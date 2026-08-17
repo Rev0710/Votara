@@ -8,7 +8,7 @@ app.use(express.json());
 
 app.get("/", (req, res) => {
     res.json({
-        message: "Votarara Backend is running!"
+        message: "Votara Backend is running!"
     });
 });
 
