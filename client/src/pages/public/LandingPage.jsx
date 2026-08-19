@@ -20,7 +20,7 @@ const LandingPage = () => {
     // =========================
 
     const handleLogin = () => {
-        navigate("/login");
+        navigate("/student-login");
     };
 
     const handleRegister = () => {

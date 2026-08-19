@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 
 import LandingPage from "./src/pages/public/LandingPage";
 import Register from "./src/pages/auth/Register";
+import StudentLogin from "./src/pages/auth/StudentLogin";
 
 const LoginPage = () => {
     return (
@@ -37,8 +38,8 @@ const App = () => {
 
             {/* LOGIN - TEMPORARY */}
             <Route
-                path="/login"
-                element={<LoginPage />}
+                path="/student-login"
+                element={<StudentLogin />}
             />
 
         </Routes>

@@ -1,0 +1,558 @@
+/* =========================================
+   RESET
+========================================= */
+
+.student-login-page,
+.student-login-page * {
+    box-sizing: border-box;
+}
+
+
+/* =========================================
+   PAGE
+========================================= */
+
+.student-login-page {
+    width: 100%;
+    min-height: 100vh;
+
+    background: #e9efff;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* =========================================
+   MAIN CARD
+========================================= */
+
+.student-login-card {
+    width: 100%;
+    max-width: 1180px;
+    min-height: 650px;
+
+    background: #ffffff;
+
+    display: flex;
+    flex-direction: row;
+
+    position: relative;
+
+    overflow: hidden;
+}
+
+
+/* =========================================
+   LEFT SIDE
+========================================= */
+
+.student-login-left {
+    width: 50%;
+    min-width: 0;
+
+    padding: 40px 55px;
+
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* =========================================
+   LOGO
+========================================= */
+
+.student-login-logo {
+    display: inline-flex;
+
+    align-items: center;
+    gap: 12px;
+
+    width: fit-content;
+
+    color: #0d4dff;
+
+    text-decoration: none;
+
+    font-size: 31px;
+    font-weight: 600;
+
+    position: relative;
+    z-index: 5;
+
+    border: none;
+    outline: none;
+
+    background: transparent;
+
+    padding: 0;
+
+    margin: 0;
+
+    cursor: pointer;
+}
+
+
+/* Logo shape */
+
+.student-login-logo-mark {
+    position: relative;
+
+    width: 34px;
+    height: 34px;
+
+    display: block;
+
+    flex-shrink: 0;
+}
+
+.student-login-logo-mark .circle {
+    position: absolute;
+
+    width: 16px;
+    height: 16px;
+
+    background: #0d4dff;
+
+    border-radius: 50%;
+
+    top: 0;
+    right: 0;
+}
+
+.student-login-logo-mark .triangle {
+    position: absolute;
+
+    width: 0;
+    height: 0;
+
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+}
+
+.student-login-logo-mark .triangle-top {
+    border-bottom: 16px solid #0d4dff;
+
+    top: 0;
+    left: 0;
+}
+
+.student-login-logo-mark .triangle-bottom {
+    border-top: 16px solid #0d4dff;
+
+    bottom: 0;
+    right: 0;
+}
+
+
+/* Logo hover */
+
+.student-login-logo:hover {
+    opacity: 0.8;
+}
+
+
+/* =========================================
+   LEFT VISUAL
+========================================= */
+
+.student-login-visual {
+    width: 390px;
+    height: 350px;
+
+    margin: auto;
+
+    position: relative;
+
+    background: #fafafa;
+
+    flex-shrink: 0;
+}
+
+.visual-circle {
+    position: absolute;
+
+    border-radius: 50%;
+}
+
+.visual-circle-one {
+    width: 180px;
+    height: 180px;
+
+    background: #e7edff;
+
+    left: 50px;
+    top: 70px;
+}
+
+.visual-circle-two {
+    width: 120px;
+    height: 120px;
+
+    background: #d8e3ff;
+
+    right: 45px;
+    bottom: 30px;
+}
+
+.visual-content {
+    position: absolute;
+
+    left: 110px;
+    top: 110px;
+
+    width: 170px;
+}
+
+.visual-line {
+    display: block;
+
+    height: 10px;
+
+    background: #7199ff;
+
+    margin-bottom: 18px;
+
+    border-radius: 5px;
+}
+
+.visual-line:nth-child(1) {
+    width: 130px;
+}
+
+.visual-line:nth-child(2) {
+    width: 160px;
+}
+
+.visual-line:nth-child(3) {
+    width: 100px;
+}
+
+
+/* =========================================
+   RIGHT SIDE
+========================================= */
+
+.student-login-right {
+    width: 50%;
+    min-width: 0;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 50px;
+}
+
+
+/* =========================================
+   LOGIN FORM CONTAINER
+========================================= */
+
+.student-login-form-container {
+    width: 100%;
+    max-width: 390px;
+}
+
+.student-login-form-container h1 {
+    margin: 0 0 15px;
+
+    font-size: 32px;
+    line-height: 1.2;
+
+    font-weight: 700;
+
+    color: #050505;
+}
+
+.login-description {
+    margin: 0 0 28px;
+
+    color: #333333;
+
+    font-size: 15px;
+
+    line-height: 1.6;
+}
+
+
+/* =========================================
+   INPUTS
+========================================= */
+
+.login-input-group {
+    width: 100%;
+
+    margin-bottom: 13px;
+}
+
+.login-input-group input {
+    width: 100%;
+    height: 42px;
+
+    border: 1.5px solid #5c82ff;
+
+    border-radius: 25px;
+
+    outline: none;
+
+    padding: 0 18px;
+
+    font-size: 12px;
+
+    font-family: inherit;
+}
+
+.login-input-group input::placeholder {
+    color: #888;
+}
+
+.login-input-group input:focus {
+    border-color: #1648ff;
+
+    box-shadow: 0 0 0 2px rgba(22, 72, 255, 0.08);
+}
+
+
+/* =========================================
+   LOGIN BUTTON
+========================================= */
+
+.student-login-button {
+    display: block;
+
+    width: 110px;
+    height: 38px;
+
+    border: none;
+
+    border-radius: 20px;
+
+    background: #1648ff;
+
+    color: #ffffff;
+
+    font-size: 14px;
+    font-family: inherit;
+
+    cursor: pointer;
+
+    margin: 25px auto 0;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.student-login-button:hover {
+    background: #0d39d9;
+
+    transform: translateY(-2px);
+
+    box-shadow: 0 6px 15px rgba(22, 72, 255, 0.2);
+}
+
+
+/* =========================================
+   BACK TO HOME
+========================================= */
+
+.login-back {
+    width: 100%;
+
+    margin-top: 25px;
+
+    text-align: center;
+}
+
+.login-back a {
+    color: #1648ff;
+
+    text-decoration: none;
+
+    font-size: 13px;
+}
+
+.login-back a:hover {
+    text-decoration: underline;
+}
+
+
+/* =========================================
+   PAGE ANIMATION
+========================================= */
+
+.student-login-card {
+    animation: loginCardEnter 0.55s ease-out both;
+}
+
+.student-login-logo {
+    animation: logoEnter 0.65s ease-out both;
+}
+
+.student-login-right {
+    animation: loginContentEnter 0.65s ease-out 0.1s both;
+}
+
+@keyframes loginCardEnter {
+    from {
+        opacity: 0;
+        transform: translateY(25px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes logoEnter {
+    from {
+        opacity: 0;
+        transform: translateY(-15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes loginContentEnter {
+    from {
+        opacity: 0;
+        transform: translateX(25px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 850px) {
+
+    .student-login-card {
+        flex-direction: column;
+    }
+
+    .student-login-left,
+    .student-login-right {
+        width: 100%;
+    }
+
+    .student-login-left {
+        padding: 30px;
+    }
+
+    .student-login-visual {
+        margin: 40px auto 0;
+
+        transform: scale(0.85);
+    }
+
+    .student-login-right {
+        padding: 30px;
+    }
+}
+
+@media (max-width: 500px) {
+
+    .student-login-page {
+        padding: 10px;
+    }
+
+    .student-login-left {
+        padding: 25px;
+    }
+
+    .student-login-logo {
+        font-size: 27px;
+    }
+
+    .student-login-visual {
+        width: 100%;
+        max-width: 390px;
+
+        transform: scale(0.7);
+        transform-origin: top center;
+
+        margin-bottom: -80px;
+    }
+
+    .student-login-right {
+        padding: 25px 20px;
+    }
+
+    .student-login-form-container h1 {
+        font-size: 28px;
+    }
+
+    .login-description br {
+        display: none;
+    }
+}
+
+/* =========================
+   PAGE TRANSITION
+========================= */
+
+.student-login-page {
+  animation: pageFadeIn 0.55s ease-out both;
+}
+
+.student-login-container {
+  animation: loginContainerEnter 0.65s ease-out both;
+}
+
+.student-login-logo {
+  animation: logoEnter 0.7s ease-out both;
+}
+
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes loginContainerEnter {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes logoEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

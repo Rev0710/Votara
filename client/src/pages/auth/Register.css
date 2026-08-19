@@ -578,3 +578,54 @@
         margin-top: 55px;
     }
 }
+/* =========================================
+   PAGE TRANSITION
+========================================= */
+
+.register-card {
+    animation: registerCardEnter 0.55s ease-out both;
+}
+
+.register-logo {
+    animation: registerLogoEnter 0.65s ease-out both;
+}
+
+.register-right {
+    animation: registerContentEnter 0.65s ease-out 0.1s both;
+}
+
+@keyframes registerCardEnter {
+    from {
+        opacity: 0;
+        transform: translateY(25px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes registerLogoEnter {
+    from {
+        opacity: 0;
+        transform: translateY(-15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes registerContentEnter {
+    from {
+        opacity: 0;
+        transform: translateX(25px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
