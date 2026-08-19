@@ -1,0 +1,565 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --primary: #064BFF;
+  --primary-light: #E9F0FF;
+  --background: #EEF3FF;
+  --white: #FFFFFF;
+  --text: #111111;
+  --muted: #666666;
+  --border: #064BFF;
+  --success: #21A366;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+  background: var(--background);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+button,
+input {
+  font-family: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* =========================
+   MAIN PAGE
+========================= */
+
+.page-wrapper {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+}
+
+/* =========================
+   CARD
+========================= */
+
+.auth-card {
+  width: 100%;
+  max-width: 930px;
+  min-height: 560px;
+  background: var(--white);
+  border-radius: 2px;
+  padding: 45px 55px;
+  box-shadow: 0 10px 35px rgba(40, 65, 120, 0.05);
+}
+
+/* =========================
+   BRAND
+========================= */
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--primary);
+  font-size: 25px;
+  font-weight: 600;
+  margin-bottom: 35px;
+}
+
+.brand-icon {
+  width: 25px;
+  height: 25px;
+  position: relative;
+  display: inline-block;
+}
+
+.brand-icon span {
+  position: absolute;
+  background: var(--primary);
+  border-radius: 50%;
+}
+
+.brand-icon span:nth-child(1) {
+  width: 11px;
+  height: 11px;
+  left: 0;
+  top: 0;
+}
+
+.brand-icon span:nth-child(2) {
+  width: 11px;
+  height: 11px;
+  right: 0;
+  top: 0;
+}
+
+.brand-icon span:nth-child(3) {
+  width: 11px;
+  height: 11px;
+  left: 7px;
+  bottom: 0;
+}
+
+/* =========================
+   REGISTER
+========================= */
+
+.register-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 70px;
+  min-height: 410px;
+}
+
+.illustration-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 330px;
+}
+
+.illustration-background {
+  width: 290px;
+  height: 300px;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.student {
+  position: absolute;
+  bottom: 22px;
+  font-size: 75px;
+  z-index: 2;
+  filter: saturate(0.9);
+}
+
+.student-one {
+  left: 5px;
+}
+
+.student-two {
+  left: 75px;
+  bottom: 8px;
+  font-size: 85px;
+}
+
+.student-three {
+  right: 65px;
+  bottom: 5px;
+  font-size: 82px;
+}
+
+.student-four {
+  right: 0;
+}
+
+.ballot-line {
+  position: absolute;
+  left: 25px;
+  right: 25px;
+  bottom: 58px;
+  height: 3px;
+  background: var(--primary);
+  opacity: 0.8;
+  z-index: 3;
+}
+
+/* =========================
+   FORM
+========================= */
+
+.form-section {
+  max-width: 310px;
+}
+
+.form-section h1 {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.form-description {
+  color: #555;
+  font-size: 11px;
+  line-height: 1.7;
+  margin-bottom: 22px;
+  max-width: 285px;
+}
+
+.input-group {
+  margin-bottom: 12px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 10px;
+  color: #555;
+  margin-bottom: 5px;
+}
+
+.input-group input {
+  width: 100%;
+  height: 39px;
+  border: 1px solid var(--primary);
+  border-radius: 22px;
+  outline: none;
+  padding: 0 15px;
+  font-size: 10px;
+  color: var(--text);
+  background: white;
+  transition: 0.2s ease;
+}
+
+.input-group input::placeholder {
+  color: #999;
+}
+
+.input-group input:focus {
+  box-shadow: 0 0 0 3px rgba(6, 75, 255, 0.08);
+}
+
+/* =========================
+   BUTTON
+========================= */
+
+.primary-button {
+  width: 100%;
+  height: 37px;
+  border: none;
+  border-radius: 22px;
+  background: var(--primary);
+  color: white;
+  font-size: 11px;
+  font-weight: 500;
+  transition: 0.2s ease;
+}
+
+.primary-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(6, 75, 255, 0.22);
+}
+
+.signup-button {
+  width: 150px;
+  margin: 15px auto 0;
+  display: block;
+}
+
+.admin-link {
+  display: block;
+  margin: 14px auto 0;
+  border: none;
+  background: transparent;
+  text-decoration: underline;
+  font-size: 10px;
+  color: #222;
+}
+
+/* =========================
+   OTP PAGE
+========================= */
+
+.otp-card {
+  max-width: 700px;
+  min-height: 690px;
+}
+
+.otp-card .brand {
+  margin-bottom: 20px;
+}
+
+.progress-container {
+  width: 75%;
+  margin: 5px auto 0;
+}
+
+.progress-line {
+  width: 100%;
+  height: 3px;
+  background: #dfe6f5;
+  position: relative;
+}
+
+.progress-active {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 50%;
+  height: 3px;
+  background: var(--primary);
+}
+
+.step-text {
+  text-align: right;
+  font-size: 9px;
+  margin-top: 6px;
+  color: #222;
+}
+
+.otp-content {
+  width: 100%;
+  max-width: 410px;
+  margin: 80px auto 0;
+  text-align: center;
+}
+
+.otp-content h2 {
+  font-size: 19px;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+.otp-description {
+  font-size: 11px;
+  line-height: 1.8;
+  color: #333;
+  margin-bottom: 30px;
+}
+
+.otp-description strong {
+  font-weight: 600;
+}
+
+.otp-inputs {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.otp-inputs input {
+  width: 38px;
+  height: 38px;
+  border: 1px solid #999;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 16px;
+  outline: none;
+}
+
+.otp-inputs input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(6, 75, 255, 0.08);
+}
+
+.resend-button {
+  display: block;
+  margin: 0 auto 10px;
+  border: none;
+  background: transparent;
+  color: var(--primary);
+  font-size: 8px;
+}
+
+.otp-button {
+  width: 170px;
+  margin: 0 auto;
+  display: block;
+}
+
+.back-button {
+  margin-top: 13px;
+  background: transparent;
+  border: none;
+  color: var(--primary);
+  font-size: 8px;
+}
+
+/* =========================
+   SUCCESS PAGE
+========================= */
+
+.success-card {
+  width: 100%;
+  max-width: 650px;
+  background: white;
+  padding: 50px;
+  text-align: center;
+  box-shadow: 0 10px 35px rgba(40, 65, 120, 0.05);
+}
+
+.success-brand {
+  justify-content: center;
+}
+
+.success-icon {
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+  background: var(--success);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 35px;
+  margin: 30px auto 20px;
+}
+
+.success-card h1 {
+  font-size: 24px;
+  margin-bottom: 12px;
+}
+
+.success-card > p {
+  font-size: 11px;
+  color: #555;
+  line-height: 1.7;
+  max-width: 430px;
+  margin: 0 auto 25px;
+}
+
+.waiting-box {
+  background: #f5f8ff;
+  border: 1px solid #e2e8f7;
+  padding: 20px;
+  text-align: left;
+  margin-bottom: 25px;
+}
+
+.waiting-box h3 {
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.waiting-box ul {
+  padding-left: 20px;
+}
+
+.waiting-box li {
+  font-size: 10px;
+  color: #555;
+  margin-bottom: 7px;
+}
+
+.success-card .primary-button {
+  max-width: 250px;
+  margin: auto;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 800px) {
+
+  .page-wrapper {
+    padding: 20px;
+  }
+
+  .auth-card {
+    padding: 35px 30px;
+  }
+
+  .register-content {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .illustration-section {
+    min-height: 230px;
+  }
+
+  .illustration-background {
+    transform: scale(0.8);
+    margin-top: -20px;
+  }
+
+  .form-section {
+    max-width: 400px;
+    width: 100%;
+    margin: auto;
+  }
+
+  .form-section h1 {
+    text-align: center;
+  }
+
+  .form-description {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+  }
+
+  .otp-card {
+    min-height: 600px;
+  }
+
+  .otp-content {
+    margin-top: 60px;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .page-wrapper {
+    padding: 10px;
+  }
+
+  .auth-card {
+    padding: 25px 20px;
+  }
+
+  .brand {
+    font-size: 22px;
+    margin-bottom: 25px;
+  }
+
+  .illustration-background {
+    transform: scale(0.68);
+    margin-top: -35px;
+    margin-bottom: -35px;
+  }
+
+  .form-section h1 {
+    font-size: 25px;
+  }
+
+  .form-description {
+    font-size: 10px;
+  }
+
+  .otp-card {
+    min-height: 550px;
+  }
+
+  .progress-container {
+    width: 90%;
+  }
+
+  .otp-content {
+    margin-top: 50px;
+  }
+
+  .otp-inputs {
+    gap: 5px;
+  }
+
+  .otp-inputs input {
+    width: 35px;
+    height: 35px;
+  }
+
+  .success-card {
+    padding: 30px 20px;
+  }
+
+  .success-card h1 {
+    font-size: 21px;
+  }
+}

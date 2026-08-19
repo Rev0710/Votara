@@ -1,0 +1,580 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+
+/* =========================================
+   GLOBAL
+========================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+.register-page {
+    min-height: 100vh;
+    width: 100%;
+    background: #eaf0ff;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 24px;
+
+    font-family: "Poppins", sans-serif;
+}
+
+
+/* =========================================
+   MAIN CARD
+========================================= */
+
+.register-card {
+    width: 100%;
+    max-width: 1180px;
+    min-height: 720px;
+
+    background: #ffffff;
+
+    border-radius: 2px;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 20px 60px rgba(34, 68, 150, 0.08);
+}
+
+
+/* =========================================
+   LEFT SIDE
+========================================= */
+
+.register-left {
+    position: relative;
+
+    min-height: 720px;
+
+    padding: 48px 58px;
+
+    overflow: hidden;
+
+    background:
+        radial-gradient(
+            circle at 20% 85%,
+            rgba(47, 87, 255, 0.08),
+            transparent 30%
+        ),
+        #ffffff;
+}
+
+
+/* =========================================
+   LOGO
+========================================= */
+
+.register-logo {
+    display: inline-flex;
+
+    align-items: center;
+    gap: 12px;
+
+    color: #0d4dff;
+
+    text-decoration: none;
+
+    font-size: 31px;
+    font-weight: 600;
+
+    position: relative;
+    z-index: 5;
+}
+
+.register-logo-mark {
+    position: relative;
+
+    width: 34px;
+    height: 34px;
+
+    display: block;
+}
+
+.register-logo-mark .circle {
+    position: absolute;
+
+    width: 16px;
+    height: 16px;
+
+    background: #0d4dff;
+
+    border-radius: 50%;
+
+    top: 0;
+    right: 0;
+}
+
+.triangle {
+    position: absolute;
+
+    width: 0;
+    height: 0;
+
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+}
+
+.triangle-top {
+    border-bottom: 16px solid #0d4dff;
+
+    top: 0;
+    left: 0;
+}
+
+.triangle-bottom {
+    border-top: 16px solid #0d4dff;
+
+    bottom: 0;
+    right: 0;
+}
+
+
+/* =========================================
+   LEFT VISUAL AREA
+========================================= */
+
+.register-visual {
+    position: absolute;
+
+    left: 55px;
+    right: 40px;
+
+    top: 210px;
+    bottom: 50px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+}
+
+
+/* Decorative blue shapes */
+
+.visual-circle {
+    position: absolute;
+
+    border-radius: 50%;
+
+    filter: blur(1px);
+}
+
+.visual-circle-one {
+    width: 250px;
+    height: 250px;
+
+    background: #f1f5ff;
+
+    left: 20px;
+    bottom: -90px;
+}
+
+.visual-circle-two {
+    width: 150px;
+    height: 150px;
+
+    background: #e4ecff;
+
+    right: 40px;
+    top: 30px;
+}
+
+
+/* Abstract visual */
+
+.visual-content {
+    position: relative;
+
+    width: 250px;
+    height: 250px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 14px;
+
+    opacity: 0.08;
+}
+
+.visual-line {
+    display: block;
+
+    width: 5px;
+    height: 150px;
+
+    background: #0d4dff;
+
+    border-radius: 10px;
+}
+
+.visual-line:nth-child(1) {
+    height: 110px;
+}
+
+.visual-line:nth-child(2) {
+    height: 180px;
+}
+
+.visual-line:nth-child(3) {
+    height: 135px;
+}
+
+
+/* =========================================
+   RIGHT SIDE
+========================================= */
+
+.register-right {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 60px 70px;
+
+    background: #ffffff;
+}
+
+
+/* =========================================
+   CONTENT
+========================================= */
+
+.register-content {
+    width: 100%;
+    max-width: 500px;
+
+    position: relative;
+}
+
+
+/* =========================================
+   HEADING
+========================================= */
+
+.register-heading {
+    width: 100%;
+
+    margin-bottom: 34px;
+}
+
+.register-heading h1 {
+    margin: 0 0 12px;
+
+    color: #080b18;
+
+    font-size: 42px;
+    line-height: 1.15;
+
+    font-weight: 700;
+
+    letter-spacing: -1.2px;
+}
+
+.register-heading p {
+    width: 100%;
+    max-width: 330px;
+
+    margin: 0;
+
+    color: #5d6375;
+
+    font-size: 14px;
+    line-height: 1.75;
+
+    font-weight: 400;
+}
+
+
+/* =========================================
+   FORM
+========================================= */
+
+.register-form {
+    width: 100%;
+    max-width: 400px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+
+    margin-bottom: 8px;
+
+    color: #171a26;
+
+    font-size: 13px;
+
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+    height: 50px;
+
+    padding: 0 18px;
+
+    border: 1.5px solid #2f5bff;
+
+    border-radius: 28px;
+
+    outline: none;
+
+    background: #ffffff;
+
+    color: #171a26;
+
+    font-family: "Poppins", sans-serif;
+
+    font-size: 13px;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.form-group input::placeholder {
+    color: #9ca3b4;
+}
+
+.form-group input:focus {
+    border-color: #0d4dff;
+
+    box-shadow:
+        0 0 0 4px rgba(13, 77, 255, 0.08);
+}
+
+
+/* =========================================
+   SIGN UP BUTTON
+========================================= */
+
+.register-submit {
+    width: 180px;
+    height: 48px;
+
+    margin-top: 10px;
+
+    border: none;
+
+    border-radius: 26px;
+
+    background: #0d4dff;
+
+    color: #ffffff;
+
+    font-family: "Poppins", sans-serif;
+
+    font-size: 14px;
+    font-weight: 500;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+.register-submit:hover {
+    background: #0844e8;
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 10px 25px rgba(13, 77, 255, 0.22);
+}
+
+.register-submit:active {
+    transform: translateY(0);
+}
+
+
+/* =========================================
+   ADMIN LINK
+========================================= */
+
+.admin-link {
+    display: block;
+
+    width: fit-content;
+
+    margin-top: 18px;
+
+    color: #151515;
+
+    font-size: 12px;
+
+    font-weight: 400;
+
+    text-decoration: underline;
+
+    transition: color 0.2s ease;
+}
+
+.admin-link:hover {
+    color: #0d4dff;
+}
+
+
+/* =========================================
+   BACK LINK
+========================================= */
+
+.back-link {
+    display: block;
+
+    margin-top: 90px;
+
+    width: fit-content;
+
+    color: #0d4dff;
+
+    font-size: 13px;
+
+    text-decoration: none;
+
+    transition:
+        transform 0.2s ease,
+        color 0.2s ease;
+}
+
+.back-link:hover {
+    color: #0844e8;
+
+    transform: translateX(-3px);
+}
+
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 900px) {
+
+    .register-page {
+        padding: 16px;
+    }
+
+    .register-card {
+        grid-template-columns: 1fr;
+
+        max-width: 650px;
+    }
+
+    .register-left {
+        min-height: 250px;
+
+        padding: 35px 40px;
+    }
+
+    .register-visual {
+        display: none;
+    }
+
+    .register-right {
+        padding: 45px 50px 55px;
+    }
+
+    .register-content {
+        max-width: 450px;
+    }
+
+    .register-heading h1 {
+        font-size: 38px;
+    }
+
+    .back-link {
+        margin-top: 60px;
+    }
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 600px) {
+
+    .register-page {
+        padding: 0;
+
+        align-items: stretch;
+    }
+
+    .register-card {
+        min-height: 100vh;
+
+        border-radius: 0;
+
+        box-shadow: none;
+    }
+
+    .register-left {
+        min-height: 130px;
+
+        padding: 28px 25px;
+    }
+
+    .register-logo {
+        font-size: 27px;
+    }
+
+    .register-logo-mark {
+        transform: scale(0.85);
+        transform-origin: left center;
+    }
+
+    .register-right {
+        padding: 30px 25px 45px;
+
+        align-items: flex-start;
+    }
+
+    .register-heading {
+        margin-bottom: 30px;
+    }
+
+    .register-heading h1 {
+        font-size: 34px;
+
+        letter-spacing: -0.8px;
+    }
+
+    .register-heading p {
+        max-width: 100%;
+
+        font-size: 13px;
+
+        line-height: 1.7;
+    }
+
+    .register-form {
+        max-width: 100%;
+    }
+
+    .register-submit {
+        width: 100%;
+    }
+
+    .back-link {
+        margin-top: 55px;
+    }
+}

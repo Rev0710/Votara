@@ -1,24 +1,37 @@
+import { useNavigate } from "react-router-dom";
 import "./LandingPage.css";
 
 const LandingPage = () => {
+    const navigate = useNavigate();
+
     const scrollToSection = (id) => {
         const section = document.getElementById(id);
 
         if (section) {
             section.scrollIntoView({
                 behavior: "smooth",
+                block: "start",
             });
         }
     };
 
+    // =========================
+    // NAVIGATION
+    // =========================
+
     const handleLogin = () => {
-        // Login page will be connected later.
-        console.log("Login clicked");
+        navigate("/login");
     };
 
     const handleRegister = () => {
-        // Registration page will be connected later.
-        console.log("Register clicked");
+        navigate("/register");
+    };
+
+    const handleLogoClick = () => {
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+        });
     };
 
     return (
@@ -30,12 +43,11 @@ const LandingPage = () => {
             <header className="votara-navbar">
                 <div className="votara-container navbar-inner">
 
+                    {/* LOGO */}
                     <button
                         className="votara-logo"
-                        onClick={() => window.scrollTo({
-                            top: 0,
-                            behavior: "smooth",
-                        })}
+                        onClick={handleLogoClick}
+                        type="button"
                     >
                         <span className="logo-mark">
                             ✓
@@ -44,28 +56,47 @@ const LandingPage = () => {
                         <span>Votara</span>
                     </button>
 
-                    <nav className="desktop-nav">
-                        <button onClick={() => scrollToSection("home")}>
+                    {/* DESKTOP NAVIGATION */}
+                    <nav
+                        className="desktop-nav"
+                        aria-label="Main navigation"
+                    >
+                        <button
+                            type="button"
+                            onClick={() => scrollToSection("home")}
+                        >
                             Home
                         </button>
 
-                        <button onClick={() => scrollToSection("about")}>
+                        <button
+                            type="button"
+                            onClick={() => scrollToSection("about")}
+                        >
                             About
                         </button>
 
-                        <button onClick={() => scrollToSection("election")}>
+                        <button
+                            type="button"
+                            onClick={() => scrollToSection("election")}
+                        >
                             Election
                         </button>
 
-                        <button onClick={() => scrollToSection("faq")}>
+                        <button
+                            type="button"
+                            onClick={() => scrollToSection("faq")}
+                        >
                             FAQ
                         </button>
                     </nav>
 
+                    {/* ACCOUNT NAVIGATION */}
                     <div className="navbar-actions">
+
                         <button
                             className="nav-login"
                             onClick={handleLogin}
+                            type="button"
                         >
                             Login
                         </button>
@@ -73,10 +104,13 @@ const LandingPage = () => {
                         <button
                             className="nav-register"
                             onClick={handleRegister}
+                            type="button"
                         >
                             Register Now
                         </button>
+
                     </div>
+
                 </div>
             </header>
 
@@ -90,6 +124,7 @@ const LandingPage = () => {
                     id="home"
                     className="hero-section"
                 >
+
                     <div className="hero-decoration hero-circle-one"></div>
                     <div className="hero-decoration hero-circle-two"></div>
 
@@ -122,6 +157,7 @@ const LandingPage = () => {
                                 <button
                                     className="primary-button"
                                     onClick={handleRegister}
+                                    type="button"
                                 >
                                     Register Now
                                     <span>→</span>
@@ -130,6 +166,7 @@ const LandingPage = () => {
                                 <button
                                     className="secondary-button"
                                     onClick={handleLogin}
+                                    type="button"
                                 >
                                     Login
                                 </button>
@@ -139,15 +176,20 @@ const LandingPage = () => {
                             <div className="hero-trust">
                                 <span>✓</span>
                                 Student-focused
+
                                 <span>✓</span>
                                 Secure process
+
                                 <span>✓</span>
                                 Faster verification
                             </div>
+
                         </div>
 
 
-                        {/* Dashboard illustration */}
+                        {/* =========================
+                            DASHBOARD ILLUSTRATION
+                        ========================= */}
                         <div className="hero-dashboard-wrapper">
 
                             <div className="hero-floating-circle circle-a"></div>
@@ -157,6 +199,7 @@ const LandingPage = () => {
                             <div className="dashboard-card">
 
                                 <div className="dashboard-header">
+
                                     <div>
                                         <span className="small-label">
                                             Election overview
@@ -170,6 +213,7 @@ const LandingPage = () => {
                                     <span className="live-badge">
                                         ● Live
                                     </span>
+
                                 </div>
 
                                 <div className="dashboard-stats">
@@ -194,17 +238,24 @@ const LandingPage = () => {
                                 <div className="chart-card">
 
                                     <div className="chart-title">
-                                        <span>Election Statistics</span>
-                                        <span>Today</span>
+                                        <span>
+                                            Election Statistics
+                                        </span>
+
+                                        <span>
+                                            Today
+                                        </span>
                                     </div>
 
                                     <div className="bar-chart">
+
                                         <div className="bar bar-1"></div>
                                         <div className="bar bar-2"></div>
                                         <div className="bar bar-3"></div>
                                         <div className="bar bar-4"></div>
                                         <div className="bar bar-5"></div>
                                         <div className="bar bar-6"></div>
+
                                     </div>
 
                                     <div className="chart-labels">
@@ -217,24 +268,34 @@ const LandingPage = () => {
                                     </div>
 
                                 </div>
+
                             </div>
+
                         </div>
+
                     </div>
 
 
-                    {/* Hero quick cards */}
+                    {/* =========================
+                        QUICK ACTIONS
+                    ========================= */}
                     <div className="votara-container quick-actions">
 
                         <button
                             className="quick-card"
                             onClick={handleRegister}
+                            type="button"
                         >
+
                             <span className="quick-number">
                                 01
                             </span>
 
                             <div>
-                                <h3>Sign up</h3>
+                                <h3>
+                                    Sign up
+                                </h3>
+
                                 <p>
                                     Register your student account
                                     before election day.
@@ -244,41 +305,53 @@ const LandingPage = () => {
                                     Register now →
                                 </span>
                             </div>
+
                         </button>
 
 
                         <button
                             className="quick-card"
                             onClick={handleLogin}
+                            type="button"
                         >
+
                             <span className="quick-number">
                                 02
                             </span>
 
                             <div>
-                                <h3>Vote</h3>
+                                <h3>
+                                    Vote
+                                </h3>
+
                                 <p>
                                     Cast your vote securely
                                     through your account.
                                 </p>
 
                                 <span className="quick-link">
-                                    Learn how →
+                                    Login to vote →
                                 </span>
                             </div>
+
                         </button>
 
 
                         <button
                             className="quick-card"
                             onClick={() => scrollToSection("election")}
+                            type="button"
                         >
+
                             <span className="quick-number">
                                 03
                             </span>
 
                             <div>
-                                <h3>View results</h3>
+                                <h3>
+                                    View results
+                                </h3>
+
                                 <p>
                                     Follow election progress and
                                     official results.
@@ -288,9 +361,11 @@ const LandingPage = () => {
                                     View results →
                                 </span>
                             </div>
+
                         </button>
 
                     </div>
+
                 </section>
 
 
@@ -301,6 +376,7 @@ const LandingPage = () => {
                     id="about"
                     className="features-section"
                 >
+
                     <div className="votara-container">
 
                         <div className="section-heading">
@@ -383,7 +459,9 @@ const LandingPage = () => {
                             </article>
 
                         </div>
+
                     </div>
+
                 </section>
 
 
@@ -394,22 +472,30 @@ const LandingPage = () => {
                     id="election"
                     className="results-section"
                 >
+
                     <div className="votara-container results-grid">
 
                         <div className="results-chart">
 
                             <div className="result-chart-header">
-                                <span>Live election</span>
-                                <span>Overview</span>
+                                <span>
+                                    Live election
+                                </span>
+
+                                <span>
+                                    Overview
+                                </span>
                             </div>
 
                             <div className="large-bars">
+
                                 <div className="large-bar height-1"></div>
                                 <div className="large-bar height-2"></div>
                                 <div className="large-bar height-3"></div>
                                 <div className="large-bar height-4"></div>
                                 <div className="large-bar height-5"></div>
                                 <div className="large-bar height-6"></div>
+
                             </div>
 
                         </div>
@@ -433,6 +519,7 @@ const LandingPage = () => {
                             </p>
 
                             <ul className="check-list">
+
                                 <li>
                                     <span>✓</span>
                                     Organized election data
@@ -447,11 +534,13 @@ const LandingPage = () => {
                                     <span>✓</span>
                                     Transparent reporting
                                 </li>
+
                             </ul>
 
                             <button
                                 className="primary-button"
                                 onClick={() => scrollToSection("election")}
+                                type="button"
                             >
                                 Learn more
                                 <span>→</span>
@@ -460,6 +549,7 @@ const LandingPage = () => {
                         </div>
 
                     </div>
+
                 </section>
 
 
@@ -473,10 +563,12 @@ const LandingPage = () => {
                         <div className="donut-wrapper">
 
                             <div className="donut-chart">
+
                                 <div className="donut-center">
                                     <strong>68%</strong>
                                     <span>Turnout</span>
                                 </div>
+
                             </div>
 
                             <div className="donut-legend">
@@ -542,6 +634,7 @@ const LandingPage = () => {
                         </div>
 
                     </div>
+
                 </section>
 
 
@@ -556,6 +649,7 @@ const LandingPage = () => {
                     <div className="votara-container">
 
                         <div className="section-heading">
+
                             <span className="section-label">
                                 FAQ
                             </span>
@@ -568,12 +662,14 @@ const LandingPage = () => {
                                 Learn more about the VOTARA voting
                                 process.
                             </p>
+
                         </div>
 
 
                         <div className="faq-list">
 
                             <details>
+
                                 <summary>
                                     How does VOTARA work?
                                     <span>+</span>
@@ -586,10 +682,12 @@ const LandingPage = () => {
                                     Electoral Board, and use their account
                                     to participate in the election.
                                 </p>
+
                             </details>
 
 
                             <details>
+
                                 <summary>
                                     Who can use VOTARA?
                                     <span>+</span>
@@ -600,10 +698,12 @@ const LandingPage = () => {
                                     students and election personnel within
                                     the department.
                                 </p>
+
                             </details>
 
 
                             <details>
+
                                 <summary>
                                     Is the voting process secure?
                                     <span>+</span>
@@ -614,10 +714,12 @@ const LandingPage = () => {
                                     student accounts and controlled
                                     Electoral Board verification.
                                 </p>
+
                             </details>
 
 
                             <details>
+
                                 <summary>
                                     How does registration work?
                                     <span>+</span>
@@ -630,10 +732,12 @@ const LandingPage = () => {
                                     approval and temporary password
                                     generation.
                                 </p>
+
                             </details>
 
 
                             <details>
+
                                 <summary>
                                     Can students vote more than once?
                                     <span>+</span>
@@ -645,11 +749,13 @@ const LandingPage = () => {
                                     another voting attempt after the
                                     election process has been completed.
                                 </p>
+
                             </details>
 
                         </div>
 
                     </div>
+
                 </section>
 
             </main>
@@ -665,11 +771,15 @@ const LandingPage = () => {
                     <div className="footer-brand">
 
                         <div className="votara-logo footer-logo">
+
                             <span className="logo-mark">
                                 ✓
                             </span>
 
-                            <span>Votara</span>
+                            <span>
+                                Votara
+                            </span>
+
                         </div>
 
                         <p>
@@ -683,17 +793,28 @@ const LandingPage = () => {
 
                     <div className="footer-column">
 
-                        <h4>Product</h4>
+                        <h4>
+                            Product
+                        </h4>
 
-                        <button onClick={() => scrollToSection("home")}>
+                        <button
+                            type="button"
+                            onClick={() => scrollToSection("home")}
+                        >
                             Home
                         </button>
 
-                        <button onClick={() => scrollToSection("about")}>
+                        <button
+                            type="button"
+                            onClick={() => scrollToSection("about")}
+                        >
                             Features
                         </button>
 
-                        <button onClick={() => scrollToSection("election")}>
+                        <button
+                            type="button"
+                            onClick={() => scrollToSection("election")}
+                        >
                             Election
                         </button>
 
@@ -702,17 +823,26 @@ const LandingPage = () => {
 
                     <div className="footer-column">
 
-                        <h4>Resources</h4>
+                        <h4>
+                            Resources
+                        </h4>
 
-                        <button onClick={() => scrollToSection("faq")}>
+                        <button
+                            type="button"
+                            onClick={() => scrollToSection("faq")}
+                        >
                             FAQ
                         </button>
 
-                        <button>
+                        <button
+                            type="button"
+                        >
                             Privacy
                         </button>
 
-                        <button>
+                        <button
+                            type="button"
+                        >
                             Terms
                         </button>
 
@@ -721,13 +851,21 @@ const LandingPage = () => {
 
                     <div className="footer-column">
 
-                        <h4>Account</h4>
+                        <h4>
+                            Account
+                        </h4>
 
-                        <button onClick={handleLogin}>
+                        <button
+                            onClick={handleLogin}
+                            type="button"
+                        >
                             Login
                         </button>
 
-                        <button onClick={handleRegister}>
+                        <button
+                            onClick={handleRegister}
+                            type="button"
+                        >
                             Register
                         </button>
 
