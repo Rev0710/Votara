@@ -1,14 +1,78 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import "./Register.css";
 
 const Register = () => {
     const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const [studentId, setStudentId] = useState("");
+    const [email, setEmail] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+
+    const handleStudentIdChange = (e) => {
+        const value = e.target.value;
+        // Restrict input length to a maximum of 5 characters
+        if (value.length <= 5) {
+            setStudentId(value);
+        }
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // OTP functionality will be connected later.
-        navigate("/otp");
+        setError("");
+        setLoading(true);
+
+        try {
+            const response = await fetch(
+                "http://localhost:5000/api/registration/send-otp",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        studentId,
+                        email,
+                    }),
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(
+                    data.message || "Unable to send OTP."
+                );
+            }
+
+            /*
+             * IMPORTANT
+             * Save registration information temporarily
+             * so OTPVerification.jsx can access it.
+             */
+            sessionStorage.setItem(
+                "votaraRegistration",
+                JSON.stringify({
+                    studentId,
+                    email,
+                })
+            );
+
+            // Go to OTP page
+            navigate("/verify-otp");
+
+        } catch (error) {
+            console.error("Registration error:", error);
+
+            setError(
+                error.message ||
+                "Unable to send OTP. Please try again."
+            );
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -16,12 +80,11 @@ const Register = () => {
 
             <div className="register-card">
 
-                {/* =========================
-                    LEFT SIDE
-                ========================= */}
+                {/* LEFT SIDE */}
                 <section className="register-left">
 
                     <Link to="/" className="register-logo">
+
                         <span className="register-logo-mark">
                             <span className="triangle triangle-top"></span>
                             <span className="circle"></span>
@@ -29,6 +92,7 @@ const Register = () => {
                         </span>
 
                         <span>Votara</span>
+
                     </Link>
 
                     <div className="register-visual">
@@ -47,9 +111,7 @@ const Register = () => {
                 </section>
 
 
-                {/* =========================
-                    RIGHT SIDE
-                ========================= */}
+                {/* RIGHT SIDE */}
                 <section className="register-right">
 
                     <div className="register-content">
@@ -69,14 +131,12 @@ const Register = () => {
                         </div>
 
 
-                        {/* =========================
-                            REGISTRATION FORM
-                        ========================= */}
                         <form
                             className="register-form"
                             onSubmit={handleSubmit}
                         >
 
+                            {/* STUDENT ID */}
                             <div className="form-group">
 
                                 <label htmlFor="studentId">
@@ -86,13 +146,17 @@ const Register = () => {
                                 <input
                                     id="studentId"
                                     type="text"
-                                    placeholder="Enter your Student ID"
+                                    value={studentId}
+                                    onChange={handleStudentIdChange}
+                                    maxLength={5}
+                                    placeholder="Enter your Student ID (max 5 chars)"
                                     required
                                 />
 
                             </div>
 
 
+                            {/* EMAIL */}
                             <div className="form-group">
 
                                 <label htmlFor="email">
@@ -102,6 +166,10 @@ const Register = () => {
                                 <input
                                     id="email"
                                     type="email"
+                                    value={email}
+                                    onChange={(e) =>
+                                        setEmail(e.target.value)
+                                    }
                                     placeholder="Enter your email address"
                                     required
                                 />
@@ -109,11 +177,23 @@ const Register = () => {
                             </div>
 
 
+                            {/* ERROR */}
+                            {error && (
+                                <p className="register-error">
+                                    {error}
+                                </p>
+                            )}
+
+
+                            {/* SUBMIT */}
                             <button
                                 type="submit"
                                 className="register-submit"
+                                disabled={loading}
                             >
-                                Sign up
+                                {loading
+                                    ? "Sending OTP..."
+                                    : "Sign up"}
                             </button>
 
                         </form>
