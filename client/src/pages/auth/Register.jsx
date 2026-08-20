@@ -10,6 +10,14 @@ const Register = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
+    const handleStudentIdChange = (e) => {
+        const value = e.target.value;
+        // Restrict input length to a maximum of 5 characters
+        if (value.length <= 5) {
+            setStudentId(value);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -139,10 +147,9 @@ const Register = () => {
                                     id="studentId"
                                     type="text"
                                     value={studentId}
-                                    onChange={(e) =>
-                                        setStudentId(e.target.value)
-                                    }
-                                    placeholder="Enter your Student ID"
+                                    onChange={handleStudentIdChange}
+                                    maxLength={5}
+                                    placeholder="Enter your Student ID (max 5 chars)"
                                     required
                                 />
 
