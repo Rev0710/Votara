@@ -71,88 +71,136 @@
 
 .student-login-logo {
     display: inline-flex;
-
     align-items: center;
-    gap: 12px;
+    gap: 6px;
 
     width: fit-content;
+    height: 42px;
 
-    color: #0d4dff;
-
+    color: #0648ff;
     text-decoration: none;
 
-    font-size: 31px;
+    font-size: 30px;
     font-weight: 600;
+    line-height: 1;
 
     position: relative;
     z-index: 5;
 
     border: none;
     outline: none;
-
     background: transparent;
 
     padding: 0;
-
     margin: 0;
 
     cursor: pointer;
 }
 
 
-/* Logo shape */
+/* =========================================
+   LOGO MARK
+========================================= */
 
 .student-login-logo-mark {
     position: relative;
 
-    width: 34px;
-    height: 34px;
+    width: 42px;
+    height: 42px;
 
-    display: block;
-
+    display: inline-block;
     flex-shrink: 0;
 }
 
-.student-login-logo-mark .circle {
-    position: absolute;
 
-    width: 16px;
-    height: 16px;
+/* =========================================
+   TOP-LEFT TRIANGLE
+========================================= */
 
-    background: #0d4dff;
-
-    border-radius: 50%;
-
-    top: 0;
-    right: 0;
-}
-
-.student-login-logo-mark .triangle {
+.student-login-logo-mark .triangle-top {
     position: absolute;
 
     width: 0;
     height: 0;
 
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
+    border-left: 11px solid transparent;
+    border-right: 11px solid transparent;
+    border-top: 16px solid #0648ff;
+
+    left: 1px;
+    top: 1px;
 }
 
-.student-login-logo-mark .triangle-top {
-    border-bottom: 16px solid #0d4dff;
 
-    top: 0;
+/* =========================================
+   TOP-RIGHT CIRCLE
+========================================= */
+
+.student-login-logo-mark .circle {
+    position: absolute;
+
+    width: 17px;
+    height: 17px;
+
+    background: #0648ff;
+    border-radius: 50%;
+
+    right: 1px;
+    top: 1px;
+}
+
+
+/* =========================================
+   BOTTOM-LEFT SHAPE
+========================================= */
+
+.student-login-logo-mark::before {
+    content: "";
+
+    position: absolute;
+
+    width: 21px;
+    height: 21px;
+
+    background: #0648ff;
+    border-radius: 50%;
+
     left: 0;
+    bottom: 1px;
+
+    clip-path: polygon(
+        0 0,
+        100% 0,
+        100% 50%,
+        50% 50%,
+        50% 100%,
+        0 100%
+    );
 }
+
+
+/* =========================================
+   BOTTOM-RIGHT TRIANGLE
+========================================= */
 
 .student-login-logo-mark .triangle-bottom {
-    border-top: 16px solid #0d4dff;
+    position: absolute;
 
-    bottom: 0;
+    width: 0;
+    height: 0;
+
+    border-left: 11px solid transparent;
+    border-right: 11px solid transparent;
+    border-bottom: 17px solid #0648ff;
+
     right: 0;
+    bottom: 0;
 }
 
 
-/* Logo hover */
+/* =========================================
+   HOVER
+========================================= */
 
 .student-login-logo:hover {
     opacity: 0.8;

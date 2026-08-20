@@ -57,75 +57,112 @@
 .register-logo {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
 
     width: fit-content;
+    height: 42px;
 
     color: #0648ff;
-
     text-decoration: none;
 
     font-size: 30px;
     font-weight: 600;
+    line-height: 1;
 }
 
 
-/* Votara logo mark */
+/* =========================================
+   LOGO MARK
+========================================= */
 
 .register-logo-mark {
-    width: 34px;
-    height: 34px;
-
     position: relative;
 
+    width: 42px;
+    height: 42px;
+
     display: inline-block;
+    flex-shrink: 0;
 }
 
 
-/* Top triangle */
+/* =========================================
+   TOP-LEFT TRIANGLE
+========================================= */
 
-.triangle {
+.register-logo-mark .triangle-top {
     position: absolute;
 
-    background: #0648ff;
-}
-
-
-/* Triangle top */
-
-.triangle-top {
     width: 0;
     height: 0;
 
     border-left: 11px solid transparent;
     border-right: 11px solid transparent;
-    border-top: 17px solid #0648ff;
+    border-top: 16px solid #0648ff;
 
-    left: 0;
-    top: 0;
+    left: 1px;
+    top: 1px;
 }
 
 
-/* Circle */
+/* =========================================
+   TOP-RIGHT CIRCLE
+========================================= */
 
 .register-logo-mark .circle {
     position: absolute;
 
-    width: 16px;
-    height: 16px;
+    width: 17px;
+    height: 17px;
 
     background: #0648ff;
-
     border-radius: 50%;
 
-    right: 0;
-    top: 0;
+    right: 1px;
+    top: 1px;
 }
 
 
-/* Bottom triangle */
+/* =========================================
+   BOTTOM-LEFT OPEN CIRCLE
+========================================= */
 
-.triangle-bottom {
+.register-logo-mark::before {
+    content: "";
+
+    position: absolute;
+
+    width: 21px;
+    height: 21px;
+
+    background: #0648ff;
+    border-radius: 50%;
+
+    left: 0;
+    bottom: 1px;
+
+    /*
+       Remove the upper-right part
+       to create the C-like shape
+    */
+    clip-path: polygon(
+        0 0,
+        100% 0,
+        100% 50%,
+        50% 50%,
+        50% 100%,
+        0 100%
+    );
+}
+
+
+/* =========================================
+   BOTTOM-RIGHT TRIANGLE
+========================================= */
+
+.register-logo-mark .triangle-bottom {
+    position: absolute;
+
     width: 0;
     height: 0;
 
@@ -133,7 +170,7 @@
     border-right: 11px solid transparent;
     border-bottom: 17px solid #0648ff;
 
-    left: 7px;
+    right: 0;
     bottom: 0;
 }
 
