@@ -7,13 +7,24 @@ const {
 
 const router = express.Router();
 
-// Send OTP
+/*
+========================================
+SEND OTP
+POST /api/registration/send-otp
+========================================
+*/
 router.post(
     "/send-otp",
     sendRegistrationOTP
 );
 
-// Verify OTP
+
+/*
+========================================
+VERIFY OTP
+POST /api/registration/verify-otp
+========================================
+*/
 router.post(
     "/verify-otp",
     verifyRegistrationOTP

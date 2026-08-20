@@ -3,6 +3,8 @@ import { Routes, Route } from "react-router-dom";
 import LandingPage from "./src/pages/public/LandingPage";
 import Register from "./src/pages/auth/Register";
 import StudentLogin from "./src/pages/auth/StudentLogin";
+import OTPVerification from "./src/pages/auth/OTPVerification";
+import RegistrationConfirmation from "./src/pages/auth/RegistrationConfirmation";
 
 const LoginPage = () => {
     return (
@@ -24,22 +26,40 @@ const App = () => {
     return (
         <Routes>
 
-            {/* PUBLIC LANDING PAGE */}
+            {/* LANDING PAGE */}
             <Route
                 path="/"
                 element={<LandingPage />}
             />
 
-            {/* STUDENT REGISTRATION */}
+            {/* REGISTRATION */}
             <Route
                 path="/register"
                 element={<Register />}
             />
 
-            {/* LOGIN - TEMPORARY */}
+            {/* OTP VERIFICATION */}
+            <Route
+                path="/verify-otp"
+                element={<OTPVerification />}
+            />
+
+            {/* REGISTRATION CONFIRMATION */}
+            <Route
+                path="/registration-confirmation"
+                element={<RegistrationConfirmation />}
+            />
+
+            {/* STUDENT LOGIN */}
             <Route
                 path="/student-login"
                 element={<StudentLogin />}
+            />
+
+            {/* TEMPORARY LOGIN */}
+            <Route
+                path="/login"
+                element={<LoginPage />}
             />
 
         </Routes>

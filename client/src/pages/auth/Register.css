@@ -1,26 +1,16 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-
-
 /* =========================================
-   GLOBAL
+   VOTARA REGISTRATION PAGE
 ========================================= */
-
-* {
-    box-sizing: border-box;
-}
 
 .register-page {
     min-height: 100vh;
-    width: 100%;
     background: #eaf0ff;
+    padding: 24px;
+    font-family: "Poppins", sans-serif;
 
     display: flex;
     align-items: center;
     justify-content: center;
-
-    padding: 24px;
-
-    font-family: "Poppins", sans-serif;
 }
 
 
@@ -30,20 +20,17 @@
 
 .register-card {
     width: 100%;
-    max-width: 1180px;
-    min-height: 720px;
+    max-width: 1160px;
+    min-height: 680px;
 
     background: #ffffff;
-
-    border-radius: 2px;
 
     display: grid;
     grid-template-columns: 1fr 1fr;
 
-    overflow: hidden;
+    border-radius: 2px;
 
-    box-shadow:
-        0 20px 60px rgba(34, 68, 150, 0.08);
+    overflow: hidden;
 }
 
 
@@ -54,19 +41,12 @@
 .register-left {
     position: relative;
 
-    min-height: 720px;
+    display: flex;
+    flex-direction: column;
 
-    padding: 48px 58px;
+    padding: 55px 60px;
 
     overflow: hidden;
-
-    background:
-        radial-gradient(
-            circle at 20% 85%,
-            rgba(47, 87, 255, 0.08),
-            transparent 30%
-        ),
-        #ffffff;
 }
 
 
@@ -76,29 +56,57 @@
 
 .register-logo {
     display: inline-flex;
-
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 
-    color: #0d4dff;
+    width: fit-content;
+
+    color: #0648ff;
 
     text-decoration: none;
 
-    font-size: 31px;
+    font-size: 30px;
     font-weight: 600;
-
-    position: relative;
-    z-index: 5;
 }
 
-.register-logo-mark {
-    position: relative;
 
+/* Votara logo mark */
+
+.register-logo-mark {
     width: 34px;
     height: 34px;
 
-    display: block;
+    position: relative;
+
+    display: inline-block;
 }
+
+
+/* Top triangle */
+
+.triangle {
+    position: absolute;
+
+    background: #0648ff;
+}
+
+
+/* Triangle top */
+
+.triangle-top {
+    width: 0;
+    height: 0;
+
+    border-left: 11px solid transparent;
+    border-right: 11px solid transparent;
+    border-top: 17px solid #0648ff;
+
+    left: 0;
+    top: 0;
+}
+
+
+/* Circle */
 
 .register-logo-mark .circle {
     position: absolute;
@@ -106,131 +114,166 @@
     width: 16px;
     height: 16px;
 
-    background: #0d4dff;
+    background: #0648ff;
 
     border-radius: 50%;
 
-    top: 0;
     right: 0;
+    top: 0;
 }
 
-.triangle {
-    position: absolute;
 
+/* Bottom triangle */
+
+.triangle-bottom {
     width: 0;
     height: 0;
 
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-}
+    border-left: 11px solid transparent;
+    border-right: 11px solid transparent;
+    border-bottom: 17px solid #0648ff;
 
-.triangle-top {
-    border-bottom: 16px solid #0d4dff;
-
-    top: 0;
-    left: 0;
-}
-
-.triangle-bottom {
-    border-top: 16px solid #0d4dff;
-
+    left: 7px;
     bottom: 0;
-    right: 0;
 }
 
 
 /* =========================================
-   LEFT VISUAL AREA
+   PROFESSIONAL VISUAL
 ========================================= */
 
 .register-visual {
-    position: absolute;
+    position: relative;
 
-    left: 55px;
-    right: 40px;
+    width: 100%;
+    max-width: 430px;
 
-    top: 210px;
-    bottom: 50px;
+    height: 360px;
+
+    margin: auto;
 
     display: flex;
-
     align-items: center;
     justify-content: center;
-
-    overflow: hidden;
 }
 
 
-/* Decorative blue shapes */
+/* Decorative circles */
 
 .visual-circle {
     position: absolute;
 
     border-radius: 50%;
-
-    filter: blur(1px);
 }
 
 .visual-circle-one {
-    width: 250px;
-    height: 250px;
+    width: 180px;
+    height: 180px;
 
-    background: #f1f5ff;
+    background: #dff5ff;
 
-    left: 20px;
-    bottom: -90px;
+    top: 30px;
+    left: 30px;
 }
 
 .visual-circle-two {
-    width: 150px;
-    height: 150px;
+    width: 120px;
+    height: 120px;
 
-    background: #e4ecff;
+    background: #e8ddff;
 
-    right: 40px;
-    top: 30px;
+    right: 20px;
+    bottom: 25px;
 }
 
 
-/* Abstract visual */
+/* Main visual card */
 
-.visual-content {
+.visual-card {
     position: relative;
+    z-index: 2;
 
-    width: 250px;
-    height: 250px;
+    width: 300px;
+    height: 220px;
+
+    background: #ffffff;
+
+    border: 1px solid #edf0f7;
+
+    border-radius: 20px;
+
+    box-shadow:
+        0 20px 50px rgba(18, 35, 80, 0.10);
+
+    padding: 24px;
+}
+
+
+/* Small header dots */
+
+.visual-card-header {
+    display: flex;
+    gap: 6px;
+
+    margin-bottom: 28px;
+}
+
+.visual-card-header span {
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: #dbe3f3;
+}
+
+
+/* Chart */
+
+.visual-chart {
+    height: 120px;
 
     display: flex;
-
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
 
-    gap: 14px;
+    gap: 18px;
 
-    opacity: 0.08;
+    padding: 0 10px;
+
+    border-bottom: 1px solid #e8edf5;
 }
 
-.visual-line {
-    display: block;
 
-    width: 5px;
-    height: 150px;
+/* Chart bars */
 
-    background: #0d4dff;
+.visual-bar {
+    width: 25px;
 
-    border-radius: 10px;
+    border-radius: 7px 7px 0 0;
+
+    background: #0648ff;
+
+    min-height: 25px;
 }
 
-.visual-line:nth-child(1) {
-    height: 110px;
+
+/* Footer */
+
+.visual-card-footer {
+    display: flex;
+    justify-content: space-between;
+
+    margin-top: 14px;
 }
 
-.visual-line:nth-child(2) {
-    height: 180px;
-}
+.visual-card-footer span {
+    height: 7px;
+    width: 55px;
 
-.visual-line:nth-child(3) {
-    height: 135px;
+    background: #edf1f8;
+
+    border-radius: 20px;
 }
 
 
@@ -240,25 +283,18 @@
 
 .register-right {
     display: flex;
-
     align-items: center;
     justify-content: center;
 
-    padding: 60px 70px;
-
-    background: #ffffff;
+    padding: 50px 70px;
 }
 
 
-/* =========================================
-   CONTENT
-========================================= */
+/* Content */
 
 .register-content {
     width: 100%;
-    max-width: 500px;
-
-    position: relative;
+    max-width: 400px;
 }
 
 
@@ -267,36 +303,29 @@
 ========================================= */
 
 .register-heading {
-    width: 100%;
-
-    margin-bottom: 34px;
+    margin-bottom: 32px;
 }
 
 .register-heading h1 {
     margin: 0 0 12px;
 
-    color: #080b18;
-
-    font-size: 42px;
+    font-size: 38px;
     line-height: 1.15;
 
     font-weight: 700;
 
-    letter-spacing: -1.2px;
+    color: #101426;
 }
 
 .register-heading p {
-    width: 100%;
-    max-width: 330px;
-
     margin: 0;
 
-    color: #5d6375;
+    max-width: 360px;
 
     font-size: 14px;
-    line-height: 1.75;
+    line-height: 1.7;
 
-    font-weight: 400;
+    color: #60677a;
 }
 
 
@@ -305,105 +334,165 @@
 ========================================= */
 
 .register-form {
-    width: 100%;
-    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+
+    gap: 20px;
 }
 
+
+/* Form group */
+
 .form-group {
-    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+
+    gap: 8px;
 }
 
 .form-group label {
-    display: block;
-
-    margin-bottom: 8px;
-
-    color: #171a26;
-
     font-size: 13px;
 
     font-weight: 500;
+
+    color: #1b2030;
 }
+
+
+/* Inputs */
 
 .form-group input {
     width: 100%;
+
     height: 50px;
 
     padding: 0 18px;
 
-    border: 1.5px solid #2f5bff;
+    border: 1.5px solid #0648ff;
 
-    border-radius: 28px;
+    border-radius: 30px;
 
     outline: none;
 
     background: #ffffff;
 
-    color: #171a26;
-
     font-family: "Poppins", sans-serif;
 
     font-size: 13px;
 
-    transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
+    color: #171b2c;
+
+    transition: 0.2s ease;
 }
 
 .form-group input::placeholder {
-    color: #9ca3b4;
+    color: #9ba2b2;
 }
 
 .form-group input:focus {
-    border-color: #0d4dff;
+    box-shadow: 0 0 0 4px rgba(6, 72, 255, 0.08);
+}
 
-    box-shadow:
-        0 0 0 4px rgba(13, 77, 255, 0.08);
+.form-group input:disabled {
+    opacity: 0.6;
+
+    cursor: not-allowed;
 }
 
 
 /* =========================================
-   SIGN UP BUTTON
+   ERROR
+========================================= */
+
+.register-error {
+    padding: 11px 14px;
+
+    border-radius: 10px;
+
+    background: #fff0f0;
+
+    border: 1px solid #ffd2d2;
+
+    color: #d93636;
+
+    font-size: 12px;
+
+    line-height: 1.5;
+}
+
+
+/* =========================================
+   SUBMIT BUTTON
 ========================================= */
 
 .register-submit {
-    width: 180px;
+    width: 150px;
     height: 48px;
 
-    margin-top: 10px;
+    margin: 10px auto 0;
 
     border: none;
 
-    border-radius: 26px;
+    border-radius: 25px;
 
-    background: #0d4dff;
+    background: #0648ff;
 
     color: #ffffff;
 
     font-family: "Poppins", sans-serif;
 
     font-size: 14px;
+
     font-weight: 500;
 
     cursor: pointer;
 
-    transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease,
-        background 0.2s ease;
+    transition: 0.2s ease;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
 .register-submit:hover {
-    background: #0844e8;
+    background: #003bd6;
 
-    transform: translateY(-2px);
+    transform: translateY(-1px);
 
-    box-shadow:
-        0 10px 25px rgba(13, 77, 255, 0.22);
+    box-shadow: 0 8px 20px rgba(6, 72, 255, 0.22);
 }
 
-.register-submit:active {
-    transform: translateY(0);
+.register-submit:disabled {
+    opacity: 0.7;
+
+    cursor: not-allowed;
+
+    transform: none;
+
+    box-shadow: none;
+}
+
+
+/* Loading spinner */
+
+.button-spinner {
+    width: 15px;
+    height: 15px;
+
+    border: 2px solid rgba(255, 255, 255, 0.4);
+
+    border-top-color: #ffffff;
+
+    border-radius: 50%;
+
+    animation: buttonSpin 0.7s linear infinite;
+}
+
+@keyframes buttonSpin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 
@@ -416,21 +505,19 @@
 
     width: fit-content;
 
-    margin-top: 18px;
+    margin: 22px auto 0;
 
     color: #151515;
 
-    font-size: 12px;
-
-    font-weight: 400;
+    font-size: 13px;
 
     text-decoration: underline;
 
-    transition: color 0.2s ease;
+    transition: 0.2s ease;
 }
 
 .admin-link:hover {
-    color: #0d4dff;
+    color: #0648ff;
 }
 
 
@@ -441,30 +528,24 @@
 .back-link {
     display: block;
 
-    margin-top: 90px;
-
     width: fit-content;
 
-    color: #0d4dff;
+    margin: 70px auto 0;
+
+    color: #0648ff;
 
     font-size: 13px;
 
     text-decoration: none;
-
-    transition:
-        transform 0.2s ease,
-        color 0.2s ease;
 }
 
 .back-link:hover {
-    color: #0844e8;
-
-    transform: translateX(-3px);
+    text-decoration: underline;
 }
 
 
 /* =========================================
-   TABLET
+   RESPONSIVE
 ========================================= */
 
 @media (max-width: 900px) {
@@ -476,156 +557,101 @@
     .register-card {
         grid-template-columns: 1fr;
 
-        max-width: 650px;
+        max-width: 600px;
     }
 
     .register-left {
-        min-height: 250px;
+        min-height: 360px;
 
-        padding: 35px 40px;
+        padding: 40px;
     }
 
     .register-visual {
-        display: none;
+        height: 250px;
     }
 
     .register-right {
-        padding: 45px 50px 55px;
-    }
-
-    .register-content {
-        max-width: 450px;
-    }
-
-    .register-heading h1 {
-        font-size: 38px;
+        padding: 45px 40px 55px;
     }
 
     .back-link {
-        margin-top: 60px;
+        margin-top: 45px;
     }
 }
 
 
-/* =========================================
-   MOBILE
-========================================= */
-
-@media (max-width: 600px) {
+@media (max-width: 520px) {
 
     .register-page {
         padding: 0;
 
-        align-items: stretch;
+        align-items: flex-start;
     }
 
     .register-card {
         min-height: 100vh;
 
         border-radius: 0;
-
-        box-shadow: none;
     }
 
     .register-left {
-        min-height: 130px;
+        min-height: 300px;
 
-        padding: 28px 25px;
+        padding: 30px 24px;
     }
 
     .register-logo {
-        font-size: 27px;
+        font-size: 26px;
     }
 
-    .register-logo-mark {
-        transform: scale(0.85);
-        transform-origin: left center;
+    .register-visual {
+        height: 200px;
+    }
+
+    .visual-card {
+        width: 250px;
+        height: 180px;
+
+        padding: 18px;
+    }
+
+    .visual-chart {
+        height: 90px;
+
+        gap: 12px;
+    }
+
+    .visual-bar {
+        width: 20px;
+    }
+
+    .visual-circle-one {
+        width: 130px;
+        height: 130px;
+    }
+
+    .visual-circle-two {
+        width: 90px;
+        height: 90px;
     }
 
     .register-right {
-        padding: 30px 25px 45px;
-
-        align-items: flex-start;
-    }
-
-    .register-heading {
-        margin-bottom: 30px;
+        padding: 35px 24px 45px;
     }
 
     .register-heading h1 {
-        font-size: 34px;
-
-        letter-spacing: -0.8px;
+        font-size: 32px;
     }
 
     .register-heading p {
-        max-width: 100%;
-
         font-size: 13px;
-
-        line-height: 1.7;
     }
 
-    .register-form {
-        max-width: 100%;
+    .form-group input {
+        height: 48px;
     }
 
     .register-submit {
-        width: 100%;
-    }
-
-    .back-link {
-        margin-top: 55px;
-    }
-}
-/* =========================================
-   PAGE TRANSITION
-========================================= */
-
-.register-card {
-    animation: registerCardEnter 0.55s ease-out both;
-}
-
-.register-logo {
-    animation: registerLogoEnter 0.65s ease-out both;
-}
-
-.register-right {
-    animation: registerContentEnter 0.65s ease-out 0.1s both;
-}
-
-@keyframes registerCardEnter {
-    from {
-        opacity: 0;
-        transform: translateY(25px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes registerLogoEnter {
-    from {
-        opacity: 0;
-        transform: translateY(-15px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes registerContentEnter {
-    from {
-        opacity: 0;
-        transform: translateX(25px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateX(0);
+        width: 160px;
     }
 }
