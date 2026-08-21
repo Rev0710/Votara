@@ -48,7 +48,7 @@ const startServer = async () => {
             "🍃 MongoDB Connected:",
             mongoose.connection.host
         );
-        
+
         app.use(
     "/api/auth",
     authRoutes
