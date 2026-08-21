@@ -22,7 +22,10 @@ const sendRegistrationOTP = async (req, res) => {
         const cleanStudentId = String(studentId).trim();
         const cleanEmail = String(email).trim().toLowerCase();
 
+        // ---------------------------------------------
         // Find student in MongoDB
+        // ---------------------------------------------
+
         const student = await Student.findOne({
             studentId: cleanStudentId,
         });
@@ -35,50 +38,71 @@ const sendRegistrationOTP = async (req, res) => {
             });
         }
 
+        // ---------------------------------------------
         // Prevent duplicate registration
+        // ---------------------------------------------
+
         if (student.registrationStatus === "submitted") {
             return res.status(400).json({
                 success: false,
-                message: "This student is already registered.",
+                message:
+                    "This student is already registered.",
             });
         }
 
+        // ---------------------------------------------
         // Generate 6-digit OTP
+        // ---------------------------------------------
+
         const otp = generateOTP();
 
         console.log("=================================");
-        console.log("🔐 New registration OTP");
+        console.log("🔐 NEW REGISTRATION OTP");
         console.log("Student ID:", cleanStudentId);
         console.log("Email:", cleanEmail);
         console.log("OTP:", otp);
         console.log("=================================");
 
+        // ---------------------------------------------
         // Hash OTP
+        // ---------------------------------------------
+
         const otpHash = await bcrypt.hash(otp, 10);
 
+        // ---------------------------------------------
         // Save registration information
+        // ---------------------------------------------
+
         student.email = cleanEmail;
         student.otpHash = otpHash;
 
-        // OTP expires after 5 minutes
         student.otpExpiresAt = new Date(
             Date.now() + 5 * 60 * 1000
         );
 
         student.otpVerified = false;
         student.otpVerifiedAt = null;
+
         student.registrationStatus = "pending";
 
         await student.save();
 
+        // ---------------------------------------------
         // Send OTP email
+        // ---------------------------------------------
+
         await sendOTPEmail(cleanEmail, otp);
 
-        console.log(`📨 OTP sent successfully to ${cleanEmail}`);
+        console.log(
+            `📨 OTP sent successfully to ${cleanEmail}`
+        );
 
         return res.status(200).json({
             success: true,
-            message: "OTP has been sent to your email address.",
+            message:
+                "OTP has been sent to your email address.",
+            studentId: student.studentId,
+            email: student.email,
         });
 
     } catch (error) {
@@ -87,7 +111,8 @@ const sendRegistrationOTP = async (req, res) => {
 
         return res.status(500).json({
             success: false,
-            message: "Unable to send OTP. Please try again.",
+            message:
+                "Unable to send OTP. Please try again.",
         });
     }
 };
@@ -104,7 +129,8 @@ const verifyRegistrationOTP = async (req, res) => {
         if (!email || !otp) {
             return res.status(400).json({
                 success: false,
-                message: "Email and OTP are required.",
+                message:
+                    "Email and OTP are required.",
             });
         }
 
@@ -115,17 +141,17 @@ const verifyRegistrationOTP = async (req, res) => {
         const cleanOTP = String(otp).trim();
 
         console.log("=================================");
-        console.log("🔐 OTP verification");
+        console.log("🔐 OTP VERIFICATION");
         console.log("Email:", cleanEmail);
         console.log("OTP received:", cleanOTP);
         console.log("=================================");
 
-        /*
-         * IMPORTANT FIX:
-         *
-         * otpHash has select:false in Student.js.
-         * Therefore we MUST explicitly select it here.
-         */
+        // ---------------------------------------------
+        // IMPORTANT:
+        // otpHash has select:false in Student.js.
+        // Therefore we MUST explicitly select it.
+        // ---------------------------------------------
+
         const student = await Student.findOne({
             email: cleanEmail,
         }).select("+otpHash");
@@ -138,7 +164,10 @@ const verifyRegistrationOTP = async (req, res) => {
             });
         }
 
-        // Check if there is an active OTP
+        // ---------------------------------------------
+        // Check OTP
+        // ---------------------------------------------
+
         if (!student.otpHash) {
             return res.status(400).json({
                 success: false,
@@ -147,7 +176,10 @@ const verifyRegistrationOTP = async (req, res) => {
             });
         }
 
+        // ---------------------------------------------
         // Check expiration
+        // ---------------------------------------------
+
         if (
             !student.otpExpiresAt ||
             new Date() > student.otpExpiresAt
@@ -164,7 +196,10 @@ const verifyRegistrationOTP = async (req, res) => {
             });
         }
 
-        // Compare entered OTP with stored hashed OTP
+        // ---------------------------------------------
+        // Compare OTP
+        // ---------------------------------------------
+
         const otpIsCorrect = await bcrypt.compare(
             cleanOTP,
             student.otpHash
@@ -178,9 +213,9 @@ const verifyRegistrationOTP = async (req, res) => {
             });
         }
 
-        // =================================================
-        // OTP VERIFIED SUCCESSFULLY
-        // =================================================
+        // =============================================
+        // OTP SUCCESSFULLY VERIFIED
+        // =============================================
 
         student.otpHash = null;
         student.otpExpiresAt = null;
@@ -193,12 +228,13 @@ const verifyRegistrationOTP = async (req, res) => {
 
         await student.save();
 
-        console.log("=================================");
-        console.log(`✅ OTP verified for ${cleanEmail}`);
+        console.log(
+            `✅ OTP verified for ${cleanEmail}`
+        );
+
         console.log(
             `✅ Registration submitted for Student ID ${student.studentId}`
         );
-        console.log("=================================");
 
         return res.status(200).json({
             success: true,
@@ -221,7 +257,8 @@ const verifyRegistrationOTP = async (req, res) => {
 
         return res.status(500).json({
             success: false,
-            message: "Unable to verify OTP.",
+            message:
+                "Unable to verify OTP.",
         });
     }
 };
@@ -238,7 +275,8 @@ const resendRegistrationOTP = async (req, res) => {
         if (!email) {
             return res.status(400).json({
                 success: false,
-                message: "Email address is required.",
+                message:
+                    "Email address is required.",
             });
         }
 
@@ -246,7 +284,10 @@ const resendRegistrationOTP = async (req, res) => {
             .trim()
             .toLowerCase();
 
+        // ---------------------------------------------
         // Find student
+        // ---------------------------------------------
+
         const student = await Student.findOne({
             email: cleanEmail,
         });
@@ -255,11 +296,14 @@ const resendRegistrationOTP = async (req, res) => {
             return res.status(404).json({
                 success: false,
                 message:
-                    "Registration information not found.",
+                    "Registration information not found. Please register again.",
             });
         }
 
-        // Don't allow resend after successful registration
+        // ---------------------------------------------
+        // Don't resend if already submitted
+        // ---------------------------------------------
+
         if (student.registrationStatus === "submitted") {
             return res.status(400).json({
                 success: false,
@@ -268,7 +312,10 @@ const resendRegistrationOTP = async (req, res) => {
             });
         }
 
+        // ---------------------------------------------
         // Generate NEW OTP
+        // ---------------------------------------------
+
         const otp = generateOTP();
 
         console.log("=================================");
@@ -277,10 +324,12 @@ const resendRegistrationOTP = async (req, res) => {
         console.log("New OTP:", otp);
         console.log("=================================");
 
+        // ---------------------------------------------
         // Hash new OTP
+        // ---------------------------------------------
+
         const otpHash = await bcrypt.hash(otp, 10);
 
-        // Replace old OTP
         student.otpHash = otpHash;
 
         student.otpExpiresAt = new Date(
@@ -289,11 +338,15 @@ const resendRegistrationOTP = async (req, res) => {
 
         student.otpVerified = false;
         student.otpVerifiedAt = null;
+
         student.registrationStatus = "pending";
 
         await student.save();
 
-        // Send new OTP
+        // ---------------------------------------------
+        // Send NEW OTP
+        // ---------------------------------------------
+
         await sendOTPEmail(cleanEmail, otp);
 
         console.log(
@@ -312,7 +365,8 @@ const resendRegistrationOTP = async (req, res) => {
 
         return res.status(500).json({
             success: false,
-            message: "Unable to resend OTP.",
+            message:
+                "Unable to resend OTP.",
         });
     }
 };

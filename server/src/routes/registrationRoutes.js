@@ -9,21 +9,30 @@ const {
 const router = express.Router();
 
 
-// Send OTP
+// ==========================================
+// SEND OTP
+// ==========================================
+
 router.post(
     "/send-otp",
     sendRegistrationOTP
 );
 
 
-// Verify OTP
+// ==========================================
+// VERIFY OTP
+// ==========================================
+
 router.post(
     "/verify-otp",
     verifyRegistrationOTP
 );
 
 
-// Resend OTP
+// ==========================================
+// RESEND OTP
+// ==========================================
+
 router.post(
     "/resend-otp",
     resendRegistrationOTP
