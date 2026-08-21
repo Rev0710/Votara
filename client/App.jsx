@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 
 import LandingPage from "./src/pages/public/LandingPage";
 import Register from "./src/pages/auth/Register";
@@ -11,131 +11,97 @@ import ChangeTemporaryPassword from "./src/pages/auth/ChangeTemporaryPassword";
 import UploadProfilePicture from "./src/pages/auth/UploadProfilePicture";
 
 import StudentDashboard from "./src/pages/student/StudentDashboard";
+import "./App.css";
 
 
 const LoginPage = () => {
-
-    return (
-        <div
-            style={{
-                minHeight: "100vh",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontFamily:
-                    "Poppins, sans-serif",
-            }}
-        >
-            <h1>
-                Login Page
-            </h1>
-        </div>
-    );
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: "Poppins, sans-serif",
+      }}
+    >
+      <h1>Login Page</h1>
+    </div>
+  );
 };
 
 
 const App = () => {
+  const location = useLocation();
 
-    return (
-        <Routes>
+  return (
+    <div
+      className="page-transition"
+      key={location.pathname}
+    >
+      <Routes location={location}>
+        {/* PUBLIC LANDING PAGE */}
+        <Route
+          path="/"
+          element={<LandingPage />}
+        />
 
-            {/* PUBLIC LANDING PAGE */}
+        {/* STUDENT REGISTRATION */}
+        <Route
+          path="/register"
+          element={<Register />}
+        />
 
-            <Route
-                path="/"
-                element={
-                    <LandingPage />
-                }
-            />
+        {/* OTP VERIFICATION */}
+        <Route
+          path="/verify-otp"
+          element={<OTPVerification />}
+        />
 
+        {/* REGISTRATION CONFIRMATION */}
+        <Route
+          path="/registration-confirmation"
+          element={<RegistrationConfirmation />}
+        />
 
-            {/* STUDENT REGISTRATION */}
+        {/* STUDENT LOGIN */}
+        <Route
+          path="/student-login"
+          element={<StudentLogin />}
+        />
 
-            <Route
-                path="/register"
-                element={
-                    <Register />
-                }
-            />
+        {/* CHANGE TEMPORARY PASSWORD */}
+        <Route
+          path="/change-password"
+          element={<ChangeTemporaryPassword />}
+        />
 
+        {/* PROFILE PICTURE */}
+        <Route
+          path="/upload-profile-picture"
+          element={<UploadProfilePicture />}
+        />
 
-            {/* OTP VERIFICATION */}
+        {/* STUDENT DASHBOARD */}
+        <Route
+          path="/student-dashboard"
+          element={<StudentDashboard />}
+        />
 
-            <Route
-                path="/verify-otp"
-                element={
-                    <OTPVerification />
-                }
-            />
+        {/* TEMPORARY LOGIN */}
+        <Route
+          path="/login"
+          element={<LoginPage />}
+        />
 
-
-            {/* REGISTRATION CONFIRMATION */}
-
-            <Route
-                path="/registration-confirmation"
-                element={
-                    <RegistrationConfirmation />
-                }
-            />
-
-
-            {/* STUDENT LOGIN */}
-
-            <Route
-                path="/student-login"
-                element={
-                    <StudentLogin />
-                }
-            />
-
-
-            {/* CHANGE TEMPORARY PASSWORD */}
-
-            <Route
-                path="/change-password"
-                element={
-                    <ChangeTemporaryPassword />
-                }
-            />
-
-
-            {/* PROFILE PICTURE */}
-
-            <Route
-                path="/upload-profile-picture"
-                element={
-                    <UploadProfilePicture />
-                }
-            />
-
-
-            {/* STUDENT DASHBOARD */}
-
-            <Route
-                path="/student-dashboard"
-                element={
-                    <StudentDashboard />
-                }
-            />
-
-
-            {/* TEMPORARY LOGIN */}
-
-            <Route
-                path="/login"
-                element={
-                    <LoginPage />
-                }
-            />
-
-            {/* ACCOUNT SELECTION */}
-            <Route
-                path="/account-selection"
-                element={<AccountSelection />}
-            />
-
-        </Routes>
-    );
+        {/* ACCOUNT SELECTION */}
+        <Route
+          path="/account-selection"
+          element={<AccountSelection />}
+        />
+      </Routes>
+    </div>
+  );
 };
 
 export default App;
