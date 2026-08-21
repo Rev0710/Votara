@@ -141,10 +141,6 @@
     left: 0;
     bottom: 1px;
 
-    /*
-       Remove the upper-right part
-       to create the C-like shape
-    */
     clip-path: polygon(
         0 0,
         100% 0,
@@ -182,24 +178,23 @@
 .register-visual {
     position: relative;
 
-    width: 100%;
-    max-width: 430px;
-
-    height: 360px;
-
-    margin: auto;
+    width: 360px;
+    height: 340px;
 
     display: flex;
     align-items: center;
     justify-content: center;
+
+    margin-top: 40px;
 }
 
 
-/* Decorative circles */
+/* =========================================
+   DECORATIVE CIRCLES
+========================================= */
 
 .visual-circle {
     position: absolute;
-
     border-radius: 50%;
 }
 
@@ -224,7 +219,9 @@
 }
 
 
-/* Main visual card */
+/* =========================================
+   MAIN VISUAL CARD
+========================================= */
 
 .visual-card {
     position: relative;
@@ -246,7 +243,9 @@
 }
 
 
-/* Small header dots */
+/* =========================================
+   SMALL HEADER DOTS
+========================================= */
 
 .visual-card-header {
     display: flex;
@@ -265,7 +264,9 @@
 }
 
 
-/* Chart */
+/* =========================================
+   CHART
+========================================= */
 
 .visual-chart {
     height: 120px;
@@ -282,7 +283,9 @@
 }
 
 
-/* Chart bars */
+/* =========================================
+   CHART BARS
+========================================= */
 
 .visual-bar {
     width: 25px;
@@ -295,7 +298,9 @@
 }
 
 
-/* Footer */
+/* =========================================
+   FOOTER
+========================================= */
 
 .visual-card-footer {
     display: flex;
@@ -327,7 +332,9 @@
 }
 
 
-/* Content */
+/* =========================================
+   CONTENT
+========================================= */
 
 .register-content {
     width: 100%;
@@ -378,7 +385,9 @@
 }
 
 
-/* Form group */
+/* =========================================
+   FORM GROUP
+========================================= */
 
 .form-group {
     display: flex;
@@ -396,7 +405,9 @@
 }
 
 
-/* Inputs */
+/* =========================================
+   INPUTS
+========================================= */
 
 .form-group input {
     width: 100%;
@@ -489,6 +500,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+
     gap: 8px;
 }
 
@@ -511,7 +523,9 @@
 }
 
 
-/* Loading spinner */
+/* =========================================
+   LOADING SPINNER
+========================================= */
 
 .button-spinner {
     width: 15px;
@@ -580,20 +594,10 @@
     text-decoration: underline;
 }
 
+
 /* =========================================
    REGISTER ILLUSTRATION
 ========================================= */
-
-.register-visual {
-    width: 360px;
-    height: 340px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    margin-top: 40px;
-}
 
 .register-illustration {
     width: 100%;
@@ -717,6 +721,7 @@
     }
 }
 
+
 /* =========================================
    PAGE TRANSITION
 ========================================= */
@@ -734,6 +739,7 @@
 }
 
 @keyframes registerCardEnter {
+
     from {
         opacity: 0;
         transform: translateY(25px);
@@ -746,6 +752,7 @@
 }
 
 @keyframes registerLogoEnter {
+
     from {
         opacity: 0;
         transform: translateY(-15px);
@@ -758,6 +765,7 @@
 }
 
 @keyframes registerContentEnter {
+
     from {
         opacity: 0;
         transform: translateX(25px);

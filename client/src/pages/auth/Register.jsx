@@ -77,7 +77,9 @@ const Register = () => {
 
             <div className="register-card">
 
-                {/* LEFT SIDE */}
+                {/* =========================================
+                    LEFT SIDE
+                ========================================= */}
 
                 <section className="register-left">
 
@@ -85,29 +87,38 @@ const Register = () => {
                         to="/"
                         className="register-logo"
                     >
+
                         <span className="register-logo-mark">
+
                             <span className="triangle triangle-top"></span>
+
                             <span className="circle"></span>
+
                             <span className="triangle triangle-bottom"></span>
+
                         </span>
 
                         <span>Votara</span>
+
                     </Link>
+
 
                     <div className="register-visual">
 
                         <img
-                       src="/src/images/Register.png"
-                        alt="Votara registration illustration"
-                        className="register-illustration"
-                      />
+                            src="/src/images/Register.png"
+                            alt="Votara registration illustration"
+                            className="register-illustration"
+                        />
 
                     </div>
 
                 </section>
 
 
-                {/* RIGHT SIDE */}
+                {/* =========================================
+                    RIGHT SIDE
+                ========================================= */}
 
                 <section className="register-right">
 
@@ -128,16 +139,14 @@ const Register = () => {
                         </div>
 
 
-                        {/* ERROR */}
+                        {/* =========================================
+                            ERROR MESSAGE
+                        ========================================= */}
 
                         {error && (
                             <div
+                                className="register-error"
                                 style={{
-                                    color: "#ff3b3b",
-                                    background: "#fff0f0",
-                                    border: "1px solid #ffbaba",
-                                    borderRadius: "10px",
-                                    padding: "14px",
                                     marginBottom: "20px",
                                 }}
                             >
@@ -146,12 +155,18 @@ const Register = () => {
                         )}
 
 
-                        {/* REGISTRATION FORM */}
+                        {/* =========================================
+                            REGISTRATION FORM
+                        ========================================= */}
 
                         <form
                             className="register-form"
                             onSubmit={handleSubmit}
                         >
+
+                            {/* =========================================
+                                STUDENT ID
+                            ========================================= */}
 
                             <div className="form-group">
 
@@ -164,14 +179,24 @@ const Register = () => {
                                     type="text"
                                     placeholder="Enter your Student ID"
                                     value={studentId}
+
+                                    maxLength={5}
+
                                     onChange={(e) =>
-                                        setStudentId(e.target.value)
+                                        setStudentId(
+                                            e.target.value.slice(0, 5)
+                                        )
                                     }
+
                                     required
                                 />
 
                             </div>
 
+
+                            {/* =========================================
+                                EMAIL
+                            ========================================= */}
 
                             <div className="form-group">
 
@@ -184,14 +209,20 @@ const Register = () => {
                                     type="email"
                                     placeholder="Enter your email address"
                                     value={email}
+
                                     onChange={(e) =>
                                         setEmail(e.target.value)
                                     }
+
                                     required
                                 />
 
                             </div>
 
+
+                            {/* =========================================
+                                SUBMIT BUTTON
+                            ========================================= */}
 
                             <button
                                 type="submit"
@@ -206,13 +237,21 @@ const Register = () => {
                         </form>
 
 
+                        {/* =========================================
+                            ADMIN LINK
+                        ========================================= */}
+
                         <Link
                             to="/account-selection"
-                             className="admin-link"
+                            className="admin-link"
                         >
                             Sign up as Admin/Electoral Board
                         </Link>
 
+
+                        {/* =========================================
+                            BACK LINK
+                        ========================================= */}
 
                         <Link
                             to="/"
