@@ -1,0 +1,432 @@
+/* =========================================
+   PAGE
+========================================= */
+
+.account-selection-page {
+    min-height: 100vh;
+
+    background: #e9efff;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* =========================================
+   MAIN CARD
+========================================= */
+
+.account-selection-card {
+    width: 100%;
+    max-width: 1180px;
+
+    min-height: 650px;
+
+    background: #ffffff;
+
+    position: relative;
+
+    padding: 40px 55px;
+
+    overflow: hidden;
+
+    animation: accountCardEnter 0.55s ease-out both;
+}
+
+
+/* =========================================
+   LOGO
+========================================= */
+
+.account-selection-logo {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    color: #0d4dff;
+
+    text-decoration: none;
+
+    font-size: 31px;
+
+    font-weight: 600;
+
+    position: relative;
+
+    z-index: 5;
+
+    animation: logoEnter 0.65s ease-out both;
+}
+
+.account-selection-logo-mark {
+    position: relative;
+
+    width: 34px;
+    height: 34px;
+
+    display: block;
+}
+
+.account-selection-logo-mark .circle {
+    position: absolute;
+
+    width: 16px;
+    height: 16px;
+
+    background: #0d4dff;
+
+    border-radius: 50%;
+
+    top: 0;
+    right: 0;
+}
+
+.account-selection-logo-mark .triangle {
+    position: absolute;
+
+    width: 0;
+    height: 0;
+
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+}
+
+.account-selection-logo-mark .triangle-top {
+    border-bottom: 16px solid #0d4dff;
+
+    top: 0;
+    left: 0;
+}
+
+.account-selection-logo-mark .triangle-bottom {
+    border-top: 16px solid #0d4dff;
+
+    bottom: 0;
+    right: 0;
+}
+
+
+/* =========================================
+   CONTENT
+========================================= */
+
+.account-selection-content {
+    width: 100%;
+
+    max-width: 900px;
+
+    margin: 55px auto 0;
+
+    text-align: center;
+
+    animation: contentEnter 0.65s ease-out 0.1s both;
+}
+
+
+/* =========================================
+   HEADING
+========================================= */
+
+.account-selection-heading {
+    margin-bottom: 40px;
+}
+
+.account-selection-heading h1 {
+    margin: 0 0 12px;
+
+    color: #111111;
+
+    font-size: 36px;
+
+    font-weight: 700;
+}
+
+.account-selection-heading p {
+    margin: 0;
+
+    color: #555555;
+
+    font-size: 15px;
+}
+
+
+/* =========================================
+   ACCOUNT CARDS
+========================================= */
+
+.account-cards {
+    display: flex;
+
+    justify-content: center;
+
+    gap: 35px;
+
+    width: 100%;
+}
+
+
+/* =========================================
+   INDIVIDUAL CARD
+========================================= */
+
+.account-card {
+    width: 390px;
+
+    background: #ffffff;
+
+    border: 1px solid #e2e7f5;
+
+    border-radius: 20px;
+
+    overflow: hidden;
+
+    cursor: pointer;
+
+    text-align: left;
+
+    box-shadow: 0 8px 25px rgba(35, 70, 150, 0.08);
+
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease,
+        border-color 0.25s ease;
+}
+
+.account-card:hover {
+    transform: translateY(-8px);
+
+    border-color: #8ba5ff;
+
+    box-shadow: 0 18px 35px rgba(35, 70, 150, 0.15);
+}
+
+
+/* =========================================
+   IMAGE
+========================================= */
+
+.account-image-container {
+    width: 100%;
+
+    height: 230px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background: #f7f8ff;
+
+    overflow: hidden;
+}
+
+.account-image {
+    width: 210px;
+    height: 210px;
+
+    object-fit: contain;
+
+    transition: transform 0.3s ease;
+}
+
+.account-card:hover .account-image {
+    transform: scale(1.05);
+}
+
+
+/* =========================================
+   CARD CONTENT
+========================================= */
+
+.account-card-content {
+    padding: 25px 28px 30px;
+}
+
+.account-card-content h2 {
+    margin: 0 0 10px;
+
+    color: #111111;
+
+    font-size: 24px;
+
+    font-weight: 700;
+}
+
+.account-card-content p {
+    min-height: 48px;
+
+    margin: 0 0 20px;
+
+    color: #666666;
+
+    font-size: 14px;
+
+    line-height: 1.5;
+}
+
+
+/* =========================================
+   CARD BUTTON
+========================================= */
+
+.account-card-button {
+    width: 100%;
+
+    height: 42px;
+
+    border: none;
+
+    border-radius: 22px;
+
+    background: #1648ff;
+
+    color: #ffffff;
+
+    font-size: 14px;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.account-card:hover .account-card-button {
+    background: #0d39d9;
+}
+
+
+/* =========================================
+   BACK
+========================================= */
+
+.account-selection-back {
+    display: inline-block;
+
+    margin-top: 30px;
+
+    color: #1648ff;
+
+    text-decoration: none;
+
+    font-size: 13px;
+}
+
+.account-selection-back:hover {
+    text-decoration: underline;
+}
+
+
+/* =========================================
+   ANIMATIONS
+========================================= */
+
+@keyframes accountCardEnter {
+    from {
+        opacity: 0;
+
+        transform: translateY(25px);
+    }
+
+    to {
+        opacity: 1;
+
+        transform: translateY(0);
+    }
+}
+
+@keyframes logoEnter {
+    from {
+        opacity: 0;
+
+        transform: translateY(-15px);
+    }
+
+    to {
+        opacity: 1;
+
+        transform: translateY(0);
+    }
+}
+
+@keyframes contentEnter {
+    from {
+        opacity: 0;
+
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+
+        transform: translateY(0);
+    }
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 850px) {
+
+    .account-selection-card {
+        padding: 30px;
+    }
+
+    .account-cards {
+        flex-direction: column;
+
+        align-items: center;
+    }
+
+    .account-card {
+        width: 100%;
+
+        max-width: 390px;
+    }
+
+    .account-selection-content {
+        margin-top: 40px;
+    }
+}
+
+
+@media (max-width: 500px) {
+
+    .account-selection-page {
+        padding: 10px;
+    }
+
+    .account-selection-card {
+        padding: 25px 20px;
+    }
+
+    .account-selection-logo {
+        font-size: 27px;
+    }
+
+    .account-selection-heading h1 {
+        font-size: 29px;
+    }
+
+    .account-selection-heading p {
+        font-size: 14px;
+    }
+
+    .account-image-container {
+        height: 200px;
+    }
+
+    .account-image {
+        width: 175px;
+        height: 175px;
+    }
+}

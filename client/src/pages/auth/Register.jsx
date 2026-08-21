@@ -200,10 +200,10 @@ const Register = () => {
 
 
                         <Link
-                            to="/admin/register"
-                            className="admin-link"
+                            to="/account-selection"
+                             className="admin-link"
                         >
-                            Sign up as Admin
+                            Sign up as Admin/Electoral Board
                         </Link>
 
 

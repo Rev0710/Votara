@@ -5,6 +5,7 @@ import Register from "./src/pages/auth/Register";
 import StudentLogin from "./src/pages/auth/StudentLogin";
 import OTPVerification from "./src/pages/auth/OTPVerification";
 import RegistrationConfirmation from "./src/pages/auth/RegistrationConfirmation";
+import AccountSelection from "./src/pages/auth/AccountSelection";
 
 const LoginPage = () => {
     return (
@@ -60,6 +61,12 @@ const App = () => {
             <Route
                 path="/login"
                 element={<LoginPage />}
+            />
+
+            {/* ACCOUNT SELECTION */}
+            <Route
+                path="/account-selection"
+                element={<AccountSelection />}
             />
 
         </Routes>
