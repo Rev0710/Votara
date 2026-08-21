@@ -7,7 +7,14 @@ import OTPVerification from "./src/pages/auth/OTPVerification";
 import RegistrationConfirmation from "./src/pages/auth/RegistrationConfirmation";
 import AccountSelection from "./src/pages/auth/AccountSelection";
 
+import ChangeTemporaryPassword from "./src/pages/auth/ChangeTemporaryPassword";
+import UploadProfilePicture from "./src/pages/auth/UploadProfilePicture";
+
+import StudentDashboard from "./src/pages/student/StudentDashboard";
+
+
 const LoginPage = () => {
+
     return (
         <div
             style={{
@@ -15,15 +22,20 @@ const LoginPage = () => {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontFamily: "Poppins, sans-serif",
+                fontFamily:
+                    "Poppins, sans-serif",
             }}
         >
-            <h1>Login Page</h1>
+            <h1>
+                Login Page
+            </h1>
         </div>
     );
 };
 
+
 const App = () => {
+
     return (
         <Routes>
 
@@ -31,7 +43,9 @@ const App = () => {
 
             <Route
                 path="/"
-                element={<LandingPage />}
+                element={
+                    <LandingPage />
+                }
             />
 
 
@@ -39,7 +53,9 @@ const App = () => {
 
             <Route
                 path="/register"
-                element={<Register />}
+                element={
+                    <Register />
+                }
             />
 
 
@@ -47,7 +63,9 @@ const App = () => {
 
             <Route
                 path="/verify-otp"
-                element={<OTPVerification />}
+                element={
+                    <OTPVerification />
+                }
             />
 
 
@@ -65,7 +83,39 @@ const App = () => {
 
             <Route
                 path="/student-login"
-                element={<StudentLogin />}
+                element={
+                    <StudentLogin />
+                }
+            />
+
+
+            {/* CHANGE TEMPORARY PASSWORD */}
+
+            <Route
+                path="/change-password"
+                element={
+                    <ChangeTemporaryPassword />
+                }
+            />
+
+
+            {/* PROFILE PICTURE */}
+
+            <Route
+                path="/upload-profile-picture"
+                element={
+                    <UploadProfilePicture />
+                }
+            />
+
+
+            {/* STUDENT DASHBOARD */}
+
+            <Route
+                path="/student-dashboard"
+                element={
+                    <StudentDashboard />
+                }
             />
 
 
@@ -73,7 +123,9 @@ const App = () => {
 
             <Route
                 path="/login"
-                element={<LoginPage />}
+                element={
+                    <LoginPage />
+                }
             />
 
             {/* ACCOUNT SELECTION */}
