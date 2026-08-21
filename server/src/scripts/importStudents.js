@@ -5,163 +5,181 @@ require("dotenv").config();
 
 const Student = require("../models/Student");
 
-const MONGO_URI = process.env.MONGO_URI;
-
-const DATA_FILE = path.join(
-    __dirname,
-    "../data/students.seed.json"
-);
-
 const importStudents = async () => {
     try {
-        if (!MONGO_URI) {
-            throw new Error(
-                "MONGO_URI is missing from your .env file."
-            );
-        }
+        // ==========================================
+        // STUDENT FILE
+        // ==========================================
+
+        const filePath = path.join(
+            __dirname,
+            "../data/students.seed.json"
+        );
 
         console.log("📄 Reading student file:");
-        console.log(DATA_FILE);
+        console.log(filePath);
 
-        if (!fs.existsSync(DATA_FILE)) {
+        // Check if file exists
+        if (!fs.existsSync(filePath)) {
             throw new Error(
-                `Student seed file not found:\n${DATA_FILE}`
+                `Student seed file not found:\n${filePath}`
             );
         }
 
         // Read JSON file
-        const fileContent = fs.readFileSync(
-            DATA_FILE,
+        const fileData = fs.readFileSync(
+            filePath,
             "utf8"
         );
 
-        if (!fileContent.trim()) {
-            throw new Error(
-                "Student seed file is empty."
-            );
-        }
+        // Parse JSON
+        const students = JSON.parse(fileData);
 
-        let students;
-
-        try {
-            students = JSON.parse(fileContent);
-        } catch (error) {
-            throw new Error(
-                "students.seed.json contains invalid JSON."
-            );
-        }
-
+        // Make sure JSON contains an array
         if (!Array.isArray(students)) {
             throw new Error(
                 "students.seed.json must contain an array of students."
             );
         }
 
-        if (students.length === 0) {
-            throw new Error(
-                "students.seed.json contains no students."
-            );
-        }
-
-        // Validate each student
-        for (const student of students) {
-            if (
-                !student.studentId ||
-                !student.fullName ||
-                !student.yearLevel
-            ) {
-                throw new Error(
-                    `Invalid student record: ${JSON.stringify(student)}`
-                );
-            }
-
-            if (
-                !["1", "2", "3", "4"].includes(
-                    String(student.yearLevel)
-                )
-            ) {
-                throw new Error(
-                    `Invalid year level for student ${student.studentId}.`
-                );
-            }
-        }
-
-        // Connect MongoDB
-        await mongoose.connect(MONGO_URI);
-
         console.log(
-            "🍃 MongoDB Connected:",
-            mongoose.connection.host
+            `📚 Found ${students.length} student records.`
         );
 
-        // Insert/update students
-        let inserted = 0;
-        let updated = 0;
+        // ==========================================
+        // CONNECT TO MONGODB
+        // ==========================================
 
-        for (const student of students) {
+        await mongoose.connect(
+            process.env.MONGO_URI
+        );
+
+        console.log(
+            `🍃 MongoDB Connected: ${mongoose.connection.host}`
+        );
+
+        // ==========================================
+        // IMPORT STUDENTS
+        // ==========================================
+
+        let newStudents = 0;
+        let updatedStudents = 0;
+
+        for (const studentData of students) {
+
+            const studentId =
+                String(studentData.studentId).trim();
+
+            const fullName =
+                String(studentData.fullName).trim();
+
+            const yearLevel =
+                String(studentData.yearLevel).trim();
+
+            // Validate required data
+            if (
+                !studentId ||
+                !fullName ||
+                !yearLevel
+            ) {
+                console.log(
+                    "⚠️ Skipping incomplete record:",
+                    studentData
+                );
+
+                continue;
+            }
+
+            // Find existing student
             const existingStudent =
                 await Student.findOne({
-                    studentId: String(
-                        student.studentId
-                    ),
+                    studentId,
                 });
 
             if (existingStudent) {
+
+                // Update only enrollment information
                 existingStudent.fullName =
-                    student.fullName;
+                    fullName;
 
                 existingStudent.yearLevel =
-                    String(student.yearLevel);
+                    yearLevel;
 
                 await existingStudent.save();
 
-                updated++;
+                updatedStudents++;
+
             } else {
+
+                // Create new student
                 await Student.create({
-                    studentId: String(
-                        student.studentId
-                    ),
-                    fullName: student.fullName,
-                    yearLevel: String(
-                        student.yearLevel
-                    ),
+                    studentId,
+                    fullName,
+                    yearLevel,
+
+                    email: null,
+
+                    registrationStatus:
+                        "not_registered",
+
+                    otpHash: null,
+
+                    otpExpiresAt: null,
+
+                    otpVerified: false,
+
+                    otpVerifiedAt: null,
+
+                    registeredAt: null,
+
+                    hasVoted: false,
                 });
 
-                inserted++;
+                newStudents++;
             }
         }
+
+        // ==========================================
+        // RESULT
+        // ==========================================
 
         console.log("");
         console.log("================================");
         console.log("✅ STUDENT IMPORT COMPLETED");
         console.log("================================");
+
         console.log(
             `📚 Total records: ${students.length}`
         );
+
         console.log(
-            `➕ New students: ${inserted}`
+            `➕ New students: ${newStudents}`
         );
+
         console.log(
-            `🔄 Updated students: ${updated}`
+            `🔄 Updated students: ${updatedStudents}`
         );
+
         console.log("================================");
 
     } catch (error) {
-        console.error("");
-        console.error("❌ Student import failed:");
+
+        console.error(
+            "❌ Student import failed:"
+        );
+
         console.error(error);
 
-        process.exitCode = 1;
-
     } finally {
-        if (mongoose.connection.readyState !== 0) {
-            await mongoose.connection.close();
 
-            console.log(
-                "🔌 MongoDB connection closed."
-            );
-        }
+        await mongoose.connection.close();
+
+        console.log(
+            "🔌 MongoDB connection closed."
+        );
     }
 };
 
+
+// Run import
 importStudents();
