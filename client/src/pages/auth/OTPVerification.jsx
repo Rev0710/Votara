@@ -1,122 +1,78 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import "./OTPVerification.css";
-
-const OTP_LENGTH = 6;
+import { useNavigate, Link } from "react-router-dom";
 
 const OTPVerification = () => {
     const navigate = useNavigate();
 
-    const [otp, setOtp] = useState(
-        Array(OTP_LENGTH).fill("")
-    );
+    const [otp, setOtp] = useState([
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+    ]);
 
     const [email, setEmail] = useState("");
-    const [studentId, setStudentId] = useState("");
-
     const [error, setError] = useState("");
-    const [message, setMessage] = useState("");
-
     const [loading, setLoading] = useState(false);
     const [resending, setResending] = useState(false);
 
-    const [countdown, setCountdown] = useState(30);
-
     const inputRefs = useRef([]);
 
-    /*
-     * Get registration information
-     * saved by Register.jsx
-     */
+    // ==========================================
+    // LOAD EMAIL FROM REGISTRATION
+    // ==========================================
+
     useEffect(() => {
+        const savedEmail =
+            sessionStorage.getItem("votara_email");
 
-        const savedRegistration =
-            sessionStorage.getItem("votaraRegistration");
-
-        if (!savedRegistration) {
+        if (!savedEmail) {
             setError(
                 "Registration information is missing. Please register again."
             );
+
             return;
         }
 
-        try {
-
-            const registration =
-                JSON.parse(savedRegistration);
-
-            setEmail(registration.email || "");
-            setStudentId(registration.studentId || "");
-
-        } catch (error) {
-
-            console.error(
-                "Registration data error:",
-                error
-            );
-
-            setError(
-                "Registration information is invalid. Please register again."
-            );
-        }
-
+        setEmail(savedEmail);
     }, []);
 
 
-    /*
-     * Countdown for resend OTP
-     */
-    useEffect(() => {
+    // ==========================================
+    // OTP INPUT
+    // ==========================================
 
-        if (countdown <= 0) {
-            return;
-        }
-
-        const timer = setInterval(() => {
-
-            setCountdown((previous) => previous - 1);
-
-        }, 1000);
-
-        return () => clearInterval(timer);
-
-    }, [countdown]);
-
-
-    /*
-     * Handle OTP input
-     */
-    const handleOtpChange = (index, value) => {
-
+    const handleChange = (value, index) => {
         // Only allow numbers
-        if (!/^\d*$/.test(value)) {
+        if (!/^\d?$/.test(value)) {
             return;
         }
 
         const newOtp = [...otp];
 
-        newOtp[index] = value.slice(-1);
+        newOtp[index] = value;
 
         setOtp(newOtp);
 
         setError("");
-        setMessage("");
 
-        // Move to next input
+        // Move to next box
         if (
             value &&
-            index < OTP_LENGTH - 1
+            index < 5
         ) {
             inputRefs.current[index + 1]?.focus();
         }
     };
 
 
-    /*
-     * Handle backspace
-     */
-    const handleKeyDown = (index, e) => {
+    // ==========================================
+    // BACKSPACE
+    // ==========================================
 
+    const handleKeyDown = (e, index) => {
         if (
             e.key === "Backspace" &&
             !otp[index] &&
@@ -127,59 +83,62 @@ const OTPVerification = () => {
     };
 
 
-    /*
-     * Paste 6-digit OTP
-     */
-    const handlePaste = (e) => {
+    // ==========================================
+    // PASTE OTP
+    // ==========================================
 
+    const handlePaste = (e) => {
         e.preventDefault();
 
         const pastedData =
             e.clipboardData
                 .getData("text")
                 .replace(/\D/g, "")
-                .slice(0, OTP_LENGTH);
+                .slice(0, 6);
 
         if (!pastedData) {
             return;
         }
 
-        const newOtp = Array(OTP_LENGTH).fill("");
+        const newOtp = [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+        ];
 
         pastedData
             .split("")
-            .forEach((number, index) => {
-                newOtp[index] = number;
+            .forEach((digit, index) => {
+                newOtp[index] = digit;
             });
 
         setOtp(newOtp);
+        setError("");
 
-        const nextIndex = Math.min(
-            pastedData.length,
-            OTP_LENGTH - 1
-        );
+        const focusIndex =
+            Math.min(
+                pastedData.length,
+                5
+            );
 
-        inputRefs.current[nextIndex]?.focus();
+        inputRefs.current[focusIndex]?.focus();
     };
 
 
-    /*
-     * VERIFY OTP
-     */
-    const handleVerifyOTP = async (e) => {
+    // ==========================================
+    // VERIFY OTP
+    // ==========================================
 
-        e.preventDefault();
-
-        const enteredOTP = otp.join("");
-
+    const handleVerifyOTP = async () => {
         setError("");
-        setMessage("");
 
-        /*
-         * Make sure all 6 digits are entered
-         */
-        if (enteredOTP.length !== OTP_LENGTH) {
+        const enteredOTP =
+            otp.join("");
 
+        if (enteredOTP.length !== 6) {
             setError(
                 "Please enter the complete 6-digit OTP."
             );
@@ -187,8 +146,7 @@ const OTPVerification = () => {
             return;
         }
 
-        if (!email || !studentId) {
-
+        if (!email) {
             setError(
                 "Registration information is missing. Please register again."
             );
@@ -199,19 +157,29 @@ const OTPVerification = () => {
         setLoading(true);
 
         try {
+            console.log(
+                "🔐 Verifying OTP..."
+            );
+
+            console.log(
+                "Email:",
+                email
+            );
+
+            console.log(
+                "OTP:",
+                enteredOTP
+            );
 
             const response = await fetch(
                 "http://localhost:5000/api/registration/verify-otp",
                 {
                     method: "POST",
-
                     headers: {
                         "Content-Type": "application/json",
                     },
-
                     body: JSON.stringify({
-                        studentId,
-                        email,
+                        email: email,
                         otp: enteredOTP,
                     }),
                 }
@@ -219,23 +187,50 @@ const OTPVerification = () => {
 
             const data = await response.json();
 
-            if (!response.ok || !data.success) {
+            console.log(
+                "OTP verification response:",
+                data
+            );
 
+            if (!response.ok || !data.success) {
                 throw new Error(
                     data.message ||
-                    "Invalid OTP. Please try again."
+                    "Invalid OTP."
                 );
             }
 
-            /*
-             * OTP is correct.
-             *
-             * Move to registration confirmation.
-             */
-            navigate("/registration-confirmation");
+            // ==========================================
+            // SAVE VERIFIED STUDENT
+            // ==========================================
+
+            if (data.student) {
+                sessionStorage.setItem(
+                    "votara_student",
+                    JSON.stringify(data.student)
+                );
+            }
+
+            // ==========================================
+            // REMOVE TEMPORARY REGISTRATION DATA
+            // ==========================================
+
+            sessionStorage.removeItem(
+                "votara_email"
+            );
+
+            sessionStorage.removeItem(
+                "votara_student_id"
+            );
+
+            // ==========================================
+            // REGISTRATION SUCCESS
+            // ==========================================
+
+            navigate(
+                "/registration-confirmation"
+            );
 
         } catch (error) {
-
             console.error(
                 "OTP verification error:",
                 error
@@ -247,24 +242,19 @@ const OTPVerification = () => {
             );
 
         } finally {
-
             setLoading(false);
-
         }
     };
 
 
-    /*
-     * RESEND OTP
-     */
+    // ==========================================
+    // RESEND OTP
+    // ==========================================
+
     const handleResendOTP = async () => {
+        setError("");
 
-        if (countdown > 0 || resending) {
-            return;
-        }
-
-        if (!email || !studentId) {
-
+        if (!email) {
             setError(
                 "Registration information is missing. Please register again."
             );
@@ -272,24 +262,18 @@ const OTPVerification = () => {
             return;
         }
 
-        setError("");
-        setMessage("");
         setResending(true);
 
         try {
-
             const response = await fetch(
-                "http://localhost:5000/api/registration/send-otp",
+                "http://localhost:5000/api/registration/resend-otp",
                 {
                     method: "POST",
-
                     headers: {
                         "Content-Type": "application/json",
                     },
-
                     body: JSON.stringify({
-                        studentId,
-                        email,
+                        email: email,
                     }),
                 }
             );
@@ -297,36 +281,29 @@ const OTPVerification = () => {
             const data = await response.json();
 
             if (!response.ok || !data.success) {
-
                 throw new Error(
                     data.message ||
                     "Unable to resend OTP."
                 );
             }
 
-            /*
-             * Clear old OTP
-             */
-            setOtp(
-                Array(OTP_LENGTH).fill("")
-            );
+            // Clear old OTP
+            setOtp([
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+            ]);
 
-            /*
-             * Restart timer
-             */
-            setCountdown(30);
+            inputRefs.current[0]?.focus();
 
-            setMessage(
+            alert(
                 "A new OTP has been sent to your email."
             );
 
-            /*
-             * Focus first box
-             */
-            inputRefs.current[0]?.focus();
-
         } catch (error) {
-
             console.error(
                 "Resend OTP error:",
                 error
@@ -338,201 +315,275 @@ const OTPVerification = () => {
             );
 
         } finally {
-
             setResending(false);
         }
     };
 
 
-    /*
-     * Mask email
-     */
-    const maskEmail = (emailAddress) => {
+    // ==========================================
+    // MASK EMAIL
+    // ==========================================
 
+    const maskEmail = (emailAddress) => {
         if (!emailAddress) {
             return "your email";
         }
 
-        const [name, domain] =
+        const [username, domain] =
             emailAddress.split("@");
 
-        if (!name || !domain) {
+        if (!username || !domain) {
             return emailAddress;
         }
 
-        if (name.length <= 2) {
-            return `${name[0]}***@${domain}`;
+        if (username.length <= 2) {
+            return `${username[0] || ""}***@${domain}`;
         }
 
-        return `${name.substring(0, 2)}***@${domain}`;
+        return `${username.substring(
+            0,
+            2
+        )}***@${domain}`;
     };
 
 
     return (
-        <div className="otp-page">
+        <div
+            style={{
+                minHeight: "100vh",
+                background: "#ffffff",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                paddingTop: "35px",
+                fontFamily:
+                    "Poppins, Arial, sans-serif",
+            }}
+        >
 
-            <div className="otp-card">
+            {/* =====================================
+                PROGRESS BAR
+            ===================================== */}
 
-                {/* LOGO */}
-                <Link
-                    to="/"
-                    className="otp-logo"
+            <div
+                style={{
+                    width: "50%",
+                    maxWidth: "560px",
+                    minWidth: "320px",
+                }}
+            >
+
+                <div
+                    style={{
+                        display: "flex",
+                        height: "3px",
+                    }}
+                >
+                    <div
+                        style={{
+                            width: "50%",
+                            background: "#1450ff",
+                        }}
+                    />
+
+                    <div
+                        style={{
+                            width: "50%",
+                            background: "#69c7e8",
+                        }}
+                    />
+                </div>
+
+                <div
+                    style={{
+                        textAlign: "right",
+                        fontSize: "12px",
+                        marginTop: "7px",
+                    }}
+                >
+                    2 of 3 steps
+                </div>
+
+            </div>
+
+
+            {/* =====================================
+                OTP CONTENT
+            ===================================== */}
+
+            <div
+                style={{
+                    width: "100%",
+                    maxWidth: "720px",
+                    textAlign: "center",
+                    marginTop: "80px",
+                }}
+            >
+
+                <h1
+                    style={{
+                        fontSize: "24px",
+                        fontWeight: "500",
+                        lineHeight: "1.4",
+                        marginBottom: "8px",
+                    }}
+                >
+                    Enter the OTP sent to
+                    <br />
+                    {maskEmail(email)}
+                </h1>
+
+
+                <p
+                    style={{
+                        fontSize: "14px",
+                        marginTop: "45px",
+                        marginBottom: "30px",
+                    }}
+                >
+                    We sent a 6-digit verification
+                    code to your email address.
+                </p>
+
+
+                {/* =================================
+                    OTP BOXES
+                ================================= */}
+
+                <div
+                    style={{
+                        display: "flex",
+                        justifyContent: "center",
+                        gap: "10px",
+                    }}
+                    onPaste={handlePaste}
                 >
 
-                    <span className="otp-logo-mark">
-                        <span className="triangle triangle-top"></span>
-                        <span className="circle"></span>
-                        <span className="triangle triangle-bottom"></span>
-                    </span>
-
-                    <span>Votara</span>
-
-                </Link>
-
-
-                {/* PROGRESS */}
-                <div className="otp-progress-wrapper">
-
-                    <div className="otp-progress">
-
-                        <div className="otp-progress-active"></div>
-
-                    </div>
-
-                    <span>
-                        2 of 3 steps
-                    </span>
+                    {otp.map((digit, index) => (
+                        <input
+                            key={index}
+                            ref={(element) => {
+                                inputRefs.current[index] =
+                                    element;
+                            }}
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={1}
+                            value={digit}
+                            onChange={(e) =>
+                                handleChange(
+                                    e.target.value,
+                                    index
+                                )
+                            }
+                            onKeyDown={(e) =>
+                                handleKeyDown(
+                                    e,
+                                    index
+                                )
+                            }
+                            style={{
+                                width: "54px",
+                                height: "64px",
+                                border: "1px solid #999",
+                                borderRadius: "10px",
+                                textAlign: "center",
+                                fontSize: "28px",
+                                outline: "none",
+                            }}
+                        />
+                    ))}
 
                 </div>
 
 
-                {/* CONTENT */}
-                <div className="otp-content">
+                {/* =================================
+                    ERROR
+                ================================= */}
 
-                    <h1>
-                        Enter the OTP sent to
-                        <br />
-
-                        <span>
-                            {maskEmail(email)}
-                        </span>
-                    </h1>
-
-
-                    {/* OTP FORM */}
-                    <form onSubmit={handleVerifyOTP}>
-
-                        <div
-                            className="otp-inputs"
-                            onPaste={handlePaste}
-                        >
-
-                            {otp.map((digit, index) => (
-
-                                <input
-                                    key={index}
-                                    ref={(element) => {
-                                        inputRefs.current[index] =
-                                            element;
-                                    }}
-                                    type="text"
-                                    inputMode="numeric"
-                                    maxLength={1}
-                                    value={digit}
-                                    onChange={(e) =>
-                                        handleOtpChange(
-                                            index,
-                                            e.target.value
-                                        )
-                                    }
-                                    onKeyDown={(e) =>
-                                        handleKeyDown(
-                                            index,
-                                            e
-                                        )
-                                    }
-                                    aria-label={`OTP digit ${index + 1}`}
-                                />
-
-                            ))}
-
-                        </div>
-
-
-                        {/* ERROR */}
-                        {error && (
-                            <p className="otp-error">
-                                {error}
-                            </p>
-                        )}
-
-
-                        {/* SUCCESS MESSAGE */}
-                        {message && (
-                            <p className="otp-success">
-                                {message}
-                            </p>
-                        )}
-
-
-                        {/* RESEND */}
-                        <button
-                            type="button"
-                            className={
-                                countdown > 0
-                                    ? "resend-button disabled"
-                                    : "resend-button"
-                            }
-                            onClick={handleResendOTP}
-                            disabled={
-                                countdown > 0 ||
-                                resending
-                            }
-                        >
-
-                            {resending
-                                ? "Sending..."
-                                : countdown > 0
-                                    ? `Resend OTP (${String(
-                                        Math.floor(countdown / 60)
-                                    ).padStart(2, "0")}:${String(
-                                        countdown % 60
-                                    ).padStart(2, "0")})`
-                                    : "Resend OTP"
-                            }
-
-                        </button>
-
-
-                        {/* VERIFY */}
-                        <button
-                            type="submit"
-                            className="verify-button"
-                            disabled={loading}
-                        >
-
-                            {loading
-                                ? "Verifying..."
-                                : "Verify OTP"
-                            }
-
-                        </button>
-
-                    </form>
-
-
-                    {/* BACK */}
-                    <button
-                        type="button"
-                        className="otp-back"
-                        onClick={() =>
-                            navigate("/register")
-                        }
+                {error && (
+                    <p
+                        style={{
+                            color: "#ff3030",
+                            fontSize: "14px",
+                            marginTop: "15px",
+                        }}
                     >
-                        BACK
-                    </button>
+                        {error}
+                    </p>
+                )}
 
-                </div>
+
+                {/* =================================
+                    RESEND OTP
+                ================================= */}
+
+                <button
+                    type="button"
+                    onClick={handleResendOTP}
+                    disabled={
+                        resending ||
+                        loading
+                    }
+                    style={{
+                        marginTop: "20px",
+                        border: "none",
+                        background: "transparent",
+                        color: "#1450ff",
+                        fontSize: "14px",
+                        cursor: "pointer",
+                    }}
+                >
+                    {resending
+                        ? "Sending..."
+                        : "Resend OTP"}
+                </button>
+
+
+                {/* =================================
+                    VERIFY BUTTON
+                ================================= */}
+
+                <button
+                    type="button"
+                    onClick={handleVerifyOTP}
+                    disabled={loading}
+                    style={{
+                        display: "block",
+                        width: "90%",
+                        maxWidth: "650px",
+                        margin: "30px auto 0",
+                        padding: "18px",
+                        borderRadius: "10px",
+                        border: "none",
+                        background: "#1450ff",
+                        color: "#ffffff",
+                        fontSize: "17px",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                    }}
+                >
+                    {loading
+                        ? "Verifying..."
+                        : "Verify OTP"}
+                </button>
+
+
+                {/* =================================
+                    BACK
+                ================================= */}
+
+                <Link
+                    to="/register"
+                    style={{
+                        display: "inline-block",
+                        marginTop: "20px",
+                        color: "#1450ff",
+                        fontSize: "14px",
+                    }}
+                >
+                    ← Back to Registration
+                </Link>
 
             </div>
 

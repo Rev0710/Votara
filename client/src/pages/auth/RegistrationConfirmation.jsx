@@ -1,93 +1,173 @@
 import { Link } from "react-router-dom";
-import "./RegistrationConfirmation.css";
 
 const RegistrationConfirmation = () => {
     return (
-        <div className="confirmation-page">
+        <div
+            style={{
+                minHeight: "100vh",
+                background: "#ffffff",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                fontFamily:
+                    "Poppins, Arial, sans-serif",
+                paddingTop: "35px",
+            }}
+        >
 
-            <div className="confirmation-card">
+            {/* =====================================
+                PROGRESS BAR
+            ===================================== */}
 
-                {/* LOGO */}
-                <Link
-                    to="/"
-                    className="confirmation-logo"
+            <div
+                style={{
+                    width: "50%",
+                    maxWidth: "560px",
+                    minWidth: "320px",
+                }}
+            >
+
+                <div
+                    style={{
+                        display: "flex",
+                        height: "3px",
+                    }}
                 >
-
-                    <span className="confirmation-logo-mark">
-                        <span className="triangle triangle-top"></span>
-                        <span className="circle"></span>
-                        <span className="triangle triangle-bottom"></span>
-                    </span>
-
-                    <span>Votara</span>
-
-                </Link>
-
-
-                {/* PROGRESS */}
-                <div className="confirmation-progress-wrapper">
-
-                    <div className="confirmation-progress">
-
-                        <div className="confirmation-progress-active"></div>
-
-                    </div>
-
-                    <span>
-                        3 of 3 steps
-                    </span>
-
+                    <div
+                        style={{
+                            width: "100%",
+                            background: "#1450ff",
+                        }}
+                    />
                 </div>
 
+                <div
+                    style={{
+                        textAlign: "right",
+                        fontSize: "12px",
+                        marginTop: "7px",
+                    }}
+                >
+                    3 of 3 steps
+                </div>
 
-                {/* SUCCESS ICON */}
-                <div className="confirmation-icon">
+            </div>
+
+
+            {/* =====================================
+                CONFIRMATION
+            ===================================== */}
+
+            <div
+                style={{
+                    textAlign: "center",
+                    marginTop: "100px",
+                    width: "90%",
+                    maxWidth: "550px",
+                }}
+            >
+
+                {/* CHECKMARK */}
+
+                <div
+                    style={{
+                        width: "80px",
+                        height: "80px",
+                        borderRadius: "50%",
+                        background: "#1450ff",
+                        color: "#ffffff",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "42px",
+                        margin: "0 auto 25px",
+                    }}
+                >
                     ✓
                 </div>
 
 
-                {/* CONTENT */}
-                <div className="confirmation-content">
-
-                    <h1>
-                        Registration Submitted!
-                    </h1>
-
-                    <p>
-                        Your registration is now pending
-                        <br />
-                        for approval by the Electoral Board.
-                    </p>
-
-                </div>
+                <h1
+                    style={{
+                        fontSize: "22px",
+                        marginBottom: "10px",
+                    }}
+                >
+                    Registration Submitted!
+                </h1>
 
 
-                {/* WHAT'S NEXT */}
-                <div className="confirmation-next">
+                <p
+                    style={{
+                        fontSize: "14px",
+                        lineHeight: "1.6",
+                    }}
+                >
+                    Your registration is pending
+                    <br />
+                    for approval by the Electoral Board.
+                </p>
 
-                    <h3>
+
+                {/* =================================
+                    WHAT'S NEXT
+                ================================= */}
+
+                <div
+                    style={{
+                        marginTop: "30px",
+                        padding: "20px",
+                        borderRadius: "8px",
+                        boxShadow:
+                            "0 2px 10px rgba(0,0,0,0.15)",
+                        textAlign: "left",
+                    }}
+                >
+
+                    <strong>
                         What's Next?
-                    </h3>
+                    </strong>
 
-                    <p>
-                        Wait for approval
-                    </p>
+                    <ul
+                        style={{
+                            marginTop: "10px",
+                            paddingLeft: "20px",
+                            fontSize: "14px",
+                            lineHeight: "1.8",
+                        }}
+                    >
+                        <li>
+                            Wait for approval
+                        </li>
 
-                    <p>
-                        Check your temporary password
-                    </p>
+                        <li>
+                            Check your Temporary password
+                        </li>
 
-                    <p>
-                        Login and change your password
-                    </p>
+                        <li>
+                            Login and change your password
+                        </li>
+                    </ul>
 
                 </div>
 
 
-                {/* LOGIN */}
+                {/* =================================
+                    LOGIN
+                ================================= */}
+
                 <Link
                     to="/student-login"
-                    className="confirmation-button"
+                    style={{
+                        display: "inline-block",
+                        marginTop: "30px",
+                        padding: "12px 55px",
+                        background: "#1450ff",
+                        color: "#ffffff",
+                        borderRadius: "7px",
+                        textDecoration: "none",
+                        fontWeight: "600",
+                    }}
                 >
                     Go to Login
                 </Link>

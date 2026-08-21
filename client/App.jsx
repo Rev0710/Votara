@@ -27,37 +27,50 @@ const App = () => {
     return (
         <Routes>
 
-            {/* LANDING PAGE */}
+            {/* PUBLIC LANDING PAGE */}
+
             <Route
                 path="/"
                 element={<LandingPage />}
             />
 
-            {/* REGISTRATION */}
+
+            {/* STUDENT REGISTRATION */}
+
             <Route
                 path="/register"
                 element={<Register />}
             />
 
+
             {/* OTP VERIFICATION */}
+
             <Route
                 path="/verify-otp"
                 element={<OTPVerification />}
             />
 
+
             {/* REGISTRATION CONFIRMATION */}
+
             <Route
                 path="/registration-confirmation"
-                element={<RegistrationConfirmation />}
+                element={
+                    <RegistrationConfirmation />
+                }
             />
 
+
             {/* STUDENT LOGIN */}
+
             <Route
                 path="/student-login"
                 element={<StudentLogin />}
             />
 
+
             {/* TEMPORARY LOGIN */}
+
             <Route
                 path="/login"
                 element={<LoginPage />}

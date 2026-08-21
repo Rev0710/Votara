@@ -2,10 +2,7 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
-
-const {
-    verifyEmailConnection,
-} = require("./src/services/emailService");
+const mongoose = require("mongoose");
 
 const registrationRoutes = require("./src/routes/registrationRoutes");
 
@@ -13,11 +10,15 @@ const app = express();
 
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
+app.use(
+    cors({
+        origin: "http://localhost:5173",
+        credentials: true,
+    })
+);
+
 app.use(express.json());
 
-// Test route
 app.get("/", (req, res) => {
     res.json({
         success: true,
@@ -25,15 +26,44 @@ app.get("/", (req, res) => {
     });
 });
 
-// Registration routes
+// Registration API
 app.use(
     "/api/registration",
     registrationRoutes
 );
 
-// Start server
-app.listen(PORT, async () => {
-    console.log(`🚀 VOTARA server running on port ${PORT}`);
+const startServer = async () => {
+    try {
+        if (!process.env.MONGO_URI) {
+            throw new Error(
+                "MONGO_URI is missing from .env"
+            );
+        }
 
-    await verifyEmailConnection();
-});
+        await mongoose.connect(
+            process.env.MONGO_URI
+        );
+
+        console.log(
+            "🍃 MongoDB Connected:",
+            mongoose.connection.host
+        );
+
+        app.listen(PORT, () => {
+            console.log(
+                `🚀 VOTARA server running on port ${PORT}`
+            );
+        });
+
+    } catch (error) {
+        console.error(
+            "❌ MongoDB connection failed:"
+        );
+
+        console.error(error.message);
+
+        process.exit(1);
+    }
+};
+
+startServer();
