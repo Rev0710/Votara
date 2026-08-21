@@ -2,17 +2,21 @@ import { Link } from "react-router-dom";
 import "./RegistrationConfirmation.css";
 
 const RegistrationConfirmation = () => {
+
+    const studentData =
+        JSON.parse(
+            sessionStorage.getItem(
+                "registeredStudent"
+            ) || "null"
+        );
+
     return (
         <div className="confirmation-page">
 
             <div className="confirmation-card">
 
                 {/* LOGO */}
-                <Link
-                    to="/"
-                    className="confirmation-logo"
-                >
-
+                <div className="confirmation-logo">
                     <span className="confirmation-logo-mark">
                         <span className="triangle triangle-top"></span>
                         <span className="circle"></span>
@@ -20,17 +24,14 @@ const RegistrationConfirmation = () => {
                     </span>
 
                     <span>Votara</span>
-
-                </Link>
+                </div>
 
 
                 {/* PROGRESS */}
-                <div className="confirmation-progress-wrapper">
+                <div className="confirmation-progress">
 
-                    <div className="confirmation-progress">
-
-                        <div className="confirmation-progress-active"></div>
-
+                    <div className="confirmation-progress-line">
+                        <div></div>
                     </div>
 
                     <span>
@@ -41,43 +42,35 @@ const RegistrationConfirmation = () => {
 
 
                 {/* SUCCESS ICON */}
-                <div className="confirmation-icon">
+                <div className="success-icon">
                     ✓
                 </div>
 
 
-                {/* CONTENT */}
-                <div className="confirmation-content">
+                <h1>
+                    Registration Submitted!
+                </h1>
 
-                    <h1>
-                        Registration Submitted!
-                    </h1>
 
-                    <p>
-                        Your registration is now pending
-                        <br />
-                        for approval by the Electoral Board.
-                    </p>
-
-                </div>
+                <p className="confirmation-message">
+                    Your registration is now pending
+                    <br />
+                    for approval by the Electoral Board.
+                </p>
 
 
                 {/* WHAT'S NEXT */}
-                <div className="confirmation-next">
+                <div className="next-box">
 
-                    <h3>
+                    <strong>
                         What's Next?
-                    </h3>
+                    </strong>
 
                     <p>
                         Wait for approval
-                    </p>
-
-                    <p>
-                        Check your temporary password
-                    </p>
-
-                    <p>
+                        <br />
+                        Check your Temporary password
+                        <br />
                         Login and change your password
                     </p>
 
@@ -87,7 +80,7 @@ const RegistrationConfirmation = () => {
                 {/* LOGIN */}
                 <Link
                     to="/student-login"
-                    className="confirmation-button"
+                    className="login-button"
                 >
                     Go to Login
                 </Link>

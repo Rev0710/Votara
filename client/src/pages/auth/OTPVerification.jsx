@@ -2,120 +2,84 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./OTPVerification.css";
 
-const OTP_LENGTH = 6;
-
 const OTPVerification = () => {
     const navigate = useNavigate();
 
-    const [otp, setOtp] = useState(
-        Array(OTP_LENGTH).fill("")
-    );
-
+    const [otp, setOtp] = useState(["", "", "", "", "", ""]);
     const [email, setEmail] = useState("");
-    const [studentId, setStudentId] = useState("");
-
     const [error, setError] = useState("");
-    const [message, setMessage] = useState("");
-
     const [loading, setLoading] = useState(false);
     const [resending, setResending] = useState(false);
-
-    const [countdown, setCountdown] = useState(30);
+    const [resendTimer, setResendTimer] = useState(30);
 
     const inputRefs = useRef([]);
 
-    /*
-     * Get registration information
-     * saved by Register.jsx
-     */
+    // =====================================================
+    // GET EMAIL FROM REGISTRATION
+    // =====================================================
+
     useEffect(() => {
+        const savedEmail = sessionStorage.getItem(
+            "registrationEmail"
+        );
 
-        const savedRegistration =
-            sessionStorage.getItem("votaraRegistration");
-
-        if (!savedRegistration) {
+        if (!savedEmail) {
             setError(
                 "Registration information is missing. Please register again."
             );
             return;
         }
 
-        try {
-
-            const registration =
-                JSON.parse(savedRegistration);
-
-            setEmail(registration.email || "");
-            setStudentId(registration.studentId || "");
-
-        } catch (error) {
-
-            console.error(
-                "Registration data error:",
-                error
-            );
-
-            setError(
-                "Registration information is invalid. Please register again."
-            );
-        }
-
+        setEmail(savedEmail);
     }, []);
 
 
-    /*
-     * Countdown for resend OTP
-     */
-    useEffect(() => {
+    // =====================================================
+    // RESEND TIMER
+    // =====================================================
 
-        if (countdown <= 0) {
-            return;
-        }
+    useEffect(() => {
+        if (resendTimer <= 0) return;
 
         const timer = setInterval(() => {
-
-            setCountdown((previous) => previous - 1);
-
+            setResendTimer((prev) => prev - 1);
         }, 1000);
 
         return () => clearInterval(timer);
+    }, [resendTimer]);
 
-    }, [countdown]);
 
+    // =====================================================
+    // HANDLE OTP INPUT
+    // =====================================================
 
-    /*
-     * Handle OTP input
-     */
-    const handleOtpChange = (index, value) => {
-
-        // Only allow numbers
-        if (!/^\d*$/.test(value)) {
+    const handleOTPChange = (value, index) => {
+        // Allow numbers only
+        if (!/^\d?$/.test(value)) {
             return;
         }
 
-        const newOtp = [...otp];
+        const newOTP = [...otp];
+        newOTP[index] = value;
 
-        newOtp[index] = value.slice(-1);
-
-        setOtp(newOtp);
-
+        setOtp(newOTP);
         setError("");
-        setMessage("");
 
         // Move to next input
         if (
             value &&
-            index < OTP_LENGTH - 1
+            index < 5
         ) {
             inputRefs.current[index + 1]?.focus();
         }
     };
 
 
-    /*
-     * Handle backspace
-     */
-    const handleKeyDown = (index, e) => {
+    // =====================================================
+    // HANDLE BACKSPACE
+    // =====================================================
+
+    const handleKeyDown = (e, index) => {
 
         if (
             e.key === "Backspace" &&
@@ -127,72 +91,63 @@ const OTPVerification = () => {
     };
 
 
-    /*
-     * Paste 6-digit OTP
-     */
-    const handlePaste = (e) => {
+    // =====================================================
+    // HANDLE PASTE
+    // =====================================================
 
+    const handlePaste = (e) => {
         e.preventDefault();
 
         const pastedData =
             e.clipboardData
                 .getData("text")
                 .replace(/\D/g, "")
-                .slice(0, OTP_LENGTH);
+                .slice(0, 6);
 
-        if (!pastedData) {
-            return;
-        }
+        if (!pastedData) return;
 
-        const newOtp = Array(OTP_LENGTH).fill("");
+        const newOTP = ["", "", "", "", "", ""];
 
         pastedData
             .split("")
-            .forEach((number, index) => {
-                newOtp[index] = number;
+            .forEach((digit, index) => {
+                newOTP[index] = digit;
             });
 
-        setOtp(newOtp);
+        setOtp(newOTP);
+        setError("");
 
-        const nextIndex = Math.min(
-            pastedData.length,
-            OTP_LENGTH - 1
-        );
+        const focusIndex =
+            Math.min(pastedData.length, 5);
 
-        inputRefs.current[nextIndex]?.focus();
+        inputRefs.current[focusIndex]?.focus();
     };
 
 
-    /*
-     * VERIFY OTP
-     */
-    const handleVerifyOTP = async (e) => {
+    // =====================================================
+    // VERIFY OTP
+    // =====================================================
 
+    const handleVerifyOTP = async (e) => {
         e.preventDefault();
+
+        setError("");
 
         const enteredOTP = otp.join("");
 
-        setError("");
-        setMessage("");
-
-        /*
-         * Make sure all 6 digits are entered
-         */
-        if (enteredOTP.length !== OTP_LENGTH) {
-
-            setError(
-                "Please enter the complete 6-digit OTP."
-            );
-
-            return;
-        }
-
-        if (!email || !studentId) {
-
+        // Check email
+        if (!email) {
             setError(
                 "Registration information is missing. Please register again."
             );
+            return;
+        }
 
+        // Check OTP
+        if (enteredOTP.length !== 6) {
+            setError(
+                "Please enter the complete 6-digit OTP."
+            );
             return;
         }
 
@@ -210,8 +165,7 @@ const OTPVerification = () => {
                     },
 
                     body: JSON.stringify({
-                        studentId,
-                        email,
+                        email: email,
                         otp: enteredOTP,
                     }),
                 }
@@ -219,20 +173,41 @@ const OTPVerification = () => {
 
             const data = await response.json();
 
-            if (!response.ok || !data.success) {
+            console.log(
+                "OTP verification response:",
+                data
+            );
 
+            if (!response.ok || !data.success) {
                 throw new Error(
-                    data.message ||
-                    "Invalid OTP. Please try again."
+                    data.message || "Invalid OTP."
                 );
             }
 
-            /*
-             * OTP is correct.
-             *
-             * Move to registration confirmation.
-             */
-            navigate("/registration-confirmation");
+            // =================================================
+            // OTP VERIFIED SUCCESSFULLY
+            // =================================================
+
+            // Save returned student information
+            if (data.student) {
+                sessionStorage.setItem(
+                    "registeredStudent",
+                    JSON.stringify(data.student)
+                );
+            }
+
+            // Remove temporary registration email
+            sessionStorage.removeItem(
+                "registrationEmail"
+            );
+
+            // Go directly to confirmation page
+            navigate(
+                "/registration-confirmation",
+                {
+                    replace: true,
+                }
+            );
 
         } catch (error) {
 
@@ -243,43 +218,39 @@ const OTPVerification = () => {
 
             setError(
                 error.message ||
-                "Unable to verify OTP."
+                "Unable to verify OTP. Please try again."
             );
 
         } finally {
-
             setLoading(false);
-
         }
     };
 
 
-    /*
-     * RESEND OTP
-     */
+    // =====================================================
+    // RESEND OTP
+    // =====================================================
+
     const handleResendOTP = async () => {
 
-        if (countdown > 0 || resending) {
-            return;
-        }
-
-        if (!email || !studentId) {
-
+        if (!email) {
             setError(
                 "Registration information is missing. Please register again."
             );
+            return;
+        }
 
+        if (resendTimer > 0) {
             return;
         }
 
         setError("");
-        setMessage("");
         setResending(true);
 
         try {
 
             const response = await fetch(
-                "http://localhost:5000/api/registration/send-otp",
+                "http://localhost:5000/api/registration/resend-otp",
                 {
                     method: "POST",
 
@@ -288,8 +259,7 @@ const OTPVerification = () => {
                     },
 
                     body: JSON.stringify({
-                        studentId,
-                        email,
+                        email: email,
                     }),
                 }
             );
@@ -297,32 +267,24 @@ const OTPVerification = () => {
             const data = await response.json();
 
             if (!response.ok || !data.success) {
-
                 throw new Error(
                     data.message ||
                     "Unable to resend OTP."
                 );
             }
 
-            /*
-             * Clear old OTP
-             */
-            setOtp(
-                Array(OTP_LENGTH).fill("")
-            );
+            // Clear previous OTP
+            setOtp([
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+            ]);
 
-            /*
-             * Restart timer
-             */
-            setCountdown(30);
+            setResendTimer(30);
 
-            setMessage(
-                "A new OTP has been sent to your email."
-            );
-
-            /*
-             * Focus first box
-             */
             inputRefs.current[0]?.focus();
 
         } catch (error) {
@@ -338,33 +300,8 @@ const OTPVerification = () => {
             );
 
         } finally {
-
             setResending(false);
         }
-    };
-
-
-    /*
-     * Mask email
-     */
-    const maskEmail = (emailAddress) => {
-
-        if (!emailAddress) {
-            return "your email";
-        }
-
-        const [name, domain] =
-            emailAddress.split("@");
-
-        if (!name || !domain) {
-            return emailAddress;
-        }
-
-        if (name.length <= 2) {
-            return `${name[0]}***@${domain}`;
-        }
-
-        return `${name.substring(0, 2)}***@${domain}`;
     };
 
 
@@ -378,7 +315,6 @@ const OTPVerification = () => {
                     to="/"
                     className="otp-logo"
                 >
-
                     <span className="otp-logo-mark">
                         <span className="triangle triangle-top"></span>
                         <span className="circle"></span>
@@ -386,17 +322,14 @@ const OTPVerification = () => {
                     </span>
 
                     <span>Votara</span>
-
                 </Link>
 
 
                 {/* PROGRESS */}
-                <div className="otp-progress-wrapper">
+                <div className="otp-progress-section">
 
                     <div className="otp-progress">
-
                         <div className="otp-progress-active"></div>
-
                     </div>
 
                     <span>
@@ -414,47 +347,63 @@ const OTPVerification = () => {
                         <br />
 
                         <span>
-                            {maskEmail(email)}
+                            {email
+                                ? email.replace(
+                                    /^(.{2}).*(@.*)$/,
+                                    "$1***$2"
+                                )
+                                : "your email"
+                            }
                         </span>
                     </h1>
 
 
+                    <p className="otp-description">
+                        We sent a 6-digit verification code
+                        to your email address.
+                    </p>
+
+
                     {/* OTP FORM */}
-                    <form onSubmit={handleVerifyOTP}>
+                    <form
+                        onSubmit={handleVerifyOTP}
+                        className="otp-form"
+                    >
 
                         <div
                             className="otp-inputs"
                             onPaste={handlePaste}
                         >
 
-                            {otp.map((digit, index) => (
-
-                                <input
-                                    key={index}
-                                    ref={(element) => {
-                                        inputRefs.current[index] =
-                                            element;
-                                    }}
-                                    type="text"
-                                    inputMode="numeric"
-                                    maxLength={1}
-                                    value={digit}
-                                    onChange={(e) =>
-                                        handleOtpChange(
-                                            index,
-                                            e.target.value
-                                        )
-                                    }
-                                    onKeyDown={(e) =>
-                                        handleKeyDown(
-                                            index,
-                                            e
-                                        )
-                                    }
-                                    aria-label={`OTP digit ${index + 1}`}
-                                />
-
-                            ))}
+                            {otp.map(
+                                (digit, index) => (
+                                    <input
+                                        key={index}
+                                        ref={(element) => {
+                                            inputRefs.current[index] =
+                                                element;
+                                        }}
+                                        type="text"
+                                        inputMode="numeric"
+                                        maxLength={1}
+                                        value={digit}
+                                        onChange={(e) =>
+                                            handleOTPChange(
+                                                e.target.value,
+                                                index
+                                            )
+                                        }
+                                        onKeyDown={(e) =>
+                                            handleKeyDown(
+                                                e,
+                                                index
+                                            )
+                                        }
+                                        className="otp-input"
+                                        autoComplete="one-time-code"
+                                    />
+                                )
+                            )}
 
                         </div>
 
@@ -467,37 +416,21 @@ const OTPVerification = () => {
                         )}
 
 
-                        {/* SUCCESS MESSAGE */}
-                        {message && (
-                            <p className="otp-success">
-                                {message}
-                            </p>
-                        )}
-
-
                         {/* RESEND */}
                         <button
                             type="button"
-                            className={
-                                countdown > 0
-                                    ? "resend-button disabled"
-                                    : "resend-button"
-                            }
+                            className="resend-button"
                             onClick={handleResendOTP}
                             disabled={
-                                countdown > 0 ||
+                                resendTimer > 0 ||
                                 resending
                             }
                         >
 
                             {resending
                                 ? "Sending..."
-                                : countdown > 0
-                                    ? `Resend OTP (${String(
-                                        Math.floor(countdown / 60)
-                                    ).padStart(2, "0")}:${String(
-                                        countdown % 60
-                                    ).padStart(2, "0")})`
+                                : resendTimer > 0
+                                    ? `Resend OTP (${resendTimer}s)`
                                     : "Resend OTP"
                             }
 
@@ -522,15 +455,12 @@ const OTPVerification = () => {
 
 
                     {/* BACK */}
-                    <button
-                        type="button"
+                    <Link
+                        to="/register"
                         className="otp-back"
-                        onClick={() =>
-                            navigate("/register")
-                        }
                     >
-                        BACK
-                    </button>
+                        ← Back to Registration
+                    </Link>
 
                 </div>
 
