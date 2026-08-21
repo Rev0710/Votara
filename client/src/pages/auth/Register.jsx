@@ -1,25 +1,25 @@
-import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import "./Register.css";
 
 const Register = () => {
     const navigate = useNavigate();
 
-    const [studentId, setStudentId] =
-        useState("");
+    const [studentId, setStudentId] = useState("");
+    const [email, setEmail] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
-    const [email, setEmail] =
-        useState("");
-
-    const [loading, setLoading] =
-        useState(false);
-
-    const [error, setError] =
-        useState("");
+    const handleStudentIdChange = (e) => {
+        const value = e.target.value;
+        // Restrict input length to a maximum of 5 characters
+        if (value.length <= 5) {
+            setStudentId(value);
+        }
+    };
 
     const handleSubmit = async (e) => {
-    e.preventDefault();
-
+        e.preventDefault();
 
         setError("");
         setLoading(true);
@@ -29,67 +29,47 @@ const Register = () => {
                 "http://localhost:5000/api/registration/send-otp",
                 {
                     method: "POST",
-
                     headers: {
-                        "Content-Type":
-                            "application/json",
+                        "Content-Type": "application/json",
                     },
-
                     body: JSON.stringify({
-                        studentId:
-                            studentId.trim(),
-
-                        email:
-                            email.trim(),
+                        studentId,
+                        email,
                     }),
                 }
             );
 
-            const data =
-                await response.json();
+            const data = await response.json();
 
             if (!response.ok || !data.success) {
-            throw new Error(
-                data.message ||
-                "Unable to send OTP. Please try again."
-            );
-        }
-
-        // Save email for OTP verification
-        sessionStorage.setItem(
-            "registrationEmail",
-            email.trim().toLowerCase()
-        );
-
+                throw new Error(
+                    data.message || "Unable to send OTP."
+                );
+            }
 
             /*
-             * Pass registration information
-             * to OTP page.
+             * IMPORTANT
+             * Save registration information temporarily
+             * so OTPVerification.jsx can access it.
              */
-            navigate(
-                "/verify-otp",
-                {
-                    state: {
-                        studentId:
-                            studentId.trim(),
-
-                        email:
-                            email.trim(),
-                    },
-                }
+            sessionStorage.setItem(
+                "votaraRegistration",
+                JSON.stringify({
+                    studentId,
+                    email,
+                })
             );
+
+            // Go to OTP page
+            navigate("/verify-otp");
 
         } catch (error) {
-            console.error(
-                "Registration error:",
-                error
-            );
+            console.error("Registration error:", error);
 
             setError(
                 error.message ||
-                    "Something went wrong. Please try again."
+                "Unable to send OTP. Please try again."
             );
-
         } finally {
             setLoading(false);
         }
@@ -100,13 +80,11 @@ const Register = () => {
 
             <div className="register-card">
 
-                {/* LEFT */}
+                {/* LEFT SIDE */}
                 <section className="register-left">
 
-                    <Link
-                        to="/"
-                        className="register-logo"
-                    >
+                    <Link to="/" className="register-logo">
+
                         <span className="register-logo-mark">
                             <span className="triangle triangle-top"></span>
                             <span className="circle"></span>
@@ -114,12 +92,12 @@ const Register = () => {
                         </span>
 
                         <span>Votara</span>
+
                     </Link>
 
                     <div className="register-visual">
 
                         <div className="visual-circle visual-circle-one"></div>
-
                         <div className="visual-circle visual-circle-two"></div>
 
                         <div className="visual-content">
@@ -133,7 +111,7 @@ const Register = () => {
                 </section>
 
 
-                {/* RIGHT */}
+                {/* RIGHT SIDE */}
                 <section className="register-right">
 
                     <div className="register-content">
@@ -145,21 +123,12 @@ const Register = () => {
                             </h1>
 
                             <p>
-                                Register as a voter on
-                                the Western Institute
-                                of Technology voting
-                                platform to vote in
-                                your preferred candidate.
+                                Register as a voter on the Western Institute
+                                of Technology voting platform to vote in your
+                                preferred candidate.
                             </p>
 
                         </div>
-
-
-                        {error && (
-                            <div className="register-error">
-                                {error}
-                            </div>
-                        )}
 
 
                         <form
@@ -167,6 +136,7 @@ const Register = () => {
                             onSubmit={handleSubmit}
                         >
 
+                            {/* STUDENT ID */}
                             <div className="form-group">
 
                                 <label htmlFor="studentId">
@@ -177,19 +147,16 @@ const Register = () => {
                                     id="studentId"
                                     type="text"
                                     value={studentId}
-                                    onChange={(e) =>
-                                        setStudentId(
-                                            e.target.value
-                                        )
-                                    }
-                                    placeholder="Enter your Student ID"
+                                    onChange={handleStudentIdChange}
+                                    maxLength={5}
+                                    placeholder="Enter your Student ID (max 5 chars)"
                                     required
-                                    disabled={loading}
                                 />
 
                             </div>
 
 
+                            {/* EMAIL */}
                             <div className="form-group">
 
                                 <label htmlFor="email">
@@ -201,18 +168,24 @@ const Register = () => {
                                     type="email"
                                     value={email}
                                     onChange={(e) =>
-                                        setEmail(
-                                            e.target.value
-                                        )
+                                        setEmail(e.target.value)
                                     }
                                     placeholder="Enter your email address"
                                     required
-                                    disabled={loading}
                                 />
 
                             </div>
 
 
+                            {/* ERROR */}
+                            {error && (
+                                <p className="register-error">
+                                    {error}
+                                </p>
+                            )}
+
+
+                            {/* SUBMIT */}
                             <button
                                 type="submit"
                                 className="register-submit"
