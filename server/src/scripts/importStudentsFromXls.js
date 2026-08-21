@@ -15,6 +15,7 @@ const filePath = path.join(
     "../data/Student file.csv.xlsx"
 );
 
+
 // =====================================================
 // READ EXCEL FILE
 // =====================================================
@@ -24,14 +25,28 @@ const readStudentFile = () => {
     console.log("📄 Reading student Excel file:");
     console.log(filePath);
 
+    // Check if file exists
+    const fs = require("fs");
+
+    if (!fs.existsSync(filePath)) {
+        throw new Error(
+            `Excel file not found:\n${filePath}`
+        );
+    }
+
     // Read workbook
     const workbook = XLSX.readFile(filePath);
 
     // Get first worksheet
-    const sheetName = workbook.SheetNames[0];
+    const sheetName =
+        workbook.SheetNames[0];
 
     const worksheet =
         workbook.Sheets[sheetName];
+
+    console.log(
+        `📑 Worksheet: ${sheetName}`
+    );
 
     // Convert worksheet to JSON
     const rows =
@@ -48,30 +63,30 @@ const readStudentFile = () => {
 
     const students = [];
 
-    for (const row of rows) {
+    // =================================================
+    // READ STUDENTS
+    // =================================================
 
-        // ---------------------------------------------
-        // Read exact column names from your Excel file
-        // ---------------------------------------------
+    for (const row of rows) {
 
         const studentId =
             String(
-                row["Student ID"] || ""
+                row["Student ID"] ?? ""
             ).trim();
 
         const fullName =
             String(
-                row["Student Name"] || ""
+                row["Student Name"] ?? ""
             ).trim();
 
         const yearLevel =
             String(
-                row["Year"] || ""
+                row["Year"] ?? ""
             ).trim();
 
 
         // ---------------------------------------------
-        // Skip incomplete rows
+        // Skip incomplete records
         // ---------------------------------------------
 
         if (
@@ -92,8 +107,9 @@ const readStudentFile = () => {
                 yearLevel
             )
         ) {
+
             console.log(
-                `⚠️ Skipping invalid year for Student ID ${studentId}: ${yearLevel}`
+                `⚠️ Skipping invalid year - Student ID: ${studentId}, Year: ${yearLevel}`
             );
 
             continue;
@@ -105,32 +121,50 @@ const readStudentFile = () => {
         // ---------------------------------------------
 
         students.push({
-
             studentId,
-
             fullName,
-
             yearLevel,
-
         });
     }
 
 
-    return students;
+    // =================================================
+    // REMOVE DUPLICATE STUDENT IDS
+    // =================================================
+
+    const uniqueStudents =
+        Array.from(
+            new Map(
+                students.map(
+                    (student) => [
+                        student.studentId,
+                        student,
+                    ]
+                )
+            ).values()
+        );
+
+
+    console.log(
+        `📚 Valid unique students found: ${uniqueStudents.length}`
+    );
+
+
+    return uniqueStudents;
 };
 
 
 // =====================================================
-// IMPORT STUDENTS TO MONGODB
+// IMPORT STUDENTS
 // =====================================================
 
 const importStudents = async () => {
 
     try {
 
-        // ---------------------------------------------
-        // Check MongoDB URI
-        // ---------------------------------------------
+        // =================================================
+        // CHECK ENVIRONMENT
+        // =================================================
 
         if (!process.env.MONGO_URI) {
 
@@ -141,36 +175,36 @@ const importStudents = async () => {
         }
 
 
-        // ---------------------------------------------
-        // Read Excel
-        // ---------------------------------------------
+        // =================================================
+        // READ EXCEL
+        // =================================================
 
         const students =
             readStudentFile();
 
 
-        console.log(
-            `📚 Valid students found: ${students.length}`
-        );
-
-
-        if (students.length === 0) {
+        if (
+            students.length === 0
+        ) {
 
             throw new Error(
-                "No valid student records were found in the Excel file."
+                "No valid student records were found."
             );
 
         }
 
 
-        // ---------------------------------------------
-        // Connect MongoDB
-        // ---------------------------------------------
+        // =================================================
+        // CONNECT MONGODB
+        // =================================================
+
+        console.log(
+            "🔌 Connecting to MongoDB..."
+        );
 
         await mongoose.connect(
             process.env.MONGO_URI
         );
-
 
         console.log(
             "🍃 MongoDB Connected:",
@@ -178,104 +212,116 @@ const importStudents = async () => {
         );
 
 
-        // ---------------------------------------------
-        // Import students
-        // ---------------------------------------------
+        // =================================================
+        // PREPARE BULK OPERATIONS
+        // =================================================
 
-        let inserted = 0;
-        let updated = 0;
-        let skipped = 0;
+        console.log(
+            "⚙️ Preparing MongoDB import..."
+        );
+
+        const operations =
+            students.map(
+                (student) => ({
+
+                    updateOne: {
+
+                        filter: {
+                            studentId:
+                                student.studentId,
+                        },
+
+                        // ---------------------------------
+                        // UPDATE EXISTING STUDENT
+                        // ---------------------------------
+
+                        update: {
+
+                            $set: {
+
+                                // These are official
+                                // enrollment records.
+
+                                fullName:
+                                    student.fullName,
+
+                                yearLevel:
+                                    student.yearLevel,
+
+                            },
+
+                            // ---------------------------------
+                            // ONLY FOR NEW STUDENTS
+                            // ---------------------------------
+
+                            $setOnInsert: {
+
+                                email: null,
+
+                                passwordHash: null,
+
+                                mustChangePassword:
+                                    true,
+
+                                profilePicture: null,
+
+                                profilePictureUploadedAt:
+                                    null,
+
+                                registrationStatus:
+                                    "not_registered",
+
+                                otpHash: null,
+
+                                otpExpiresAt: null,
+
+                                otpVerified:
+                                    false,
+
+                                otpVerifiedAt:
+                                    null,
+
+                                registeredAt:
+                                    null,
+
+                                hasVoted:
+                                    false,
+
+                            },
+                        },
+
+                        upsert: true,
+
+                    },
+
+                })
+            );
 
 
-        for (const studentData of students) {
-
-            try {
-
-                const existingStudent =
-                    await Student.findOne({
-                        studentId:
-                            studentData.studentId,
-                    });
-
-
-                // =====================================
-                // STUDENT ALREADY EXISTS
-                // =====================================
-
-                if (existingStudent) {
-
-                    // Only update official
-                    // enrollment information.
-
-                    existingStudent.fullName =
-                        studentData.fullName;
-
-                    existingStudent.yearLevel =
-                        studentData.yearLevel;
-
-                    await existingStudent.save();
-
-                    updated++;
-
-                    continue;
-                }
-
-
-                // =====================================
-                // NEW STUDENT
-                // =====================================
-
-                await Student.create({
-
-                    studentId:
-                        studentData.studentId,
-
-                    fullName:
-                        studentData.fullName,
-
-                    yearLevel:
-                        studentData.yearLevel,
-
-                    email: null,
-
-                    registrationStatus:
-                        "not_registered",
-
-                    otpHash: null,
-
-                    otpExpiresAt: null,
-
-                    otpVerified: false,
-
-                    otpVerifiedAt: null,
-
-                    registeredAt: null,
-
-                    hasVoted: false,
-
-                });
-
-
-                inserted++;
-
-            } catch (studentError) {
-
-                console.error(
-                    `❌ Error importing Student ID ${studentData.studentId}:`
-                );
-
-                console.error(
-                    studentError.message
-                );
-
-                skipped++;
-
-            }
-        }
+        console.log(
+            `📦 MongoDB operations prepared: ${operations.length}`
+        );
 
 
         // =================================================
-        // IMPORT RESULT
+        // BULK WRITE
+        // =================================================
+
+        console.log(
+            "🚀 Importing students into MongoDB..."
+        );
+
+        const result =
+            await Student.bulkWrite(
+                operations,
+                {
+                    ordered: false,
+                }
+            );
+
+
+        // =================================================
+        // RESULTS
         // =================================================
 
         console.log("");
@@ -293,19 +339,31 @@ const importStudents = async () => {
         );
 
         console.log(
-            `📚 Records read: ${students.length}`
+            `📚 Excel records: ${students.length}`
         );
 
         console.log(
-            `➕ New students inserted: ${inserted}`
+            `➕ New students inserted: ${
+                result.upsertedCount || 0
+            }`
         );
 
         console.log(
-            `🔄 Existing students updated: ${updated}`
+            `🔄 Existing students matched: ${
+                result.matchedCount || 0
+            }`
         );
 
         console.log(
-            `⚠️ Students skipped: ${skipped}`
+            `✏️ Existing students modified: ${
+                result.modifiedCount || 0
+            }`
+        );
+
+        console.log(
+            `⚠️ Upserted documents: ${
+                result.upsertedCount || 0
+            }`
         );
 
         console.log(
@@ -322,11 +380,23 @@ const importStudents = async () => {
         );
 
         console.error(
+            "=========================================="
+        );
+
+        console.error(
             error.message
+        );
+
+        console.error(
+            "=========================================="
         );
 
 
     } finally {
+
+        // =================================================
+        // CLOSE MONGODB
+        // =================================================
 
         if (
             mongoose.connection.readyState !== 0
