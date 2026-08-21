@@ -100,25 +100,11 @@ const StudentLogin = () => {
 
                     <div className="student-login-visual">
 
-<<<<<<< HEAD
                         <img
                        src="/src/images/Login.png"
                         alt="Votara login illustration"
                         className="student-login-illustration"
                       />
-=======
-                        <div className="visual-circle visual-circle-one"></div>
-
-                        <div className="visual-circle visual-circle-two"></div>
-
-                        <div className="visual-content">
-
-                            <span className="visual-line"></span>
-                            <span className="visual-line"></span>
-                            <span className="visual-line"></span>
-
-                        </div>
->>>>>>> d05f794ed7e14495f7daeeea4318c10b9183248c
 
                     </div>
 
