@@ -150,7 +150,7 @@ const StudentLogin = () => {
 
                                 <input
                                     type="text"
-                                    placeholder="Student ID No. (max 5 digits)"
+                                    placeholder="Student ID No."
                                     value={studentId}
                                     onChange={handleStudentIdChange}
                                     maxLength={5}
