@@ -38,6 +38,34 @@ const studentSchema = new mongoose.Schema(
         },
 
         // ==========================================
+        // PASSWORD / LOGIN
+        // ==========================================
+
+        passwordHash: {
+            type: String,
+            default: null,
+        },
+
+        mustChangePassword: {
+            type: Boolean,
+            default: true,
+        },
+
+        // ==========================================
+        // PROFILE PICTURE
+        // ==========================================
+
+        profilePicture: {
+            type: String,
+            default: null,
+        },
+
+        profilePictureUploadedAt: {
+            type: Date,
+            default: null,
+        },
+
+        // ==========================================
         // REGISTRATION
         // ==========================================
 

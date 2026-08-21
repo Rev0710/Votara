@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { studentLogin } from "../../services/authService";
 import "./StudentLogin.css";
 
 const StudentLogin = () => {
@@ -7,27 +8,69 @@ const StudentLogin = () => {
 
     const [studentId, setStudentId] = useState("");
     const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const handleStudentIdChange = (e) => {
-        // Remove any non-numeric characters and restrict length to 5 digits max
         const value = e.target.value.replace(/\D/g, "");
+
         if (value.length <= 5) {
             setStudentId(value);
         }
     };
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
 
+        setError("");
+
         if (!studentId || !password) {
-            alert("Please enter your Student ID and Password.");
+            setError("Please enter your Student ID and Password.");
             return;
         }
 
-        console.log("Student ID:", studentId);
-        console.log("Password:", password);
+        try {
+            setLoading(true);
 
-        // Add your authentication here later
+            const data = await studentLogin(
+                studentId,
+                password
+            );
+
+            // Save authentication token
+            localStorage.setItem(
+                "votaraToken",
+                data.token
+            );
+
+            // Save student information
+            localStorage.setItem(
+                "votaraStudent",
+                JSON.stringify(data.student)
+            );
+
+            console.log("✅ Student login successful");
+
+            // First login → change temporary password
+            if (data.mustChangePassword) {
+                navigate("/change-password");
+                return;
+            }
+
+            // Normal login → dashboard
+            navigate("/student-dashboard");
+
+        } catch (error) {
+            console.error("❌ Login error:", error);
+
+            setError(
+                error.message ||
+                "Unable to login. Please try again."
+            );
+
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -35,33 +78,54 @@ const StudentLogin = () => {
 
             <div className="student-login-card">
 
+                {/* LEFT SIDE */}
                 <section className="student-login-left">
 
-                    <Link to="/" className="student-login-logo">
-
+                    <Link
+                        to="/"
+                        className="student-login-logo"
+                    >
                         <span className="student-login-logo-mark">
+
                             <span className="triangle triangle-top"></span>
+
                             <span className="circle"></span>
+
                             <span className="triangle triangle-bottom"></span>
+
                         </span>
 
                         <span>Votara</span>
-
                     </Link>
 
                     <div className="student-login-visual">
 
+<<<<<<< HEAD
                         <img
                        src="/src/images/Login.png"
                         alt="Votara login illustration"
                         className="student-login-illustration"
                       />
+=======
+                        <div className="visual-circle visual-circle-one"></div>
+
+                        <div className="visual-circle visual-circle-two"></div>
+
+                        <div className="visual-content">
+
+                            <span className="visual-line"></span>
+                            <span className="visual-line"></span>
+                            <span className="visual-line"></span>
+
+                        </div>
+>>>>>>> d05f794ed7e14495f7daeeea4318c10b9183248c
 
                     </div>
 
                 </section>
 
 
+                {/* RIGHT SIDE */}
                 <section className="student-login-right">
 
                     <div className="student-login-form-container">
@@ -76,9 +140,28 @@ const StudentLogin = () => {
                             your preferred candidate
                         </p>
 
+
+                        {/* ERROR MESSAGE */}
+                        {error && (
+                            <div
+                                style={{
+                                    color: "#d93025",
+                                    background: "#fff1f0",
+                                    padding: "12px",
+                                    borderRadius: "8px",
+                                    marginBottom: "15px",
+                                    fontSize: "14px",
+                                }}
+                            >
+                                {error}
+                            </div>
+                        )}
+
+
                         <form onSubmit={handleLogin}>
 
                             <div className="login-input-group">
+
                                 <input
                                     type="text"
                                     placeholder="Student ID No. (max 5 digits)"
@@ -87,31 +170,44 @@ const StudentLogin = () => {
                                     maxLength={5}
                                     required
                                 />
+
                             </div>
 
+
                             <div className="login-input-group">
+
                                 <input
                                     type="password"
                                     placeholder="Password"
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    onChange={(e) =>
+                                        setPassword(e.target.value)
+                                    }
                                     required
                                 />
+
                             </div>
+
 
                             <button
                                 type="submit"
                                 className="student-login-button"
+                                disabled={loading}
                             >
-                                Login
+                                {loading
+                                    ? "Logging in..."
+                                    : "Login"}
                             </button>
 
                         </form>
 
+
                         <div className="login-back">
+
                             <Link to="/">
                                 ← Back to Home
                             </Link>
+
                         </div>
 
                     </div>
