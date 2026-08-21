@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 5000;
 
 app.use(
     cors({
-        origin: "http://localhost:5174",
+        origin: "http://localhost:5173",
         credentials: true,
     })
 );
@@ -48,7 +48,7 @@ const startServer = async () => {
             "🍃 MongoDB Connected:",
             mongoose.connection.host
         );
-        
+
         app.use(
     "/api/auth",
     authRoutes

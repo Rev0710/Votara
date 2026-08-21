@@ -20,158 +20,101 @@ const filePath = path.join(
 // =====================================================
 
 const readStudentFile = () => {
-    console.log("📄 Reading student file:");
+
+    console.log("📄 Reading student Excel file:");
     console.log(filePath);
 
-    // Check if file exists
-    const fs = require("fs");
-
-    if (!fs.existsSync(filePath)) {
-        throw new Error(
-            `Student Excel file not found:\n${filePath}`
-        );
-    }
-
-    // Read Excel workbook
+    // Read workbook
     const workbook = XLSX.readFile(filePath);
 
     // Get first worksheet
     const sheetName = workbook.SheetNames[0];
 
-    if (!sheetName) {
-        throw new Error(
-            "No worksheet was found in the Excel file."
-        );
-    }
-
-    console.log(`📑 Worksheet: ${sheetName}`);
-
     const worksheet =
         workbook.Sheets[sheetName];
 
     // Convert worksheet to JSON
-    const rows = XLSX.utils.sheet_to_json(
-        worksheet,
-        {
-            defval: "",
-        }
-    );
-
-    console.log(
-        `📚 Rows found in Excel file: ${rows.length}`
-    );
-
-    if (rows.length === 0) {
-        throw new Error(
-            "The Excel file contains no student records."
+    const rows =
+        XLSX.utils.sheet_to_json(
+            worksheet,
+            {
+                defval: "",
+            }
         );
-    }
-
-    // Show actual column names
-    console.log(
-        "📋 Excel columns:"
-    );
 
     console.log(
-        Object.keys(rows[0])
+        `📊 Rows found in Excel: ${rows.length}`
     );
 
     const students = [];
 
     for (const row of rows) {
 
-        // -------------------------------------------------
-        // Find Student ID
-        // -------------------------------------------------
+        // ---------------------------------------------
+        // Read exact column names from your Excel file
+        // ---------------------------------------------
 
         const studentId =
-            row["Student ID"] ??
-            row["StudentId"] ??
-            row["studentId"] ??
-            row["Student No."] ??
-            row["Student No"] ??
-            row["ID"] ??
-            row["id"] ??
-            "";
-
-
-        // -------------------------------------------------
-        // Find Full Name
-        // -------------------------------------------------
+            String(
+                row["Student ID"] || ""
+            ).trim();
 
         const fullName =
-            row["Full Name"] ??
-            row["FullName"] ??
-            row["fullName"] ??
-            row["Name"] ??
-            row["name"] ??
-            "";
-
-
-        // -------------------------------------------------
-        // Find Year Level
-        // -------------------------------------------------
+            String(
+                row["Student Name"] || ""
+            ).trim();
 
         const yearLevel =
-            row["Year Level"] ??
-            row["YearLevel"] ??
-            row["yearLevel"] ??
-            row["Year"] ??
-            row["year"] ??
-            "";
+            String(
+                row["Year"] || ""
+            ).trim();
 
 
-        // -------------------------------------------------
-        // Clean values
-        // -------------------------------------------------
-
-        const cleanStudentId =
-            String(studentId)
-                .trim();
-
-        const cleanFullName =
-            String(fullName)
-                .trim();
-
-        const cleanYearLevel =
-            String(yearLevel)
-                .trim()
-                .replace(
-                    /^Year\s*/i,
-                    ""
-                );
-
-
-        // -------------------------------------------------
-        // Skip invalid rows
-        // -------------------------------------------------
+        // ---------------------------------------------
+        // Skip incomplete rows
+        // ---------------------------------------------
 
         if (
-            !cleanStudentId ||
-            !cleanFullName ||
-            !["1", "2", "3", "4"].includes(
-                cleanYearLevel
-            )
+            !studentId ||
+            !fullName ||
+            !yearLevel
         ) {
             continue;
         }
 
 
-        // -------------------------------------------------
-        // Add valid student
-        // -------------------------------------------------
+        // ---------------------------------------------
+        // Validate year
+        // ---------------------------------------------
+
+        if (
+            !["1", "2", "3", "4"].includes(
+                yearLevel
+            )
+        ) {
+            console.log(
+                `⚠️ Skipping invalid year for Student ID ${studentId}: ${yearLevel}`
+            );
+
+            continue;
+        }
+
+
+        // ---------------------------------------------
+        // Add student
+        // ---------------------------------------------
 
         students.push({
-            studentId:
-                cleanStudentId,
 
-            fullName:
-                cleanFullName,
+            studentId,
 
-            yearLevel:
-                cleanYearLevel,
+            fullName,
+
+            yearLevel,
+
         });
     }
+
 
     return students;
 };
@@ -185,42 +128,44 @@ const importStudents = async () => {
 
     try {
 
-        // -------------------------------------------------
+        // ---------------------------------------------
         // Check MongoDB URI
-        // -------------------------------------------------
+        // ---------------------------------------------
 
         if (!process.env.MONGO_URI) {
+
             throw new Error(
                 "MONGO_URI is missing from .env"
             );
+
         }
 
 
-        // -------------------------------------------------
+        // ---------------------------------------------
         // Read Excel
-        // -------------------------------------------------
+        // ---------------------------------------------
 
         const students =
             readStudentFile();
 
 
         console.log(
-            `✅ Valid student records: ${students.length}`
+            `📚 Valid students found: ${students.length}`
         );
 
 
         if (students.length === 0) {
 
             throw new Error(
-                "No valid student records were found. Check the Excel column names and year-level values."
+                "No valid student records were found in the Excel file."
             );
 
         }
 
 
-        // -------------------------------------------------
+        // ---------------------------------------------
         // Connect MongoDB
-        // -------------------------------------------------
+        // ---------------------------------------------
 
         await mongoose.connect(
             process.env.MONGO_URI
@@ -233,9 +178,9 @@ const importStudents = async () => {
         );
 
 
-        // -------------------------------------------------
+        // ---------------------------------------------
         // Import students
-        // -------------------------------------------------
+        // ---------------------------------------------
 
         let inserted = 0;
         let updated = 0;
@@ -244,94 +189,99 @@ const importStudents = async () => {
 
         for (const studentData of students) {
 
-            const existingStudent =
-                await Student.findOne({
+            try {
+
+                const existingStudent =
+                    await Student.findOne({
+                        studentId:
+                            studentData.studentId,
+                    });
+
+
+                // =====================================
+                // STUDENT ALREADY EXISTS
+                // =====================================
+
+                if (existingStudent) {
+
+                    // Only update official
+                    // enrollment information.
+
+                    existingStudent.fullName =
+                        studentData.fullName;
+
+                    existingStudent.yearLevel =
+                        studentData.yearLevel;
+
+                    await existingStudent.save();
+
+                    updated++;
+
+                    continue;
+                }
+
+
+                // =====================================
+                // NEW STUDENT
+                // =====================================
+
+                await Student.create({
+
                     studentId:
                         studentData.studentId,
+
+                    fullName:
+                        studentData.fullName,
+
+                    yearLevel:
+                        studentData.yearLevel,
+
+                    email: null,
+
+                    registrationStatus:
+                        "not_registered",
+
+                    otpHash: null,
+
+                    otpExpiresAt: null,
+
+                    otpVerified: false,
+
+                    otpVerifiedAt: null,
+
+                    registeredAt: null,
+
+                    hasVoted: false,
+
                 });
 
 
-            // -------------------------------------------------
-            // EXISTING STUDENT
-            // -------------------------------------------------
+                inserted++;
 
-            if (existingStudent) {
+            } catch (studentError) {
 
-                /*
-                 * IMPORTANT:
-                 *
-                 * We only update official enrollment
-                 * information.
-                 *
-                 * We DO NOT reset:
-                 *
-                 * - email
-                 * - password
-                 * - OTP
-                 * - registration status
-                 * - voting status
-                 */
+                console.error(
+                    `❌ Error importing Student ID ${studentData.studentId}:`
+                );
 
-                existingStudent.fullName =
-                    studentData.fullName;
+                console.error(
+                    studentError.message
+                );
 
-                existingStudent.yearLevel =
-                    studentData.yearLevel;
+                skipped++;
 
-                await existingStudent.save();
-
-                updated++;
-
-                continue;
             }
-
-
-            // -------------------------------------------------
-            // NEW STUDENT
-            // -------------------------------------------------
-
-            await Student.create({
-
-                studentId:
-                    studentData.studentId,
-
-                fullName:
-                    studentData.fullName,
-
-                yearLevel:
-                    studentData.yearLevel,
-
-                email: null,
-
-                registrationStatus:
-                    "not_registered",
-
-                otpHash: null,
-
-                otpExpiresAt: null,
-
-                otpVerified: false,
-
-                otpVerifiedAt: null,
-
-                registeredAt: null,
-
-                hasVoted: false,
-            });
-
-
-            inserted++;
         }
 
 
-        // -------------------------------------------------
-        // RESULT
-        // -------------------------------------------------
+        // =================================================
+        // IMPORT RESULT
+        // =================================================
 
         console.log("");
 
         console.log(
-            "======================================"
+            "=========================================="
         );
 
         console.log(
@@ -339,7 +289,7 @@ const importStudents = async () => {
         );
 
         console.log(
-            "======================================"
+            "=========================================="
         );
 
         console.log(
@@ -347,19 +297,19 @@ const importStudents = async () => {
         );
 
         console.log(
-            `➕ New students: ${inserted}`
+            `➕ New students inserted: ${inserted}`
         );
 
         console.log(
-            `🔄 Updated students: ${updated}`
+            `🔄 Existing students updated: ${updated}`
         );
 
         console.log(
-            `⏭️ Skipped students: ${skipped}`
+            `⚠️ Students skipped: ${skipped}`
         );
 
         console.log(
-            "======================================"
+            "=========================================="
         );
 
 
@@ -368,7 +318,7 @@ const importStudents = async () => {
         console.error("");
 
         console.error(
-            "❌ Student import failed:"
+            "❌ STUDENT IMPORT FAILED"
         );
 
         console.error(
@@ -387,7 +337,9 @@ const importStudents = async () => {
             console.log(
                 "🔌 MongoDB connection closed."
             );
+
         }
+
     }
 };
 

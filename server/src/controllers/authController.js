@@ -13,43 +13,58 @@ const studentLogin = async (req, res) => {
         if (!studentId || !password) {
             return res.status(400).json({
                 success: false,
-                message: "Student ID and password are required.",
+                message:
+                    "Student ID and password are required.",
             });
         }
 
-        const cleanStudentId = String(studentId).trim();
+        const cleanStudentId =
+            String(studentId).trim();
 
-        // Find student
-        const student = await Student.findOne({
-            studentId: cleanStudentId,
-        });
+        // =================================================
+        // FIND STUDENT
+        // =================================================
+
+        const student =
+            await Student.findOne({
+                studentId: cleanStudentId,
+            });
 
         if (!student) {
             return res.status(404).json({
                 success: false,
-                message: "Student ID not found.",
+                message:
+                    "Student ID not found.",
             });
         }
 
-        /*
-         * TEMPORARY DEFAULT PASSWORD
-         *
-         * The Electoral Board can eventually generate
-         * individual temporary passwords.
-         *
-         * For now, the password comes from .env:
-         *
-         * DEFAULT_STUDENT_PASSWORD=...
-         */
+        // =================================================
+        // STUDENT MUST REGISTER FIRST
+        // =================================================
+
+        if (
+            student.registrationStatus !==
+            "submitted"
+        ) {
+            return res.status(403).json({
+                success: false,
+                message:
+                    "Your registration has not been completed. Please register first.",
+            });
+        }
+
+        // =================================================
+        // PASSWORD
+        // =================================================
 
         const defaultPassword =
             process.env.DEFAULT_STUDENT_PASSWORD;
 
         let passwordCorrect = false;
 
-        // ---------------------------------------------
+        // =================================================
         // FIRST LOGIN
-        // ---------------------------------------------
+        // =================================================
 
         if (!student.passwordHash) {
 
@@ -66,9 +81,9 @@ const studentLogin = async (req, res) => {
 
         } else {
 
-            // -----------------------------------------
-            // NORMAL LOGIN
-            // -----------------------------------------
+            // =================================================
+            // NORMAL LOGIN AFTER PASSWORD CHANGE
+            // =================================================
 
             passwordCorrect =
                 await bcrypt.compare(
@@ -77,83 +92,126 @@ const studentLogin = async (req, res) => {
                 );
         }
 
+        // =================================================
+        // INCORRECT PASSWORD
+        // =================================================
+
         if (!passwordCorrect) {
             return res.status(401).json({
                 success: false,
-                message: "Incorrect password.",
+                message:
+                    "Incorrect password.",
             });
         }
 
-        // ---------------------------------------------
+        // =================================================
         // CREATE JWT
-        // ---------------------------------------------
+        // =================================================
 
-        const token = jwt.sign(
-            {
-                studentId: student.studentId,
-                role: "student",
-            },
-            process.env.JWT_SECRET,
-            {
-                expiresIn:
-                    process.env.JWT_EXPIRES_IN || "1d",
-            }
-        );
+        const token =
+            jwt.sign(
+                {
+                    studentId:
+                        student.studentId,
 
-        // ---------------------------------------------
-        // CHECK IF PASSWORD MUST BE CHANGED
-        // ---------------------------------------------
+                    role: "student",
+                },
+                process.env.JWT_SECRET,
+                {
+                    expiresIn:
+                        process.env.JWT_EXPIRES_IN ||
+                        "1d",
+                }
+            );
+
+        // =================================================
+        // CHECK PASSWORD STATUS
+        // =================================================
 
         const mustChangePassword =
             !student.passwordHash ||
             student.mustChangePassword === true;
 
+        // =================================================
+        // LOGIN SUCCESS
+        // =================================================
+
         return res.status(200).json({
+
             success: true,
-            message: "Login successful.",
+
+            message:
+                "Login successful.",
 
             token,
 
             mustChangePassword,
 
             student: {
-                studentId: student.studentId,
-                fullName: student.fullName,
-                yearLevel: student.yearLevel,
-                email: student.email,
+                studentId:
+                    student.studentId,
+
+                fullName:
+                    student.fullName,
+
+                yearLevel:
+                    student.yearLevel,
+
+                email:
+                    student.email,
+
                 profilePicture:
                     student.profilePicture,
+
+                registrationStatus:
+                    student.registrationStatus,
             },
         });
 
     } catch (error) {
 
-        console.error("❌ Student login error:");
+        console.error(
+            "❌ Student login error:"
+        );
+
         console.error(error);
 
         return res.status(500).json({
             success: false,
-            message: "Unable to login.",
+            message:
+                "Unable to login.",
         });
     }
 };
 
 
 // =====================================================
-// CHANGE PASSWORD
+// CHANGE TEMPORARY PASSWORD
 // =====================================================
 
-const changeTemporaryPassword = async (req, res) => {
+const changeTemporaryPassword = async (
+    req,
+    res
+) => {
+
     try {
 
-        const studentId = req.student.studentId;
+        const studentId =
+            req.student.studentId;
 
         const {
             newPassword,
             confirmPassword,
         } = req.body;
 
-        if (!newPassword || !confirmPassword) {
+        // =================================================
+        // VALIDATION
+        // =================================================
+
+        if (
+            !newPassword ||
+            !confirmPassword
+        ) {
             return res.status(400).json({
                 success: false,
                 message:
@@ -161,7 +219,10 @@ const changeTemporaryPassword = async (req, res) => {
             });
         }
 
-        if (newPassword !== confirmPassword) {
+        if (
+            newPassword !==
+            confirmPassword
+        ) {
             return res.status(400).json({
                 success: false,
                 message:
@@ -169,7 +230,9 @@ const changeTemporaryPassword = async (req, res) => {
             });
         }
 
-        if (newPassword.length < 8) {
+        if (
+            newPassword.length < 8
+        ) {
             return res.status(400).json({
                 success: false,
                 message:
@@ -177,18 +240,42 @@ const changeTemporaryPassword = async (req, res) => {
             });
         }
 
-        const student = await Student.findOne({
-            studentId,
-        });
+        // =================================================
+        // FIND STUDENT
+        // =================================================
+
+        const student =
+            await Student.findOne({
+                studentId,
+            });
 
         if (!student) {
             return res.status(404).json({
                 success: false,
-                message: "Student not found.",
+                message:
+                    "Student not found.",
             });
         }
 
-        // Hash new password
+        // =================================================
+        // MAKE SURE REGISTRATION IS COMPLETE
+        // =================================================
+
+        if (
+            student.registrationStatus !==
+            "submitted"
+        ) {
+            return res.status(403).json({
+                success: false,
+                message:
+                    "Student registration is not completed.",
+            });
+        }
+
+        // =================================================
+        // HASH NEW PASSWORD
+        // =================================================
+
         const passwordHash =
             await bcrypt.hash(
                 newPassword,
@@ -202,6 +289,10 @@ const changeTemporaryPassword = async (req, res) => {
             false;
 
         await student.save();
+
+        console.log(
+            `✅ Password changed for Student ID ${student.studentId}`
+        );
 
         return res.status(200).json({
             success: true,
@@ -230,14 +321,19 @@ const changeTemporaryPassword = async (req, res) => {
 // UPLOAD PROFILE PICTURE
 // =====================================================
 
-const uploadProfilePicture = async (req, res) => {
+const uploadProfilePicture = async (
+    req,
+    res
+) => {
+
     try {
 
         const studentId =
             req.student.studentId;
 
-        const { profilePicture } =
-            req.body;
+        const {
+            profilePicture,
+        } = req.body;
 
         if (!profilePicture) {
             return res.status(400).json({
@@ -247,7 +343,10 @@ const uploadProfilePicture = async (req, res) => {
             });
         }
 
-        // Basic image validation
+        // =================================================
+        // BASIC IMAGE VALIDATION
+        // =================================================
+
         if (
             !profilePicture.startsWith(
                 "data:image/"
@@ -259,6 +358,10 @@ const uploadProfilePicture = async (req, res) => {
                     "Invalid image format.",
             });
         }
+
+        // =================================================
+        // FIND STUDENT
+        // =================================================
 
         const student =
             await Student.findOne({
@@ -273,6 +376,24 @@ const uploadProfilePicture = async (req, res) => {
             });
         }
 
+        // =================================================
+        // PASSWORD MUST ALREADY BE CHANGED
+        // =================================================
+
+        if (
+            student.mustChangePassword === true
+        ) {
+            return res.status(403).json({
+                success: false,
+                message:
+                    "Please change your password before uploading your profile picture.",
+            });
+        }
+
+        // =================================================
+        // SAVE PROFILE PICTURE
+        // =================================================
+
         student.profilePicture =
             profilePicture;
 
@@ -281,8 +402,14 @@ const uploadProfilePicture = async (req, res) => {
 
         await student.save();
 
+        console.log(
+            `📸 Profile picture uploaded for Student ID ${student.studentId}`
+        );
+
         return res.status(200).json({
+
             success: true,
+
             message:
                 "Profile picture uploaded successfully.",
 
@@ -311,7 +438,11 @@ const uploadProfilePicture = async (req, res) => {
 // GET CURRENT STUDENT
 // =====================================================
 
-const getCurrentStudent = async (req, res) => {
+const getCurrentStudent = async (
+    req,
+    res
+) => {
+
     try {
 
         const student =
@@ -329,9 +460,11 @@ const getCurrentStudent = async (req, res) => {
         }
 
         return res.status(200).json({
+
             success: true,
 
             student: {
+
                 studentId:
                     student.studentId,
 
@@ -371,6 +504,10 @@ const getCurrentStudent = async (req, res) => {
     }
 };
 
+
+// =====================================================
+// EXPORT
+// =====================================================
 
 module.exports = {
     studentLogin,
