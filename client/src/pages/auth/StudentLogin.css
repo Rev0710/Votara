@@ -555,6 +555,30 @@
     }
 }
 
+/* =========================================
+   REGISTER ILLUSTRATION
+========================================= */
+
+.student-login-visual {
+    width: 360px;
+    height: 340px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-top: 40px;
+}
+
+.student-login-illustration {
+    width: 100%;
+    height: 100%;
+
+    object-fit: contain;
+
+    display: block;
+}
+
 /* =========================
    PAGE TRANSITION
 ========================= */

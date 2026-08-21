@@ -51,14 +51,11 @@ const StudentLogin = () => {
 
                     <div className="student-login-visual">
 
-                        <div className="visual-circle visual-circle-one"></div>
-                        <div className="visual-circle visual-circle-two"></div>
-
-                        <div className="visual-content">
-                            <span className="visual-line"></span>
-                            <span className="visual-line"></span>
-                            <span className="visual-line"></span>
-                        </div>
+                        <img
+                       src="/src/images/Login.png"
+                        alt="Votara login illustration"
+                        className="student-login-illustration"
+                      />
 
                     </div>
 

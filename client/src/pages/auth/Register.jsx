@@ -96,14 +96,11 @@ const Register = () => {
 
                     <div className="register-visual">
 
-                        <div className="visual-circle visual-circle-one"></div>
-                        <div className="visual-circle visual-circle-two"></div>
-
-                        <div className="visual-content">
-                            <span className="visual-line"></span>
-                            <span className="visual-line"></span>
-                            <span className="visual-line"></span>
-                        </div>
+                        <img
+                       src="/src/images/Register.png"
+                        alt="Votara registration illustration"
+                        className="register-illustration"
+                      />
 
                     </div>
 
