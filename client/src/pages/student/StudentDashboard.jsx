@@ -1,295 +1,586 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+// StudentDashboard.jsx
+
+import { useEffect, useState } from "react";
 import "./StudentDashboard.css";
 
-const NAV_ITEMS = [
-    { key: "dashboard", label: "Dashboard", icon: "dashboard" },
-    { key: "vote", label: "Vote", icon: "vote" },
-    { key: "guidelines", label: "VOTERS GUIDELINES", icon: "info" },
-    { key: "settings", label: "Settings", icon: "gear" },
-    { key: "qrcode", label: "QR Code", icon: "qr" },
-];
+// =====================================================
+// LOGO SRC - CHANGE THIS PATH TO YOUR IMAGE
+// =====================================================
 
-// Values read directly off the chart in the mockup (bar lengths / gridlines).
-const CANDIDATES = [
-    { name: "Ryan", votes: 15, color: "#1861FD" },
-    { name: "Rex", votes: 45, color: "#70D1F7" },
-    { name: "Mathew", votes: 27, color: "#FFE8D6" },
-    { name: "Mark", votes: 38, color: "#000000" },
-];
-const CHART_MAX = 50;
+const votaraLogoSrc = "/src/images/Votara.png";
 
-const PROCESS_STEPS = ["Verify Identity", "Review candidates", "Cast your vote", "Submit and confirm", "Present QR"];
+// =====================================================
+// SIDEBAR ICONS
+// =====================================================
 
-// Replace with a real value from your backend — mockup shows 00:07:42 remaining.
-const ELECTION_DEADLINE = new Date(Date.now() + (0 * 3600 + 7 * 60 + 42) * 1000);
+import dashboardIcon from "/src/images/homealt.png";
+import voteIcon from "/src/images/votealt.png";
+import guidelinesIcon from "/src/images/guidelinesalt.png";
+import settingsIcon from "/src/images/settingalt.png";
+import qrCodeIcon from "/src/images/Qr-code.png";
 
-function useCountdown(target) {
-    const [remaining, setRemaining] = useState(() => target - Date.now());
-    useEffect(() => {
-        const id = setInterval(() => setRemaining(target - Date.now()), 1000);
-        return () => clearInterval(id);
-    }, [target]);
-    const clamped = Math.max(0, remaining);
-    const hours = String(Math.floor(clamped / 3600000)).padStart(2, "0");
-    const minutes = String(Math.floor((clamped % 3600000) / 60000)).padStart(2, "0");
-    const seconds = String(Math.floor((clamped % 60000) / 1000)).padStart(2, "0");
-    return { hours, minutes, seconds, expired: clamped === 0 };
-}
+import dashboardActiveIcon from "/src/images/home.png";
+import voteActiveIcon from "/src/images/review.png";
+import guidelinesActiveIcon from "/src/images/guidelines.png";
+import settingsActiveIcon from "/src/images/setting.png";
+import qrCodeActiveIcon from "/src/images/Qrcodealt.png";
 
-const NavIcon = ({ type }) => {
-    switch (type) {
-        case "dashboard":
-            return (
-                <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor">
-                    <circle cx="4" cy="4" r="2" /><circle cx="10" cy="4" r="2" /><circle cx="16" cy="4" r="2" />
-                    <circle cx="4" cy="10" r="2" /><circle cx="10" cy="10" r="2" /><circle cx="16" cy="10" r="2" />
-                    <circle cx="4" cy="16" r="2" /><circle cx="10" cy="16" r="2" />
-                </svg>
-            );
-        case "vote":
-            return (
-                <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor">
-                    <rect x="2" y="12" width="3" height="6" rx="1" />
-                    <rect x="8.5" y="7" width="3" height="11" rx="1" />
-                    <rect x="15" y="2" width="3" height="16" rx="1" />
-                </svg>
-            );
-        case "info":
-            return (
-                <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6">
-                    <circle cx="10" cy="10" r="8" />
-                    <line x1="10" y1="9" x2="10" y2="14" strokeLinecap="round" />
-                    <circle cx="10" cy="6.2" r="0.9" fill="currentColor" stroke="none" />
-                </svg>
-            );
-        case "gear":
-            return (
-                <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor">
-                    <path d="M10 6.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7zm7.4 3.5c0 .4 0 .8-.1 1.2l1.6 1.3-1.6 2.8-1.9-.6c-.6.5-1.3.9-2 1.2l-.3 2H8.9l-.3-2c-.7-.3-1.4-.7-2-1.2l-1.9.6-1.6-2.8 1.6-1.3a7 7 0 010-2.4L3.1 9.5l1.6-2.8 1.9.6c.6-.5 1.3-.9 2-1.2l.3-2h2.2l.3 2c.7.3 1.4.7 2 1.2l1.9-.6 1.6 2.8-1.6 1.3c.1.4.1.8.1 1.2z" />
-                </svg>
-            );
-        case "qr":
-            return (
-                <svg viewBox="0 0 20 20" width="16" height="16">
-                    <circle cx="10" cy="10" r="8" fill="currentColor" />
-                    <path d="M10 2a8 8 0 000 16z" fill="#fff" opacity="0.85" />
-                </svg>
-            );
-        default:
-            return null;
-    }
-};
+function StudentDashboard() {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [activeMenu, setActiveMenu] = useState("dashboard");
+  const [student, setStudent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [searchValue, setSearchValue] = useState("");
+  const [calendarTab, setCalendarTab] = useState("Today");
+  const [selectedFaq, setSelectedFaq] = useState(null);
 
-const VotaraLogo = () => (
-    <svg viewBox="0 0 34 22" width="30" height="20">
-        <path d="M2 2 L9 2 L5.5 9 Z" fill="#1861FD" />
-        <circle cx="20" cy="6" r="4" fill="#1861FD" />
-        <path d="M13 20c0-4.4 3.6-8 8-8s8 3.6 8 8z" fill="#1861FD" />
-    </svg>
-);
+  useEffect(() => {
+    const fetchStudent = async () => {
+      try {
+        const token = localStorage.getItem("token");
 
-const StudentDashboard = () => {
-    const navigate = useNavigate();
-    const studentData = localStorage.getItem("votaraStudent");
-    const student = studentData ? JSON.parse(studentData) : null;
+        const response = await fetch(
+          "http://localhost:5000/api/student/current",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-    const [collapsed, setCollapsed] = useState(false);
-    const [activeNav, setActiveNav] = useState("dashboard");
-    const [calendarTab, setCalendarTab] = useState("Today");
-    const [hasVoted, setHasVoted] = useState(false);
-    const [activeFaq, setActiveFaq] = useState(null);
+        const data = await response.json();
 
-    const countdown = useCountdown(ELECTION_DEADLINE);
-
-    const handleLogout = () => {
-        localStorage.removeItem("votaraToken");
-        localStorage.removeItem("votaraStudent");
-        navigate("/student-login");
+        if (data.success && data.student) {
+          setStudent(data.student);
+        }
+      } catch (error) {
+        console.error("Unable to load student:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    const handleNavClick = (key) => {
-        setActiveNav(key);
-        if (key === "vote") navigate("/vote");
-        if (key === "guidelines") navigate("/voter-guidelines");
-        if (key === "settings") navigate("/settings");
-        if (key === "qrcode") navigate("/qr-code");
-    };
+    fetchStudent();
+  }, []);
 
-    const handleVoteNow = () => {
-        setHasVoted(true);
-        navigate("/vote");
-    };
+  const sidebarItems = [
+    {
+      id: "dashboard",
+      label: "Dashboard",
+      icon: dashboardIcon,
+      activeIcon: dashboardActiveIcon,
+    },
+    {
+      id: "vote",
+      label: "Vote",
+      icon: voteIcon,
+      activeIcon: voteActiveIcon,
+    },
+    {
+      id: "guidelines",
+      label: "VOTERS GUIDELINES",
+      icon: guidelinesIcon,
+      activeIcon: guidelinesActiveIcon,
+    },
+    {
+      id: "settings",
+      label: "Settings",
+      icon: settingsIcon,
+      activeIcon: settingsActiveIcon,
+    },
+    {
+      id: "qr",
+      label: "QR Code",
+      icon: qrCodeIcon,
+      activeIcon: qrCodeActiveIcon,
+    },
+  ];
 
-    const fullName = student?.fullName || "Arthur Morgan";
-    const firstName = fullName.split(" ")[0];
-    const initials = fullName.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
+  const handleMenuClick = (id) => {
+    setActiveMenu(id);
+  };
 
-    return (
-        <div className={`votara-shell ${collapsed ? "is-collapsed" : ""}`}>
-            <aside className="votara-sidebar">
-                <div className="sidebar-top">
-                    <button className="collapse-btn" onClick={() => setCollapsed((c) => !c)} aria-label="Toggle sidebar">☰</button>
-                    <div className="brand">
-                        <VotaraLogo />
-                        <span className="brand-name">Votara</span>
-                    </div>
-                </div>
+  const fullName = student?.fullName || "Arthur Morgan";
+  const firstName = fullName.split(" ")[0] || "Arthur";
 
-                <div className="profile-block">
-                    <div className="profile-avatar">{initials}</div>
-                    <span className="profile-name">{fullName}</span>
-                    <button className="profile-link">View Profile</button>
-                </div>
+  const initials = fullName
+    .split(" ")
+    .map((name) => name.charAt(0))
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
-                <nav className="sidebar-nav">
-                    {NAV_ITEMS.map((item) => (
-                        <button
-                            key={item.key}
-                            className={`nav-item ${activeNav === item.key ? "is-active" : ""}`}
-                            onClick={() => handleNavClick(item.key)}
-                        >
-                            <span className="nav-icon"><NavIcon type={item.icon} /></span>
-                            <span className="nav-label">{item.label}</span>
-                        </button>
-                    ))}
-                </nav>
+  const profilePicture = student?.profilePicture;
 
-                <div className="sidebar-bottom">
-                    <button className="collapse-btn ghost" onClick={() => setCollapsed((c) => !c)} aria-label="Collapse sidebar">←</button>
-                    <button className="logout-link" onClick={handleLogout}>Logout</button>
-                </div>
-            </aside>
+  const faqs = [
+    {
+      question: "QUESTION 1",
+      answer:
+        "You can participate in the election by selecting the Vote section from the sidebar.",
+    },
+    {
+      question: "QUESTION 2",
+      answer:
+        "Review the available candidates and select your preferred candidate before submitting your vote.",
+    },
+    {
+      question: "QUESTION 3",
+      answer:
+        "Once your vote is submitted and confirmed, your participation will be recorded.",
+    },
+  ];
 
-            <div className="votara-main">
-                <header className="votara-topbar">
-                    <div className="search-wrap">
-                        <span className="search-icon">🔍</span>
-                        <input className="search-input" type="text" placeholder="Search" />
-                    </div>
-                    <div className="topbar-actions">
-                        <button className="icon-btn" aria-label="Notifications">🔔</button>
-                        <button className="icon-btn" aria-label="Help">?</button>
-                        <div className="topbar-user">
-                            <div className="topbar-avatar">{initials}</div>
-                            <span>{firstName}</span>
-                        </div>
-                    </div>
-                </header>
+  if (loading) {
+    return <div className="dashboard-loading">Loading...</div>;
+  }
 
-                <main className="votara-content">
-                    <h1 className="greeting-title">Hello <strong>{firstName}!</strong></h1>
-                    <p className="greeting-sub">Welcome to Votara</p>
+  return (
+    <div className="student-dashboard">
+      {/* ================= NAVBAR ================= */}
 
-                    <div className="grid">
-                        <section className="card election-card">
-                            <span className="card-eyebrow">Ongoing Elections</span>
-                            <h2>President Student Council</h2>
-                            <button className="vote-btn" onClick={handleVoteNow} disabled={hasVoted || countdown.expired}>
-                                {countdown.expired ? "Polls closed" : hasVoted ? "Voted" : "Vote"}
-                            </button>
-                        </section>
+      <header className="top-navbar">
+        <div className="nav-left">
+          <button
+            type="button"
+            className="menu-toggle"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            aria-label="Toggle sidebar"
+          >
+            <span />
+            <span />
+            <span />
+          </button>
 
-                        <section className="card calendar-card">
-                            <div className="calendar-head">
-                                <h3>Calendar</h3>
-                                <div className="calendar-tabs">
-                                    {["Today", "Next week", "This Month"].map((t) => (
-                                        <button key={t} className={`tab ${calendarTab === t ? "is-active" : ""}`} onClick={() => setCalendarTab(t)}>
-                                            {t}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="calendar-hours">
-                                {["7:00", "8:00", "9:00", "10:00", "11:00", "11:00"].map((h, i) => (
-                                    <span key={i}>{h}</span>
-                                ))}
-                            </div>
-                            <div className="calendar-row">
-                                <span className="calendar-date">September 19</span>
-                                <div className="event-pill">
-                                    <span className="event-pill-title">President Student Council</span>
-                                    <div className="event-countdown">
-                                        <div className="countdown-box">
-                                            <span className="countdown-num">{countdown.hours}</span>
-                                            <span className="countdown-label">hrs</span>
-                                        </div>
-                                        <div className="countdown-box">
-                                            <span className="countdown-num">{countdown.minutes}</span>
-                                            <span className="countdown-label">min</span>
-                                        </div>
-                                        <div className="countdown-box">
-                                            <span className="countdown-num">{countdown.seconds}</span>
-                                            <span className="countdown-label">sec</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
+          <div className="brand">
+            <img
+              src={votaraLogoSrc}
+              alt="Votara"
+              className="votara-logo"
+            />
 
-                        <section className="card results-card">
-                            <h3 className="results-title">Live Results</h3>
-                            <div className="results-head">
-                                <button className="chevron">‹</button>
-                                <span>President Student Council</span>
-                                <button className="chevron">›</button>
-                            </div>
-                            <div className="bars">
-                                {CANDIDATES.map((c) => {
-                                    const pct = Math.round((c.votes / CHART_MAX) * 100);
-                                    return (
-                                        <div className="bar-row" key={c.name}>
-                                            <span className="bar-name">{c.name}</span>
-                                            <div className="bar-track">
-                                                <div className="bar-fill" style={{ width: `${pct}%`, background: c.color }} />
-                                            </div>
-                                            <span className="bar-pct" style={{ color: c.color === "#FFE8D6" ? "#e5a97a" : c.color }}>
-                                                {c.votes}
-                                            </span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </section>
-
-                        <section className="card process-card">
-                            <h3>Voting Process</h3>
-                            <ol className="process-steps">
-                                {PROCESS_STEPS.map((step, i) => (
-                                    <li key={step} className={i === PROCESS_STEPS.length - 1 ? "is-pending" : ""}>
-                                        <span className="step-num">{i + 1}</span>
-                                        <span className="step-text">{step}</span>
-                                    </li>
-                                ))}
-                            </ol>
-                        </section>
-
-                        <section className="card announce-card">
-                            <h3>Announcements</h3>
-                            <p>Polls close in before 4pm</p>
-                            <button className="link-btn" onClick={() => handleNavClick("vote")}>See all ›</button>
-                        </section>
-
-                        <section className="faq-row">
-                            <h3 className="faq-title">FAQs</h3>
-                            <div className="faq-pills">
-                                {["QUESTION 1", "QUESTION 2", "QUESTION 3"].map((label, i) => (
-                                    <button
-                                        key={label}
-                                        className={`faq-pill ${activeFaq === i ? "is-active" : ""}`}
-                                        onClick={() => setActiveFaq(activeFaq === i ? null : i)}
-                                    >
-                                        {label}
-                                    </button>
-                                ))}
-                            </div>
-                        </section>
-                    </div>
-                </main>
-            </div>
+            <span>Votara</span>
+          </div>
         </div>
-    );
-};
+
+        <div className="search-container">
+          <input
+            type="text"
+            placeholder="Search"
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+          />
+
+          <button
+            type="button"
+            className="search-button"
+            aria-label="Search"
+          >
+            ⌕
+          </button>
+        </div>
+
+        <div className="nav-right">
+          <button
+          
+            type="button"
+            className="nav-icon-button"
+            aria-label="Notifications"
+          >
+            <img
+      src="/src/images/bell.png"
+      alt="Notifications"
+      className="nav-icon-image"
+    />
+          </button>
+
+          <button
+            type="button"
+            className="help-button"
+            aria-label="Help"
+          >
+            ?
+          </button>
+
+          <div className="nav-profile">
+            {profilePicture ? (
+              <img
+                src={profilePicture}
+                alt={fullName}
+                className="nav-profile-image"
+              />
+            ) : (
+              <div className="nav-profile-placeholder">
+                {initials}
+              </div>
+            )}
+
+            <span>{firstName}</span>
+          </div>
+        </div>
+      </header>
+
+      <div className="dashboard-body">
+        {/* ================= SIDEBAR ================= */}
+
+        <aside
+          className={`sidebar ${
+            sidebarOpen ? "sidebar-open" : "sidebar-collapsed"
+          }`}
+        >
+          <div className="sidebar-profile">
+            {profilePicture ? (
+              <img
+                src={profilePicture}
+                alt={fullName}
+                className="profile-picture"
+              />
+            ) : (
+              <div className="profile-placeholder">{initials}</div>
+            )}
+
+            <div className="profile-details">
+              <h3>{fullName}</h3>
+
+              <button type="button">Show Profile</button>
+            </div>
+          </div>
+
+          <nav className="sidebar-menu">
+            {sidebarItems.map((item) => {
+              const isActive = activeMenu === item.id;
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`sidebar-item ${isActive ? "active" : ""}`}
+                  onClick={() => handleMenuClick(item.id)}
+                >
+                  <span className="sidebar-icon-wrapper">
+                    <img
+                      src={item.icon}
+                      alt=""
+                      className={`sidebar-menu-icon normal-icon ${
+                        isActive ? "hide-icon" : ""
+                      }`}
+                    />
+
+                    <img
+                      src={item.activeIcon}
+                      alt=""
+                      className={`sidebar-menu-icon active-icon ${
+                        isActive ? "show-icon" : ""
+                      }`}
+                    />
+                  </span>
+
+                  <span className="sidebar-label">
+                    {item.label}
+                  </span>
+                </button>
+              );
+            })}
+          </nav>
+
+          <div className="sidebar-bottom">
+            <button
+              type="button"
+              className="logout-button"
+              onClick={() => {
+                localStorage.removeItem("token");
+                localStorage.removeItem("student");
+                window.location.href = "/";
+              }}
+            >
+              <img
+      src="/src/images/logoutalt.png"
+      alt="Log out"
+      className="logout-image"
+    />
+              <span className="logout-text">Log out</span>
+            </button>
+          </div>
+        </aside>
+
+        {/* ================= MAIN CONTENT ================= */}
+
+        <main className="dashboard-main">
+          <section className="welcome-section">
+            <h1>
+              Hello <strong>{firstName}!</strong>
+            </h1>
+
+            <p>Welcome to Votara</p>
+          </section>
+
+          <div className="dashboard-grid">
+            {/* ================= LEFT COLUMN ================= */}
+
+            <div className="left-column">
+              <section className="election-card main-hover-card">
+                <h2>Ongoing Elections</h2>
+
+                <h3>
+                  President Student
+                  <br />
+                  Council
+                </h3>
+
+                <button
+                  type="button"
+                  className="vote-button"
+                  onClick={() => handleMenuClick("vote")}
+                >
+                  Vote
+                </button>
+              </section>
+
+              <section className="results-card main-hover-card">
+                <div className="results-header">
+                  <h3>Live Results</h3>
+                </div>
+
+                <div className="position-title">
+                  <button type="button" className="chart-arrow">
+                    ‹
+                  </button>
+
+                  <h2>President Student Council</h2>
+
+                  <button type="button" className="chart-arrow">
+                    ›
+                  </button>
+                </div>
+
+                <div className="chart">
+                  <div className="chart-row">
+                    <span className="candidate-name">Ryan</span>
+
+                    <div className="bar-area">
+                      <div
+                        className="bar ryan"
+                        style={{ width: "35%" }}
+                      />
+                    </div>
+
+                    <span className="vote-count">16</span>
+                  </div>
+
+                  <div className="chart-row">
+                    <span className="candidate-name">Rev</span>
+
+                    <div className="bar-area">
+                      <div
+                        className="bar rev"
+                        style={{ width: "88%" }}
+                      />
+                    </div>
+
+                    <span className="vote-count">45</span>
+                  </div>
+
+                  <div className="chart-row">
+                    <span className="candidate-name">Mathew</span>
+
+                    <div className="bar-area">
+                      <div
+                        className="bar mathew"
+                        style={{ width: "52%" }}
+                      />
+                    </div>
+
+                    <span className="vote-count">27</span>
+                  </div>
+
+                  <div className="chart-row">
+                    <span className="candidate-name">Mark</span>
+
+                    <div className="bar-area">
+                      <div
+                        className="bar mark"
+                        style={{ width: "74%" }}
+                      />
+                    </div>
+
+                    <span className="vote-count">38</span>
+                  </div>
+                </div>
+              </section>
+
+              <section className="announcement-card main-hover-card">
+                <h3>Announcements</h3>
+
+                <p>Polls close in before 4pm</p>
+
+                <div className="announcement-line" />
+
+                <button type="button">See all ›</button>
+              </section>
+
+              <section className="faq-section">
+                <h3>FAQs</h3>
+
+                <div className="faq-list">
+                  {faqs.map((faq, index) => (
+                    <div className="faq-item" key={index}>
+                      <button
+                        type="button"
+                        className={`faq-button ${
+                          selectedFaq === index
+                            ? "faq-active"
+                            : ""
+                        }`}
+                        onClick={() =>
+                          setSelectedFaq(
+                            selectedFaq === index
+                              ? null
+                              : index
+                          )
+                        }
+                      >
+                        {faq.question}
+                      </button>
+
+                      {selectedFaq === index && (
+                        <div className="faq-answer">
+                          {faq.answer}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
+
+            {/* ================= RIGHT COLUMN ================= */}
+
+            <div className="right-column">
+              <section className="calendar-card main-hover-card">
+                <h3>Calendar</h3>
+
+                <div className="calendar-tabs">
+                  {["Today", "Next week", "This Month"].map(
+                    (tab) => (
+                      <button
+                        type="button"
+                        key={tab}
+                        className={
+                          calendarTab === tab
+                            ? "selected-tab"
+                            : ""
+                        }
+                        onClick={() => setCalendarTab(tab)}
+                      >
+                        {tab}
+                      </button>
+                    )
+                  )}
+                </div>
+
+                <div className="time-row">
+                  <span>7:00</span>
+                  <span>8:00</span>
+                  <span>9:00</span>
+                  <span>10:00</span>
+                  <span>11:00</span>
+                </div>
+
+                <div className="calendar-line" />
+
+                <div className="election-time">
+                  <div className="date">
+                    <strong>September</strong>
+                    <span>10</span>
+                  </div>
+
+                  <div className="countdown">
+                    <small>President Student Council</small>
+
+                    <div className="countdown-values">
+                      <span>
+                        <strong>00</strong>
+                        DAYS
+                      </span>
+
+                      <span>
+                        <strong>07</strong>
+                        HOURS
+                      </span>
+
+                      <span>
+                        <strong>42</strong>
+                        MINS
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section className="process-card main-hover-card">
+                <h3>Voting Process</h3>
+
+                <div className="process-list">
+                  <div className="process-item">
+                    <div className="process-number">1</div>
+
+                    <div className="process-text">
+                      <strong>Verify identity</strong>
+                      <span>
+                        Confirm your student ID to unlock ballots
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="process-item">
+                    <div className="process-number">2</div>
+
+                    <div className="process-text">
+                      <strong>Review candidates</strong>
+                      <span>
+                        Check profiles and platforms before choosing
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="process-item">
+                    <div className="process-number">3</div>
+
+                    <div className="process-text">
+                      <strong>Cast your vote</strong>
+                      <span>
+                        Select one candidate per position
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="process-item">
+                    <div className="process-number">4</div>
+
+                    <div className="process-text">
+                      <strong>Submit and confirm</strong>
+                      <span>
+                        Get a confirmation once your vote is recorded
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="process-item last">
+                    <div className="process-number inactive">
+                      5
+                    </div>
+
+                    <div className="process-text">
+                      <strong>Present QR</strong>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
 
 export default StudentDashboard;
