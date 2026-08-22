@@ -47,118 +47,137 @@ export const studentLogin = async (
 // CHANGE PASSWORD
 // =====================================================
 
-export const changePassword = async (
-    token,
-    newPassword,
-    confirmPassword
-) => {
+export const changeTemporaryPassword =
+    async (
+        token,
+        newPassword,
+        confirmPassword
+    ) => {
 
-    const response =
-        await fetch(
-            `${API_URL}/change-password`,
-            {
-                method: "POST",
+        const response =
+            await fetch(
+                `${API_URL}/change-password`,
+                {
+                    method: "POST",
 
-                headers: {
-                    "Content-Type":
-                        "application/json",
+                    headers: {
+                        "Content-Type":
+                            "application/json",
 
-                    Authorization:
-                        `Bearer ${token}`,
-                },
+                        Authorization:
+                            `Bearer ${token}`,
+                    },
 
-                body: JSON.stringify({
-                    newPassword,
-                    confirmPassword,
-                }),
-            }
-        );
+                    body: JSON.stringify({
+                        newPassword,
+                        confirmPassword,
+                    }),
+                }
+            );
 
-    const data =
-        await response.json();
+        const data =
+            await response.json();
 
-    if (!response.ok) {
-        throw new Error(
-            data.message ||
-            "Unable to change password."
-        );
-    }
+        if (!response.ok) {
+            throw new Error(
+                data.message ||
+                "Unable to change password."
+            );
+        }
 
-    return data;
-};
+        return data;
+    };
 
 
 // =====================================================
-// PROFILE PICTURE
+// UPLOAD PROFILE PICTURE
 // =====================================================
 
-export const uploadProfilePicture = async (
-    token,
-    profilePicture
-) => {
+export const uploadProfilePicture =
+    async (
+        token,
+        profilePicture
+    ) => {
 
-    const response =
-        await fetch(
-            `${API_URL}/profile-picture`,
-            {
-                method: "POST",
+        const response =
+            await fetch(
+                `${API_URL}/profile-picture`,
+                {
+                    method: "POST",
 
-                headers: {
-                    "Content-Type":
-                        "application/json",
+                    headers: {
+                        "Content-Type":
+                            "application/json",
 
-                    Authorization:
-                        `Bearer ${token}`,
-                },
+                        Authorization:
+                            `Bearer ${token}`,
+                    },
 
-                body: JSON.stringify({
-                    profilePicture,
-                }),
-            }
-        );
+                    body: JSON.stringify({
+                        profilePicture,
+                    }),
+                }
+            );
 
-    const data =
-        await response.json();
+        const data =
+            await response.json();
 
-    if (!response.ok) {
-        throw new Error(
-            data.message ||
-            "Unable to upload profile picture."
-        );
-    }
+        if (!response.ok) {
+            throw new Error(
+                data.message ||
+                "Unable to upload profile picture."
+            );
+        }
 
-    return data;
-};
+        return data;
+    };
 
 
 // =====================================================
 // GET CURRENT STUDENT
 // =====================================================
 
-export const getCurrentStudent = async (
-    token
-) => {
+export const getCurrentStudent =
+    async (token) => {
 
-    const response =
-        await fetch(
-            `${API_URL}/me`,
-            {
-                headers: {
-                    Authorization:
-                        `Bearer ${token}`,
-                },
-            }
-        );
+        const response =
+            await fetch(
+                `${API_URL}/me`,
+                {
+                    method: "GET",
 
-    const data =
-        await response.json();
+                    headers: {
+                        Authorization:
+                            `Bearer ${token}`,
+                    },
+                }
+            );
 
-    if (!response.ok) {
-        throw new Error(
-            data.message ||
-            "Unable to get student information."
-        );
-    }
+        const data =
+            await response.json();
 
-    return data;
+        if (!response.ok) {
+            throw new Error(
+                data.message ||
+                "Unable to get student information."
+            );
+        }
+
+        return data;
+    };
+
+
+// =====================================================
+// LOGOUT
+// =====================================================
+
+export const logoutStudent = () => {
+
+    localStorage.removeItem(
+        "votaraToken"
+    );
+
+    localStorage.removeItem(
+        "votaraStudent"
+    );
 };

@@ -2,10 +2,6 @@ const mongoose = require("mongoose");
 
 const studentSchema = new mongoose.Schema(
     {
-        // ==========================================
-        // STUDENT INFORMATION
-        // ==========================================
-
         studentId: {
             type: String,
             required: true,
@@ -26,10 +22,6 @@ const studentSchema = new mongoose.Schema(
             trim: true,
         },
 
-        // ==========================================
-        // EMAIL
-        // ==========================================
-
         email: {
             type: String,
             default: null,
@@ -38,7 +30,7 @@ const studentSchema = new mongoose.Schema(
         },
 
         // ==========================================
-        // PASSWORD / LOGIN
+        // PASSWORD
         // ==========================================
 
         passwordHash: {
@@ -104,10 +96,6 @@ const studentSchema = new mongoose.Schema(
             default: null,
         },
 
-        // ==========================================
-        // REGISTRATION DATE
-        // ==========================================
-
         registeredAt: {
             type: Date,
             default: null,
@@ -127,4 +115,5 @@ const studentSchema = new mongoose.Schema(
     }
 );
 
-module.exports = mongoose.model("Student", studentSchema);
+module.exports =
+    mongoose.model("Student", studentSchema);

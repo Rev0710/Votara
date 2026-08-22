@@ -54,7 +54,7 @@ const studentLogin = async (req, res) => {
         }
 
         // =================================================
-        // PASSWORD
+        // PASSWORD CHECK
         // =================================================
 
         const defaultPassword =
@@ -82,7 +82,7 @@ const studentLogin = async (req, res) => {
         } else {
 
             // =================================================
-            // NORMAL LOGIN AFTER PASSWORD CHANGE
+            // NORMAL LOGIN
             // =================================================
 
             passwordCorrect =
@@ -105,6 +105,33 @@ const studentLogin = async (req, res) => {
         }
 
         // =================================================
+        // SETUP STATUS
+        // =================================================
+
+        const mustChangePassword =
+            !student.passwordHash ||
+            student.mustChangePassword === true;
+
+        const needsProfilePicture =
+            !student.profilePicture;
+
+        let nextStep = "dashboard";
+
+        if (mustChangePassword) {
+
+            nextStep = "change-password";
+
+        } else if (needsProfilePicture) {
+
+            nextStep = "profile-picture";
+
+        }
+
+        const setupComplete =
+            !mustChangePassword &&
+            !needsProfilePicture;
+
+        // =================================================
         // CREATE JWT
         // =================================================
 
@@ -125,15 +152,7 @@ const studentLogin = async (req, res) => {
             );
 
         // =================================================
-        // CHECK PASSWORD STATUS
-        // =================================================
-
-        const mustChangePassword =
-            !student.passwordHash ||
-            student.mustChangePassword === true;
-
-        // =================================================
-        // LOGIN SUCCESS
+        // LOGIN RESPONSE
         // =================================================
 
         return res.status(200).json({
@@ -145,9 +164,20 @@ const studentLogin = async (req, res) => {
 
             token,
 
+            // Password status
             mustChangePassword,
 
+            // Photo status
+            needsProfilePicture,
+
+            // Overall setup status
+            setupComplete,
+
+            // Frontend should navigate here
+            nextStep,
+
             student: {
+
                 studentId:
                     student.studentId,
 
@@ -205,7 +235,7 @@ const changeTemporaryPassword = async (
         } = req.body;
 
         // =================================================
-        // VALIDATION
+        // REQUIRED FIELDS
         // =================================================
 
         if (
@@ -219,6 +249,10 @@ const changeTemporaryPassword = async (
             });
         }
 
+        // =================================================
+        // PASSWORD MATCH
+        // =================================================
+
         if (
             newPassword !==
             confirmPassword
@@ -230,49 +264,60 @@ const changeTemporaryPassword = async (
             });
         }
 
-       // =============================================
-// PASSWORD SECURITY REQUIREMENTS
-// =============================================
+        // =================================================
+        // PASSWORD SECURITY REQUIREMENTS
+        // =================================================
 
-if (newPassword.length < 8) {
-    return res.status(400).json({
-        success: false,
-        message:
-            "Password must be at least 8 characters.",
-    });
-}
+        if (newPassword.length < 8) {
 
-if (!/[A-Z]/.test(newPassword)) {
-    return res.status(400).json({
-        success: false,
-        message:
-            "Password must contain at least one uppercase letter.",
-    });
-}
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Password must be at least 8 characters.",
+            });
 
-if (!/[a-z]/.test(newPassword)) {
-    return res.status(400).json({
-        success: false,
-        message:
-            "Password must contain at least one lowercase letter.",
-    });
-}
+        }
 
-if (!/[0-9]/.test(newPassword)) {
-    return res.status(400).json({
-        success: false,
-        message:
-            "Password must contain at least one number.",
-    });
-}
+        if (!/[A-Z]/.test(newPassword)) {
 
-if (!/[^A-Za-z0-9]/.test(newPassword)) {
-    return res.status(400).json({
-        success: false,
-        message:
-            "Password must contain at least one special character.",
-    });
-}
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Password must contain at least one uppercase letter.",
+            });
+
+        }
+
+        if (!/[a-z]/.test(newPassword)) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Password must contain at least one lowercase letter.",
+            });
+
+        }
+
+        if (!/[0-9]/.test(newPassword)) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Password must contain at least one number.",
+            });
+
+        }
+
+        if (!/[^A-Za-z0-9]/.test(newPassword)) {
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Password must contain at least one special character.",
+            });
+
+        }
+
         // =================================================
         // FIND STUDENT
         // =================================================
@@ -291,7 +336,7 @@ if (!/[^A-Za-z0-9]/.test(newPassword)) {
         }
 
         // =================================================
-        // MAKE SURE REGISTRATION IS COMPLETE
+        // REGISTRATION CHECK
         // =================================================
 
         if (
@@ -306,7 +351,7 @@ if (!/[^A-Za-z0-9]/.test(newPassword)) {
         }
 
         // =================================================
-        // HASH NEW PASSWORD
+        // HASH PASSWORD
         // =================================================
 
         const passwordHash =
@@ -327,10 +372,36 @@ if (!/[^A-Za-z0-9]/.test(newPassword)) {
             `✅ Password changed for Student ID ${student.studentId}`
         );
 
+        // =================================================
+        // CHECK PHOTO
+        // =================================================
+
+        const needsProfilePicture =
+            !student.profilePicture;
+
         return res.status(200).json({
+
             success: true,
+
             message:
                 "Password changed successfully.",
+
+            needsProfilePicture,
+            
+            student: {
+        studentId: student.studentId,
+        fullName: student.fullName,
+        yearLevel: student.yearLevel,
+        email: student.email,
+        profilePicture: student.profilePicture,
+        registrationStatus:
+            student.registrationStatus,
+    },
+
+            nextStep:
+                needsProfilePicture
+                    ? "profile-picture"
+                    : "dashboard",
         });
 
     } catch (error) {
@@ -368,6 +439,10 @@ const uploadProfilePicture = async (
             profilePicture,
         } = req.body;
 
+        // =================================================
+        // REQUIRED
+        // =================================================
+
         if (!profilePicture) {
             return res.status(400).json({
                 success: false,
@@ -377,7 +452,7 @@ const uploadProfilePicture = async (
         }
 
         // =================================================
-        // BASIC IMAGE VALIDATION
+        // IMAGE VALIDATION
         // =================================================
 
         if (
@@ -410,7 +485,7 @@ const uploadProfilePicture = async (
         }
 
         // =================================================
-        // PASSWORD MUST ALREADY BE CHANGED
+        // PASSWORD MUST BE CHANGED FIRST
         // =================================================
 
         if (
@@ -424,7 +499,7 @@ const uploadProfilePicture = async (
         }
 
         // =================================================
-        // SAVE PROFILE PICTURE
+        // SAVE PHOTO
         // =================================================
 
         student.profilePicture =
@@ -439,6 +514,10 @@ const uploadProfilePicture = async (
             `📸 Profile picture uploaded for Student ID ${student.studentId}`
         );
 
+        // =================================================
+        // SETUP IS NOW COMPLETE
+        // =================================================
+
         return res.status(200).json({
 
             success: true,
@@ -448,6 +527,12 @@ const uploadProfilePicture = async (
 
             profilePicture:
                 student.profilePicture,
+
+            setupComplete:
+                true,
+
+            nextStep:
+                "dashboard",
         });
 
     } catch (error) {
@@ -492,9 +577,65 @@ const getCurrentStudent = async (
             });
         }
 
+        // =================================================
+        // CHECK SETUP
+        // =================================================
+
+        const mustChangePassword =
+            !student.passwordHash ||
+            student.mustChangePassword === true;
+
+        const needsProfilePicture =
+            !student.profilePicture;
+
+        // =================================================
+        // DO NOT ALLOW DASHBOARD ACCESS YET
+        // =================================================
+
+        if (
+            mustChangePassword ||
+            needsProfilePicture
+        ) {
+
+            let nextStep =
+                "change-password";
+
+            if (
+                !mustChangePassword &&
+                needsProfilePicture
+            ) {
+                nextStep =
+                    "profile-picture";
+            }
+
+            return res.status(403).json({
+
+                success: false,
+
+                setupComplete:
+                    false,
+
+                mustChangePassword,
+
+                needsProfilePicture,
+
+                nextStep,
+
+                message:
+                    "Please complete your account setup before accessing the dashboard.",
+            });
+        }
+
+        // =================================================
+        // EVERYTHING COMPLETE
+        // =================================================
+
         return res.status(200).json({
 
             success: true,
+
+            setupComplete:
+                true,
 
             student: {
 

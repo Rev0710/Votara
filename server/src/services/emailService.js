@@ -1,43 +1,93 @@
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-    host: "64.233.188.109",
-    port: 465,
-    secure: true,
-
-    tls: {
-        servername: "smtp.gmail.com",
-        rejectUnauthorized: false,
-    },
+    service: "gmail",
 
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
     },
 
-    connectionTimeout: 30000,
-    greetingTimeout: 30000,
-    socketTimeout: 30000,
+    connectionTimeout: 60000,
+    greetingTimeout: 60000,
+    socketTimeout: 60000,
 });
 
+module.exports = transporter;
+
+// =====================================================
+// VERIFY EMAIL CONNECTION
+// =====================================================
+
 const verifyEmailConnection = async () => {
+
     try {
+
+        console.log("");
+        console.log(
+            "📧 Testing Gmail SMTP connection..."
+        );
+
         await transporter.verify();
 
-        console.log("✅ Gmail SMTP connection successful.");
-        console.log(`📧 Email sender: ${process.env.EMAIL_USER}`);
+        console.log(
+            "✅ Gmail SMTP server is ready."
+        );
+
+        console.log(
+            `📨 Email sender: ${process.env.EMAIL_USER}`
+        );
+
     } catch (error) {
-        console.error("❌ Gmail SMTP connection failed.");
-        console.error(error);
+
+        console.error("");
+        console.error(
+            "❌ Gmail SMTP connection failed."
+        );
+
+        console.error(
+            "Error code:",
+            error.code
+        );
+
+        console.error(
+            "Error message:",
+            error.message
+        );
+
+        console.error(
+            "Command:",
+            error.command
+        );
     }
 };
 
-const sendOTPEmail = async (recipientEmail, otp) => {
+
+// =====================================================
+// SEND OTP EMAIL
+// =====================================================
+
+const sendOTPEmail = async (
+    recipientEmail,
+    otp
+) => {
+
     try {
+
         const mailOptions = {
-            from: `"VOTARA Election System" <${process.env.EMAIL_USER}>`,
-            to: recipientEmail,
-            subject: "VOTARA Student Registration OTP",
+
+            from:
+                `"VOTARA Election System" <${process.env.EMAIL_USER}>`,
+
+            to:
+                recipientEmail,
+
+            subject:
+                "VOTARA Student Registration OTP",
+
+            // -----------------------------------------
+            // PLAIN TEXT EMAIL
+            // -----------------------------------------
 
             text: `
 Your VOTARA verification code is:
@@ -46,8 +96,15 @@ ${otp}
 
 This code will expire in 5 minutes.
 
-If you did not request this code, please ignore this email.
+If you did not request this verification code,
+please ignore this email.
+
+VOTARA — Department Student Election System
             `,
+
+            // -----------------------------------------
+            // HTML EMAIL
+            // -----------------------------------------
 
             html: `
                 <div style="
@@ -60,7 +117,10 @@ If you did not request this code, please ignore this email.
                     background: #ffffff;
                 ">
 
-                    <h2 style="color:#0647ff;">
+                    <h2 style="
+                        color: #0647ff;
+                        margin-bottom: 5px;
+                    ">
                         VOTARA
                     </h2>
 
@@ -78,61 +138,131 @@ If you did not request this code, please ignore this email.
                     </p>
 
                     <div style="
-                        font-size:32px;
-                        font-weight:bold;
-                        letter-spacing:8px;
-                        color:#0647ff;
-                        padding:20px;
-                        text-align:center;
-                        background:#f1f5ff;
-                        border-radius:10px;
+                        font-size: 32px;
+                        font-weight: bold;
+                        letter-spacing: 8px;
+                        color: #0647ff;
+                        padding: 20px;
+                        text-align: center;
+                        background: #f1f5ff;
+                        border-radius: 10px;
+                        margin: 20px 0;
                     ">
                         ${otp}
                     </div>
 
-                    <p style="margin-top:20px;">
-                        This OTP will expire in
-                        <strong>5 minutes</strong>.
+                    <p>
+                        This verification code will expire
+                        in <strong>5 minutes</strong>.
                     </p>
 
                     <p style="
-                        color:#6b7280;
-                        font-size:13px;
+                        color: #6b7280;
+                        font-size: 13px;
                     ">
-                        If you did not request this verification code,
-                        please ignore this email.
+                        If you did not request this
+                        verification code, please ignore
+                        this email.
                     </p>
 
-                    <hr>
+                    <hr style="
+                        border: none;
+                        border-top: 1px solid #e5e7eb;
+                        margin: 25px 0;
+                    ">
 
                     <p style="
-                        color:#6b7280;
-                        font-size:12px;
+                        color: #6b7280;
+                        font-size: 12px;
                     ">
-                        VOTARA — Department Student Election System
+                        VOTARA — Department Student
+                        Election System
                     </p>
 
                 </div>
             `,
         };
 
-        const result = await transporter.sendMail(mailOptions);
 
-        console.log("✅ OTP email sent successfully.");
-        console.log("📨 Message ID:", result.messageId);
+        // =================================================
+        // SEND EMAIL
+        // =================================================
+
+        const result =
+            await transporter.sendMail(
+                mailOptions
+            );
+
+
+        console.log("");
+        console.log(
+            "================================="
+        );
+
+        console.log(
+            "✅ OTP EMAIL SENT SUCCESSFULLY"
+        );
+
+        console.log(
+            `📧 To: ${recipientEmail}`
+        );
+
+        console.log(
+            `📨 Message ID: ${result.messageId}`
+        );
+
+        console.log(
+            "================================="
+        );
+
 
         return result;
 
     } catch (error) {
-        console.error("❌ OTP sending error:");
-        console.error(error);
+
+        console.error("");
+        console.error(
+            "================================="
+        );
+
+        console.error(
+            "❌ OTP EMAIL FAILED"
+        );
+
+        console.error(
+            "================================="
+        );
+
+        console.error(
+            "Error code:",
+            error.code
+        );
+
+        console.error(
+            "Error message:",
+            error.message
+        );
+
+        console.error(
+            "Command:",
+            error.command
+        );
 
         throw error;
     }
 };
 
+
+// =====================================================
+// EXPORT
+// =====================================================
+
 module.exports = {
+
     transporter,
+
     verifyEmailConnection,
+
     sendOTPEmail,
+
 };

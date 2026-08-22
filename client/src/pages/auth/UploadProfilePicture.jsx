@@ -1,18 +1,21 @@
 import React, {
     useRef,
-    useState,
+    useState
 } from "react";
 
-import { useNavigate } from "react-router-dom";
+import {
+    useNavigate
+} from "react-router-dom";
 
 import {
-    uploadProfilePicture,
+    uploadProfilePicture
 } from "../../services/authService";
 
 
 const UploadProfilePicture = () => {
 
-    const navigate = useNavigate();
+    const navigate =
+        useNavigate();
 
     const fileInputRef =
         useRef(null);
@@ -23,17 +26,35 @@ const UploadProfilePicture = () => {
     const canvasRef =
         useRef(null);
 
-    const [image, setImage] =
-        useState(null);
 
-    const [cameraOpen, setCameraOpen] =
-        useState(false);
+    const [
+        preview,
+        setPreview
+    ] = useState("");
 
-    const [error, setError] =
-        useState("");
 
-    const [loading, setLoading] =
-        useState(false);
+    const [
+        error,
+        setError
+    ] = useState("");
+
+
+    const [
+        loading,
+        setLoading
+    ] = useState(false);
+
+
+    const [
+        cameraOpen,
+        setCameraOpen
+    ] = useState(false);
+
+
+    const [
+        stream,
+        setStream
+    ] = useState(null);
 
 
     const token =
@@ -42,16 +63,19 @@ const UploadProfilePicture = () => {
         );
 
 
-    // ==========================================
-    // SELECT IMAGE
-    // ==========================================
+    // =====================================================
+    // FILE UPLOAD
+    // =====================================================
 
     const handleFileChange = (e) => {
 
         const file =
             e.target.files?.[0];
 
-        if (!file) return;
+        if (!file) {
+            return;
+        }
+
 
         if (
             !file.type.startsWith(
@@ -66,26 +90,28 @@ const UploadProfilePicture = () => {
             return;
         }
 
+
         const reader =
             new FileReader();
 
+
         reader.onload = () => {
 
-            setImage(
+            setPreview(
                 reader.result
             );
 
             setError("");
-
         };
+
 
         reader.readAsDataURL(file);
     };
 
 
-    // ==========================================
+    // =====================================================
     // OPEN CAMERA
-    // ==========================================
+    // =====================================================
 
     const openCamera = async () => {
 
@@ -93,38 +119,53 @@ const UploadProfilePicture = () => {
 
             setError("");
 
-            setCameraOpen(true);
-
-            const stream =
+            const mediaStream =
                 await navigator.mediaDevices.getUserMedia(
                     {
                         video: true,
+                        audio: false,
                     }
                 );
 
-            if (videoRef.current) {
 
-                videoRef.current.srcObject =
-                    stream;
+            setStream(
+                mediaStream
+            );
 
-            }
+            setCameraOpen(
+                true
+            );
+
+
+            setTimeout(() => {
+
+                if (
+                    videoRef.current
+                ) {
+
+                    videoRef.current.srcObject =
+                        mediaStream;
+
+                }
+
+            }, 100);
 
         } catch (error) {
 
-            console.error(error);
-
-            setCameraOpen(false);
+            console.error(
+                error
+            );
 
             setError(
-                "Unable to access your camera. Please allow camera permission."
+                "Unable to access your camera. Please allow camera permission or upload a photo instead."
             );
         }
     };
 
 
-    // ==========================================
+    // =====================================================
     // TAKE PHOTO
-    // ==========================================
+    // =====================================================
 
     const takePhoto = () => {
 
@@ -134,9 +175,14 @@ const UploadProfilePicture = () => {
         const canvas =
             canvasRef.current;
 
-        if (!video || !canvas) {
+
+        if (
+            !video ||
+            !canvas
+        ) {
             return;
         }
+
 
         canvas.width =
             video.videoWidth;
@@ -144,10 +190,12 @@ const UploadProfilePicture = () => {
         canvas.height =
             video.videoHeight;
 
+
         const context =
             canvas.getContext(
                 "2d"
             );
+
 
         context.drawImage(
             video,
@@ -157,17 +205,27 @@ const UploadProfilePicture = () => {
             canvas.height
         );
 
-        const photo =
+
+        const image =
             canvas.toDataURL(
-                "image/jpeg",
-                0.8
+                "image/png"
             );
 
-        setImage(photo);
 
-        // Stop camera
-        const stream =
-            video.srcObject;
+        setPreview(
+            image
+        );
+
+
+        closeCamera();
+    };
+
+
+    // =====================================================
+    // CLOSE CAMERA
+    // =====================================================
+
+    const closeCamera = () => {
 
         if (stream) {
 
@@ -179,55 +237,107 @@ const UploadProfilePicture = () => {
                 );
         }
 
-        video.srcObject = null;
 
-        setCameraOpen(false);
+        setStream(null);
+
+        setCameraOpen(
+            false
+        );
     };
 
 
-    // ==========================================
-    // SAVE PROFILE PICTURE
-    // ==========================================
+    // =====================================================
+    // SUBMIT PHOTO
+    // =====================================================
 
-    const handleNext = async () => {
+    const handleSubmit = async () => {
+
+        setError("");
+
 
         if (!token) {
 
             setError(
-                "Your session has expired. Please login again."
+                "Your login session has expired. Please login again."
             );
 
             return;
         }
 
-        if (!image) {
+
+        if (!preview) {
 
             setError(
-                "Please take or upload a profile picture."
+                "Please take or upload a profile photo first."
             );
 
             return;
         }
+
 
         try {
 
             setLoading(true);
 
-            await uploadProfilePicture(
-                token,
-                image
-            );
+
+            const data =
+                await uploadProfilePicture(
+                    token,
+                    preview
+                );
+
+
+            // Update stored student
+            // information
+
+            const storedStudent =
+                localStorage.getItem(
+                    "votaraStudent"
+                );
+
+
+            if (
+                storedStudent
+            ) {
+
+                const student =
+                    JSON.parse(
+                        storedStudent
+                    );
+
+
+                student.profilePicture =
+                    data.profilePicture;
+
+
+                localStorage.setItem(
+                    "votaraStudent",
+                    JSON.stringify(
+                        student
+                    )
+                );
+            }
+
+
+            // Go to dashboard
 
             navigate(
-                "/student-dashboard"
+                "/student-dashboard",
+                {
+                    replace: true
+                }
             );
 
         } catch (error) {
 
-            console.error(error);
+            console.error(
+                "❌ Profile picture error:",
+                error
+            );
 
             setError(
-                error.message
+                error.message ||
+                "Unable to upload profile picture."
             );
 
         } finally {
@@ -238,315 +348,428 @@ const UploadProfilePicture = () => {
 
 
     return (
+
         <div
             style={{
-                minHeight: "100vh",
+                minHeight:
+                    "100vh",
+
+                display:
+                    "flex",
+
+                alignItems:
+                    "center",
+
+                justifyContent:
+                    "center",
+
                 background:
-                    "#ffffff",
+                    "#eef3ff",
+
                 fontFamily:
                     "Poppins, sans-serif",
-                padding: "50px",
+
+                padding:
+                    "20px",
             }}
         >
 
             <div
                 style={{
-                    maxWidth: "700px",
-                    margin: "0 auto",
+                    width:
+                        "500px",
+
+                    maxWidth:
+                        "100%",
+
+                    background:
+                        "#ffffff",
+
+                    padding:
+                        "40px",
+
+                    borderRadius:
+                        "15px",
+
+                    boxShadow:
+                        "0 10px 30px rgba(0,0,0,0.08)",
+
+                    textAlign:
+                        "center",
                 }}
             >
 
-                <h1
-                    style={{
-                        color:
-                            "#1455ff",
-                        marginBottom:
-                            "50px",
-                    }}
-                >
-                    ◈ Votara
+                <h1>
+                    Profile Photo
                 </h1>
 
 
-                <div
+                <p
                     style={{
-                        textAlign:
-                            "center",
+                        color:
+                            "#666",
+
+                        lineHeight:
+                            "1.6",
+
+                        marginBottom:
+                            "25px",
                     }}
                 >
+                    Take a photo or upload
+                    your photo to complete
+                    your account setup.
+                </p>
 
-                    <h2>
-                        Take or Upload your
-                        Profile Picture
-                    </h2>
+
+                {/* ERROR */}
+
+                {error && (
+
+                    <div
+                        style={{
+                            background:
+                                "#fff1f0",
+
+                            color:
+                                "#d93025",
+
+                            padding:
+                                "12px",
+
+                            borderRadius:
+                                "8px",
+
+                            marginBottom:
+                                "20px",
+
+                            textAlign:
+                                "left",
+                        }}
+                    >
+                        {error}
+                    </div>
+
+                )}
 
 
-                    {error && (
-                        <p
+                {/* CAMERA */}
+
+                {cameraOpen && (
+
+                    <div
+                        style={{
+                            marginBottom:
+                                "20px",
+                        }}
+                    >
+
+                        <video
+                            ref={
+                                videoRef
+                            }
+                            autoPlay
+                            playsInline
                             style={{
-                                color:
-                                    "red",
+                                width:
+                                    "100%",
+
+                                borderRadius:
+                                    "12px",
+
+                                background:
+                                    "#000",
                             }}
-                        >
-                            {error}
-                        </p>
-                    )}
+                        />
 
-
-                    {/* CAMERA */}
-
-                    {cameraOpen && (
-
-                        <div>
-
-                            <video
-                                ref={
-                                    videoRef
-                                }
-                                autoPlay
-                                playsInline
-                                style={{
-                                    width:
-                                        "300px",
-                                    borderRadius:
-                                        "50%",
-                                    objectFit:
-                                        "cover",
-                                }}
-                            />
-
-                            <br />
-
-                            <button
-                                onClick={
-                                    takePhoto
-                                }
-                                style={{
-                                    marginTop:
-                                        "20px",
-                                    padding:
-                                        "12px 25px",
-                                    background:
-                                        "#1455ff",
-                                    color:
-                                        "white",
-                                    border:
-                                        "none",
-                                    borderRadius:
-                                        "8px",
-                                }}
-                            >
-                                Take Photo
-                            </button>
-
-                        </div>
-                    )}
-
-
-                    {/* PREVIEW */}
-
-                    {!cameraOpen && (
-
-                        <div
-                            style={{
-                                margin:
-                                    "30px auto",
-                            }}
-                        >
-
-                            {image ? (
-
-                                <img
-                                    src={image}
-                                    alt="Profile Preview"
-                                    style={{
-                                        width:
-                                            "180px",
-                                        height:
-                                            "180px",
-                                        objectFit:
-                                            "cover",
-                                        borderRadius:
-                                            "50%",
-                                    }}
-                                />
-
-                            ) : (
-
-                                <div
-                                    style={{
-                                        width:
-                                            "180px",
-                                        height:
-                                            "180px",
-                                        borderRadius:
-                                            "50%",
-                                        background:
-                                            "#e9ddff",
-                                        display:
-                                            "flex",
-                                        alignItems:
-                                            "center",
-                                        justifyContent:
-                                            "center",
-                                        margin:
-                                            "0 auto",
-                                        fontSize:
-                                            "60px",
-                                    }}
-                                >
-                                    👤
-                                </div>
-
-                            )}
-
-                        </div>
-                    )}
-
-
-                    {!cameraOpen && (
 
                         <div
                             style={{
                                 display:
                                     "flex",
-                                justifyContent:
-                                    "center",
+
                                 gap:
                                     "10px",
+
+                                marginTop:
+                                    "15px",
                             }}
                         >
 
                             <button
+                                type="button"
                                 onClick={
-                                    openCamera
+                                    takePhoto
                                 }
                                 style={{
+                                    flex:
+                                        1,
+
                                     padding:
-                                        "10px 20px",
-                                    background:
-                                        "white",
+                                        "12px",
+
                                     border:
-                                        "1px solid #aaa",
+                                        "none",
+
                                     borderRadius:
                                         "8px",
+
+                                    background:
+                                        "#1455ff",
+
+                                    color:
+                                        "#fff",
+
+                                    fontWeight:
+                                        "600",
                                 }}
                             >
-                                Take Photo
+                                📷 Take Photo
                             </button>
 
 
                             <button
-                                onClick={() =>
-                                    fileInputRef.current?.click()
+                                type="button"
+                                onClick={
+                                    closeCamera
                                 }
                                 style={{
+                                    flex:
+                                        1,
+
                                     padding:
-                                        "10px 20px",
-                                    background:
-                                        "white",
+                                        "12px",
+
                                     border:
-                                        "1px solid #aaa",
+                                        "1px solid #ccc",
+
                                     borderRadius:
                                         "8px",
+
+                                    background:
+                                        "#fff",
                                 }}
                             >
-                                Upload Photo
+                                Cancel
                             </button>
-
-                            <input
-                                ref={
-                                    fileInputRef
-                                }
-                                type="file"
-                                accept="image/*"
-                                onChange={
-                                    handleFileChange
-                                }
-                                style={{
-                                    display:
-                                        "none",
-                                }}
-                            />
 
                         </div>
-                    )}
-
-
-                    <canvas
-                        ref={
-                            canvasRef
-                        }
-                        style={{
-                            display:
-                                "none",
-                        }}
-                    />
-
-
-                    <div
-                        style={{
-                            marginTop:
-                                "30px",
-                        }}
-                    >
-
-                        <button
-                            onClick={() =>
-                                navigate(
-                                    "/student-login"
-                                )
-                            }
-                            style={{
-                                padding:
-                                    "10px 40px",
-                                marginRight:
-                                    "10px",
-                                border:
-                                    "1px solid #aaa",
-                                borderRadius:
-                                    "20px",
-                                background:
-                                    "white",
-                            }}
-                        >
-                            Back
-                        </button>
-
-
-                        <button
-                            onClick={
-                                handleNext
-                            }
-                            disabled={
-                                loading
-                            }
-                            style={{
-                                padding:
-                                    "10px 40px",
-                                border:
-                                    "none",
-                                borderRadius:
-                                    "20px",
-                                background:
-                                    "#1455ff",
-                                color:
-                                    "white",
-                            }}
-                        >
-                            {loading
-                                ? "Saving..."
-                                : "NEXT"}
-                        </button>
 
                     </div>
 
-                </div>
+                )}
+
+
+                {/* PREVIEW */}
+
+                {preview && !cameraOpen && (
+
+                    <div
+                        style={{
+                            marginBottom:
+                                "20px",
+                        }}
+                    >
+
+                        <img
+                            src={
+                                preview
+                            }
+                            alt="Profile preview"
+                            style={{
+                                width:
+                                    "180px",
+
+                                height:
+                                    "180px",
+
+                                objectFit:
+                                    "cover",
+
+                                borderRadius:
+                                    "50%",
+
+                                border:
+                                    "4px solid #1455ff",
+                            }}
+                        />
+
+                    </div>
+
+                )}
+
+
+                {/* BUTTONS */}
+
+                {!cameraOpen && (
+
+                    <>
+
+                        <button
+                            type="button"
+                            onClick={
+                                openCamera
+                            }
+                            style={{
+                                width:
+                                    "100%",
+
+                                padding:
+                                    "13px",
+
+                                marginBottom:
+                                    "12px",
+
+                                border:
+                                    "none",
+
+                                borderRadius:
+                                    "8px",
+
+                                background:
+                                    "#1455ff",
+
+                                color:
+                                    "#fff",
+
+                                fontWeight:
+                                    "600",
+
+                                fontSize:
+                                    "15px",
+                            }}
+                        >
+                            📷 Take a Photo
+                        </button>
+
+
+                        <button
+                            type="button"
+                            onClick={() =>
+                                fileInputRef.current?.click()
+                            }
+                            style={{
+                                width:
+                                    "100%",
+
+                                padding:
+                                    "13px",
+
+                                border:
+                                    "1px solid #1455ff",
+
+                                borderRadius:
+                                    "8px",
+
+                                background:
+                                    "#fff",
+
+                                color:
+                                    "#1455ff",
+
+                                fontWeight:
+                                    "600",
+
+                                fontSize:
+                                    "15px",
+
+                                marginBottom:
+                                    "20px",
+                            }}
+                        >
+                            📁 Upload Photo
+                        </button>
+
+
+                        <input
+                            ref={
+                                fileInputRef
+                            }
+                            type="file"
+                            accept="image/*"
+                            onChange={
+                                handleFileChange
+                            }
+                            style={{
+                                display:
+                                    "none",
+                            }}
+                        />
+
+                    </>
+
+                )}
+
+
+                {/* CONTINUE */}
+
+                <button
+                    type="button"
+                    onClick={
+                        handleSubmit
+                    }
+                    disabled={
+                        loading ||
+                        !preview
+                    }
+                    style={{
+                        width:
+                            "100%",
+
+                        padding:
+                            "14px",
+
+                        border:
+                            "none",
+
+                        borderRadius:
+                            "8px",
+
+                        background:
+                            loading ||
+                            !preview
+                                ? "#aebbdc"
+                                : "#159447",
+
+                        color:
+                            "#fff",
+
+                        fontWeight:
+                            "600",
+
+                        fontSize:
+                            "15px",
+
+                        cursor:
+                            loading ||
+                            !preview
+                                ? "not-allowed"
+                                : "pointer",
+                    }}
+                >
+
+                    {loading
+                        ? "Saving Photo..."
+                        : "Continue to Dashboard"}
+
+                </button>
+
+
+                <canvas
+                    ref={
+                        canvasRef
+                    }
+                    style={{
+                        display:
+                            "none",
+                    }}
+                />
 
             </div>
 
         </div>
     );
 };
+
 
 export default UploadProfilePicture;

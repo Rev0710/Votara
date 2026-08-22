@@ -11,7 +11,8 @@ const {
     protectStudent,
 } = require("../middleware/authMiddleware");
 
-const router = express.Router();
+const router =
+    express.Router();
 
 
 // =====================================================
@@ -25,7 +26,7 @@ router.post(
 
 
 // =====================================================
-// CHANGE TEMPORARY PASSWORD
+// CHANGE PASSWORD
 // =====================================================
 
 router.post(

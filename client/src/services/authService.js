@@ -1,4 +1,5 @@
-const API_URL = "http://localhost:5000/api/auth";
+const API_URL =
+    "http://localhost:5000/api/auth";
 
 
 // =====================================================
@@ -9,13 +10,15 @@ export const studentLogin = async (
     studentId,
     password
 ) => {
+
     const response = await fetch(
         `${API_URL}/student-login`,
         {
             method: "POST",
 
             headers: {
-                "Content-Type": "application/json",
+                "Content-Type":
+                    "application/json",
             },
 
             body: JSON.stringify({
@@ -25,7 +28,8 @@ export const studentLogin = async (
         }
     );
 
-    const data = await response.json();
+    const data =
+        await response.json();
 
     if (!response.ok) {
         throw new Error(
@@ -47,13 +51,15 @@ export const changeTemporaryPassword = async (
     newPassword,
     confirmPassword
 ) => {
+
     const response = await fetch(
         `${API_URL}/change-password`,
         {
             method: "POST",
 
             headers: {
-                "Content-Type": "application/json",
+                "Content-Type":
+                    "application/json",
 
                 Authorization:
                     `Bearer ${token}`,
@@ -66,7 +72,8 @@ export const changeTemporaryPassword = async (
         }
     );
 
-    const data = await response.json();
+    const data =
+        await response.json();
 
     if (!response.ok) {
         throw new Error(
@@ -87,6 +94,7 @@ export const uploadProfilePicture = async (
     token,
     profilePicture
 ) => {
+
     const response = await fetch(
         `${API_URL}/profile-picture`,
         {
@@ -106,7 +114,8 @@ export const uploadProfilePicture = async (
         }
     );
 
-    const data = await response.json();
+    const data =
+        await response.json();
 
     if (!response.ok) {
         throw new Error(
@@ -126,6 +135,7 @@ export const uploadProfilePicture = async (
 export const getCurrentStudent = async (
     token
 ) => {
+
     const response = await fetch(
         `${API_URL}/me`,
         {
@@ -138,7 +148,8 @@ export const getCurrentStudent = async (
         }
     );
 
-    const data = await response.json();
+    const data =
+        await response.json();
 
     if (!response.ok) {
         throw new Error(
@@ -156,6 +167,7 @@ export const getCurrentStudent = async (
 // =====================================================
 
 export const logoutStudent = () => {
+
     localStorage.removeItem(
         "votaraToken"
     );

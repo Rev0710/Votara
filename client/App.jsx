@@ -1,6 +1,7 @@
 import { Routes, Route, useLocation } from "react-router-dom";
 
 import LandingPage from "./src/pages/public/LandingPage";
+
 import Register from "./src/pages/auth/Register";
 import StudentLogin from "./src/pages/auth/StudentLogin";
 import OTPVerification from "./src/pages/auth/OTPVerification";
