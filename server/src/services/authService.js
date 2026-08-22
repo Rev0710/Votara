@@ -1,6 +1,4 @@
-const API_URL =
-    "http://localhost:5000/api/auth";
-
+import api from "./api";
 
 // =====================================================
 // STUDENT LOGIN
@@ -10,168 +8,298 @@ export const studentLogin = async (
     studentId,
     password
 ) => {
+    try {
 
-    const response =
-        await fetch(
-            `${API_URL}/student-login`,
+        const response = await api.post(
+            "/auth/student-login",
             {
-                method: "POST",
-
-                headers: {
-                    "Content-Type":
-                        "application/json",
-                },
-
-                body: JSON.stringify({
-                    studentId,
-                    password,
-                }),
+                studentId,
+                password,
             }
         );
 
-    const data =
-        await response.json();
+        // =============================================
+        // CHECK RESPONSE
+        // =============================================
 
-    if (!response.ok) {
+        if (!response.data) {
+            throw new Error(
+                "No response received from the server."
+            );
+        }
+
+        if (
+            response.data.success === false
+        ) {
+            throw new Error(
+                response.data.message ||
+                "Unable to login."
+            );
+        }
+
+        return response.data;
+
+    } catch (error) {
+
+        console.error(
+            "❌ Student login API error:",
+            error
+        );
+
         throw new Error(
-            data.message ||
-            "Unable to login."
+            error.response?.data?.message ||
+            error.message ||
+            "Unable to login. Please try again."
         );
     }
-
-    return data;
 };
 
 
 // =====================================================
-// CHANGE PASSWORD
+// CHANGE TEMPORARY PASSWORD
 // =====================================================
 
-export const changeTemporaryPassword =
-    async (
-        token,
-        newPassword,
-        confirmPassword
-    ) => {
+export const changeTemporaryPassword = async (
+    newPassword,
+    confirmPassword
+) => {
 
-        const response =
-            await fetch(
-                `${API_URL}/change-password`,
-                {
-                    method: "POST",
+    // =============================================
+    // GET JWT TOKEN
+    // =============================================
 
-                    headers: {
-                        "Content-Type":
-                            "application/json",
+    const token =
+        localStorage.getItem("votaraToken");
 
-                        Authorization:
-                            `Bearer ${token}`,
-                    },
+    if (!token) {
 
-                    body: JSON.stringify({
-                        newPassword,
-                        confirmPassword,
-                    }),
-                }
-            );
+        throw new Error(
+            "Your login session has expired. Please login again."
+        );
+    }
 
-        const data =
-            await response.json();
+    try {
 
-        if (!response.ok) {
+        console.log(
+            "🔐 Sending change-password request..."
+        );
+
+        const response = await api.post(
+            "/auth/change-password",
+            {
+                newPassword,
+                confirmPassword,
+            },
+            {
+                headers: {
+                    Authorization:
+                        `Bearer ${token}`,
+                },
+            }
+        );
+
+        console.log(
+            "✅ Change password response:",
+            response.data
+        );
+
+        if (
+            response.data.success === false
+        ) {
             throw new Error(
-                data.message ||
+                response.data.message ||
                 "Unable to change password."
             );
         }
 
-        return data;
-    };
+        return response.data;
+
+    } catch (error) {
+
+        console.error(
+            "❌ Change password API error:",
+            error
+        );
+
+        // =============================================
+        // JWT EXPIRED / INVALID
+        // =============================================
+
+        if (
+            error.response?.status === 401
+        ) {
+
+            localStorage.removeItem(
+                "votaraToken"
+            );
+
+            throw new Error(
+                "Your login session has expired. Please login again."
+            );
+        }
+
+        throw new Error(
+            error.response?.data?.message ||
+            error.message ||
+            "Unable to change password."
+        );
+    }
+};
 
 
 // =====================================================
 // UPLOAD PROFILE PICTURE
 // =====================================================
 
-export const uploadProfilePicture =
-    async (
-        token,
-        profilePicture
-    ) => {
+export const uploadProfilePicture = async (
+    profilePicture
+) => {
 
-        const response =
-            await fetch(
-                `${API_URL}/profile-picture`,
-                {
-                    method: "POST",
+    // =============================================
+    // GET JWT TOKEN
+    // =============================================
 
-                    headers: {
-                        "Content-Type":
-                            "application/json",
+    const token =
+        localStorage.getItem("votaraToken");
 
-                        Authorization:
-                            `Bearer ${token}`,
-                    },
+    if (!token) {
 
-                    body: JSON.stringify({
-                        profilePicture,
-                    }),
-                }
-            );
+        throw new Error(
+            "Your login session has expired. Please login again."
+        );
+    }
 
-        const data =
-            await response.json();
+    try {
 
-        if (!response.ok) {
+        console.log(
+            "📸 Sending profile picture..."
+        );
+
+        const response = await api.post(
+            "/auth/upload-profile-picture",
+            {
+                profilePicture,
+            },
+            {
+                headers: {
+                    Authorization:
+                        `Bearer ${token}`,
+                },
+            }
+        );
+
+        console.log(
+            "✅ Profile picture response:",
+            response.data
+        );
+
+        if (
+            response.data.success === false
+        ) {
             throw new Error(
-                data.message ||
+                response.data.message ||
                 "Unable to upload profile picture."
             );
         }
 
-        return data;
-    };
+        return response.data;
+
+    } catch (error) {
+
+        console.error(
+            "❌ Profile picture API error:",
+            error
+        );
+
+        if (
+            error.response?.status === 401
+        ) {
+
+            localStorage.removeItem(
+                "votaraToken"
+            );
+
+            throw new Error(
+                "Your login session has expired. Please login again."
+            );
+        }
+
+        throw new Error(
+            error.response?.data?.message ||
+            error.message ||
+            "Unable to upload profile picture."
+        );
+    }
+};
 
 
 // =====================================================
 // GET CURRENT STUDENT
 // =====================================================
 
-export const getCurrentStudent =
-    async (token) => {
+export const getCurrentStudent = async () => {
 
-        const response =
-            await fetch(
-                `${API_URL}/me`,
-                {
-                    method: "GET",
+    const token =
+        localStorage.getItem("votaraToken");
 
-                    headers: {
-                        Authorization:
-                            `Bearer ${token}`,
-                    },
-                }
+    if (!token) {
+
+        throw new Error(
+            "Your login session has expired. Please login again."
+        );
+    }
+
+    try {
+
+        const response = await api.get(
+            "/auth/student/me",
+            {
+                headers: {
+                    Authorization:
+                        `Bearer ${token}`,
+                },
+            }
+        );
+
+        return response.data;
+
+    } catch (error) {
+
+        console.error(
+            "❌ Get current student error:",
+            error
+        );
+
+        if (
+            error.response?.status === 401
+        ) {
+
+            localStorage.removeItem(
+                "votaraToken"
             );
 
-        const data =
-            await response.json();
+            localStorage.removeItem(
+                "votaraStudent"
+            );
 
-        if (!response.ok) {
             throw new Error(
-                data.message ||
-                "Unable to get student information."
+                "Your login session has expired. Please login again."
             );
         }
 
-        return data;
-    };
+        throw new Error(
+            error.response?.data?.message ||
+            "Unable to get student information."
+        );
+    }
+};
 
 
 // =====================================================
 // LOGOUT
 // =====================================================
 
-export const logoutStudent = () => {
+export const studentLogout = () => {
 
     localStorage.removeItem(
         "votaraToken"

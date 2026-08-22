@@ -46,19 +46,25 @@ const StudentLogin = () => {
             // SAVE JWT TOKEN
             // =================================================
 
-            localStorage.setItem(
-                "votaraToken",
-                data.token
-            );
+            if (data.token) {
+                localStorage.setItem(
+                    "votaraToken",
+                    data.token
+                );
+
+                console.log("🔐 JWT token saved.");
+            }
 
             // =================================================
             // SAVE STUDENT INFORMATION
             // =================================================
 
-            localStorage.setItem(
-                "votaraStudent",
-                JSON.stringify(data.student)
-            );
+            if (data.student) {
+                localStorage.setItem(
+                    "votaraStudent",
+                    JSON.stringify(data.student)
+                );
+            }
 
             // =================================================
             // STEP 1
@@ -66,6 +72,7 @@ const StudentLogin = () => {
             // =================================================
 
             if (data.mustChangePassword === true) {
+
                 console.log(
                     "🔐 Student must change temporary password."
                 );
@@ -83,6 +90,7 @@ const StudentLogin = () => {
             // =================================================
 
             if (data.needsProfilePicture === true) {
+
                 console.log(
                     "📸 Student must upload a profile picture."
                 );
@@ -108,6 +116,7 @@ const StudentLogin = () => {
             });
 
         } catch (error) {
+
             console.error(
                 "❌ Login error:",
                 error
@@ -119,7 +128,9 @@ const StudentLogin = () => {
             );
 
         } finally {
+
             setLoading(false);
+
         }
     };
 
@@ -142,30 +153,39 @@ const StudentLogin = () => {
                         onClick={() => navigate("/")}
                         aria-label="Go to VOTARA home"
                     >
+
                         <span className="student-login-logo-mark">
+
                             <span className="triangle-top"></span>
+
                             <span className="circle"></span>
+
                             <span className="triangle-bottom"></span>
+
                         </span>
 
                         <span>
                             Votara
                         </span>
+
                     </button>
 
- {/* REGISTER VECTOR ILLUSTRATION */}
 
-    <div className="student-login-visual">
+                    {/* =================================================
+                        REGISTER VECTOR ILLUSTRATION
+                    ================================================= */}
 
-        <img
-            src="/src/images/Register.png"
-            alt="Votara student login illustration"
-            className="student-login-illustration"
-        />
+                    <div className="student-login-visual">
 
-    </div>
+                        <img
+                            src="/src/images/Register.png"
+                            alt="Votara student login illustration"
+                            className="student-login-illustration"
+                        />
 
-</div>
+                    </div>
+
+                </div>
 
 
                 {/* =================================================
@@ -204,79 +224,79 @@ const StudentLogin = () => {
                             LOGIN FORM
                         ================================================= */}
 
-                       <form onSubmit={handleSubmit}>
+                        <form onSubmit={handleSubmit}>
 
-    {/* STUDENT ID */}
+                            {/* STUDENT ID */}
 
-    <div className="login-input-group">
+                            <div className="login-input-group">
 
-        <input
-            id="studentId"
-            type="text"
-            value={studentId}
-            onChange={(e) =>
-                setStudentId(
-                    e.target.value
-                )
-            }
-            placeholder="Student ID No."
-            maxLength={5}
-            required
-            disabled={loading}
-            autoComplete="username"
-        />
+                                <input
+                                    id="studentId"
+                                    type="text"
+                                    value={studentId}
+                                    onChange={(e) =>
+                                        setStudentId(
+                                            e.target.value
+                                        )
+                                    }
+                                    placeholder="Student ID No."
+                                    maxLength={5}
+                                    required
+                                    disabled={loading}
+                                    autoComplete="username"
+                                />
 
-    </div>
-
-
-    {/* PASSWORD */}
-
-    <div className="login-input-group">
-
-        <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) =>
-                setPassword(
-                    e.target.value
-                )
-            }
-            placeholder="Password"
-            required
-            disabled={loading}
-            autoComplete="current-password"
-        />
-
-    </div>
+                            </div>
 
 
-    {/* LOGIN BUTTON */}
+                            {/* PASSWORD */}
 
-    <button
-        type="submit"
-        className="student-login-button"
-        disabled={loading}
-    >
-        {loading
-            ? "..."
-            : "Login"}
-    </button>
+                            <div className="login-input-group">
+
+                                <input
+                                    id="password"
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) =>
+                                        setPassword(
+                                            e.target.value
+                                        )
+                                    }
+                                    placeholder="Password"
+                                    required
+                                    disabled={loading}
+                                    autoComplete="current-password"
+                                />
+
+                            </div>
 
 
-    {/* BACK BUTTON */}
+                            {/* LOGIN BUTTON */}
 
-    <button
-        type="button"
-        className="student-login-back-button"
-        onClick={() => navigate("/")}
-        disabled={loading}
-    >
-        ← Back
-        
-    </button>
+                            <button
+                                type="submit"
+                                className="student-login-button"
+                                disabled={loading}
+                            >
+                                {loading
+                                    ? "Logging in..."
+                                    : "Login"}
+                            </button>
 
-</form>
+
+                            {/* BACK BUTTON */}
+
+                            <button
+                                type="button"
+                                className="student-login-back-button"
+                                onClick={() => navigate("/")}
+                                disabled={loading}
+                            >
+                                ← Back
+                            </button>
+
+                        </form>
+
                     </div>
 
                 </div>

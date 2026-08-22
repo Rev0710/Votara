@@ -1,268 +1,199 @@
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
 
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
     },
 
-    connectionTimeout: 60000,
-    greetingTimeout: 60000,
-    socketTimeout: 60000,
+    tls: {
+        rejectUnauthorized: false,
+        servername: "smtp.gmail.com",
+    },
+
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 30000,
+
+    family: 4,
 });
 
-module.exports = transporter;
 
-// =====================================================
-// VERIFY EMAIL CONNECTION
-// =====================================================
+/*
+=====================================================
+TEST SMTP CONNECTION
+=====================================================
+*/
 
 const verifyEmailConnection = async () => {
-
     try {
-
-        console.log("");
-        console.log(
-            "📧 Testing Gmail SMTP connection..."
-        );
-
         await transporter.verify();
 
-        console.log(
-            "✅ Gmail SMTP server is ready."
-        );
+        console.log("=================================");
+        console.log("✅ GMAIL SMTP CONNECTION SUCCESS");
+        console.log("=================================");
+        console.log("Host: smtp.gmail.com");
+        console.log("Port: 465");
+        console.log("User:", process.env.EMAIL_USER);
+        console.log("=================================");
 
-        console.log(
-            `📨 Email sender: ${process.env.EMAIL_USER}`
-        );
+        return true;
 
     } catch (error) {
 
-        console.error("");
-        console.error(
-            "❌ Gmail SMTP connection failed."
-        );
+        console.error("=================================");
+        console.error("❌ GMAIL SMTP CONNECTION FAILED");
+        console.error("=================================");
+        console.error("Code:", error.code);
+        console.error("Message:", error.message);
+        console.error("Command:", error.command);
+        console.error("=================================");
 
-        console.error(
-            "Error code:",
-            error.code
-        );
-
-        console.error(
-            "Error message:",
-            error.message
-        );
-
-        console.error(
-            "Command:",
-            error.command
-        );
+        return false;
     }
 };
 
 
-// =====================================================
-// SEND OTP EMAIL
-// =====================================================
+/*
+=====================================================
+SEND REGISTRATION OTP
+=====================================================
+*/
 
-const sendOTPEmail = async (
-    recipientEmail,
-    otp
-) => {
+const sendOTPEmail = async (email, studentId, otp) => {
 
     try {
 
+        console.log("=================================");
+        console.log("📧 SENDING VOTARA OTP");
+        console.log("=================================");
+        console.log("To:", email);
+        console.log("Student ID:", studentId);
+        console.log("OTP:", otp);
+        console.log("=================================");
+
         const mailOptions = {
+            from: `"VOTARA Electoral Board" <${process.env.EMAIL_USER}>`,
 
-            from:
-                `"VOTARA Election System" <${process.env.EMAIL_USER}>`,
+            to: email,
 
-            to:
-                recipientEmail,
-
-            subject:
-                "VOTARA Student Registration OTP",
-
-            // -----------------------------------------
-            // PLAIN TEXT EMAIL
-            // -----------------------------------------
-
-            text: `
-Your VOTARA verification code is:
-
-${otp}
-
-This code will expire in 5 minutes.
-
-If you did not request this verification code,
-please ignore this email.
-
-VOTARA — Department Student Election System
-            `,
-
-            // -----------------------------------------
-            // HTML EMAIL
-            // -----------------------------------------
+            subject: "VOTARA Registration OTP",
 
             html: `
                 <div style="
                     font-family: Arial, sans-serif;
                     max-width: 600px;
-                    margin: 30px auto;
+                    margin: 0 auto;
                     padding: 30px;
+                    background: #ffffff;
                     border: 1px solid #e5e7eb;
                     border-radius: 12px;
-                    background: #ffffff;
                 ">
 
                     <h2 style="
-                        color: #0647ff;
-                        margin-bottom: 5px;
+                        color: #0648ff;
+                        margin-bottom: 20px;
                     ">
-                        VOTARA
+                        VOTARA Registration
                     </h2>
 
-                    <h3>
-                        Student Registration Verification
-                    </h3>
+                    <p>Hello,</p>
 
                     <p>
-                        Thank you for registering for the
-                        VOTARA Student Election System.
-                    </p>
-
-                    <p>
-                        Your One-Time Password (OTP) is:
+                        Your OTP for VOTARA voter registration is:
                     </p>
 
                     <div style="
-                        font-size: 32px;
-                        font-weight: bold;
-                        letter-spacing: 8px;
-                        color: #0647ff;
+                        margin: 25px 0;
                         padding: 20px;
                         text-align: center;
-                        background: #f1f5ff;
+                        background: #f3f6ff;
                         border-radius: 10px;
-                        margin: 20px 0;
                     ">
-                        ${otp}
+
+                        <span style="
+                            font-size: 32px;
+                            font-weight: bold;
+                            letter-spacing: 8px;
+                            color: #0648ff;
+                        ">
+                            ${otp}
+                        </span>
+
                     </div>
 
                     <p>
-                        This verification code will expire
-                        in <strong>5 minutes</strong>.
+                        <strong>Student ID:</strong> ${studentId}
                     </p>
 
-                    <p style="
-                        color: #6b7280;
-                        font-size: 13px;
-                    ">
-                        If you did not request this
-                        verification code, please ignore
-                        this email.
+                    <p>
+                        Enter this OTP on the VOTARA
+                        registration verification page.
+                    </p>
+
+                    <p style="color: #666;">
+                        If you did not request this registration,
+                        please ignore this email.
                     </p>
 
                     <hr style="
                         border: none;
-                        border-top: 1px solid #e5e7eb;
+                        border-top: 1px solid #eeeeee;
                         margin: 25px 0;
                     ">
 
                     <p style="
-                        color: #6b7280;
                         font-size: 12px;
+                        color: #888;
                     ">
-                        VOTARA — Department Student
-                        Election System
+                        VOTARA Electoral Board<br>
+                        Western Institute of Technology
                     </p>
 
                 </div>
             `,
         };
 
+        const info = await transporter.sendMail(mailOptions);
 
-        // =================================================
-        // SEND EMAIL
-        // =================================================
+        console.log("=================================");
+        console.log("✅ OTP EMAIL SENT SUCCESSFULLY");
+        console.log("=================================");
+        console.log("To:", email);
+        console.log("Message ID:", info.messageId);
+        console.log("=================================");
 
-        const result =
-            await transporter.sendMail(
-                mailOptions
-            );
-
-
-        console.log("");
-        console.log(
-            "================================="
-        );
-
-        console.log(
-            "✅ OTP EMAIL SENT SUCCESSFULLY"
-        );
-
-        console.log(
-            `📧 To: ${recipientEmail}`
-        );
-
-        console.log(
-            `📨 Message ID: ${result.messageId}`
-        );
-
-        console.log(
-            "================================="
-        );
-
-
-        return result;
+        return {
+            success: true,
+            messageId: info.messageId,
+        };
 
     } catch (error) {
 
-        console.error("");
-        console.error(
-            "================================="
-        );
-
-        console.error(
-            "❌ OTP EMAIL FAILED"
-        );
-
-        console.error(
-            "================================="
-        );
-
-        console.error(
-            "Error code:",
-            error.code
-        );
-
-        console.error(
-            "Error message:",
-            error.message
-        );
-
-        console.error(
-            "Command:",
-            error.command
-        );
+        console.error("=================================");
+        console.error("❌ OTP EMAIL FAILED");
+        console.error("=================================");
+        console.error("Error code:", error.code);
+        console.error("Error message:", error.message);
+        console.error("Command:", error.command);
+        console.error("=================================");
 
         throw error;
     }
 };
 
 
-// =====================================================
-// EXPORT
-// =====================================================
+/*
+=====================================================
+EXPORT
+=====================================================
+*/
 
 module.exports = {
-
-    transporter,
-
-    verifyEmailConnection,
-
     sendOTPEmail,
-
+    verifyEmailConnection,
 };

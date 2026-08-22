@@ -5,6 +5,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const path = require("path");
 const registrationRoutes = require("./src/routes/registrationRoutes");
+const { verifyEmailConnection } = require("./src/services/emailService");
 
 const app = express();
 

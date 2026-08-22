@@ -1,7 +1,7 @@
 const Student = require("../models/Student");
 const bcrypt = require("bcryptjs");
 const { generateOTP } = require("../utils/otp");
-const { sendOTPEmail } = require("../services/emailService");
+const {sendOTPEmail} = require("../services/emailService");
 
 
 // =====================================================
