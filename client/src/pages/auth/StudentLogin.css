@@ -875,6 +875,10 @@
 }
 
 
+/* =====================================================
+   BACK BUTTON DISABLED
+===================================================== */
+
 .student-login-back-button:disabled {
     opacity: 0.6;
 
@@ -883,37 +887,4 @@
     transform: none;
 
     box-shadow: none;
-}
-/* =====================================================
-   LOGIN VECTOR ILLUSTRATION
-===================================================== */
-
-.student-login-visual {
-    width: 100%;
-    max-width: 430px;
-
-    height: 420px;
-
-    margin: auto;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    flex-shrink: 0;
-}
-
-
-/* =====================================================
-   REGISTER VECTOR IMAGE
-   SAME IMAGE USED ON REGISTRATION PAGE
-===================================================== */
-
-.student-login-illustration {
-    width: 100%;
-    height: 100%;
-
-    object-fit: contain;
-
-    display: block;
 }
