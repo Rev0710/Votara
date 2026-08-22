@@ -3,14 +3,20 @@
 ========================================= */
 
 .register-page {
+    width: 100%;
     min-height: 100vh;
+
     background: #eaf0ff;
-    padding: 24px;
-    font-family: "Poppins", sans-serif;
+
+    padding: 18px;
+
+    font-family: "Poppins", Arial, Helvetica, sans-serif;
 
     display: flex;
     align-items: center;
     justify-content: center;
+
+    box-sizing: border-box;
 }
 
 
@@ -20,17 +26,19 @@
 
 .register-card {
     width: 100%;
-    max-width: 1160px;
-    min-height: 680px;
+    max-width: 1180px;
+    min-height: 650px;
 
     background: #ffffff;
 
     display: grid;
     grid-template-columns: 1fr 1fr;
 
+    overflow: hidden;
+
     border-radius: 2px;
 
-    overflow: hidden;
+    animation: registerCardEnter 0.55s ease-out both;
 }
 
 
@@ -44,7 +52,7 @@
     display: flex;
     flex-direction: column;
 
-    padding: 55px 60px;
+    padding: 38px 55px;
 
     overflow: hidden;
 }
@@ -56,18 +64,26 @@
 
 .register-logo {
     display: inline-flex;
+
     align-items: center;
+
     gap: 6px;
 
     width: fit-content;
     height: 42px;
 
     color: #0648ff;
+
     text-decoration: none;
 
     font-size: 30px;
     font-weight: 600;
+
     line-height: 1;
+
+    flex-shrink: 0;
+
+    animation: registerLogoEnter 0.65s ease-out both;
 }
 
 
@@ -82,13 +98,12 @@
     height: 42px;
 
     display: inline-block;
+
     flex-shrink: 0;
 }
 
 
-/* =========================================
-   TOP-LEFT TRIANGLE
-========================================= */
+/* TOP LEFT TRIANGLE */
 
 .register-logo-mark .triangle-top {
     position: absolute;
@@ -105,9 +120,7 @@
 }
 
 
-/* =========================================
-   TOP-RIGHT CIRCLE
-========================================= */
+/* TOP RIGHT CIRCLE */
 
 .register-logo-mark .circle {
     position: absolute;
@@ -116,6 +129,7 @@
     height: 17px;
 
     background: #0648ff;
+
     border-radius: 50%;
 
     right: 1px;
@@ -123,9 +137,7 @@
 }
 
 
-/* =========================================
-   BOTTOM-LEFT OPEN CIRCLE
-========================================= */
+/* BOTTOM LEFT SHAPE */
 
 .register-logo-mark::before {
     content: "";
@@ -136,6 +148,7 @@
     height: 21px;
 
     background: #0648ff;
+
     border-radius: 50%;
 
     left: 0;
@@ -152,9 +165,7 @@
 }
 
 
-/* =========================================
-   BOTTOM-RIGHT TRIANGLE
-========================================= */
+/* BOTTOM RIGHT TRIANGLE */
 
 .register-logo-mark .triangle-bottom {
     position: absolute;
@@ -171,151 +182,45 @@
 }
 
 
+/* LOGO HOVER */
+
+.register-logo:hover {
+    opacity: 0.8;
+}
+
+
 /* =========================================
-   PROFESSIONAL VISUAL
+   VECTOR IMAGE AREA
 ========================================= */
 
 .register-visual {
-    position: relative;
+    width: 100%;
+    max-width: 430px;
 
-    width: 360px;
-    height: 340px;
+    height: 420px;
+
+    margin: auto;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    margin-top: 40px;
+    flex-shrink: 0;
 }
 
 
 /* =========================================
-   DECORATIVE CIRCLES
+   VECTOR IMAGE
+   DO NOT MODIFY THE IMAGE ITSELF
 ========================================= */
 
-.visual-circle {
-    position: absolute;
-    border-radius: 50%;
-}
+.register-illustration {
+    width: 100%;
+    height: 100%;
 
-.visual-circle-one {
-    width: 180px;
-    height: 180px;
+    object-fit: contain;
 
-    background: #dff5ff;
-
-    top: 30px;
-    left: 30px;
-}
-
-.visual-circle-two {
-    width: 120px;
-    height: 120px;
-
-    background: #e8ddff;
-
-    right: 20px;
-    bottom: 25px;
-}
-
-
-/* =========================================
-   MAIN VISUAL CARD
-========================================= */
-
-.visual-card {
-    position: relative;
-    z-index: 2;
-
-    width: 300px;
-    height: 220px;
-
-    background: #ffffff;
-
-    border: 1px solid #edf0f7;
-
-    border-radius: 20px;
-
-    box-shadow:
-        0 20px 50px rgba(18, 35, 80, 0.10);
-
-    padding: 24px;
-}
-
-
-/* =========================================
-   SMALL HEADER DOTS
-========================================= */
-
-.visual-card-header {
-    display: flex;
-    gap: 6px;
-
-    margin-bottom: 28px;
-}
-
-.visual-card-header span {
-    width: 7px;
-    height: 7px;
-
-    border-radius: 50%;
-
-    background: #dbe3f3;
-}
-
-
-/* =========================================
-   CHART
-========================================= */
-
-.visual-chart {
-    height: 120px;
-
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-
-    gap: 18px;
-
-    padding: 0 10px;
-
-    border-bottom: 1px solid #e8edf5;
-}
-
-
-/* =========================================
-   CHART BARS
-========================================= */
-
-.visual-bar {
-    width: 25px;
-
-    border-radius: 7px 7px 0 0;
-
-    background: #0648ff;
-
-    min-height: 25px;
-}
-
-
-/* =========================================
-   FOOTER
-========================================= */
-
-.visual-card-footer {
-    display: flex;
-    justify-content: space-between;
-
-    margin-top: 14px;
-}
-
-.visual-card-footer span {
-    height: 7px;
-    width: 55px;
-
-    background: #edf1f8;
-
-    border-radius: 20px;
+    display: block;
 }
 
 
@@ -325,10 +230,13 @@
 
 .register-right {
     display: flex;
+
     align-items: center;
     justify-content: center;
 
-    padding: 50px 70px;
+    padding: 50px 65px;
+
+    animation: registerContentEnter 0.65s ease-out 0.1s both;
 }
 
 
@@ -338,7 +246,12 @@
 
 .register-content {
     width: 100%;
-    max-width: 400px;
+    max-width: 390px;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: stretch;
 }
 
 
@@ -347,13 +260,16 @@
 ========================================= */
 
 .register-heading {
-    margin-bottom: 32px;
+    width: 100%;
+
+    margin-bottom: 30px;
 }
 
 .register-heading h1 {
     margin: 0 0 12px;
 
     font-size: 38px;
+
     line-height: 1.15;
 
     font-weight: 700;
@@ -364,12 +280,42 @@
 .register-heading p {
     margin: 0;
 
+    width: 100%;
+
     max-width: 360px;
 
     font-size: 14px;
+
     line-height: 1.7;
 
     color: #60677a;
+}
+
+
+/* =========================================
+   ERROR
+========================================= */
+
+.register-error {
+    width: 100%;
+
+    padding: 11px 14px;
+
+    margin-bottom: 18px;
+
+    border-radius: 10px;
+
+    background: #fff0f0;
+
+    border: 1px solid #ffd2d2;
+
+    color: #d93636;
+
+    font-size: 12px;
+
+    line-height: 1.5;
+
+    box-sizing: border-box;
 }
 
 
@@ -378,10 +324,13 @@
 ========================================= */
 
 .register-form {
+    width: 100%;
+
     display: flex;
+
     flex-direction: column;
 
-    gap: 20px;
+    gap: 19px;
 }
 
 
@@ -390,23 +339,31 @@
 ========================================= */
 
 .form-group {
+    width: 100%;
+
     display: flex;
+
     flex-direction: column;
 
     gap: 8px;
 }
 
+
+/* =========================================
+   LABEL
+========================================= */
+
 .form-group label {
     font-size: 13px;
 
-    font-weight: 500;
+    font-weight: 600;
 
     color: #1b2030;
 }
 
 
 /* =========================================
-   INPUTS
+   INPUT
 ========================================= */
 
 .form-group input {
@@ -424,48 +381,43 @@
 
     background: #ffffff;
 
-    font-family: "Poppins", sans-serif;
+    font-family: "Poppins", Arial, Helvetica, sans-serif;
 
     font-size: 13px;
 
     color: #171b2c;
 
-    transition: 0.2s ease;
+    box-sizing: border-box;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
 }
+
+
+/* PLACEHOLDER */
 
 .form-group input::placeholder {
     color: #9ba2b2;
 }
 
+
+/* FOCUS */
+
 .form-group input:focus {
-    box-shadow: 0 0 0 4px rgba(6, 72, 255, 0.08);
+    border-color: #0648ff;
+
+    box-shadow:
+        0 0 0 4px rgba(6, 72, 255, 0.08);
 }
+
+
+/* DISABLED */
 
 .form-group input:disabled {
     opacity: 0.6;
 
     cursor: not-allowed;
-}
-
-
-/* =========================================
-   ERROR
-========================================= */
-
-.register-error {
-    padding: 11px 14px;
-
-    border-radius: 10px;
-
-    background: #fff0f0;
-
-    border: 1px solid #ffd2d2;
-
-    color: #d93636;
-
-    font-size: 12px;
-
-    line-height: 1.5;
 }
 
 
@@ -477,7 +429,7 @@
     width: 150px;
     height: 48px;
 
-    margin: 10px auto 0;
+    margin: 7px auto 0;
 
     border: none;
 
@@ -487,30 +439,39 @@
 
     color: #ffffff;
 
-    font-family: "Poppins", sans-serif;
+    font-family: "Poppins", Arial, Helvetica, sans-serif;
 
     font-size: 14px;
 
-    font-weight: 500;
+    font-weight: 600;
 
     cursor: pointer;
 
-    transition: 0.2s ease;
-
     display: flex;
+
     align-items: center;
     justify-content: center;
 
-    gap: 8px;
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
-.register-submit:hover {
+
+/* HOVER */
+
+.register-submit:hover:not(:disabled) {
     background: #003bd6;
 
     transform: translateY(-1px);
 
-    box-shadow: 0 8px 20px rgba(6, 72, 255, 0.22);
+    box-shadow:
+        0 8px 20px rgba(6, 72, 255, 0.22);
 }
+
+
+/* DISABLED */
 
 .register-submit:disabled {
     opacity: 0.7;
@@ -524,26 +485,17 @@
 
 
 /* =========================================
-   LOADING SPINNER
+   BOTTOM LINKS
 ========================================= */
 
-.button-spinner {
-    width: 15px;
-    height: 15px;
+.register-links {
+    width: 100%;
 
-    border: 2px solid rgba(255, 255, 255, 0.4);
+    display: flex;
 
-    border-top-color: #ffffff;
+    flex-direction: column;
 
-    border-radius: 50%;
-
-    animation: buttonSpin 0.7s linear infinite;
-}
-
-@keyframes buttonSpin {
-    to {
-        transform: rotate(360deg);
-    }
+    align-items: center;
 }
 
 
@@ -556,7 +508,7 @@
 
     width: fit-content;
 
-    margin: 22px auto 0;
+    margin-top: 25px;
 
     color: #151515;
 
@@ -564,7 +516,7 @@
 
     text-decoration: underline;
 
-    transition: 0.2s ease;
+    transition: color 0.2s ease;
 }
 
 .admin-link:hover {
@@ -581,7 +533,7 @@
 
     width: fit-content;
 
-    margin: 70px auto 0;
+    margin-top: 32px;
 
     color: #0648ff;
 
@@ -596,16 +548,54 @@
 
 
 /* =========================================
-   REGISTER ILLUSTRATION
+   ANIMATIONS
 ========================================= */
 
-.register-illustration {
-    width: 100%;
-    height: 100%;
+@keyframes registerCardEnter {
 
-    object-fit: contain;
+    from {
+        opacity: 0;
 
-    display: block;
+        transform: translateY(25px);
+    }
+
+    to {
+        opacity: 1;
+
+        transform: translateY(0);
+    }
+}
+
+
+@keyframes registerLogoEnter {
+
+    from {
+        opacity: 0;
+
+        transform: translateY(-15px);
+    }
+
+    to {
+        opacity: 1;
+
+        transform: translateY(0);
+    }
+}
+
+
+@keyframes registerContentEnter {
+
+    from {
+        opacity: 0;
+
+        transform: translateX(25px);
+    }
+
+    to {
+        opacity: 1;
+
+        transform: translateX(0);
+    }
 }
 
 
@@ -623,24 +613,32 @@
         grid-template-columns: 1fr;
 
         max-width: 600px;
+
+        min-height: auto;
     }
 
     .register-left {
-        min-height: 360px;
+        min-height: 350px;
 
-        padding: 40px;
+        padding: 35px 40px;
     }
 
     .register-visual {
-        height: 250px;
+        height: 270px;
+
+        margin-top: 25px;
     }
 
     .register-right {
         padding: 45px 40px 55px;
     }
 
+    .register-content {
+        max-width: 400px;
+    }
+
     .back-link {
-        margin-top: 45px;
+        margin-top: 30px;
     }
 }
 
@@ -654,6 +652,8 @@
     }
 
     .register-card {
+        width: 100%;
+
         min-height: 100vh;
 
         border-radius: 0;
@@ -670,34 +670,9 @@
     }
 
     .register-visual {
-        height: 200px;
-    }
+        height: 220px;
 
-    .visual-card {
-        width: 250px;
-        height: 180px;
-
-        padding: 18px;
-    }
-
-    .visual-chart {
-        height: 90px;
-
-        gap: 12px;
-    }
-
-    .visual-bar {
-        width: 20px;
-    }
-
-    .visual-circle-one {
-        width: 130px;
-        height: 130px;
-    }
-
-    .visual-circle-two {
-        width: 90px;
-        height: 90px;
+        margin-top: 20px;
     }
 
     .register-right {
@@ -718,61 +693,5 @@
 
     .register-submit {
         width: 160px;
-    }
-}
-
-
-/* =========================================
-   PAGE TRANSITION
-========================================= */
-
-.register-card {
-    animation: registerCardEnter 0.55s ease-out both;
-}
-
-.register-logo {
-    animation: registerLogoEnter 0.65s ease-out both;
-}
-
-.register-right {
-    animation: registerContentEnter 0.65s ease-out 0.1s both;
-}
-
-@keyframes registerCardEnter {
-
-    from {
-        opacity: 0;
-        transform: translateY(25px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes registerLogoEnter {
-
-    from {
-        opacity: 0;
-        transform: translateY(-15px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes registerContentEnter {
-
-    from {
-        opacity: 0;
-        transform: translateX(25px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateX(0);
     }
 }

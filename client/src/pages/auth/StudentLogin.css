@@ -1,6 +1,6 @@
-/* =========================================
+/* =====================================================
    RESET
-========================================= */
+===================================================== */
 
 .student-login-page,
 .student-login-page * {
@@ -8,9 +8,9 @@
 }
 
 
-/* =========================================
+/* =====================================================
    PAGE
-========================================= */
+===================================================== */
 
 .student-login-page {
     width: 100%;
@@ -22,15 +22,17 @@
     align-items: center;
     justify-content: center;
 
-    padding: 20px;
+    padding: 18px;
 
     font-family: Arial, Helvetica, sans-serif;
+
+    animation: pageFadeIn 0.5s ease-out both;
 }
 
 
-/* =========================================
+/* =====================================================
    MAIN CARD
-========================================= */
+===================================================== */
 
 .student-login-card {
     width: 100%;
@@ -45,12 +47,16 @@
     position: relative;
 
     overflow: hidden;
+
+    border-radius: 0;
+
+    animation: loginCardEnter 0.55s ease-out both;
 }
 
 
-/* =========================================
+/* =====================================================
    LEFT SIDE
-========================================= */
+===================================================== */
 
 .student-login-left {
     width: 50%;
@@ -65,23 +71,25 @@
 }
 
 
-/* =========================================
+/* =====================================================
    LOGO
-========================================= */
+===================================================== */
 
 .student-login-logo {
     display: inline-flex;
+
     align-items: center;
-    gap: 6px;
+
+    gap: 7px;
 
     width: fit-content;
     height: 42px;
 
     color: #0648ff;
-    text-decoration: none;
 
-    font-size: 30px;
+    font-size: 25px;
     font-weight: 600;
+
     line-height: 1;
 
     position: relative;
@@ -89,33 +97,35 @@
 
     border: none;
     outline: none;
+
     background: transparent;
 
     padding: 0;
     margin: 0;
 
     cursor: pointer;
+
+    animation: logoEnter 0.65s ease-out both;
 }
 
 
-/* =========================================
+/* =====================================================
    LOGO MARK
-========================================= */
+===================================================== */
 
 .student-login-logo-mark {
     position: relative;
 
-    width: 42px;
-    height: 42px;
+    width: 27px;
+    height: 27px;
 
     display: inline-block;
+
     flex-shrink: 0;
 }
 
 
-/* =========================================
-   TOP-LEFT TRIANGLE
-========================================= */
+/* TOP TRIANGLE */
 
 .student-login-logo-mark .triangle-top {
     position: absolute;
@@ -123,26 +133,25 @@
     width: 0;
     height: 0;
 
-    border-left: 11px solid transparent;
-    border-right: 11px solid transparent;
-    border-top: 16px solid #0648ff;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 10px solid #0648ff;
 
     left: 1px;
     top: 1px;
 }
 
 
-/* =========================================
-   TOP-RIGHT CIRCLE
-========================================= */
+/* TOP RIGHT CIRCLE */
 
 .student-login-logo-mark .circle {
     position: absolute;
 
-    width: 17px;
-    height: 17px;
+    width: 11px;
+    height: 11px;
 
     background: #0648ff;
+
     border-radius: 50%;
 
     right: 1px;
@@ -150,19 +159,18 @@
 }
 
 
-/* =========================================
-   BOTTOM-LEFT SHAPE
-========================================= */
+/* BOTTOM LEFT SHAPE */
 
 .student-login-logo-mark::before {
     content: "";
 
     position: absolute;
 
-    width: 21px;
-    height: 21px;
+    width: 13px;
+    height: 13px;
 
     background: #0648ff;
+
     border-radius: 50%;
 
     left: 0;
@@ -179,9 +187,7 @@
 }
 
 
-/* =========================================
-   BOTTOM-RIGHT TRIANGLE
-========================================= */
+/* BOTTOM RIGHT TRIANGLE */
 
 .student-login-logo-mark .triangle-bottom {
     position: absolute;
@@ -189,27 +195,25 @@
     width: 0;
     height: 0;
 
-    border-left: 11px solid transparent;
-    border-right: 11px solid transparent;
-    border-bottom: 17px solid #0648ff;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-bottom: 11px solid #0648ff;
 
     right: 0;
     bottom: 0;
 }
 
 
-/* =========================================
-   HOVER
-========================================= */
+/* LOGO HOVER */
 
 .student-login-logo:hover {
     opacity: 0.8;
 }
 
 
-/* =========================================
-   LEFT VISUAL
-========================================= */
+/* =====================================================
+   LEFT ILLUSTRATION AREA
+===================================================== */
 
 .student-login-visual {
     width: 390px;
@@ -219,10 +223,13 @@
 
     position: relative;
 
-    background: #fafafa;
-
     flex-shrink: 0;
 }
+
+
+/* =====================================================
+   BACKGROUND CIRCLES
+===================================================== */
 
 .visual-circle {
     position: absolute;
@@ -231,62 +238,238 @@
 }
 
 .visual-circle-one {
-    width: 180px;
-    height: 180px;
+    width: 210px;
+    height: 210px;
 
-    background: #e7edff;
+    background: #edf2ff;
 
     left: 50px;
-    top: 70px;
+    top: 55px;
 }
 
 .visual-circle-two {
-    width: 120px;
-    height: 120px;
+    width: 130px;
+    height: 130px;
 
-    background: #d8e3ff;
+    background: #e0e8ff;
 
-    right: 45px;
+    right: 35px;
     bottom: 30px;
 }
 
-.visual-content {
+
+/* =====================================================
+   LOGIN DEVICE
+===================================================== */
+
+.login-device {
     position: absolute;
 
-    left: 110px;
-    top: 110px;
+    width: 105px;
+    height: 215px;
 
-    width: 170px;
+    left: 145px;
+    top: 65px;
+
+    background: #dfe7ff;
+
+    border-radius: 7px;
+
+    border: 4px solid #d4dcf5;
+
+    box-shadow:
+        0 10px 25px rgba(40, 76, 180, 0.08);
 }
 
-.visual-line {
-    display: block;
 
-    height: 10px;
+/* DEVICE SCREEN */
+
+.device-screen {
+    position: absolute;
+
+    left: 11px;
+    right: 11px;
+
+    top: 15px;
+
+    height: 150px;
+
+    background: #ffffff;
+
+    border-radius: 5px;
+
+    padding: 15px 10px;
+}
+
+
+/* DEVICE AVATAR */
+
+.device-avatar {
+    width: 45px;
+    height: 45px;
+
+    margin: 0 auto 12px;
+
+    position: relative;
+
+    background: #e9efff;
+
+    border-radius: 50%;
+}
+
+.device-avatar-head {
+    position: absolute;
+
+    width: 13px;
+    height: 13px;
 
     background: #7199ff;
 
-    margin-bottom: 18px;
+    border-radius: 50%;
+
+    top: 7px;
+    left: 16px;
+}
+
+.device-avatar-body {
+    position: absolute;
+
+    width: 25px;
+    height: 15px;
+
+    background: #7199ff;
+
+    border-radius: 15px 15px 7px 7px;
+
+    left: 10px;
+    bottom: 7px;
+}
+
+
+/* DEVICE LINES */
+
+.device-line {
+    height: 5px;
+
+    width: 75px;
+
+    background: #7199ff;
 
     border-radius: 5px;
+
+    margin: 8px auto;
 }
 
-.visual-line:nth-child(1) {
-    width: 130px;
-}
-
-.visual-line:nth-child(2) {
-    width: 160px;
-}
-
-.visual-line:nth-child(3) {
-    width: 100px;
+.device-line.short {
+    width: 55px;
 }
 
 
-/* =========================================
+/* DEVICE BUTTON */
+
+.device-button {
+    position: absolute;
+
+    width: 65px;
+    height: 9px;
+
+    border-radius: 10px;
+
+    background: #7199ff;
+
+    bottom: 15px;
+
+    left: 17px;
+}
+
+
+/* =====================================================
+   SIMPLE PEOPLE ILLUSTRATION
+===================================================== */
+
+.visual-person {
+    position: absolute;
+
+    width: 75px;
+    height: 220px;
+}
+
+
+/* PERSON ONE */
+
+.person-one {
+    left: 40px;
+    top: 100px;
+}
+
+
+/* PERSON TWO */
+
+.person-two {
+    right: 35px;
+    top: 80px;
+}
+
+
+/* HEAD */
+
+.person-head {
+    width: 30px;
+    height: 30px;
+
+    background: #333;
+
+    border-radius: 50%;
+
+    margin: 0 auto;
+}
+
+
+/* BODY */
+
+.person-body {
+    width: 38px;
+    height: 85px;
+
+    background: #1648ff;
+
+    border-radius: 18px 18px 8px 8px;
+
+    margin: 5px auto 0;
+}
+
+
+/* LEGS */
+
+.person-leg {
+    position: absolute;
+
+    width: 10px;
+    height: 75px;
+
+    background: #333;
+
+    border-radius: 8px;
+
+    top: 115px;
+}
+
+.person-leg-left {
+    left: 25px;
+
+    transform: rotate(8deg);
+}
+
+.person-leg-right {
+    right: 25px;
+
+    transform: rotate(-8deg);
+}
+
+
+/* =====================================================
    RIGHT SIDE
-========================================= */
+===================================================== */
 
 .student-login-right {
     width: 50%;
@@ -298,22 +481,31 @@
     justify-content: center;
 
     padding: 50px;
+
+    animation: loginContentEnter 0.65s ease-out 0.1s both;
 }
 
 
-/* =========================================
-   LOGIN FORM CONTAINER
-========================================= */
+/* =====================================================
+   FORM CONTAINER
+===================================================== */
 
 .student-login-form-container {
     width: 100%;
+
     max-width: 390px;
 }
 
-.student-login-form-container h1 {
-    margin: 0 0 15px;
 
-    font-size: 32px;
+/* =====================================================
+   TITLE
+===================================================== */
+
+.student-login-form-container h1 {
+    margin: 0 0 14px;
+
+    font-size: 30px;
+
     line-height: 1.2;
 
     font-weight: 700;
@@ -321,20 +513,50 @@
     color: #050505;
 }
 
+
+/* =====================================================
+   DESCRIPTION
+===================================================== */
+
 .login-description {
     margin: 0 0 28px;
 
     color: #333333;
 
-    font-size: 15px;
+    font-size: 13px;
 
     line-height: 1.6;
 }
 
 
-/* =========================================
-   INPUTS
-========================================= */
+/* =====================================================
+   ERROR
+===================================================== */
+
+.login-error {
+    width: 100%;
+
+    padding: 10px 14px;
+
+    margin-bottom: 15px;
+
+    border-radius: 8px;
+
+    background: #fff1f0;
+
+    color: #d93025;
+
+    font-size: 12px;
+
+    line-height: 1.5;
+
+    border: 1px solid #ffd5d2;
+}
+
+
+/* =====================================================
+   INPUT GROUP
+===================================================== */
 
 .login-input-group {
     width: 100%;
@@ -342,8 +564,14 @@
     margin-bottom: 13px;
 }
 
+
+/* =====================================================
+   INPUT
+===================================================== */
+
 .login-input-group input {
     width: 100%;
+
     height: 42px;
 
     border: 1.5px solid #5c82ff;
@@ -357,27 +585,54 @@
     font-size: 12px;
 
     font-family: inherit;
+
+    color: #222;
+
+    background: #ffffff;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
 }
+
+
+/* PLACEHOLDER */
 
 .login-input-group input::placeholder {
     color: #888;
 }
 
+
+/* FOCUS */
+
 .login-input-group input:focus {
     border-color: #1648ff;
 
-    box-shadow: 0 0 0 2px rgba(22, 72, 255, 0.08);
+    box-shadow:
+        0 0 0 2px rgba(22, 72, 255, 0.08);
 }
 
 
-/* =========================================
+/* DISABLED */
+
+.login-input-group input:disabled {
+    background: #f6f7fb;
+
+    cursor: not-allowed;
+
+    opacity: 0.7;
+}
+
+
+/* =====================================================
    LOGIN BUTTON
-========================================= */
+===================================================== */
 
 .student-login-button {
     display: block;
 
     width: 110px;
+
     height: 38px;
 
     border: none;
@@ -389,7 +644,10 @@
     color: #ffffff;
 
     font-size: 14px;
+
     font-family: inherit;
+
+    font-weight: 500;
 
     cursor: pointer;
 
@@ -401,101 +659,108 @@
         box-shadow 0.2s ease;
 }
 
-.student-login-button:hover {
+
+/* HOVER */
+
+.student-login-button:hover:not(:disabled) {
     background: #0d39d9;
 
     transform: translateY(-2px);
 
-    box-shadow: 0 6px 15px rgba(22, 72, 255, 0.2);
+    box-shadow:
+        0 6px 15px rgba(22, 72, 255, 0.2);
 }
 
 
-/* =========================================
-   BACK TO HOME
-========================================= */
+/* DISABLED */
 
-.login-back {
-    width: 100%;
+.student-login-button:disabled {
+    background: #8aa8ff;
 
-    margin-top: 25px;
+    cursor: not-allowed;
 
-    text-align: center;
-}
+    transform: none;
 
-.login-back a {
-    color: #1648ff;
-
-    text-decoration: none;
-
-    font-size: 13px;
-}
-
-.login-back a:hover {
-    text-decoration: underline;
+    box-shadow: none;
 }
 
 
-/* =========================================
-   PAGE ANIMATION
-========================================= */
+/* =====================================================
+   ANIMATIONS
+===================================================== */
 
-.student-login-card {
-    animation: loginCardEnter 0.55s ease-out both;
+@keyframes pageFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
-.student-login-logo {
-    animation: logoEnter 0.65s ease-out both;
-}
-
-.student-login-right {
-    animation: loginContentEnter 0.65s ease-out 0.1s both;
-}
 
 @keyframes loginCardEnter {
     from {
         opacity: 0;
-        transform: translateY(25px);
+
+        transform:
+            translateY(25px);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0);
+
+        transform:
+            translateY(0);
     }
 }
+
 
 @keyframes logoEnter {
     from {
         opacity: 0;
-        transform: translateY(-15px);
+
+        transform:
+            translateY(-15px);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0);
+
+        transform:
+            translateY(0);
     }
 }
+
 
 @keyframes loginContentEnter {
     from {
         opacity: 0;
-        transform: translateX(25px);
+
+        transform:
+            translateX(25px);
     }
 
     to {
         opacity: 1;
-        transform: translateX(0);
+
+        transform:
+            translateX(0);
     }
 }
 
 
-/* =========================================
+/* =====================================================
    RESPONSIVE
-========================================= */
+===================================================== */
 
 @media (max-width: 850px) {
 
     .student-login-card {
         flex-direction: column;
+
+        min-height: auto;
     }
 
     .student-login-left,
@@ -518,6 +783,7 @@
     }
 }
 
+
 @media (max-width: 500px) {
 
     .student-login-page {
@@ -529,14 +795,16 @@
     }
 
     .student-login-logo {
-        font-size: 27px;
+        font-size: 23px;
     }
 
     .student-login-visual {
         width: 100%;
+
         max-width: 390px;
 
         transform: scale(0.7);
+
         transform-origin: top center;
 
         margin-bottom: -80px;
@@ -554,21 +822,92 @@
         display: none;
     }
 }
+/* =====================================================
+   BACK BUTTON
+===================================================== */
 
-/* =========================================
-   REGISTER ILLUSTRATION
-========================================= */
+.student-login-back-button {
+    display: block;
+
+    width: 110px;
+
+    height: 38px;
+
+    border: 1.5px solid #1648ff;
+
+    border-radius: 20px;
+
+    background: #ffffff;
+
+    color: #1648ff;
+
+    font-size: 14px;
+
+    font-family: inherit;
+
+    font-weight: 500;
+
+    cursor: pointer;
+
+    margin: 12px auto 0;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+/* =====================================================
+   BACK BUTTON HOVER
+===================================================== */
+
+.student-login-back-button:hover:not(:disabled) {
+    background: #1648ff;
+
+    color: #ffffff;
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 6px 15px rgba(22, 72, 255, 0.15);
+}
+
+
+.student-login-back-button:disabled {
+    opacity: 0.6;
+
+    cursor: not-allowed;
+
+    transform: none;
+
+    box-shadow: none;
+}
+/* =====================================================
+   LOGIN VECTOR ILLUSTRATION
+===================================================== */
 
 .student-login-visual {
-    width: 360px;
-    height: 340px;
+    width: 100%;
+    max-width: 430px;
+
+    height: 420px;
+
+    margin: auto;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    margin-top: 40px;
+    flex-shrink: 0;
 }
+
+
+/* =====================================================
+   REGISTER VECTOR IMAGE
+   SAME IMAGE USED ON REGISTRATION PAGE
+===================================================== */
 
 .student-login-illustration {
     width: 100%;
@@ -577,54 +916,4 @@
     object-fit: contain;
 
     display: block;
-}
-
-/* =========================
-   PAGE TRANSITION
-========================= */
-
-.student-login-page {
-  animation: pageFadeIn 0.55s ease-out both;
-}
-
-.student-login-container {
-  animation: loginContainerEnter 0.65s ease-out both;
-}
-
-.student-login-logo {
-  animation: logoEnter 0.7s ease-out both;
-}
-
-@keyframes pageFadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes loginContainerEnter {
-  from {
-    opacity: 0;
-    transform: translateY(25px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes logoEnter {
-  from {
-    opacity: 0;
-    transform: translateY(-15px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }

@@ -83,6 +83,8 @@ const Register = () => {
 
                 <section className="register-left">
 
+                    {/* VOTARA LOGO */}
+
                     <Link
                         to="/"
                         className="register-logo"
@@ -102,6 +104,10 @@ const Register = () => {
 
                     </Link>
 
+
+                    {/* =========================================
+                        VECTOR ILLUSTRATION
+                    ========================================= */}
 
                     <div className="register-visual">
 
@@ -124,6 +130,10 @@ const Register = () => {
 
                     <div className="register-content">
 
+                        {/* =========================================
+                            HEADING
+                        ========================================= */}
+
                         <div className="register-heading">
 
                             <h1>
@@ -140,16 +150,11 @@ const Register = () => {
 
 
                         {/* =========================================
-                            ERROR MESSAGE
+                            ERROR
                         ========================================= */}
 
                         {error && (
-                            <div
-                                className="register-error"
-                                style={{
-                                    marginBottom: "20px",
-                                }}
-                            >
+                            <div className="register-error">
                                 {error}
                             </div>
                         )}
@@ -164,9 +169,7 @@ const Register = () => {
                             onSubmit={handleSubmit}
                         >
 
-                            {/* =========================================
-                                STUDENT ID
-                            ========================================= */}
+                            {/* STUDENT ID */}
 
                             <div className="form-group">
 
@@ -179,24 +182,20 @@ const Register = () => {
                                     type="text"
                                     placeholder="Enter your Student ID"
                                     value={studentId}
-
                                     maxLength={5}
-
                                     onChange={(e) =>
                                         setStudentId(
                                             e.target.value.slice(0, 5)
                                         )
                                     }
-
                                     required
+                                    disabled={loading}
                                 />
 
                             </div>
 
 
-                            {/* =========================================
-                                EMAIL
-                            ========================================= */}
+                            {/* EMAIL */}
 
                             <div className="form-group">
 
@@ -209,20 +208,17 @@ const Register = () => {
                                     type="email"
                                     placeholder="Enter your email address"
                                     value={email}
-
                                     onChange={(e) =>
                                         setEmail(e.target.value)
                                     }
-
                                     required
+                                    disabled={loading}
                                 />
 
                             </div>
 
 
-                            {/* =========================================
-                                SUBMIT BUTTON
-                            ========================================= */}
+                            {/* SUBMIT */}
 
                             <button
                                 type="submit"
@@ -238,27 +234,26 @@ const Register = () => {
 
 
                         {/* =========================================
-                            ADMIN LINK
+                            BOTTOM LINKS
                         ========================================= */}
 
-                        <Link
-                            to="/account-selection"
-                            className="admin-link"
-                        >
-                            Sign up as Admin/Electoral Board
-                        </Link>
+                        <div className="register-links">
 
+                            <Link
+                                to="/account-selection"
+                                className="admin-link"
+                            >
+                                Sign up as Admin/Electoral Board
+                            </Link>
 
-                        {/* =========================================
-                            BACK LINK
-                        ========================================= */}
+                            <Link
+                                to="/"
+                                className="back-link"
+                            >
+                                ← Back to Votara
+                            </Link>
 
-                        <Link
-                            to="/"
-                            className="back-link"
-                        >
-                            ← Back to Votara
-                        </Link>
+                        </div>
 
                     </div>
 
