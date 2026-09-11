@@ -22,6 +22,13 @@ import AdminDashboard from "./src/pages/admin/AdminDashboard";
 import ElectoralBoardManagement from "./src/pages/admin/ElectoralBoardManagement";
 import AdminAccountManagement from "./src/pages/admin/AdminAccountManagement";
 import RegistrationRequirements from "./src/pages/auth/RegistrationRequirements";
+import StudentManagement from "./src/pages/admin/StudentManagement";
+import CandidateManagement from "./src/pages/admin/CandidateManagement";
+import ElectionManagement from "./src/pages/admin/ElectionManagement";
+import AuditLogs from "./src/pages/admin/AuditLogs";
+import Reports from "./src/pages/admin/Reports";
+import ElectionResults from "./src/pages/admin/ElectionResults";
+import SystemSettings from "./src/pages/admin/SystemSettings";
 
 // =====================================================
 // STUDENT
@@ -261,6 +268,48 @@ const App = () => {
                     path="/admin/electoral-board"
                     element={
                         <ElectoralBoardManagement />
+                    }
+                />
+                <Route
+                    path="/admin/students"
+                    element={
+                        <StudentManagement />
+                    }
+                />
+                <Route
+                    path="/admin/candidates"
+                    element={
+                        <CandidateManagement />
+                    }
+                />
+                <Route
+                    path="/admin/election"
+                    element={
+                        <ElectionManagement />
+                    }
+                />
+                <Route
+                    path="/admin/audit-logs"
+                    element={
+                        <AuditLogs />
+                    }
+                />
+                <Route
+                    path="/admin/reports"
+                    element={
+                        <Reports />
+                    }
+                />
+                <Route
+                    path="/admin/results"
+                    element={
+                        <ElectionResults />
+                    }
+                />
+                <Route
+                    path="/admin/settings"
+                    element={
+                        <SystemSettings />
                     }
                 />
                 <Route

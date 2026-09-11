@@ -1,0 +1,1425 @@
+/* =====================================================
+   ELECTION MANAGEMENT
+   ===================================================== */
+
+.election-management {
+    min-height: 100vh;
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 32px 42px 50px;
+
+    background: #f5f7fb;
+    color: #0b1b35;
+
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* =====================================================
+   BACK TO DASHBOARD
+   ===================================================== */
+
+.election-back-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    border: none;
+    background: transparent;
+
+    padding: 0;
+    margin: 0 0 18px;
+
+    color: #526581;
+
+    font-size: 13px;
+    font-weight: 500;
+
+    cursor: pointer;
+
+    transition: color 0.2s ease;
+}
+
+.election-back-button:hover {
+    color: #246bff;
+}
+
+.election-back-button span {
+    font-size: 21px;
+    line-height: 1;
+}
+
+
+/* =====================================================
+   HEADER
+   ===================================================== */
+
+.election-page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+
+    gap: 30px;
+
+    margin-bottom: 26px;
+}
+
+.election-page-label {
+    display: block;
+
+    margin-bottom: 8px;
+
+    color: #246bff;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    letter-spacing: 1.4px;
+}
+
+.election-page-header h1 {
+    margin: 0 0 7px;
+
+    color: #0a1b36;
+
+    font-size: 29px;
+    font-weight: 750;
+
+    letter-spacing: -0.5px;
+}
+
+.election-page-header p {
+    margin: 0;
+
+    color: #64748b;
+
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+
+/* =====================================================
+   CREATE BUTTON
+   ===================================================== */
+
+.create-election-button {
+    min-width: 155px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    border: none;
+    border-radius: 9px;
+
+    background: #286cff;
+    color: #ffffff;
+
+    padding: 0 18px;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 5px 14px rgba(36, 107, 255, 0.18);
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.create-election-button span {
+    font-size: 19px;
+}
+
+.create-election-button:hover {
+    background: #155be8;
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 7px 18px rgba(36, 107, 255, 0.25);
+}
+
+
+/* =====================================================
+   STATISTICS
+   ===================================================== */
+
+.election-stat-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 16px;
+
+    margin-bottom: 22px;
+}
+
+.election-stat-card {
+    min-height: 96px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 14px;
+
+    box-sizing: border-box;
+
+    padding: 18px;
+
+    border: 1px solid #e1e7ef;
+    border-radius: 13px;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 2px 5px rgba(15, 23, 42, 0.025);
+}
+
+.election-stat-icon {
+    width: 40px;
+    height: 40px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+
+    font-size: 19px;
+    font-weight: 700;
+}
+
+.election-stat-icon.blue {
+    background: #edf4ff;
+    color: #246bff;
+}
+
+.election-stat-icon.green {
+    background: #eafaf2;
+    color: #10a568;
+}
+
+.election-stat-icon.orange {
+    background: #fff5e8;
+    color: #ef941e;
+}
+
+.election-stat-icon.purple {
+    background: #f1edff;
+    color: #7354d8;
+}
+
+.election-stat-card span {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #61728b;
+
+    font-size: 11px;
+}
+
+.election-stat-card strong {
+    display: block;
+
+    margin-bottom: 3px;
+
+    color: #0b1b35;
+
+    font-size: 24px;
+    line-height: 1;
+}
+
+.election-stat-card small {
+    display: block;
+
+    color: #8a99ad;
+
+    font-size: 10px;
+}
+
+
+/* =====================================================
+   CURRENT ELECTION
+   ===================================================== */
+
+.current-election-card {
+    min-height: 82px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 15px;
+
+    box-sizing: border-box;
+
+    padding: 16px 20px;
+
+    margin-bottom: 22px;
+
+    border: 1px solid #dfe6ef;
+    border-radius: 13px;
+
+    background: #ffffff;
+}
+
+.current-election-icon {
+    width: 43px;
+    height: 43px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 11px;
+
+    background: #edf4ff;
+    color: #286cff;
+
+    font-size: 18px;
+}
+
+.current-election-content {
+    flex: 1;
+}
+
+.current-election-content > span {
+    display: block;
+
+    margin-bottom: 4px;
+
+    color: #7a8aa1;
+
+    font-size: 9px;
+    font-weight: 700;
+
+    letter-spacing: 1px;
+}
+
+.current-election-content h2 {
+    margin: 0 0 3px;
+
+    color: #10213c;
+
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.current-election-content p {
+    margin: 0;
+
+    color: #72829a;
+
+    font-size: 11px;
+}
+
+.current-election-status {
+    display: flex;
+    align-items: center;
+
+    gap: 7px;
+
+    padding: 8px 12px;
+
+    border-radius: 20px;
+
+    background: #eafaf2;
+    color: #0c9d61;
+
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.current-election-status span {
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: #16b979;
+}
+
+
+/* =====================================================
+   TABLE CARD
+   ===================================================== */
+
+.election-table-card {
+    overflow: hidden;
+
+    border: 1px solid #dfe6ef;
+    border-radius: 14px;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 2px 6px rgba(15, 23, 42, 0.025);
+}
+
+
+/* =====================================================
+   TABLE HEADER
+   ===================================================== */
+
+.election-table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 20px;
+
+    border-bottom: 1px solid #e6ebf2;
+}
+
+.election-table-header h2 {
+    margin: 0 0 5px;
+
+    color: #10213c;
+
+    font-size: 16px;
+}
+
+.election-table-header p {
+    margin: 0;
+
+    color: #718199;
+
+    font-size: 11px;
+}
+
+.election-refresh-button {
+    height: 35px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 7px;
+
+    padding: 0 13px;
+
+    border: 1px solid #d3dce8;
+    border-radius: 8px;
+
+    background: #ffffff;
+    color: #455a75;
+
+    font-size: 11px;
+
+    cursor: pointer;
+
+    transition: 0.2s ease;
+}
+
+.election-refresh-button:hover {
+    background: #f7f9fc;
+
+    border-color: #aebed2;
+
+    color: #246bff;
+}
+
+
+/* =====================================================
+   FILTER BAR
+   ===================================================== */
+
+.election-filter-bar {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 15px 20px;
+
+    border-bottom: 1px solid #e6ebf2;
+}
+
+.election-search {
+    flex: 1;
+
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+
+    box-sizing: border-box;
+
+    padding: 0 12px;
+
+    border: 1px solid #d4ddea;
+    border-radius: 8px;
+
+    background: #ffffff;
+}
+
+.election-search span {
+    color: #8291a6;
+
+    font-size: 20px;
+}
+
+.election-search input {
+    width: 100%;
+
+    border: none;
+    outline: none;
+
+    background: transparent;
+
+    color: #243752;
+
+    font-size: 11px;
+}
+
+.election-search input::placeholder {
+    color: #94a1b3;
+}
+
+.election-search:focus-within {
+    border-color: #8db2ff;
+
+    box-shadow:
+        0 0 0 3px rgba(36, 107, 255, 0.08);
+}
+
+.election-status-filter {
+    width: 160px;
+    height: 38px;
+
+    padding: 0 11px;
+
+    border: 1px solid #d4ddea;
+    border-radius: 8px;
+
+    outline: none;
+
+    background: #ffffff;
+    color: #53657d;
+
+    font-size: 11px;
+
+    cursor: pointer;
+}
+
+.election-status-filter:focus {
+    border-color: #8db2ff;
+}
+
+.election-clear-button {
+    height: 38px;
+
+    padding: 0 12px;
+
+    border: 1px solid #f0caca;
+    border-radius: 8px;
+
+    background: #ffffff;
+
+    color: #df5050;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.election-clear-button:hover {
+    background: #fff5f5;
+}
+
+
+/* =====================================================
+   TABLE
+   ===================================================== */
+
+.election-table-wrapper {
+    width: 100%;
+
+    overflow-x: auto;
+}
+
+.election-table {
+    width: 100%;
+
+    min-width: 1100px;
+
+    border-collapse: collapse;
+}
+
+.election-table thead {
+    background: #fafbfd;
+}
+
+.election-table th {
+    height: 43px;
+
+    padding: 0 14px;
+
+    border-bottom: 1px solid #e5eaf1;
+
+    color: #4e6079;
+
+    text-align: left;
+
+    font-size: 10px;
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+.election-table th:first-child,
+.election-table td:first-child {
+    padding-left: 20px;
+}
+
+.election-table th:last-child,
+.election-table td:last-child {
+    padding-right: 20px;
+}
+
+.election-table td {
+    height: 70px;
+
+    padding: 8px 14px;
+
+    border-bottom: 1px solid #edf0f4;
+
+    color: #52637b;
+
+    font-size: 11px;
+
+    vertical-align: middle;
+}
+
+.election-table tbody tr {
+    transition: background 0.15s ease;
+}
+
+.election-table tbody tr:hover {
+    background: #fbfcff;
+}
+
+.election-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+
+/* =====================================================
+   ELECTION NAME
+   ===================================================== */
+
+.election-name-cell {
+    display: flex;
+    align-items: center;
+
+    gap: 11px;
+
+    min-width: 250px;
+}
+
+.election-avatar {
+    width: 38px;
+    height: 38px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+
+    background: #edf4ff;
+    color: #286cff;
+
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.election-name-cell > div:last-child {
+    display: flex;
+    flex-direction: column;
+
+    gap: 4px;
+}
+
+.election-name-cell strong {
+    color: #17304f;
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.election-name-cell span {
+    color: #8492a7;
+
+    font-size: 9px;
+}
+
+
+/* =====================================================
+   SCHEDULE
+   ===================================================== */
+
+.election-schedule {
+    display: flex;
+    flex-direction: column;
+
+    gap: 4px;
+
+    white-space: nowrap;
+}
+
+.election-schedule strong {
+    color: #53657d;
+
+    font-size: 10px;
+}
+
+.election-schedule span {
+    color: #8997a9;
+
+    font-size: 9px;
+}
+
+
+/* =====================================================
+   NUMBERS
+   ===================================================== */
+
+.election-number {
+    color: #273d59;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.votes-cell {
+    display: flex;
+    flex-direction: column;
+
+    gap: 3px;
+}
+
+.votes-cell strong {
+    color: #273d59;
+
+    font-size: 11px;
+}
+
+.votes-cell span {
+    color: #8997a9;
+
+    font-size: 9px;
+}
+
+
+/* =====================================================
+   STATUS
+   ===================================================== */
+
+.election-status {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 6px;
+
+    padding: 6px 9px;
+
+    border-radius: 20px;
+
+    font-size: 10px;
+    font-weight: 600;
+
+    white-space: nowrap;
+}
+
+.election-status-dot {
+    width: 6px;
+    height: 6px;
+
+    border-radius: 50%;
+}
+
+.election-status.active {
+    background: #eafaf2;
+    color: #0a9b60;
+}
+
+.election-status.active .election-status-dot {
+    background: #13b873;
+}
+
+.election-status.scheduled {
+    background: #fff5e7;
+    color: #d9850c;
+}
+
+.election-status.scheduled .election-status-dot {
+    background: #ee9a20;
+}
+
+.election-status.completed {
+    background: #edf4ff;
+    color: #286cff;
+}
+
+.election-status.completed .election-status-dot {
+    background: #286cff;
+}
+
+.election-status.archived {
+    background: #f0f2f5;
+    color: #6f7d90;
+}
+
+.election-status.archived .election-status-dot {
+    background: #8491a2;
+}
+
+
+/* =====================================================
+   ACTIONS
+   ===================================================== */
+
+.election-view-button {
+    height: 29px;
+
+    padding: 0 10px;
+
+    border: 1px solid #d4ddea;
+    border-radius: 6px;
+
+    background: #ffffff;
+    color: #4e6079;
+
+    font-size: 9px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.2s ease;
+}
+
+.election-view-button:hover {
+    border-color: #9db9e9;
+
+    background: #f5f8ff;
+
+    color: #246bff;
+}
+
+
+/* =====================================================
+   NO ELECTIONS
+   ===================================================== */
+
+.no-elections {
+    min-height: 220px;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+}
+
+.no-elections > div {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #f0f4f9;
+    color: #8090a7;
+
+    font-size: 19px;
+}
+
+.no-elections strong {
+    color: #354964;
+
+    font-size: 12px;
+}
+
+.no-elections span {
+    color: #8a98aa;
+
+    font-size: 10px;
+}
+
+
+/* =====================================================
+   TABLE FOOTER
+   ===================================================== */
+
+.election-table-footer {
+    min-height: 52px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 20px;
+
+    border-top: 1px solid #e7ebf1;
+
+    color: #8794a7;
+
+    font-size: 10px;
+}
+
+.election-table-footer strong {
+    color: #52647c;
+}
+
+
+/* =====================================================
+   MODAL OVERLAY
+   ===================================================== */
+
+.election-modal-overlay {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 1000;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 25px;
+
+    background: rgba(8, 19, 37, 0.48);
+
+    backdrop-filter: blur(3px);
+}
+
+
+/* =====================================================
+   MODAL
+   ===================================================== */
+
+.election-modal {
+    width: min(600px, 100%);
+
+    max-height: calc(100vh - 50px);
+
+    overflow-y: auto;
+
+    border-radius: 15px;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 20px 50px rgba(10, 27, 54, 0.2);
+}
+
+
+/* =====================================================
+   MODAL HEADER
+   ===================================================== */
+
+.election-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    padding: 22px 23px 18px;
+
+    border-bottom: 1px solid #e8edf3;
+}
+
+.election-modal-header > div > span {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #286cff;
+
+    font-size: 9px;
+    font-weight: 700;
+
+    letter-spacing: 1px;
+}
+
+.election-modal-header h2 {
+    max-width: 470px;
+
+    margin: 0;
+
+    color: #10213c;
+
+    font-size: 18px;
+    line-height: 1.3;
+}
+
+.election-modal-close {
+    width: 30px;
+    height: 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border: none;
+    border-radius: 7px;
+
+    background: #f3f6fa;
+    color: #63748b;
+
+    font-size: 20px;
+
+    cursor: pointer;
+}
+
+.election-modal-close:hover {
+    background: #e9eef5;
+    color: #10213c;
+}
+
+
+/* =====================================================
+   MODAL STATUS
+   ===================================================== */
+
+.modal-election-status-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin: 20px 23px;
+
+    padding: 14px;
+
+    border: 1px solid #e3e9f0;
+    border-radius: 10px;
+
+    background: #f9fbfd;
+}
+
+.modal-election-status-box > div > span {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #8a98aa;
+
+    font-size: 9px;
+    font-weight: 600;
+
+    letter-spacing: 0.5px;
+}
+
+.modal-election-status-box strong {
+    display: flex;
+    align-items: center;
+
+    gap: 7px;
+
+    font-size: 11px;
+}
+
+.modal-election-status-box strong span {
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+}
+
+.modal-election-status-box strong.active {
+    color: #0a9b60;
+}
+
+.modal-election-status-box strong.active span {
+    background: #13b873;
+}
+
+.modal-election-status-box strong.scheduled {
+    color: #d9850c;
+}
+
+.modal-election-status-box strong.scheduled span {
+    background: #ee9a20;
+}
+
+.modal-election-status-box strong.completed {
+    color: #286cff;
+}
+
+.modal-election-status-box strong.completed span {
+    background: #286cff;
+}
+
+.modal-election-status-box strong.archived {
+    color: #6f7d90;
+}
+
+.modal-election-status-box strong.archived span {
+    background: #8491a2;
+}
+
+.modal-election-id {
+    color: #8794a7;
+
+    font-size: 9px;
+}
+
+
+/* =====================================================
+   DETAILS
+   ===================================================== */
+
+.election-details-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, 1fr);
+
+    gap: 12px;
+
+    padding: 0 23px;
+}
+
+.election-details-grid > div {
+    padding: 13px;
+
+    border: 1px solid #e5eaf1;
+    border-radius: 9px;
+
+    background: #ffffff;
+}
+
+.election-details-grid label {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #8492a5;
+
+    font-size: 9px;
+}
+
+.election-details-grid strong {
+    display: block;
+
+    color: #334963;
+
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+
+/* =====================================================
+   PARTICIPATION
+   ===================================================== */
+
+.election-participation {
+    margin: 20px 23px 0;
+
+    padding: 15px;
+
+    border: 1px solid #e4e9f0;
+    border-radius: 10px;
+
+    background: #f9fbfd;
+}
+
+.participation-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 10px;
+}
+
+.participation-header span {
+    color: #718199;
+
+    font-size: 9px;
+    font-weight: 700;
+
+    letter-spacing: 0.7px;
+}
+
+.participation-header strong {
+    color: #286cff;
+
+    font-size: 14px;
+}
+
+.participation-bar {
+    width: 100%;
+    height: 7px;
+
+    overflow: hidden;
+
+    border-radius: 10px;
+
+    background: #e5ebf3;
+}
+
+.participation-bar div {
+    height: 100%;
+
+    border-radius: inherit;
+
+    background: #286cff;
+
+    transition: width 0.3s ease;
+}
+
+.election-participation p {
+    margin: 8px 0 0;
+
+    color: #8794a7;
+
+    font-size: 9px;
+}
+
+
+/* =====================================================
+   MODAL ACTIONS
+   ===================================================== */
+
+.election-modal-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+
+    margin-top: 20px;
+
+    padding: 17px 23px;
+
+    border-top: 1px solid #e7ebf1;
+}
+
+.election-modal-actions button {
+    min-height: 36px;
+
+    padding: 0 14px;
+
+    border-radius: 7px;
+
+    font-size: 10px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.modal-activate-button {
+    border: 1px solid #bde5d1;
+
+    background: #eafaf2;
+    color: #0a9b60;
+}
+
+.modal-activate-button:hover {
+    background: #d9f5e7;
+}
+
+.modal-complete-button {
+    border: 1px solid #c6d9f8;
+
+    background: #edf4ff;
+    color: #286cff;
+}
+
+.modal-complete-button:hover {
+    background: #e1ecff;
+}
+
+.modal-archive-button {
+    border: 1px solid #d5dce5;
+
+    background: #f5f7fa;
+    color: #5f7087;
+}
+
+.modal-archive-button:hover {
+    background: #e9edf2;
+}
+
+.archived-message {
+    color: #8794a7;
+
+    font-size: 10px;
+}
+
+
+/* =====================================================
+   TABLET
+   ===================================================== */
+
+@media (max-width: 1100px) {
+
+    .election-management {
+        padding: 28px 28px 45px;
+    }
+
+    .election-stat-grid {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+    .election-filter-bar {
+        flex-wrap: wrap;
+    }
+
+    .election-search {
+        flex-basis: 100%;
+    }
+
+}
+
+
+/* =====================================================
+   MOBILE
+   ===================================================== */
+
+@media (max-width: 700px) {
+
+    .election-management {
+        padding: 22px 16px 35px;
+    }
+
+    .election-page-header {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+    .election-page-header h1 {
+        font-size: 24px;
+    }
+
+    .create-election-button {
+        width: 100%;
+    }
+
+    .election-stat-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .current-election-card {
+        align-items: flex-start;
+
+        flex-wrap: wrap;
+    }
+
+    .current-election-status {
+        margin-left: 58px;
+    }
+
+    .election-table-header {
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 12px;
+    }
+
+    .election-refresh-button {
+        width: 100%;
+
+        justify-content: center;
+    }
+
+    .election-filter-bar {
+        align-items: stretch;
+
+        flex-direction: column;
+    }
+
+    .election-search {
+        width: 100%;
+
+        flex-basis: auto;
+    }
+
+    .election-status-filter {
+        width: 100%;
+    }
+
+    .election-clear-button {
+        width: 100%;
+    }
+
+    .election-details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .election-modal-actions {
+        flex-direction: column;
+
+        align-items: stretch;
+    }
+
+    .election-modal-actions button {
+        width: 100%;
+    }
+
+}
+
+
+/* =====================================================
+   SMALL MOBILE
+   ===================================================== */
+
+@media (max-width: 420px) {
+
+    .election-management {
+        padding: 18px 12px 30px;
+    }
+
+    .election-stat-card {
+        padding: 15px;
+    }
+
+    .election-table-header {
+        padding: 17px 15px;
+    }
+
+    .election-filter-bar {
+        padding: 13px 15px;
+    }
+
+    .election-table-footer {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    .current-election-status {
+        margin-left: 0;
+    }
+
+    .election-modal-overlay {
+        padding: 12px;
+    }
+
+}

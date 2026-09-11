@@ -1,0 +1,90 @@
+/* =====================================================
+   ADMIN DASHBOARD THEME
+   ===================================================== */
+
+:root {
+    --admin-bg: #f8fafc;
+    --admin-card: #ffffff;
+    --admin-sidebar: #05080d;
+    --admin-text: #172033;
+    --admin-text-secondary: #667085;
+    --admin-border: #e5e7eb;
+    --admin-input: #ffffff;
+    --admin-hover: #f8fafc;
+}
+
+html[data-theme="dark"] {
+    --admin-bg: #0b1020;
+    --admin-card: #151b2d;
+    --admin-sidebar: #070b14;
+    --admin-text: #f8fafc;
+    --admin-text-secondary: #98a2b3;
+    --admin-border: #293249;
+    --admin-input: #111827;
+    --admin-hover: #1c2438;
+}
+
+/* Main dashboard background */
+html[data-theme="dark"] .votara-admin-main {
+    background: var(--admin-bg) !important;
+    color: var(--admin-text);
+}
+
+/* Header */
+html[data-theme="dark"] .votara-admin-header {
+    background: var(--admin-card) !important;
+    color: var(--admin-text);
+    border-color: var(--admin-border) !important;
+}
+
+/* Dashboard cards */
+html[data-theme="dark"] .votara-admin-stats > *,
+html[data-theme="dark"] .votara-admin-health > *,
+html[data-theme="dark"] .votara-admin-management > * {
+    color: var(--admin-text);
+}
+
+/* Generic cards */
+html[data-theme="dark"] .votara-admin-main .card,
+html[data-theme="dark"] .votara-admin-main .stat-card,
+html[data-theme="dark"] .votara-admin-main .health-card,
+html[data-theme="dark"] .votara-admin-main .management-card {
+    background: var(--admin-card) !important;
+    color: var(--admin-text) !important;
+    border-color: var(--admin-border) !important;
+}
+
+/* Text */
+html[data-theme="dark"] .votara-admin-main h1,
+html[data-theme="dark"] .votara-admin-main h2,
+html[data-theme="dark"] .votara-admin-main h3,
+html[data-theme="dark"] .votara-admin-main h4,
+html[data-theme="dark"] .votara-admin-main p,
+html[data-theme="dark"] .votara-admin-main span {
+    color: var(--admin-text);
+}
+
+/* Sidebar */
+html[data-theme="dark"] .votara-admin-sidebar {
+    background: var(--admin-sidebar) !important;
+}
+
+/* Inputs */
+html[data-theme="dark"] .votara-admin-main input,
+html[data-theme="dark"] .votara-admin-main select,
+html[data-theme="dark"] .votara-admin-main textarea {
+    background: var(--admin-input) !important;
+    color: var(--admin-text) !important;
+    border-color: var(--admin-border) !important;
+}
+
+/* Panels */
+html[data-theme="dark"] .votara-admin-main .info-panel {
+    background: var(--admin-card) !important;
+    border-color: var(--admin-border) !important;
+}
+
+/* Hover */
+html[data-theme="dark"] .votara-admin-main button:hover {
+    background: var(--admin-hover);
+}

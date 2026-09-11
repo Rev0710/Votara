@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import "./AdminDashboard.css";
 import {
     FiUsers,
     FiUserCheck,
@@ -23,6 +23,96 @@ import {
 import api from "../../services/api";
 
 // =========================================================
+// SYSTEM THEME
+// =========================================================
+
+const DEFAULT_PRIMARY = "#266EFF";
+
+const hexToRgba = (hex, alpha) => {
+    if (!hex) {
+        return `rgba(38, 110, 255, ${alpha})`;
+    }
+
+    let cleanHex = hex.replace("#", "");
+
+    if (cleanHex.length === 3) {
+        cleanHex = cleanHex
+            .split("")
+            .map((char) => char + char)
+            .join("");
+    }
+
+    const r = parseInt(cleanHex.substring(0, 2), 16);
+    const g = parseInt(cleanHex.substring(2, 4), 16);
+    const b = parseInt(cleanHex.substring(4, 6), 16);
+
+    if (
+        Number.isNaN(r) ||
+        Number.isNaN(g) ||
+        Number.isNaN(b)
+    ) {
+        return `rgba(38, 110, 255, ${alpha})`;
+    }
+
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+const applySystemTheme = () => {
+    try {
+        const savedSettings =
+            localStorage.getItem("votaraSystemSettings");
+
+        const settings = savedSettings
+            ? JSON.parse(savedSettings)
+            : {};
+
+        const primaryColor =
+            settings.primaryColor || DEFAULT_PRIMARY;
+
+        const root = document.documentElement;
+
+        // Primary color
+        root.style.setProperty(
+            "--votara-primary",
+            primaryColor
+        );
+
+        root.style.setProperty(
+            "--votara-primary-light",
+            hexToRgba(primaryColor, 0.10)
+        );
+
+        root.style.setProperty(
+            "--votara-primary-medium",
+            hexToRgba(primaryColor, 0.18)
+        );
+
+        root.style.setProperty(
+            "--votara-primary-border",
+            hexToRgba(primaryColor, 0.25)
+        );
+
+        // Theme
+        root.setAttribute(
+            "data-theme",
+            settings.theme || "light"
+        );
+    } catch (error) {
+        console.error(
+            "Unable to apply system theme:",
+            error
+        );
+
+        document.documentElement.setAttribute(
+            "data-theme",
+            "light"
+        );
+    }
+}; 
+
+
+
+// =========================================================
 // ADMIN DASHBOARD
 // =========================================================
 
@@ -30,6 +120,43 @@ function AdminDashboard() {
     const navigate = useNavigate();
 
     const [admin, setAdmin] = useState(null);
+
+    // =====================================================
+// APPLY SYSTEM SETTINGS THEME
+// =====================================================
+
+useEffect(() => {
+    // Apply saved color when dashboard loads
+    applySystemTheme();
+
+    // Update if settings are changed
+    const handleSettingsChanged = () => {
+        applySystemTheme();
+    };
+
+    window.addEventListener(
+        "votaraSettingsChanged",
+        handleSettingsChanged
+    );
+
+    // Also listen for changes from another browser tab
+    window.addEventListener(
+        "storage",
+        handleSettingsChanged
+    );
+
+    return () => {
+        window.removeEventListener(
+            "votaraSettingsChanged",
+            handleSettingsChanged
+        );
+
+        window.removeEventListener(
+            "storage",
+            handleSettingsChanged
+        );
+    };
+}, []);
 
     const [loading, setLoading] = useState(true);
 
@@ -361,6 +488,14 @@ const checkSystem = async () => {
             icon: FiCalendar,
             path: "/admin/election",
         },
+
+        {
+        title: "System Settings",
+        description:
+            "Configure system preferences and appearance.",
+        icon: FiSettings,
+        path: "/admin/settings",
+    },
     ];
 
     const monitoringItems = [
@@ -417,7 +552,10 @@ const checkSystem = async () => {
                 SIDEBAR
             ================================================= */}
 
-            <aside style={styles.sidebar}>
+            <aside
+    className="votara-admin-sidebar"
+    style={styles.sidebar}
+>
                 <div style={styles.logoArea}>
                     <div style={styles.logoIcon}>
                         <FiShield size={25} />
@@ -650,24 +788,16 @@ const checkSystem = async () => {
                         styles.sidebarBottom
                     }
                 >
-                    <button
-                        style={
-                            styles.settingsButton
-                        }
-                        onClick={() =>
-                            alert(
-                                "System configuration will be added in the next step."
-                            )
-                        }
+                <button
+                    style={styles.settingsButton}
+                    onClick={() => goTo("/admin/settings")}
                     >
-                        <FiSettings
-                            size={18}
-                        />
+                    <FiSettings size={18} />
 
-                        <span>
-                            System Settings
-                        </span>
-                    </button>
+                    <span>
+                    System Settings
+                    </span>
+                </button>
 
                     <button
                         style={
@@ -1340,8 +1470,8 @@ function ManagementCard({
 const styles = {
     page: {
         minHeight: "100vh",
-        background: "#f5f7fb",
-        color: "#172033",
+        background: "var(--admin-bg)",
+        color: "var(--admin-text)",
         fontFamily:
             "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     },
@@ -1377,7 +1507,7 @@ const styles = {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "#266EFF",
+        background: "var(--votara-primary, #266EFF)",
     },
 
     logoText: {
@@ -1409,7 +1539,7 @@ const styles = {
         width: "40px",
         height: "40px",
         borderRadius: "50%",
-        background: "#266EFF",
+        background: "var(--votara-primary, #266EFF)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -1460,7 +1590,7 @@ const styles = {
     },
 
     navItemActive: {
-        background: "#266EFF",
+        background: "var(--votara-primary, #266EFF)",
         color: "#ffffff",
         fontWeight: 600,
     },
@@ -1521,7 +1651,7 @@ const styles = {
         fontSize: "10px",
         fontWeight: 700,
         letterSpacing: "1.5px",
-        color: "#266EFF",
+        color: "var(--votara-primary, #266EFF)",
     },
 
     title: {
@@ -1548,9 +1678,8 @@ const styles = {
         alignItems: "center",
         gap: "7px",
         padding: "9px 13px",
-        background: "#ffffff",
-        border:
-            "1px solid #EAECF0",
+        background: "var(--admin-card)",
+border: "1px solid var(--admin-border)",
         borderRadius: "9px",
         fontSize: "12px",
         fontWeight: 600,
@@ -1566,8 +1695,8 @@ const styles = {
     refreshButton: {
         border:
             "1px solid #D0D5DD",
-        background: "#ffffff",
-        color: "#344054",
+        background: "var(--admin-card)",
+        color: "var(--admin-text)",
         borderRadius: "9px",
         padding: "9px 13px",
         display: "flex",
@@ -1584,9 +1713,8 @@ const styles = {
         gap: "12px",
         padding: "15px 17px",
         marginBottom: "25px",
-        background: "#FEF3F2",
-        border:
-            "1px solid #FECDCA",
+        bbackground: "var(--admin-bg)",
+border: "1px solid var(--admin-border)",
         borderRadius: "12px",
         color: "#B42318",
     },
@@ -1619,9 +1747,9 @@ const styles = {
     },
 
     statCard: {
-        background: "#ffffff",
+        background: "var(--admin-card)",
         border:
-            "1px solid #EAECF0",
+            "1px solid var(--admin-border)",
         borderRadius: "14px",
         padding: "19px",
         boxShadow:
@@ -1638,8 +1766,8 @@ const styles = {
         width: "38px",
         height: "38px",
         borderRadius: "10px",
-        background: "#EEF4FF",
-        color: "#266EFF",
+        background: "var(--votara-primary-light, #EEF4FF)",
+        color: "var(--votara-primary, #266EFF)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -1672,9 +1800,9 @@ const styles = {
     },
 
     healthCard: {
-        background: "#ffffff",
+        background: "var(--admin-card)",
         border:
-            "1px solid #EAECF0",
+            "1px solid var(--admin-border)",
         borderRadius: "14px",
         padding: "17px",
         display: "flex",
@@ -1686,8 +1814,8 @@ const styles = {
         width: "38px",
         height: "38px",
         borderRadius: "10px",
-        background: "#F2F4F7",
-        color: "#344054",
+        background: "var(--admin-card)",
+        color: "var(--admin-text)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -1727,8 +1855,8 @@ const styles = {
     managementCard: {
         width: "100%",
         border:
-            "1px solid #EAECF0",
-        background: "#ffffff",
+            "1px solid var(--admin-border)",
+        background: "var(--admin-card)",
         borderRadius: "14px",
         padding: "18px",
         display: "flex",
@@ -1744,8 +1872,8 @@ const styles = {
         width: "43px",
         height: "43px",
         borderRadius: "11px",
-        background: "#EEF4FF",
-        color: "#266EFF",
+        background: "var(--votara-primary-light, #EEF4FF)",
+        color: "var(--votara-primary, #266EFF)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -1766,9 +1894,8 @@ const styles = {
         alignItems: "flex-start",
         gap: "14px",
         padding: "18px",
-        background: "#EEF4FF",
-        border:
-            "1px solid #D1E0FF",
+        background: "var(--votara-primary-light, #EEF4FF)",
+border: "1px solid var(--admin-border)",
         borderRadius: "14px",
     },
 
@@ -1776,8 +1903,8 @@ const styles = {
         width: "40px",
         height: "40px",
         borderRadius: "10px",
-        background: "#ffffff",
-        color: "#266EFF",
+        background: "var(--admin-card)",
+        color: "var(--votara-primary, #266EFF)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -1793,7 +1920,7 @@ const styles = {
         padding:
             "20px 0 5px",
         borderTop:
-            "1px solid #EAECF0",
+            "1px solid var(--admin-border)",
         display: "flex",
         justifyContent: "space-between",
         gap: "20px",
@@ -1807,12 +1934,12 @@ const styles = {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        background: "#f5f7fb",
-        color: "#344054",
+        background: "var(--admin-bg)",
+        color: "var(--admin-text)",
     },
 
     loadingSpinner: {
-        color: "#266EFF",
+        color: "var(--votara-primary, #266EFF)",
         marginBottom: "10px",
     },
 };
