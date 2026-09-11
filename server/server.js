@@ -1,37 +1,105 @@
 require("dotenv").config();
-const authRoutes = require("./src/routes/authRoutes");
+
 const express = require("express");
 const cors = require("cors");
-const mongoose = require("mongoose");
 const path = require("path");
+
+const supabase = require("./src/config/supabase");
+
+const adminAuthRoutes = require("./src/routes/adminAuthRoutes");
+const authRoutes = require("./src/routes/authRoutes");
+const ebAuthRoutes = require("./src/routes/ebAuthRoutes");
+const profileRoutes = require("./src/routes/profileRoutes");
 const registrationRoutes = require("./src/routes/registrationRoutes");
-const { verifyEmailConnection } = require("./src/services/emailService");
+const registrationDocumentsRoutes = require("./src/routes/registrationDocumentsRoutes");
+const staffAuthRoutes = require("./src/routes/staffAuthRoutes");
+const adminRoutes = require("./src/routes/adminRoutes");
+const ebRegistrationRoutes = require("./src/routes/ebRegistrationRoutes");
 
 const app = express();
 
-const PORT = process.env.PORT || 5000;
+// =====================================================
+// ENVIRONMENT
+// =====================================================
 
 require("dotenv").config({
     path: path.join(__dirname, ".env"),
 });
 
+const PORT = process.env.PORT || 5000;
+
+// =====================================================
+// ENVIRONMENT CHECK
+// =====================================================
+
 console.log("=================================");
-console.log("🔧 ENVIRONMENT CHECK");
-console.log("EMAIL_HOST:", process.env.EMAIL_HOST);
-console.log("EMAIL_PORT:", process.env.EMAIL_PORT);
-console.log("EMAIL_USER:", process.env.EMAIL_USER);
+console.log("🔧 VOTARA ENVIRONMENT CHECK");
+console.log("=================================");
+
+console.log(
+    "SUPABASE_URL configured:",
+    Boolean(process.env.SUPABASE_URL)
+);
+
+console.log(
+    "SUPABASE_SECRET_KEY configured:",
+    Boolean(process.env.SUPABASE_SECRET_KEY)
+);
+
+console.log(
+    "JWT_SECRET configured:",
+    Boolean(process.env.JWT_SECRET)
+);
+
+console.log(
+    "EMAIL_HOST:",
+    process.env.EMAIL_HOST || "Not configured"
+);
+
+console.log(
+    "EMAIL_PORT:",
+    process.env.EMAIL_PORT || "Not configured"
+);
+
+console.log(
+    "EMAIL_USER:",
+    process.env.EMAIL_USER || "Not configured"
+);
+
 console.log(
     "EMAIL_PASS configured:",
     Boolean(process.env.EMAIL_PASS)
 );
+
+console.log(
+    "DEFAULT_STUDENT_PASSWORD configured:",
+    Boolean(process.env.DEFAULT_STUDENT_PASSWORD)
+);
+
+console.log(
+    "PORT:",
+    PORT
+);
+
 console.log("=================================");
+
+// =====================================================
+// CORS
+// =====================================================
 
 app.use(
     cors({
-        origin: "http://localhost:5173",
+        origin: [
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+        ],
         credentials: true,
     })
 );
+
+// =====================================================
+// BODY PARSER
+// =====================================================
 
 app.use(
     express.json({
@@ -46,56 +114,482 @@ app.use(
     })
 );
 
+// =====================================================
+// STAFF AUTH API
+// =====================================================
+
+app.use(
+    "/api/staff-auth",
+    staffAuthRoutes
+);
+
+// =====================================================
+// ADMIN API
+// =====================================================
+
+app.use(
+    "/api/admin",
+    adminRoutes
+);
+
+// =====================================================
+// ELECTORAL BOARD REGISTRATION API
+// =====================================================
+
+app.use(
+    "/api/eb",
+    ebRegistrationRoutes
+);
+
+// =====================================================
+// SERVER TEST ROUTE
+// =====================================================
+
 app.get("/", (req, res) => {
-    res.json({
+    return res.status(200).json({
         success: true,
         message: "VOTARA server is running.",
+        port: PORT,
     });
 });
 
-// Registration API
+// =====================================================
+// API HEALTH CHECK
+// =====================================================
+
+app.get("/api/health", (req, res) => {
+    return res.status(200).json({
+        success: true,
+        message: "VOTARA API is running.",
+        database: "Supabase",
+        timestamp: new Date().toISOString(),
+    });
+});
+
+// =====================================================
+// SUPABASE TEST ROUTE
+// =====================================================
+
+app.get(
+    "/api/test-supabase",
+    async (req, res) => {
+
+        try {
+
+            const {
+                data,
+                error,
+            } = await supabase
+                .from("students")
+                .select(
+                    "student_id, full_name, year_level"
+                )
+                .limit(5);
+
+            if (error) {
+
+                console.error(
+                    "❌ Supabase test error:",
+                    error
+                );
+
+                return res.status(500).json({
+
+                    success: false,
+
+                    message:
+                        "Supabase connection failed.",
+
+                    error:
+                        error.message,
+
+                });
+            }
+
+            return res.status(200).json({
+
+                success: true,
+
+                message:
+                    "Supabase connection successful.",
+
+                students:
+                    data,
+
+            });
+
+        } catch (error) {
+
+            console.error(
+                "❌ Supabase connection error:",
+                error
+            );
+
+            return res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Unable to connect to Supabase.",
+
+            });
+        }
+    }
+);
+
+// =====================================================
+// TEMPORARY SUPABASE STUDENT LOOKUP TEST
+// =====================================================
+//
+// DEVELOPMENT TEST ONLY
+//
+// Example:
+// http://localhost:5000/api/test-supabase-student/99991
+//
+// =====================================================
+
+app.get(
+    "/api/test-supabase-student/:studentId",
+    async (req, res) => {
+
+        try {
+
+            const studentId =
+                String(
+                    req.params.studentId
+                ).trim();
+
+            console.log(
+                "🔎 Testing Supabase student ID:",
+                studentId
+            );
+
+            const {
+                data,
+                error,
+            } = await supabase
+                .from("students")
+                .select(
+                    "student_id, full_name, year_level"
+                )
+                .eq(
+                    "student_id",
+                    studentId
+                )
+                .maybeSingle();
+
+            console.log(
+                "📦 Supabase returned:",
+                data
+            );
+
+            if (error) {
+
+                console.error(
+                    "❌ Supabase student test error:",
+                    error
+                );
+
+                return res.status(500).json({
+
+                    success: false,
+
+                    error:
+                        error.message,
+
+                });
+            }
+
+            return res.status(200).json({
+
+                success: true,
+
+                searchedStudentId:
+                    studentId,
+
+                found:
+                    Boolean(data),
+
+                student:
+                    data,
+
+            });
+
+        } catch (error) {
+
+            console.error(
+                "❌ Student lookup test failed:",
+                error
+            );
+
+            return res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Student lookup test failed.",
+
+            });
+        }
+    }
+);
+
+// =====================================================
+// ADMIN AUTH API
+// =====================================================
+
+app.use(
+    "/api/admin-auth",
+    adminAuthRoutes
+);
+
+// =====================================================
+// REGISTRATION API
+// =====================================================
+
 app.use(
     "/api/registration",
     registrationRoutes
 );
 
-const startServer = async () => {
-    try {
-        if (!process.env.MONGO_URI) {
-            throw new Error(
-                "MONGO_URI is missing from .env"
-            );
-        }
+// =====================================================
+// REGISTRATION DOCUMENTS API
+// =====================================================
 
-        await mongoose.connect(
-            process.env.MONGO_URI
-        );
+app.use(
+    "/api/registration-documents",
+    registrationDocumentsRoutes
+);
 
-        console.log(
-            "🍃 MongoDB Connected:",
-            mongoose.connection.host
-        );
+// =====================================================
+// AUTH API
+// =====================================================
 
-        app.use(
+app.use(
     "/api/auth",
     authRoutes
 );
 
-        app.listen(PORT, () => {
-            console.log(
-                `🚀 VOTARA server running on port ${PORT}`
-            );
-        });
+// =====================================================
+// ELECTORAL BOARD AUTH API
+// =====================================================
 
-    } catch (error) {
+app.use(
+    "/api/eb-auth",
+    ebAuthRoutes
+);
+
+// =====================================================
+// PROFILE API
+// =====================================================
+
+app.use(
+    "/api/profile",
+    profileRoutes
+);
+
+// =====================================================
+// UNKNOWN ROUTE
+// =====================================================
+
+app.use(
+    (req, res) => {
+
+        return res.status(404).json({
+
+            success: false,
+
+            message:
+                `Route not found: ${req.method} ${req.originalUrl}`,
+
+        });
+    }
+);
+
+// =====================================================
+// ERROR HANDLER
+// =====================================================
+
+app.use(
+    (error, req, res, next) => {
+
         console.error(
-            "❌ MongoDB connection failed:"
+            "================================="
         );
 
-        console.error(error.message);
+        console.error(
+            "❌ SERVER ERROR"
+        );
+
+        console.error(
+            "================================="
+        );
+
+        console.error(
+            error
+        );
+
+        console.error(
+            "================================="
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "An unexpected server error occurred.",
+
+        });
+    }
+);
+
+// =====================================================
+// START SERVER
+// =====================================================
+
+const startServer = async () => {
+
+    try {
+
+        // =================================================
+        // CHECK REQUIRED ENVIRONMENT VARIABLES
+        // =================================================
+
+        if (!process.env.JWT_SECRET) {
+
+            throw new Error(
+                "JWT_SECRET is missing from .env"
+            );
+        }
+
+        if (!process.env.SUPABASE_URL) {
+
+            throw new Error(
+                "SUPABASE_URL is missing from .env"
+            );
+        }
+
+        if (!process.env.SUPABASE_SECRET_KEY) {
+
+            throw new Error(
+                "SUPABASE_SECRET_KEY is missing from .env"
+            );
+        }
+
+        // =================================================
+        // START EXPRESS SERVER
+        // =================================================
+
+        app.listen(
+            PORT,
+            "127.0.0.1",
+            () => {
+
+                console.log(
+                    "================================="
+                );
+
+                console.log(
+                    `🚀 VOTARA server running on port ${PORT}`
+                );
+
+                console.log(
+                    `🌐 http://localhost:${PORT}`
+                );
+
+                console.log(
+                    `❤️  http://localhost:${PORT}/api/health`
+                );
+
+                console.log(
+                    `🟦 http://localhost:${PORT}/api/test-supabase`
+                );
+
+                console.log(
+                    `📝 Registration API: http://localhost:${PORT}/api/registration`
+                );
+
+                console.log(
+                    `📁 Registration Documents API: http://localhost:${PORT}/api/registration-documents`
+                );
+
+                console.log(
+                    "================================="
+                );
+
+            }
+        );
+
+    } catch (error) {
+
+        console.error(
+            "================================="
+        );
+
+        console.error(
+            "❌ VOTARA SERVER FAILED TO START"
+        );
+
+        console.error(
+            "================================="
+        );
+
+        console.error(
+            error.message
+        );
+
+        console.error(
+            "================================="
+        );
+
+        if (
+            error.message.includes(
+                "JWT_SECRET is missing"
+            )
+        ) {
+
+            console.error(
+                "➡️ Add JWT_SECRET to server/.env."
+            );
+        }
+
+        if (
+            error.message.includes(
+                "SUPABASE_URL is missing"
+            )
+        ) {
+
+            console.error(
+                "➡️ Add SUPABASE_URL to server/.env."
+            );
+        }
+
+        if (
+            error.message.includes(
+                "SUPABASE_SECRET_KEY is missing"
+            )
+        ) {
+
+            console.error(
+                "➡️ Add SUPABASE_SECRET_KEY to server/.env."
+            );
+        }
+
+        console.error(
+            "➡️ Make sure Supabase credentials are configured."
+        );
+
+        console.error(
+            "➡️ The API will NOT be available until the server starts successfully."
+        );
 
         process.exit(1);
     }
 };
+
+// =====================================================
+// START
+// =====================================================
 
 startServer();

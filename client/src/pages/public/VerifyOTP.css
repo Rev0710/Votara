@@ -1,0 +1,331 @@
+* {
+    box-sizing: border-box;
+}
+
+.verify-otp-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f5f7fb;
+    padding: 30px;
+}
+
+.verify-otp-card {
+    width: 100%;
+    max-width: 1100px;
+    min-height: 650px;
+    display: grid;
+    grid-template-columns: 45% 55%;
+    background: #ffffff;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+}
+
+/* =====================================================
+   LEFT
+===================================================== */
+
+.verify-otp-left {
+    background: #f8fafc;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+}
+
+.verify-otp-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: #111827;
+    font-size: 25px;
+    font-weight: 700;
+}
+
+.verify-otp-logo-mark {
+    position: relative;
+    width: 34px;
+    height: 34px;
+    display: inline-block;
+}
+
+.verify-otp-logo-mark .circle {
+    position: absolute;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: #266eff;
+    left: 10px;
+    top: 10px;
+}
+
+.verify-otp-logo-mark .triangle {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+}
+
+.verify-otp-logo-mark .triangle-top {
+    border-bottom: 12px solid #266eff;
+    top: 0;
+    left: 9px;
+}
+
+.verify-otp-logo-mark .triangle-bottom {
+    border-top: 12px solid #266eff;
+    bottom: 0;
+    left: 9px;
+}
+
+.verify-otp-visual {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.verify-otp-illustration {
+    width: 80%;
+    max-width: 380px;
+    object-fit: contain;
+}
+
+/* =====================================================
+   RIGHT
+===================================================== */
+
+.verify-otp-right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 50px;
+}
+
+.verify-otp-content {
+    width: 100%;
+    max-width: 460px;
+}
+
+.verify-otp-heading {
+    margin-bottom: 28px;
+}
+
+.verify-otp-heading h1 {
+    margin: 0 0 10px;
+    color: #111827;
+    font-size: 34px;
+    font-weight: 700;
+}
+
+.verify-otp-heading p {
+    margin: 0;
+    color: #6b7280;
+    line-height: 1.6;
+}
+
+/* =====================================================
+   EMAIL
+===================================================== */
+
+.otp-email-box {
+    padding: 16px 18px;
+    margin-bottom: 22px;
+    border: 1px solid #dbe3f0;
+    border-radius: 12px;
+    background: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.otp-email-box span {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.otp-email-box strong {
+    font-size: 14px;
+    color: #111827;
+    word-break: break-word;
+}
+
+/* =====================================================
+   MESSAGES
+===================================================== */
+
+.verify-otp-error,
+.verify-otp-success {
+    padding: 13px 15px;
+    border-radius: 10px;
+    margin-bottom: 18px;
+    font-size: 14px;
+}
+
+.verify-otp-error {
+    background: #fff1f2;
+    border: 1px solid #fecdd3;
+    color: #be123c;
+}
+
+.verify-otp-success {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    color: #047857;
+}
+
+/* =====================================================
+   FORM
+===================================================== */
+
+.verify-otp-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    color: #374151;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.form-group input {
+    width: 100%;
+    height: 52px;
+    padding: 0 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    outline: none;
+    font-size: 17px;
+    letter-spacing: 5px;
+    text-align: center;
+    transition: 0.2s ease;
+}
+
+.form-group input:focus {
+    border-color: #266eff;
+    box-shadow: 0 0 0 3px rgba(38, 110, 255, 0.1);
+}
+
+.verify-otp-submit {
+    width: 100%;
+    height: 52px;
+    border: none;
+    border-radius: 10px;
+    background: #266eff;
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.verify-otp-submit:hover {
+    background: #1557d6;
+}
+
+.verify-otp-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* =====================================================
+   RESEND
+===================================================== */
+
+.resend-section {
+    margin-top: 25px;
+    text-align: center;
+}
+
+.resend-section p {
+    margin: 0 0 6px;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.resend-button {
+    border: none;
+    background: transparent;
+    color: #266eff;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.resend-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* =====================================================
+   BACK
+===================================================== */
+
+.verify-back-link {
+    display: block;
+    margin-top: 28px;
+    text-align: center;
+    color: #6b7280;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.verify-back-link:hover {
+    color: #266eff;
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 850px) {
+
+    .verify-otp-card {
+        grid-template-columns: 1fr;
+    }
+
+    .verify-otp-left {
+        min-height: 250px;
+    }
+
+    .verify-otp-visual {
+        display: none;
+    }
+
+    .verify-otp-right {
+        padding: 35px 25px;
+    }
+}
+
+@media (max-width: 500px) {
+
+    .verify-otp-page {
+        padding: 15px;
+    }
+
+    .verify-otp-card {
+        border-radius: 16px;
+    }
+
+    .verify-otp-left {
+        padding: 25px;
+    }
+
+    .verify-otp-right {
+        padding: 30px 20px;
+    }
+
+    .verify-otp-heading h1 {
+        font-size: 28px;
+    }
+}

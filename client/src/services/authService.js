@@ -176,3 +176,80 @@ export const logoutStudent = () => {
         "votaraStudent"
     );
 };
+
+
+// =====================================================
+// GET STUDENT PROFILE
+// =====================================================
+
+export const getStudentProfile = async (
+    token
+) => {
+
+    const response = await fetch(
+        "http://localhost:5000/api/profile",
+        {
+            method: "GET",
+
+            headers: {
+                Authorization:
+                    `Bearer ${token}`,
+            },
+        }
+    );
+
+    const data =
+        await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            data.message ||
+            "Unable to load profile."
+        );
+    }
+
+    return data;
+};
+
+
+// =====================================================
+// UPDATE STUDENT PROFILE
+// =====================================================
+
+export const updateStudentProfile = async (
+    token,
+    profileData
+) => {
+
+    const response = await fetch(
+        "http://localhost:5000/api/profile",
+        {
+            method: "PUT",
+
+            headers: {
+                "Content-Type":
+                    "application/json",
+
+                Authorization:
+                    `Bearer ${token}`,
+            },
+
+            body: JSON.stringify(
+                profileData
+            ),
+        }
+    );
+
+    const data =
+        await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            data.message ||
+            "Unable to update profile."
+        );
+    }
+
+    return data;
+};
+

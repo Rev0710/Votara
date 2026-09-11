@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.114.0",
     "axios": "^1.19.0",
     "html5-qrcode": "^2.3.8",
     "react-icons": "^5.7.0",

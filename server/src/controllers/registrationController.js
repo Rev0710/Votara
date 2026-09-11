@@ -1,379 +1,3121 @@
-const Student = require("../models/Student");
 const bcrypt = require("bcryptjs");
-const { generateOTP } = require("../utils/otp");
-const {sendOTPEmail} = require("../services/emailService");
+
+const supabase = require("../config/supabase");
+
+const {
+    generateOTP,
+} = require("../utils/otp");
+
+const {
+    sendOTPEmail,
+} = require("../services/emailService");
 
 
-// =====================================================
-// SEND OTP
-// =====================================================
+// =========================================================
+// CONSTANTS
+// =========================================================
 
-const sendRegistrationOTP = async (req, res) => {
-    try {
-        const { studentId, email } = req.body;
+const VALID_YEAR_LEVELS = [
+    "1st Year",
+    "2nd Year",
+    "3rd Year",
+    "4th Year",
+];
 
-        if (!studentId || !email) {
-            return res.status(400).json({
-                success: false,
-                message: "Student ID and email are required.",
-            });
-        }
+const OTP_EXPIRATION_MINUTES = 5;
 
-        const cleanStudentId = String(studentId).trim();
-        const cleanEmail = String(email).trim().toLowerCase();
+const MAX_OTP_ATTEMPTS = 5;
 
-        // ---------------------------------------------
-        // Find student in MongoDB
-        // ---------------------------------------------
 
-        const student = await Student.findOne({
-            studentId: cleanStudentId,
-        });
+// =========================================================
+// YEAR LEVEL HELPER
+// =========================================================
 
-        if (!student) {
-            return res.status(404).json({
-                success: false,
-                message:
-                    "Student ID not found in the enrollment records. Please check your Student ID.",
-            });
-        }
+const yearLevelToDisplayValue = (
+    yearLevel
+) => {
 
-        // ---------------------------------------------
-        // Prevent duplicate registration
-        // ---------------------------------------------
+    const mapping = {
+        "1": "1st Year",
+        "2": "2nd Year",
+        "3": "3rd Year",
+        "4": "4th Year",
 
-        if (student.registrationStatus === "submitted") {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "This student is already registered.",
-            });
-        }
+        "1st": "1st Year",
+        "2nd": "2nd Year",
+        "3rd": "3rd Year",
+        "4th": "4th Year",
 
-        // ---------------------------------------------
-        // Generate 6-digit OTP
-        // ---------------------------------------------
+        "1st Year": "1st Year",
+        "2nd Year": "2nd Year",
+        "3rd Year": "3rd Year",
+        "4th Year": "4th Year",
+    };
 
-        const otp = generateOTP();
+    return (
+        mapping[String(yearLevel).trim()] ||
+        String(yearLevel).trim()
+    );
+};
 
-        console.log("=================================");
-        console.log("🔐 NEW REGISTRATION OTP");
-        console.log("Student ID:", cleanStudentId);
-        console.log("Email:", cleanEmail);
-        console.log("OTP:", otp);
-        console.log("=================================");
 
-        // ---------------------------------------------
-        // Hash OTP
-        // ---------------------------------------------
+// =========================================================
+// EMAIL VALIDATION
+// =========================================================
 
-        const otpHash = await bcrypt.hash(otp, 10);
+const isValidEmail = (
+    email
+) => {
 
-        // ---------------------------------------------
-        // Save registration information
-        // ---------------------------------------------
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+        email
+    );
+};
 
-        student.email = cleanEmail;
-        student.otpHash = otpHash;
 
-        student.otpExpiresAt = new Date(
-            Date.now() + 5 * 60 * 1000
-        );
+// =========================================================
+// STUDENT ID VALIDATION
+// =========================================================
 
-        student.otpVerified = false;
-        student.otpVerifiedAt = null;
+const isValidStudentId = (
+    studentId
+) => {
 
-        student.registrationStatus = "pending";
+    return /^\d{5}$/.test(
+        studentId
+    );
+};
 
-        await student.save();
 
-        // ---------------------------------------------
-        // Send OTP email
-        // ---------------------------------------------
+// =========================================================
+// FULL NAME VALIDATION
+// FOR LATE ENROLLEE
+//
+// FORMAT:
+// LastName_FirstName_MiddleInitial
+// =========================================================
 
-        await sendOTPEmail(cleanEmail, otp);
+const validateFullName = (
+    fullName
+) => {
 
-        console.log(
-            `📨 OTP sent successfully to ${cleanEmail}`
-        );
+    if (
+        !fullName ||
+        typeof fullName !== "string"
+    ) {
 
-        return res.status(200).json({
-            success: true,
+        return {
+            valid: false,
             message:
-                "OTP has been sent to your email address.",
-            studentId: student.studentId,
-            email: student.email,
-        });
+                "Full name is required.",
+        };
+    }
+
+    const trimmedName =
+        fullName.trim();
+
+    const parts =
+        trimmedName
+            .split("_")
+            .map(
+                (part) =>
+                    part.trim()
+            );
+
+    if (
+        parts.length !== 3
+    ) {
+
+        return {
+            valid: false,
+            message:
+                "Full name must follow this format: LastName_FirstName_MiddleInitial",
+        };
+    }
+
+    const [
+        lastName,
+        firstName,
+        middleInitial,
+    ] = parts;
+
+    if (
+        !lastName ||
+        !firstName ||
+        !middleInitial
+    ) {
+
+        return {
+            valid: false,
+            message:
+                "Last name, first name, and middle initial are required.",
+        };
+    }
+
+    if (
+        !/^[A-Za-zÀ-ÖØ-öø-ÿ]+$/.test(
+            lastName
+        )
+    ) {
+
+        return {
+            valid: false,
+            message:
+                "Last name must contain letters only.",
+        };
+    }
+
+    if (
+        !/^[A-Za-zÀ-ÖØ-öø-ÿ]+$/.test(
+            firstName
+        )
+    ) {
+
+        return {
+            valid: false,
+            message:
+                "First name must contain letters only.",
+        };
+    }
+
+    if (
+        !/^[A-Za-zÀ-ÖØ-öø-ÿ]\.?$/.test(
+            middleInitial
+        )
+    ) {
+
+        return {
+            valid: false,
+            message:
+                "Middle initial must be one letter, optionally followed by a period.",
+        };
+    }
+
+    return {
+        valid: true,
+        message: "",
+    };
+};
+
+
+// =========================================================
+// SUPABASE OFFICIAL STUDENT LOOKUP
+// =========================================================
+
+const findOfficialStudent = async (
+    studentId
+) => {
+
+    try {
+
+        const {
+            data,
+            error,
+        } = await supabase
+            .from("students")
+            .select(
+                "student_id, full_name, year_level, enrollment_status"
+            )
+            .eq(
+                "student_id",
+                studentId
+            )
+            .maybeSingle();
+
+        if (error) {
+
+            console.error(
+                "❌ Supabase student lookup error:",
+                error.message
+            );
+
+            throw new Error(
+                "Unable to verify student information from the official student roster."
+            );
+        }
+
+        return data;
 
     } catch (error) {
-        console.error("❌ OTP sending error:");
-        console.error(error);
 
-        return res.status(500).json({
-            success: false,
-            message:
-                "Unable to send OTP. Please try again.",
-        });
+        console.error(
+            "❌ Official student lookup failed:",
+            error.message
+        );
+
+        throw error;
     }
 };
 
 
-// =====================================================
-// VERIFY OTP
-// =====================================================
+// =========================================================
+// FIND LATEST REGISTRATION
+// =========================================================
 
-const verifyRegistrationOTP = async (req, res) => {
+const findLatestRegistration = async (
+    studentId
+) => {
+
+    const {
+        data,
+        error,
+    } = await supabase
+        .from(
+            "registration_applications"
+        )
+        .select("*")
+        .eq(
+            "student_id",
+            studentId
+        )
+        .order(
+            "created_at",
+            {
+                ascending: false,
+            }
+        )
+        .limit(1)
+        .maybeSingle();
+
+    if (error) {
+
+        console.error(
+            "❌ Registration lookup error:",
+            error.message
+        );
+
+        throw new Error(
+            "Unable to check the registration record."
+        );
+    }
+
+    return data;
+};
+
+
+// =========================================================
+// CHECK STUDENT
+//
+// PURPOSE:
+// 1. Check official Supabase roster.
+// 2. Return official name/year level.
+// 3. Detect late enrollee.
+// 4. Check existing registration.
+// =========================================================
+
+const checkStudent = async (
+    req,
+    res
+) => {
+
     try {
-        const { email, otp } = req.body;
 
-        if (!email || !otp) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Email and OTP are required.",
-            });
-        }
+        const {
+            studentId,
+            email,
+        } = req.body;
 
-        const cleanEmail = String(email)
-            .trim()
-            .toLowerCase();
 
-        const cleanOTP = String(otp).trim();
-
-        console.log("=================================");
-        console.log("🔐 OTP VERIFICATION");
-        console.log("Email:", cleanEmail);
-        console.log("OTP received:", cleanOTP);
-        console.log("=================================");
-
-        // ---------------------------------------------
-        // IMPORTANT:
-        // otpHash has select:false in Student.js.
-        // Therefore we MUST explicitly select it.
-        // ---------------------------------------------
-
-        const student = await Student.findOne({
-            email: cleanEmail,
-        }).select("+otpHash");
-
-        if (!student) {
-            return res.status(404).json({
-                success: false,
-                message:
-                    "Registration information not found. Please register again.",
-            });
-        }
-
-        // ---------------------------------------------
-        // Check OTP
-        // ---------------------------------------------
-
-        if (!student.otpHash) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "No active OTP found. Please request a new OTP.",
-            });
-        }
-
-        // ---------------------------------------------
-        // Check expiration
-        // ---------------------------------------------
+        // =================================================
+        // REQUIRED FIELDS
+        // =================================================
 
         if (
-            !student.otpExpiresAt ||
-            new Date() > student.otpExpiresAt
+            !studentId ||
+            !email
         ) {
-            student.otpHash = null;
-            student.otpExpiresAt = null;
-
-            await student.save();
 
             return res.status(400).json({
+
                 success: false,
+
                 message:
-                    "OTP has expired. Please request a new OTP.",
+                    "Student ID and email are required.",
+
             });
         }
 
-        // ---------------------------------------------
-        // Compare OTP
-        // ---------------------------------------------
 
-        const otpIsCorrect = await bcrypt.compare(
-            cleanOTP,
-            student.otpHash
-        );
+        // =================================================
+        // CLEAN INPUT
+        // =================================================
 
-        if (!otpIsCorrect) {
+        const normalizedStudentId =
+            String(studentId).trim();
+
+        const normalizedEmail =
+            String(email)
+                .trim()
+                .toLowerCase();
+
+
+        // =================================================
+        // VALIDATE STUDENT ID
+        // =================================================
+
+        if (
+            !isValidStudentId(
+                normalizedStudentId
+            )
+        ) {
+
             return res.status(400).json({
+
                 success: false,
+
                 message:
-                    "Invalid OTP. Please check the code sent to your email.",
+                    "Student ID must contain exactly 5 digits.",
+
             });
         }
 
-        // =============================================
-        // OTP SUCCESSFULLY VERIFIED
-        // =============================================
 
-        student.otpHash = null;
-        student.otpExpiresAt = null;
+        // =================================================
+        // VALIDATE EMAIL
+        // =================================================
 
-        student.otpVerified = true;
-        student.otpVerifiedAt = new Date();
+        if (
+            !isValidEmail(
+                normalizedEmail
+            )
+        ) {
 
-        student.registrationStatus = "submitted";
-        student.registeredAt = new Date();
+            return res.status(400).json({
 
-        await student.save();
+                success: false,
 
-        console.log(
-            `✅ OTP verified for ${cleanEmail}`
-        );
+                message:
+                    "Please provide a valid email address.",
 
-        console.log(
-            `✅ Registration submitted for Student ID ${student.studentId}`
-        );
+            });
+        }
+
+
+        // =================================================
+        // CHECK OFFICIAL SUPABASE ROSTER
+        // =================================================
+
+        const officialStudent =
+            await findOfficialStudent(
+                normalizedStudentId
+            );
+
+
+        // =================================================
+        // LATE ENROLLEE
+        // =================================================
+
+        if (!officialStudent) {
+
+            return res.status(200).json({
+
+                success: true,
+
+                exists: false,
+
+                isLateEnrollee: true,
+
+                student: {
+
+                    studentId:
+                        normalizedStudentId,
+
+                    email:
+                        normalizedEmail,
+
+                },
+
+                message:
+                    "Student ID was not found in the current official enrollment roster. You may continue as a late enrollee.",
+
+            });
+        }
+
+
+        // =================================================
+        // CHECK ENROLLMENT STATUS
+        // =================================================
+
+        if (
+            officialStudent.enrollment_status &&
+            String(
+                officialStudent.enrollment_status
+            ).toUpperCase() !==
+                "ACTIVE"
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "This student record is not currently active in the official enrollment roster.",
+
+            });
+        }
+
+
+        // =================================================
+        // OFFICIAL INFORMATION
+        // =================================================
+
+        const officialFullName =
+            officialStudent.full_name;
+
+        const officialYearLevel =
+            yearLevelToDisplayValue(
+                officialStudent.year_level
+            );
+
+
+        // =================================================
+        // CHECK EXISTING REGISTRATION
+        // =================================================
+
+        const existingRegistration =
+            await findLatestRegistration(
+                normalizedStudentId
+            );
+
+
+        // =================================================
+        // ALREADY APPROVED
+        // =================================================
+
+        if (
+            existingRegistration &&
+            existingRegistration.application_status ===
+                "approved"
+        ) {
+
+            return res.status(200).json({
+
+                success: true,
+
+                exists: true,
+
+                alreadyRegistered: true,
+
+                registrationStatus:
+                    "approved",
+
+                student: {
+
+                    studentId:
+                        normalizedStudentId,
+
+                    fullName:
+                        officialFullName,
+
+                    yearLevel:
+                        officialYearLevel,
+
+                },
+
+                message:
+                    "This student has already been approved for registration.",
+
+            });
+        }
+
+
+        // =================================================
+        // ALREADY PENDING REVIEW
+        // =================================================
+
+        if (
+            existingRegistration &&
+            existingRegistration.application_status ===
+                "pending_review"
+        ) {
+
+            return res.status(200).json({
+
+                success: true,
+
+                exists: true,
+
+                alreadyRegistered: true,
+
+                registrationStatus:
+                    "pending_review",
+
+                student: {
+
+                    studentId:
+                        normalizedStudentId,
+
+                    fullName:
+                        officialFullName,
+
+                    yearLevel:
+                        officialYearLevel,
+
+                },
+
+                message:
+                    "This registration is already pending review by the Electoral Board/Admin.",
+
+            });
+        }
+
+
+        // =================================================
+        // ALREADY VERIFIED BUT NOT SUBMITTED
+        // =================================================
+
+        if (
+            existingRegistration &&
+            existingRegistration.application_status ===
+                "otp_verified"
+        ) {
+
+            return res.status(200).json({
+
+                success: true,
+
+                exists: true,
+
+                alreadyRegistered: false,
+
+                otpVerified: true,
+
+                registrationStatus:
+                    "otp_verified",
+
+                student: {
+
+                    studentId:
+                        normalizedStudentId,
+
+                    fullName:
+                        officialFullName,
+
+                    yearLevel:
+                        officialYearLevel,
+
+                },
+
+                message:
+                    "Your email has already been verified. Please continue your registration.",
+
+            });
+        }
+
+
+        // =================================================
+        // NORMAL STUDENT
+        // =================================================
 
         return res.status(200).json({
+
             success: true,
-            message:
-                "OTP verified successfully. Registration submitted.",
+
+            exists: true,
+
+            isLateEnrollee: false,
 
             student: {
-                studentId: student.studentId,
-                fullName: student.fullName,
-                yearLevel: student.yearLevel,
-                email: student.email,
-                registrationStatus:
-                    student.registrationStatus,
+
+                studentId:
+                    normalizedStudentId,
+
+                fullName:
+                    officialFullName,
+
+                yearLevel:
+                    officialYearLevel,
+
+                email:
+                    normalizedEmail,
+
             },
+
+            message:
+                "Student verified against the official enrollment roster.",
+
         });
 
     } catch (error) {
-        console.error("❌ OTP verification error:");
-        console.error(error);
+
+        console.error(
+            "❌ checkStudent error:",
+            error
+        );
 
         return res.status(500).json({
+
             success: false,
+
             message:
-                "Unable to verify OTP.",
+                error.message ||
+                "Unable to verify student information.",
+
         });
     }
 };
 
 
-// =====================================================
-// RESEND OTP
-// =====================================================
+// =========================================================
+// CREATE OR UPDATE REGISTRATION APPLICATION
+// =========================================================
 
-const resendRegistrationOTP = async (req, res) => {
+const createOrUpdateRegistration =
+    async ({
+        studentId,
+        email,
+        fullName,
+        yearLevel,
+        registrationType,
+    }) => {
+
+        const existing =
+            await findLatestRegistration(
+                studentId
+            );
+
+
+        // =================================================
+        // DO NOT REPLACE ACTIVE APPLICATION
+        // =================================================
+
+        if (
+            existing &&
+            [
+                "pending_review",
+                "approved",
+            ].includes(
+                existing.application_status
+            )
+        ) {
+
+            return existing;
+        }
+
+
+        // =================================================
+        // UPDATE EXISTING DRAFT
+        // =================================================
+
+        if (
+            existing &&
+            [
+                "draft",
+                "otp_verified",
+                "needs_correction",
+            ].includes(
+                existing.application_status
+            )
+        ) {
+
+            const {
+                data,
+                error,
+            } = await supabase
+                .from(
+                    "registration_applications"
+                )
+                .update({
+
+                    email,
+
+                    full_name:
+                        fullName,
+
+                    year_level:
+                        yearLevel,
+
+                    registration_type:
+                        registrationType,
+
+                    updated_at:
+                        new Date().toISOString(),
+
+                })
+                .eq(
+                    "id",
+                    existing.id
+                )
+                .select()
+                .single();
+
+            if (error) {
+
+                console.error(
+                    "❌ Registration update error:",
+                    error.message
+                );
+
+                throw new Error(
+                    "Unable to update registration application."
+                );
+            }
+
+            return data;
+        }
+
+
+        // =================================================
+        // CREATE NEW APPLICATION
+        // =================================================
+
+        const {
+            data,
+            error,
+        } = await supabase
+            .from(
+                "registration_applications"
+            )
+            .insert({
+
+                student_id:
+                    studentId,
+
+                registration_type:
+                    registrationType,
+
+                application_status:
+                    "draft",
+
+                email,
+
+                full_name:
+                    fullName || null,
+
+                year_level:
+                    yearLevel || null,
+
+            })
+            .select()
+            .single();
+
+        if (error) {
+
+            console.error(
+                "❌ Registration creation error:",
+                error.message
+            );
+
+            throw new Error(
+                "Unable to create registration application."
+            );
+        }
+
+        return data;
+    };
+
+
+// =========================================================
+// SEND REGISTRATION OTP
+// =========================================================
+
+const sendRegistrationOTP = async (
+    req,
+    res
+) => {
+
     try {
-        const { email } = req.body;
 
-        if (!email) {
+        const {
+            studentId,
+            email,
+            fullName,
+            yearLevel,
+        } = req.body;
+
+
+        // =================================================
+        // REQUIRED FIELDS
+        // =================================================
+
+        if (
+            !studentId ||
+            !email
+        ) {
+
             return res.status(400).json({
+
                 success: false,
+
                 message:
-                    "Email address is required.",
+                    "Student ID and email are required.",
+
             });
         }
 
-        const cleanEmail = String(email)
-            .trim()
-            .toLowerCase();
 
-        // ---------------------------------------------
-        // Find student
-        // ---------------------------------------------
+        // =================================================
+        // CLEAN INPUT
+        // =================================================
 
-        const student = await Student.findOne({
-            email: cleanEmail,
-        });
+        const normalizedStudentId =
+            String(studentId).trim();
 
-        if (!student) {
-            return res.status(404).json({
-                success: false,
-                message:
-                    "Registration information not found. Please register again.",
-            });
-        }
+        const normalizedEmail =
+            String(email)
+                .trim()
+                .toLowerCase();
 
-        // ---------------------------------------------
-        // Don't resend if already submitted
-        // ---------------------------------------------
 
-        if (student.registrationStatus === "submitted") {
+        // =================================================
+        // VALIDATION
+        // =================================================
+
+        if (
+            !isValidStudentId(
+                normalizedStudentId
+            )
+        ) {
+
             return res.status(400).json({
+
                 success: false,
+
                 message:
-                    "This registration has already been submitted.",
+                    "Student ID must contain exactly 5 digits.",
+
             });
         }
 
-        // ---------------------------------------------
-        // Generate NEW OTP
-        // ---------------------------------------------
+        if (
+            !isValidEmail(
+                normalizedEmail
+            )
+        ) {
 
-        const otp = generateOTP();
+            return res.status(400).json({
 
-        console.log("=================================");
-        console.log("🔄 RESEND OTP");
-        console.log("Email:", cleanEmail);
-        console.log("New OTP:", otp);
-        console.log("=================================");
+                success: false,
 
-        // ---------------------------------------------
-        // Hash new OTP
-        // ---------------------------------------------
+                message:
+                    "Please provide a valid email address.",
 
-        const otpHash = await bcrypt.hash(otp, 10);
+            });
+        }
 
-        student.otpHash = otpHash;
 
-        student.otpExpiresAt = new Date(
-            Date.now() + 5 * 60 * 1000
-        );
+        // =================================================
+        // CHECK OFFICIAL ROSTER
+        // =================================================
 
-        student.otpVerified = false;
-        student.otpVerifiedAt = null;
+        const officialStudent =
+            await findOfficialStudent(
+                normalizedStudentId
+            );
 
-        student.registrationStatus = "pending";
 
-        await student.save();
+        // =================================================
+        // VARIABLES
+        // =================================================
 
-        // ---------------------------------------------
-        // Send NEW OTP
-        // ---------------------------------------------
+        let registrationType =
+            "normal";
 
-        await sendOTPEmail(cleanEmail, otp);
+        let finalFullName =
+            null;
 
-        console.log(
-            `🔄 New OTP sent to: ${cleanEmail}`
-        );
+        let finalYearLevel =
+            null;
+
+
+        // =================================================
+        // NORMAL STUDENT
+        // =================================================
+
+        if (officialStudent) {
+
+            // ---------------------------------------------
+            // CHECK ACTIVE STATUS
+            // ---------------------------------------------
+
+            if (
+                officialStudent.enrollment_status &&
+                String(
+                    officialStudent.enrollment_status
+                ).toUpperCase() !==
+                    "ACTIVE"
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "This student record is not currently active.",
+
+                });
+            }
+
+
+            finalFullName =
+                officialStudent.full_name;
+
+            finalYearLevel =
+                yearLevelToDisplayValue(
+                    officialStudent.year_level
+                );
+
+            registrationType =
+                "normal";
+
+        }
+
+        // =================================================
+        // LATE ENROLLEE
+        // =================================================
+
+        else {
+
+            registrationType =
+                "late_enrollee";
+
+
+            if (
+                !fullName ||
+                !yearLevel
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    isLateEnrollee: true,
+
+                    message:
+                        "This Student ID is not in the official roster. Full name and year level are required for late enrollee registration.",
+
+                });
+            }
+
+
+            // ---------------------------------------------
+            // VALIDATE NAME
+            // ---------------------------------------------
+
+            const nameValidation =
+                validateFullName(
+                    fullName
+                );
+
+            if (
+                !nameValidation.valid
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        nameValidation.message,
+
+                });
+            }
+
+
+            // ---------------------------------------------
+            // VALIDATE YEAR LEVEL
+            // ---------------------------------------------
+
+            const normalizedYearLevel =
+                yearLevelToDisplayValue(
+                    yearLevel
+                );
+
+            if (
+                !VALID_YEAR_LEVELS.includes(
+                    normalizedYearLevel
+                )
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Invalid year level.",
+
+                });
+            }
+
+
+            finalFullName =
+                String(fullName).trim();
+
+            finalYearLevel =
+                normalizedYearLevel;
+        }
+
+
+        // =================================================
+        // CHECK EXISTING APPLICATION
+        // =================================================
+
+        const existingRegistration =
+            await findLatestRegistration(
+                normalizedStudentId
+            );
+
+
+        // =================================================
+        // ALREADY APPROVED
+        // =================================================
+
+        if (
+            existingRegistration &&
+            existingRegistration.application_status ===
+                "approved"
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "This student has already been approved for registration.",
+
+            });
+        }
+
+
+        // =================================================
+        // ALREADY PENDING REVIEW
+        // =================================================
+
+        if (
+            existingRegistration &&
+            existingRegistration.application_status ===
+                "pending_review"
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "This registration is already pending review by the Electoral Board/Admin.",
+
+            });
+        }
+
+
+        // =================================================
+        // ALREADY OTP VERIFIED
+        // =================================================
+
+        if (
+            existingRegistration &&
+            existingRegistration.application_status ===
+                "otp_verified"
+        ) {
+
+            return res.status(200).json({
+
+                success: true,
+
+                alreadyVerified: true,
+
+                student: {
+
+                    studentId:
+                        normalizedStudentId,
+
+                    fullName:
+                        finalFullName,
+
+                    yearLevel:
+                        finalYearLevel,
+
+                    email:
+                        normalizedEmail,
+
+                },
+
+                message:
+                    "Your email has already been verified. Please continue your registration.",
+
+            });
+        }
+
+
+        // =================================================
+        // CREATE / UPDATE APPLICATION
+        // =================================================
+
+        const registration =
+            await createOrUpdateRegistration({
+
+                studentId:
+                    normalizedStudentId,
+
+                email:
+                    normalizedEmail,
+
+                fullName:
+                    finalFullName,
+
+                yearLevel:
+                    finalYearLevel,
+
+                registrationType:
+                    registrationType,
+
+            });
+
+
+        // =================================================
+        // GENERATE OTP
+        // =================================================
+
+        const otp =
+            String(
+                generateOTP()
+            );
+
+
+        // =================================================
+        // HASH OTP
+        // =================================================
+
+        const otpHash =
+            await bcrypt.hash(
+                otp,
+                10
+            );
+
+
+        // =================================================
+        // INVALIDATE PREVIOUS OTPs
+        // =================================================
+
+        const {
+            error:
+                invalidateError,
+        } = await supabase
+            .from("otp_codes")
+            .update({
+
+                verification_status:
+                    "invalidated",
+
+            })
+            .eq(
+                "registration_id",
+                registration.id
+            )
+            .eq(
+                "verification_status",
+                "active"
+            );
+
+        if (invalidateError) {
+
+            console.error(
+                "❌ Unable to invalidate previous OTP:",
+                invalidateError.message
+            );
+
+            throw new Error(
+                "Unable to prepare the new OTP."
+            );
+        }
+
+
+        // =================================================
+        // CREATE NEW OTP
+        // =================================================
+
+        const expiresAt =
+            new Date(
+                Date.now() +
+                OTP_EXPIRATION_MINUTES *
+                60 *
+                1000
+            );
+
+
+        const {
+            error:
+                otpInsertError,
+        } = await supabase
+            .from("otp_codes")
+            .insert({
+
+                registration_id:
+                    registration.id,
+
+                student_id:
+                    normalizedStudentId,
+
+                email:
+                    normalizedEmail,
+
+                otp_hash:
+                    otpHash,
+
+                purpose:
+                    "registration",
+
+                expires_at:
+                    expiresAt.toISOString(),
+
+                attempt_count:
+                    0,
+
+                max_attempts:
+                    MAX_OTP_ATTEMPTS,
+
+                verification_status:
+                    "active",
+
+            });
+
+        if (otpInsertError) {
+
+            console.error(
+                "❌ OTP database error:",
+                otpInsertError.message
+            );
+
+            throw new Error(
+                "Unable to create the OTP."
+            );
+        }
+
+
+        // =================================================
+        // SEND OTP EMAIL
+        // =================================================
+
+        try {
+
+            await sendOTPEmail(
+                normalizedEmail,
+                normalizedStudentId,
+                otp
+            );
+
+        } catch (emailError) {
+
+            console.error(
+                "❌ OTP email failed:",
+                emailError.message
+            );
+
+
+            // ---------------------------------------------
+            // INVALIDATE OTP IF EMAIL FAILS
+            // ---------------------------------------------
+
+            await supabase
+                .from("otp_codes")
+                .update({
+
+                    verification_status:
+                        "invalidated",
+
+                })
+                .eq(
+                    "registration_id",
+                    registration.id
+                )
+                .eq(
+                    "otp_hash",
+                    otpHash
+                );
+
+
+            throw new Error(
+                "Unable to send the OTP email. Please try again."
+            );
+        }
+
+
+        // =================================================
+        // RESPONSE
+        // =================================================
 
         return res.status(200).json({
+
             success: true,
+
+            isLateEnrollee:
+                registrationType ===
+                "late_enrollee",
+
+            student: {
+
+                studentId:
+                    normalizedStudentId,
+
+                fullName:
+                    finalFullName,
+
+                yearLevel:
+                    finalYearLevel,
+
+                email:
+                    normalizedEmail,
+
+            },
+
             message:
-                "A new OTP has been sent to your email.",
+                "OTP has been sent to your email.",
+
         });
 
     } catch (error) {
-        console.error("❌ Resend OTP error:");
-        console.error(error);
+
+        console.error(
+            "❌ sendRegistrationOTP error:",
+            error
+        );
 
         return res.status(500).json({
+
             success: false,
+
             message:
-                "Unable to resend OTP.",
+                error.message ||
+                "Unable to send registration OTP.",
+
         });
     }
 };
 
 
+// =========================================================
+// VERIFY REGISTRATION OTP
+//
+// IMPORTANT:
+// OTP verification does NOT submit the registration.
+//
+// Status becomes:
+// otp_verified
+//
+// Student must still complete:
+// documents + selfie + submit.
+// =========================================================
+
+const verifyRegistrationOTP = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const {
+            studentId,
+            email,
+            otp,
+        } = req.body;
+
+
+        // =================================================
+        // REQUIRED FIELDS
+        // =================================================
+
+        if (
+            !email ||
+            !otp
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Email and OTP are required.",
+
+            });
+        }
+
+
+        // =================================================
+        // CLEAN INPUT
+        // =================================================
+
+        const normalizedEmail =
+            String(email)
+                .trim()
+                .toLowerCase();
+
+        const cleanOTP =
+            String(otp)
+                .trim();
+
+
+        // =================================================
+        // FIND ACTIVE OTP
+        // =================================================
+
+        let otpQuery =
+            supabase
+                .from("otp_codes")
+                .select("*")
+                .eq(
+                    "email",
+                    normalizedEmail
+                )
+                .eq(
+                    "verification_status",
+                    "active"
+                )
+                .order(
+                    "created_at",
+                    {
+                        ascending: false,
+                    }
+                )
+                .limit(1)
+                .maybeSingle();
+
+
+        // If Student ID is supplied,
+        // also restrict the lookup.
+        if (studentId) {
+
+            otpQuery =
+                supabase
+                    .from("otp_codes")
+                    .select("*")
+                    .eq(
+                        "student_id",
+                        String(
+                            studentId
+                        ).trim()
+                    )
+                    .eq(
+                        "email",
+                        normalizedEmail
+                    )
+                    .eq(
+                        "verification_status",
+                        "active"
+                    )
+                    .order(
+                        "created_at",
+                        {
+                            ascending: false,
+                        }
+                    )
+                    .limit(1)
+                    .maybeSingle();
+        }
+
+
+        const {
+            data: otpRecord,
+            error: otpLookupError,
+        } = await otpQuery;
+
+
+        if (otpLookupError) {
+
+            console.error(
+                "❌ OTP lookup error:",
+                otpLookupError.message
+            );
+
+            return res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Unable to verify OTP.",
+
+            });
+        }
+
+
+        // =================================================
+        // NO OTP
+        // =================================================
+
+        if (!otpRecord) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "No active OTP was found. Please request a new OTP.",
+
+            });
+        }
+
+
+        // =================================================
+        // CHECK ATTEMPT LIMIT
+        // =================================================
+
+        if (
+            otpRecord.attempt_count >=
+            otpRecord.max_attempts
+        ) {
+
+            await supabase
+                .from("otp_codes")
+                .update({
+
+                    verification_status:
+                        "invalidated",
+
+                })
+                .eq(
+                    "id",
+                    otpRecord.id
+                );
+
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Too many incorrect OTP attempts. Please request a new OTP.",
+
+            });
+        }
+
+
+        // =================================================
+        // CHECK EXPIRATION
+        // =================================================
+
+        if (
+            new Date() >
+            new Date(
+                otpRecord.expires_at
+            )
+        ) {
+
+            await supabase
+                .from("otp_codes")
+                .update({
+
+                    verification_status:
+                        "expired",
+
+                })
+                .eq(
+                    "id",
+                    otpRecord.id
+                );
+
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "OTP has expired. Please request a new OTP.",
+
+            });
+        }
+
+
+        // =================================================
+        // COMPARE OTP
+        // =================================================
+
+        const isOTPValid =
+            await bcrypt.compare(
+                cleanOTP,
+                otpRecord.otp_hash
+            );
+
+
+        // =================================================
+        // INVALID OTP
+        // =================================================
+
+        if (!isOTPValid) {
+
+            const nextAttempt =
+                otpRecord.attempt_count +
+                1;
+
+
+            await supabase
+                .from("otp_codes")
+                .update({
+
+                    attempt_count:
+                        nextAttempt,
+
+                    verification_status:
+                        nextAttempt >=
+                        otpRecord.max_attempts
+                            ? "invalidated"
+                            : "active",
+
+                })
+                .eq(
+                    "id",
+                    otpRecord.id
+                );
+
+
+            if (
+                nextAttempt >=
+                otpRecord.max_attempts
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Too many incorrect OTP attempts. Please request a new OTP.",
+
+                });
+            }
+
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Invalid OTP.",
+
+            });
+        }
+
+
+        // =================================================
+        // OTP VERIFIED
+        // =================================================
+
+        const verifiedAt =
+            new Date();
+
+
+        // -------------------------------------------------
+        // MARK OTP VERIFIED
+        // -------------------------------------------------
+
+        const {
+            error:
+                otpUpdateError,
+        } = await supabase
+            .from("otp_codes")
+            .update({
+
+                verification_status:
+                    "verified",
+
+                verified_at:
+                    verifiedAt.toISOString(),
+
+            })
+            .eq(
+                "id",
+                otpRecord.id
+            );
+
+        if (otpUpdateError) {
+
+            console.error(
+                "❌ OTP update error:",
+                otpUpdateError.message
+            );
+
+            return res.status(500).json({
+
+                success: false,
+
+                message:
+                    "OTP was verified but could not update the verification record.",
+
+            });
+        }
+
+
+        // =================================================
+        // UPDATE REGISTRATION APPLICATION
+        //
+        // IMPORTANT:
+        // DO NOT SET pending_review HERE.
+        //
+        // The student has not submitted documents
+        // and selfie yet.
+        // =================================================
+
+        const {
+            data:
+                updatedRegistration,
+            error:
+                registrationUpdateError,
+        } = await supabase
+            .from(
+                "registration_applications"
+            )
+            .update({
+
+                application_status:
+                    "otp_verified",
+
+                otp_verified_at:
+                    verifiedAt.toISOString(),
+
+                updated_at:
+                    verifiedAt.toISOString(),
+
+            })
+            .eq(
+                "id",
+                otpRecord.registration_id
+            )
+            .select()
+            .single();
+
+
+        if (registrationUpdateError) {
+
+            console.error(
+                "❌ Registration status update error:",
+                registrationUpdateError.message
+            );
+
+            return res.status(500).json({
+
+                success: false,
+
+                message:
+                    "OTP was verified but the registration could not be updated.",
+
+            });
+        }
+
+
+        // =================================================
+        // SUCCESS
+        // =================================================
+
+        return res.status(200).json({
+
+            success: true,
+
+            alreadyVerified:
+                false,
+
+            registrationSubmitted:
+                false,
+
+            otpVerified:
+                true,
+
+            registrationStatus:
+                "otp_verified",
+
+            message:
+                "OTP verified successfully. Please continue your registration.",
+
+            student: {
+
+                studentId:
+                    updatedRegistration.student_id,
+
+                fullName:
+                    updatedRegistration.full_name,
+
+                yearLevel:
+                    updatedRegistration.year_level,
+
+                email:
+                    updatedRegistration.email,
+
+                registrationType:
+                    updatedRegistration.registration_type,
+
+                registrationStatus:
+                    updatedRegistration.application_status,
+
+            },
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "❌ verifyRegistrationOTP error:",
+            error
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "Unable to verify OTP.",
+
+        });
+    }
+};
+
+
+// =========================================================
+// RESEND REGISTRATION OTP
+// =========================================================
+
+const resendRegistrationOTP = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const {
+            studentId,
+            email,
+        } = req.body;
+
+
+        // =================================================
+        // REQUIRED
+        // =================================================
+
+        if (!email) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Email is required.",
+
+            });
+        }
+
+
+        // =================================================
+        // CLEAN INPUT
+        // =================================================
+
+        const normalizedEmail =
+            String(email)
+                .trim()
+                .toLowerCase();
+
+        const normalizedStudentId =
+            studentId
+                ? String(
+                    studentId
+                ).trim()
+                : null;
+
+
+        // =================================================
+        // FIND REGISTRATION
+        // =================================================
+
+        let registrationQuery =
+            supabase
+                .from(
+                    "registration_applications"
+                )
+                .select("*")
+                .eq(
+                    "email",
+                    normalizedEmail
+                )
+                .order(
+                    "created_at",
+                    {
+                        ascending: false,
+                    }
+                )
+                .limit(1)
+                .maybeSingle();
+
+
+        if (
+            normalizedStudentId
+        ) {
+
+            registrationQuery =
+                supabase
+                    .from(
+                        "registration_applications"
+                    )
+                    .select("*")
+                    .eq(
+                        "student_id",
+                        normalizedStudentId
+                    )
+                    .eq(
+                        "email",
+                        normalizedEmail
+                    )
+                    .order(
+                        "created_at",
+                        {
+                            ascending: false,
+                        }
+                    )
+                    .limit(1)
+                    .maybeSingle();
+        }
+
+
+        const {
+            data:
+                registration,
+            error:
+                registrationError,
+        } = await registrationQuery;
+
+
+        if (registrationError) {
+
+            console.error(
+                "❌ Registration lookup error:",
+                registrationError.message
+            );
+
+            return res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Unable to find registration information.",
+
+            });
+        }
+
+
+        if (!registration) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message:
+                    "Registration information not found. Please register again.",
+
+            });
+        }
+
+
+        // =================================================
+        // DO NOT RESEND AFTER SUBMISSION
+        // =================================================
+
+        if (
+            registration.application_status ===
+            "pending_review"
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "This registration has already been submitted and is pending review.",
+
+            });
+        }
+
+
+        // =================================================
+        // DO NOT RESEND AFTER APPROVAL
+        // =================================================
+
+        if (
+            registration.application_status ===
+            "approved"
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "This registration has already been approved.",
+
+            });
+        }
+
+
+        // =================================================
+        // ALREADY OTP VERIFIED
+        // =================================================
+
+        if (
+            registration.application_status ===
+            "otp_verified"
+        ) {
+
+            return res.status(200).json({
+
+                success: true,
+
+                alreadyVerified:
+                    true,
+
+                otpVerified:
+                    true,
+
+                message:
+                    "Your email has already been verified. Please continue your registration.",
+
+            });
+        }
+
+
+        // =================================================
+        // GENERATE NEW OTP
+        // =================================================
+
+        const otp =
+            String(
+                generateOTP()
+            );
+
+
+        // =================================================
+        // HASH OTP
+        // =================================================
+
+        const otpHash =
+            await bcrypt.hash(
+                otp,
+                10
+            );
+
+
+        // =================================================
+        // INVALIDATE PREVIOUS ACTIVE OTP
+        // =================================================
+
+        const {
+            error:
+                invalidateError,
+        } = await supabase
+            .from("otp_codes")
+            .update({
+
+                verification_status:
+                    "invalidated",
+
+            })
+            .eq(
+                "registration_id",
+                registration.id
+            )
+            .eq(
+                "verification_status",
+                "active"
+            );
+
+
+        if (invalidateError) {
+
+            console.error(
+                "❌ Previous OTP invalidation error:",
+                invalidateError.message
+            );
+
+            return res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Unable to prepare a new OTP.",
+
+            });
+        }
+
+
+        // =================================================
+        // CREATE NEW OTP
+        // =================================================
+
+        const expiresAt =
+            new Date(
+                Date.now() +
+                OTP_EXPIRATION_MINUTES *
+                60 *
+                1000
+            );
+
+
+        const {
+            error:
+                otpInsertError,
+        } = await supabase
+            .from("otp_codes")
+            .insert({
+
+                registration_id:
+                    registration.id,
+
+                student_id:
+                    registration.student_id,
+
+                email:
+                    normalizedEmail,
+
+                otp_hash:
+                    otpHash,
+
+                purpose:
+                    "resend",
+
+                expires_at:
+                    expiresAt.toISOString(),
+
+                attempt_count:
+                    0,
+
+                max_attempts:
+                    MAX_OTP_ATTEMPTS,
+
+                verification_status:
+                    "active",
+
+            });
+
+
+        if (otpInsertError) {
+
+            console.error(
+                "❌ New OTP insert error:",
+                otpInsertError.message
+            );
+
+            return res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Unable to create a new OTP.",
+
+            });
+        }
+
+
+        // =================================================
+        // SEND EMAIL
+        // =================================================
+
+        try {
+
+            await sendOTPEmail(
+                normalizedEmail,
+                registration.student_id,
+                otp
+            );
+
+        } catch (emailError) {
+
+            console.error(
+                "❌ Resend OTP email failed:",
+                emailError.message
+            );
+
+
+            await supabase
+                .from("otp_codes")
+                .update({
+
+                    verification_status:
+                        "invalidated",
+
+                })
+                .eq(
+                    "registration_id",
+                    registration.id
+                )
+                .eq(
+                    "otp_hash",
+                    otpHash
+                );
+
+
+            return res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Unable to send the new OTP. Please try again.",
+
+            });
+        }
+
+
+        // =================================================
+        // SUCCESS
+        // =================================================
+
+        return res.status(200).json({
+
+            success: true,
+
+            message:
+                "A new OTP has been sent to your email.",
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "❌ resendRegistrationOTP error:",
+            error
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "Unable to resend OTP.",
+
+        });
+    }
+};
+
+
+// =========================================================
+// SUBMIT REGISTRATION
+//
+// NOTE:
+// The route will be connected after this controller.
+//
+// This endpoint will receive the completed registration
+// information and eventually the uploaded documents/selfie.
+// =========================================================
+
+const submitRegistration = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const {
+            studentId,
+            email,
+            birthday,
+            contactNumber,
+            province,
+            barangay,
+            city,
+        } = req.body;
+
+
+        // =================================================
+        // REQUIRED FIELDS
+        // =================================================
+
+        if (
+            !studentId ||
+            !email ||
+            !birthday ||
+            !contactNumber
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Student ID, email, birthday, and contact number are required.",
+
+            });
+        }
+
+
+        // =================================================
+        // CLEAN INPUT
+        // =================================================
+
+        const normalizedStudentId =
+            String(studentId).trim();
+
+        const normalizedEmail =
+            String(email)
+                .trim()
+                .toLowerCase();
+
+
+        // =================================================
+        // FIND REGISTRATION
+        // =================================================
+
+        const registration =
+            await findLatestRegistration(
+                normalizedStudentId
+            );
+
+
+        if (!registration) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message:
+                    "Registration application not found.",
+
+            });
+        }
+
+
+        // =================================================
+        // EMAIL MUST MATCH
+        // =================================================
+
+        if (
+            registration.email !==
+            normalizedEmail
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Registration information does not match.",
+
+            });
+        }
+
+
+        // =================================================
+        // OTP MUST BE VERIFIED
+        // =================================================
+
+        if (
+            registration.application_status !==
+            "otp_verified"
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Please verify your OTP before submitting the registration.",
+
+            });
+        }
+
+
+        // =================================================
+        // BASIC PHONE VALIDATION
+        // =================================================
+
+        const cleanContactNumber =
+            String(
+                contactNumber
+            ).trim();
+
+
+        if (
+            cleanContactNumber.length <
+            10
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Please provide a valid contact number.",
+
+            });
+        }
+
+
+        // =================================================
+        // UPDATE APPLICATION
+        //
+        // Documents and selfie storage will be connected
+        // in the next step.
+        // =================================================
+
+        const {
+            data:
+                updatedRegistration,
+            error:
+                updateError,
+        } = await supabase
+            .from(
+                "registration_applications"
+            )
+            .update({
+
+                birthday,
+
+                contact_number:
+                    cleanContactNumber,
+
+                province:
+                    province
+                        ? String(
+                            province
+                        ).trim()
+                        : null,
+
+                barangay:
+                    barangay
+                        ? String(
+                            barangay
+                        ).trim()
+                        : null,
+
+                city:
+                    city
+                        ? String(
+                            city
+                        ).trim()
+                        : null,
+
+                application_status:
+                    "pending_review",
+
+                submitted_at:
+                    new Date().toISOString(),
+
+                updated_at:
+                    new Date().toISOString(),
+
+            })
+            .eq(
+                "id",
+                registration.id
+            )
+            .select()
+            .single();
+
+
+        if (updateError) {
+
+            console.error(
+                "❌ Registration submission error:",
+                updateError.message
+            );
+
+            return res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Unable to submit registration.",
+
+            });
+        }
+
+
+        // =================================================
+        // SUCCESS
+        // =================================================
+
+        return res.status(200).json({
+
+            success: true,
+
+            registrationSubmitted:
+                true,
+
+            registrationStatus:
+                "pending_review",
+
+            message:
+                "Registration submitted successfully. Your application is now pending review by the Electoral Board/Admin.",
+
+            registration: {
+
+                id:
+                    updatedRegistration.id,
+
+                studentId:
+                    updatedRegistration.student_id,
+
+                email:
+                    updatedRegistration.email,
+
+                fullName:
+                    updatedRegistration.full_name,
+
+                yearLevel:
+                    updatedRegistration.year_level,
+
+                status:
+                    updatedRegistration.application_status,
+
+                submittedAt:
+                    updatedRegistration.submitted_at,
+
+            },
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "❌ submitRegistration error:",
+            error
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "Unable to submit registration.",
+
+        });
+    }
+};
+
+// =========================================================
+// ELECTORAL BOARD AUTHENTICATION
+//
+// These functions protect EB-only registration endpoints.
+// Student authentication is NOT changed.
+// =========================================================
+
+const jwt = require("jsonwebtoken");
+
+const authenticateEB = (req) => {
+
+    const authorization =
+        req.headers.authorization || "";
+
+    if (
+        !authorization.startsWith("Bearer ")
+    ) {
+        const error = new Error(
+            "Electoral Board authentication is required."
+        );
+
+        error.statusCode = 401;
+
+        throw error;
+    }
+
+    const token =
+        authorization.substring(7).trim();
+
+    if (!token) {
+        const error = new Error(
+            "Electoral Board authentication is required."
+        );
+
+        error.statusCode = 401;
+
+        throw error;
+    }
+
+    try {
+
+        const decoded =
+            jwt.verify(
+                token,
+                process.env.JWT_SECRET
+            );
+
+        if (
+            decoded.role !==
+            "electoral_board"
+        ) {
+            const error = new Error(
+                "Electoral Board access is required."
+            );
+
+            error.statusCode = 403;
+
+            throw error;
+        }
+
+        return decoded;
+
+    } catch (error) {
+
+        if (
+            error.statusCode
+        ) {
+            throw error;
+        }
+
+        const authError =
+            new Error(
+                "Invalid or expired Electoral Board session."
+            );
+
+        authError.statusCode = 401;
+
+        throw authError;
+    }
+};
+
+
+// =========================================================
+// EB DASHBOARD STATISTICS
+//
+// Reads REAL registration data from Supabase.
+//
+// No fake numbers.
+// No student-side changes.
+// =========================================================
+
+const getEBDashboardStats = async (
+    req,
+    res
+) => {
+
+    try {
+
+        // -------------------------------------------------
+        // VERIFY EB TOKEN
+        // -------------------------------------------------
+
+        authenticateEB(req);
+
+
+        // -------------------------------------------------
+        // REGISTERED STUDENTS
+        //
+        // Official enrollment roster
+        // -------------------------------------------------
+
+        const {
+            count:
+                registeredStudents,
+            error:
+                studentsError,
+        } = await supabase
+            .from("students")
+            .select(
+                "id",
+                {
+                    count: "exact",
+                    head: true,
+                }
+            );
+
+
+        if (studentsError) {
+
+            console.error(
+                "❌ EB registered students count error:",
+                studentsError.message
+            );
+
+            throw new Error(
+                "Unable to retrieve registered student count."
+            );
+        }
+
+
+        // -------------------------------------------------
+        // PENDING APPLICATIONS
+        // -------------------------------------------------
+
+        const {
+            count:
+                pendingApplications,
+            error:
+                pendingError,
+        } = await supabase
+            .from(
+                "registration_applications"
+            )
+            .select(
+                "id",
+                {
+                    count: "exact",
+                    head: true,
+                }
+            )
+            .eq(
+                "application_status",
+                "pending_review"
+            );
+
+
+        if (pendingError) {
+
+            console.error(
+                "❌ EB pending applications count error:",
+                pendingError.message
+            );
+
+            throw new Error(
+                "Unable to retrieve pending registration count."
+            );
+        }
+
+
+        // -------------------------------------------------
+        // APPROVED STUDENTS
+        // -------------------------------------------------
+
+        const {
+            count:
+                approvedStudents,
+            error:
+                approvedError,
+        } = await supabase
+            .from(
+                "registration_applications"
+            )
+            .select(
+                "id",
+                {
+                    count: "exact",
+                    head: true,
+                }
+            )
+            .eq(
+                "application_status",
+                "approved"
+            );
+
+
+        if (approvedError) {
+
+            console.error(
+                "❌ EB approved students count error:",
+                approvedError.message
+            );
+
+            throw new Error(
+                "Unable to retrieve approved student count."
+            );
+        }
+
+
+        // -------------------------------------------------
+        // RESPONSE
+        // -------------------------------------------------
+
+        return res.status(200).json({
+
+            success: true,
+
+            statistics: {
+
+                registeredStudents:
+                    registeredStudents || 0,
+
+                pendingApplications:
+                    pendingApplications || 0,
+
+                approvedStudents:
+                    approvedStudents || 0,
+
+                remoteVotes: 0,
+
+                kioskVotes: 0,
+
+            },
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "❌ getEBDashboardStats error:",
+            error.message
+        );
+
+        return res.status(
+            error.statusCode || 500
+        ).json({
+
+            success: false,
+
+            message:
+                error.message ||
+                "Unable to retrieve Electoral Board dashboard statistics.",
+
+        });
+    }
+};
+
+
+// =========================================================
+// EB PENDING REGISTRATIONS
+//
+// Returns ONLY applications waiting for EB review.
+//
+// IMPORTANT:
+// This endpoint does NOT expose candidate vote choices.
+// =========================================================
+
+const getEBPendingRegistrations = async (
+    req,
+    res
+) => {
+
+    try {
+
+        // -------------------------------------------------
+        // VERIFY EB TOKEN
+        // -------------------------------------------------
+
+        authenticateEB(req);
+
+
+        // -------------------------------------------------
+        // FETCH PENDING APPLICATIONS
+        // -------------------------------------------------
+
+        const {
+            data,
+            error,
+        } = await supabase
+            .from(
+                "registration_applications"
+            )
+            .select(`
+                id,
+                student_id,
+                registration_type,
+                application_status,
+                email,
+                full_name,
+                year_level,
+                birthday,
+                contact_number,
+                province,
+                barangay,
+                city,
+                otp_verified_at,
+                submitted_at,
+                reviewed_at,
+                reviewed_by,
+                rejection_reason,
+                correction_message,
+                created_at,
+                updated_at
+            `)
+            .eq(
+                "application_status",
+                "pending_review"
+            )
+            .order(
+                "submitted_at",
+                {
+                    ascending: true,
+                }
+            );
+
+
+        if (error) {
+
+            console.error(
+                "❌ EB pending registrations error:",
+                error.message
+            );
+
+            throw new Error(
+                "Unable to retrieve pending registration applications."
+            );
+        }
+
+
+        // -------------------------------------------------
+        // RESPONSE
+        // -------------------------------------------------
+
+        return res.status(200).json({
+
+            success: true,
+
+            count:
+                data?.length || 0,
+
+            applications:
+                data || [],
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "❌ getEBPendingRegistrations error:",
+            error.message
+        );
+
+        return res.status(
+            error.statusCode || 500
+        ).json({
+
+            success: false,
+
+            message:
+                error.message ||
+                "Unable to retrieve pending registration applications.",
+
+        });
+    }
+};
+
+
+// =========================================================
+// EB REGISTRATION DETAILS
+//
+// Used when EB clicks a pending application.
+// =========================================================
+
+const getEBRegistrationDetails = async (
+    req,
+    res
+) => {
+
+    try {
+
+        // -------------------------------------------------
+        // VERIFY EB TOKEN
+        // -------------------------------------------------
+
+        authenticateEB(req);
+
+
+        const {
+            id,
+        } = req.params;
+
+
+        if (!id) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Registration application ID is required.",
+
+            });
+        }
+
+
+        // -------------------------------------------------
+        // FIND APPLICATION
+        // -------------------------------------------------
+
+        const {
+            data:
+                application,
+            error,
+        } = await supabase
+            .from(
+                "registration_applications"
+            )
+            .select(`
+                id,
+                student_id,
+                registration_type,
+                application_status,
+                email,
+                full_name,
+                year_level,
+                birthday,
+                contact_number,
+                province,
+                barangay,
+                city,
+                otp_verified_at,
+                submitted_at,
+                reviewed_at,
+                reviewed_by,
+                rejection_reason,
+                correction_message,
+                created_at,
+                updated_at
+            `)
+            .eq(
+                "id",
+                id
+            )
+            .maybeSingle();
+
+
+        if (error) {
+
+            console.error(
+                "❌ EB registration details error:",
+                error.message
+            );
+
+            throw new Error(
+                "Unable to retrieve registration details."
+            );
+        }
+
+
+        if (!application) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message:
+                    "Registration application not found.",
+
+            });
+        }
+
+
+        // -------------------------------------------------
+        // RESPONSE
+        // -------------------------------------------------
+
+        return res.status(200).json({
+
+            success: true,
+
+            application,
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "❌ getEBRegistrationDetails error:",
+            error.message
+        );
+
+        return res.status(
+            error.statusCode || 500
+        ).json({
+
+            success: false,
+
+            message:
+                error.message ||
+                "Unable to retrieve registration details.",
+
+        });
+    }
+};
+
+
+// =========================================================
+// EXPORTS
+// =========================================================
+
 module.exports = {
+
+    checkStudent,
+
     sendRegistrationOTP,
+
     verifyRegistrationOTP,
+
     resendRegistrationOTP,
+
+    submitRegistration,
+
+    getEBDashboardStats,
+
+    getEBPendingRegistrations,
+
+    getEBRegistrationDetails,
+
 };
