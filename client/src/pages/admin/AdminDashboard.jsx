@@ -593,9 +593,11 @@ const checkSystem = async () => {
             <header className="votara-admin-topbar">
                 <div className="votara-admin-brand" onClick={() => goTo("/admin-dashboard")}>
                     <span className="votara-admin-brand-mark" aria-hidden="true">
-                        <span className="brand-shape brand-shape-one"></span>
-                        <span className="brand-shape brand-shape-two"></span>
-                        <span className="brand-shape brand-shape-three"></span>
+                        <img
+            src="/src/images/Votara.png"
+            alt="Votara Logo"
+            className="votara-admin-brand-logo"
+        />
                     </span>
                     <span className="votara-admin-brand-name">Votara</span>
                 </div>
@@ -838,14 +840,33 @@ const checkSystem = async () => {
                 </section>
 
                 <section className="votara-feature-card account-role-card">
-                    <div className="feature-card-title-row"><h2>Account by role</h2><span>{(stats.totalStudents ?? 0) + (stats.totalStaff ?? 0)} Total</span></div>
+                    <div className="feature-card-title-row">
+                        <h2>Account by role</h2>
+                        <span>1,500 Total</span>
+                    </div>
                     {[
-                        ["Students / Voters", stats.totalStudents ?? 0, Math.min(100, ((stats.totalStudents ?? 0) / Math.max(1, (stats.totalStudents ?? 0) + (stats.totalStaff ?? 0))) * 100)],
-                        ["Staff accounts", stats.totalStaff ?? 0, Math.min(100, ((stats.totalStaff ?? 0) / Math.max(1, (stats.totalStudents ?? 0) + (stats.totalStaff ?? 0))) * 100)],
-                        ["Pending registrations", stats.pendingRegistrations ?? 0, Math.min(100, ((stats.pendingRegistrations ?? 0) / Math.max(1, stats.totalStudents ?? 1)) * 100)],
-                        ["Active users", stats.activeUsers ?? 0, Math.min(100, ((stats.activeUsers ?? 0) / Math.max(1, stats.totalStaff ?? 1)) * 100)],
-                    ].map(([label, value, percent]) => (
-                        <div className="role-row" key={label}><span>{label}</span><div className="role-track"><i style={{ width: `${percent}%` }}></i></div><b>{value}</b></div>
+                        [
+                            "Students / Voter",
+                            stats.totalStudents ?? 0,
+                            Math.min(100, ((stats.totalStudents ?? 0) / 1012) * 100),
+                            `${(stats.totalStudents ?? 0).toLocaleString()}/1,012`,
+                        ],
+                        [
+                            "Electoral Board",
+                            stats.totalStaff ?? 26,
+                            Math.min(100, ((stats.totalStaff ?? 26) / 100) * 100),
+                            `${(stats.totalStaff ?? 26).toLocaleString()}`,
+                        ],
+                        ["Admin", 7, 7],
+                        ["Kiosk device", 10, 10],
+                    ].map(([label, value, percent, displayValue]) => (
+                        <div className="role-row" key={label}>
+                            <span>{label}</span>
+                            <div className="role-track">
+                                <i style={{ width: `${percent}%` }}></i>
+                            </div>
+                            <b>{displayValue ?? value}</b>
+                        </div>
                     ))}
                 </section>
 

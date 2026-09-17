@@ -22,52 +22,25 @@
 }
 
 .votara-admin-brand {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     gap: 10px;
-    flex-shrink: 0;
     cursor: pointer;
     user-select: none;
 }
 
-.votara-admin-brand-mark {
-    position: relative;
-    width: 35px;
-    height: 35px;
+.votara-admin-brand-logo {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
     display: block;
+    flex-shrink: 0;
 }
 
-.brand-shape {
-    position: absolute;
-    display: block;
-    background: var(--votara-primary, #266eff);
-}
-
-.brand-shape-one {
-    width: 15px;
-    height: 15px;
-    left: 0;
-    top: 0;
-    border-radius: 50% 50% 3px 50%;
-    transform: rotate(45deg);
-}
-
-.brand-shape-two {
-    width: 15px;
-    height: 15px;
-    right: 0;
-    top: 0;
-    border-radius: 50% 50% 50% 3px;
-    transform: rotate(-45deg);
-}
-
-.brand-shape-three {
-    width: 17px;
-    height: 17px;
-    left: 9px;
-    bottom: 0;
-    border-radius: 50% 50% 3px 50%;
-    transform: rotate(45deg);
+.votara-admin-brand-name {
+    font-size: 25px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
 }
 
 .votara-admin-brand-name {
@@ -605,3 +578,246 @@ html[data-theme="light"] .votara-admin-main .info-panel h3 {
 [data-theme="light"] .votara-admin-topbar{background:rgba(255,255,255,.94)!important;border-bottom-color:rgba(20,25,45,.08)!important}.data-theme-light .votara-admin-brand-name,[data-theme="light"] .votara-admin-brand-name{color:#245eea!important}[data-theme="light"] .votara-admin-topnav-link{color:#626478!important}[data-theme="light"] .votara-admin-topnav-link.active{color:#173a9e!important;background:rgba(38,110,255,.12)!important}[data-theme="light"] .votara-admin-user{color:#333!important}[data-theme="light"] .votara-feature-card,[data-theme="light"] .votara-quick-actions button{background:#fff!important;border-color:rgba(30,40,70,.09)!important;color:#26283a!important;box-shadow:0 12px 30px rgba(20,25,45,.06)!important}[data-theme="light"] .votara-admin-hero h1,[data-theme="light"] .feature-card-heading h2,[data-theme="light"] .feature-card-title-row h2,[data-theme="light"] .config-panel h2,[data-theme="light"] .support-panel h3,[data-theme="light"] .health-score-row strong,[data-theme="light"] .approval-stat strong{color:#202231!important}[data-theme="light"] .votara-admin-hero p,[data-theme="light"] .system-overview-row small,[data-theme="light"] .feature-time{color:#72768a!important}[data-theme="light"] .system-overview-row{background:#f0f1f7!important;color:#292b3b!important}[data-theme="light"] .system-overview-row:hover{background:#e8eaf3!important}[data-theme="light"] .election-alert{background:#f0f0f5!important;color:#4b4d5d!important}[data-theme="light"] .config-row,[data-theme="light"] .log-row,[data-theme="light"] .ticket-row,[data-theme="light"] .approval-stat{border-bottom-color:rgba(30,40,70,.1)!important}[data-theme="light"] .votara-quick-actions button{color:#2d3042!important}
 .votara-topbar-environment{display:inline-flex!important;align-items:center!important;gap:6px!important;border:1px solid rgba(38,110,255,.25)!important;background:rgba(38,110,255,.13)!important;color:#286bff!important;border-radius:18px!important;padding:7px 12px!important;font-size:10px!important;cursor:pointer!important}.votara-notification-button{position:relative!important;width:34px!important;height:34px!important;border:0!important;background:transparent!important;color:#d8d5e4!important;display:grid!important;place-items:center!important;cursor:pointer!important}.notification-dot{position:absolute!important;right:6px!important;top:6px!important;width:5px!important;height:5px!important;background:#286bff!important;border-radius:50%!important;box-shadow:0 0 7px rgba(38,110,255,.6)!important}
 @media(max-width:1100px){.votara-topbar-environment{display:none!important}}
+
+/* =========================================================
+   GLASSMORPHISM FEATURE CARDS + HOVER INTERACTION
+   ========================================================= */
+.votara-dashboard-grid,
+.account-role-card,
+.config-support-card {
+    perspective: 1200px;
+}
+
+.votara-feature-card,
+.account-role-card {
+    position: relative !important;
+    overflow: hidden !important;
+    background:
+        linear-gradient(135deg, rgba(255,255,255,.075), rgba(255,255,255,.025) 48%, rgba(38,110,255,.045)),
+        rgba(28, 28, 53, .52) !important;
+    border: 1px solid rgba(255,255,255,.12) !important;
+    box-shadow:
+        0 20px 45px rgba(0,0,0,.22),
+        inset 0 1px 0 rgba(255,255,255,.10),
+        inset 0 -1px 0 rgba(255,255,255,.025) !important;
+    backdrop-filter: blur(22px) saturate(135%) !important;
+    -webkit-backdrop-filter: blur(22px) saturate(135%) !important;
+    transition:
+        transform .28s cubic-bezier(.2,.8,.2,1),
+        border-color .28s ease,
+        box-shadow .28s ease,
+        background .28s ease !important;
+}
+
+.votara-feature-card::before,
+.account-role-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+        120deg,
+        rgba(255,255,255,.09),
+        transparent 28%,
+        transparent 68%,
+        rgba(38,110,255,.06)
+    );
+    opacity: .65;
+    transition: opacity .28s ease;
+}
+
+.votara-feature-card::after,
+.account-role-card::after {
+    content: "";
+    position: absolute;
+    width: 170px;
+    height: 170px;
+    right: -95px;
+    top: -95px;
+    border-radius: 50%;
+    background: rgba(38,110,255,.12);
+    filter: blur(30px);
+    pointer-events: none;
+    opacity: .55;
+    transition: opacity .28s ease, transform .28s ease;
+}
+
+.votara-feature-card > *,
+.account-role-card > * {
+    position: relative;
+    z-index: 1;
+}
+
+.votara-feature-card:hover,
+.account-role-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(77, 139, 255, .38) !important;
+    background:
+        linear-gradient(135deg, rgba(255,255,255,.095), rgba(255,255,255,.035) 48%, rgba(38,110,255,.075)),
+        rgba(30, 30, 58, .60) !important;
+    box-shadow:
+        0 26px 55px rgba(0,0,0,.28),
+        0 0 0 1px rgba(38,110,255,.08),
+        0 0 32px rgba(38,110,255,.10),
+        inset 0 1px 0 rgba(255,255,255,.14) !important;
+}
+
+.votara-feature-card:hover::before,
+.account-role-card:hover::before {
+    opacity: 1;
+}
+
+.votara-feature-card:hover::after,
+.account-role-card:hover::after {
+    opacity: .9;
+    transform: scale(1.12);
+}
+
+/* Account by role — matches the supplied Figma reference */
+.account-role-card {
+    max-width: 1240px !important;
+    margin: 0 auto 18px !important;
+    min-height: 286px !important;
+    padding: 23px 45px 28px !important;
+    border-radius: 18px !important;
+}
+
+.account-role-card .feature-card-title-row h2 {
+    font-size: 15px !important;
+    letter-spacing: -.15px;
+}
+
+.account-role-card .feature-card-title-row > span {
+    font-size: 13px !important;
+    color: #8d8ba0 !important;
+}
+
+.account-role-card .role-row {
+    display: grid !important;
+    grid-template-columns: 125px minmax(120px, 1fr) 82px !important;
+    align-items: center !important;
+    gap: 14px !important;
+    margin-top: 18px !important;
+    font-size: 14px !important;
+    line-height: 1 !important;
+    color: #f0edf8 !important;
+}
+
+.account-role-card .role-row > span {
+    white-space: nowrap !important;
+}
+
+.account-role-card .role-track {
+    height: 8px !important;
+    border-radius: 999px !important;
+    background: rgba(255,255,255,.025) !important;
+    border: 1px solid rgba(150,148,180,.18) !important;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.15) !important;
+}
+
+.account-role-card .role-track i {
+    height: 100% !important;
+    min-width: 0 !important;
+    border-radius: 999px !important;
+    background: linear-gradient(90deg, #1458ff, #176dff) !important;
+    box-shadow: 0 0 12px rgba(28,102,255,.48) !important;
+    transition: width .55s ease !important;
+}
+
+.account-role-card .role-row > b {
+    text-align: right !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #f0eef7 !important;
+    white-space: nowrap !important;
+}
+
+.account-role-card:hover .role-track i {
+    box-shadow: 0 0 18px rgba(38,110,255,.68) !important;
+}
+
+/* Make the nested feature surfaces glassy as well */
+.system-overview-row,
+.election-alert,
+.approval-stat,
+.log-row,
+.ticket-row,
+.config-row,
+.votara-quick-actions button {
+    transition: background .2s ease, border-color .2s ease, transform .2s ease, box-shadow .2s ease !important;
+}
+
+.system-overview-row:hover,
+.log-row:hover,
+.ticket-row:hover,
+.config-row:hover,
+.votara-quick-actions button:hover {
+    transform: translateX(3px);
+    background: rgba(255,255,255,.055) !important;
+    border-color: rgba(70,126,255,.22) !important;
+    box-shadow: 0 8px 22px rgba(0,0,0,.12) !important;
+}
+
+@media (max-width: 800px) {
+    .account-role-card {
+        min-height: 0 !important;
+        padding: 20px !important;
+    }
+
+    .account-role-card .role-row {
+        grid-template-columns: 115px minmax(80px, 1fr) 75px !important;
+        gap: 10px !important;
+        font-size: 12px !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .votara-feature-card,
+    .account-role-card,
+    .system-overview-row,
+    .log-row,
+    .ticket-row,
+    .config-row,
+    .votara-quick-actions button {
+        transition: none !important;
+    }
+
+    .votara-feature-card:hover,
+    .account-role-card:hover,
+    .system-overview-row:hover,
+    .log-row:hover,
+    .ticket-row:hover,
+    .config-row:hover,
+    .votara-quick-actions button:hover {
+        transform: none !important;
+    }
+}
+
+/* Light theme keeps the same glass effect without the dark Figma background. */
+[data-theme="light"] .votara-feature-card,
+[data-theme="light"] .account-role-card {
+    background:
+        linear-gradient(135deg, rgba(255,255,255,.88), rgba(246,248,255,.70)),
+        rgba(255,255,255,.68) !important;
+    border-color: rgba(50,65,110,.12) !important;
+    box-shadow:
+        0 18px 40px rgba(35,45,75,.10),
+        inset 0 1px 0 rgba(255,255,255,.95) !important;
+}
+
+[data-theme="light"] .votara-feature-card:hover,
+[data-theme="light"] .account-role-card:hover {
+    background:
+        linear-gradient(135deg, rgba(255,255,255,.94), rgba(239,244,255,.78)),
+        rgba(255,255,255,.78) !important;
+    border-color: rgba(38,110,255,.25) !important;
+    box-shadow:
+        0 24px 48px rgba(35,45,75,.14),
+        0 0 26px rgba(38,110,255,.08),
+        inset 0 1px 0 rgba(255,255,255,1) !important;
+}
+
+[data-theme="light"] .account-role-card .role-row,
+[data-theme="light"] .account-role-card .role-row > b {
+    color: #282a3b !important;
+}
