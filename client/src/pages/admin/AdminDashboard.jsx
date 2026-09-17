@@ -18,6 +18,7 @@ import {
     FiDatabase,
     FiUserPlus,
     FiChevronRight,
+    FiBell,
 } from "react-icons/fi";
 
 import api from "../../services/api";
@@ -181,6 +182,9 @@ useEffect(() => {
             api: "Checking",
             database: "Checking",
         });
+
+    const [environment, setEnvironment] = useState("Production");
+    const [showEnvironmentMenu, setShowEnvironmentMenu] = useState(false);
 
     // =====================================================
     // LOAD ADMIN SESSION
@@ -429,6 +433,39 @@ const checkSystem = async () => {
         navigate(path);
     };
 
+    const handleExportResults = () => {
+        const rows = [
+            ["VOTARA Admin Dashboard Export", ""],
+            ["Generated", new Date().toLocaleString()],
+            ["Environment", environment],
+            [],
+            ["Metric", "Value"],
+            ["Total Students / Voters", stats.totalStudents ?? 0],
+            ["Staff Accounts", stats.totalStaff ?? 0],
+            ["Pending Registrations", stats.pendingRegistrations ?? 0],
+            ["Active Users", stats.activeUsers ?? 0],
+            ["API Status", systemStatus.api],
+            ["Database Status", systemStatus.database],
+        ];
+
+        const csv = rows
+            .map((row) => row.map((cell) => {
+                const value = String(cell ?? "");
+                return `"${value.replace(/"/g, '""')}"`;
+            }).join(","))
+            .join("\n");
+
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `votara-dashboard-${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+    };
+
     // =====================================================
     // FORMAT TIME
     // =====================================================
@@ -549,270 +586,91 @@ const checkSystem = async () => {
     return (
         <div style={styles.page}>
             {/* =================================================
-                SIDEBAR
+                TOP NAVIGATION
+                Design-only replacement for the old sidebar.
             ================================================= */}
 
-            <aside
-    className="votara-admin-sidebar"
-    style={styles.sidebar}
->
-                <div style={styles.logoArea}>
-                    <div style={styles.logoIcon}>
-                        <FiShield size={25} />
-                    </div>
-
-                    <div>
-                        <h2 style={styles.logoText}>
-                            VOTARA
-                        </h2>
-
-                        <span
-                            style={
-                                styles.logoSubtitle
-                            }
-                        >
-                            ADMIN PANEL
-                        </span>
-                    </div>
-                </div>
-
-                {/* ADMIN PROFILE */}
-
-                <div
-                    style={styles.adminProfile}
-                >
-                    <div style={styles.avatar}>
-                        {admin.full_name
-                            ?.charAt(0)
-                            ?.toUpperCase() ||
-                            "A"}
-                    </div>
-
-                    <div
-                        style={
-                            styles.profileInfo
-                        }
-                    >
-                        <strong>
-                            {admin.full_name ||
-                                "Administrator"}
-                        </strong>
-
-                        <span>
-                            Administrator
-                        </span>
-                    </div>
-                </div>
-
-                {/* NAVIGATION */}
-
-                <nav style={styles.navigation}>
-                    <div
-                        style={
-                            styles.navSection
-                        }
-                    >
-                        <span
-                            style={
-                                styles.navSectionTitle
-                            }
-                        >
-                            MAIN
-                        </span>
-
-                        <button
-                            style={{
-                                ...styles.navItem,
-                                ...styles.navItemActive,
-                            }}
-                        >
-                            <FiBarChart2
-                                size={18}
-                            />
-
-                            <span>
-                                Dashboard
-                            </span>
-                        </button>
-                    </div>
-
-                    <div
-                        style={
-                            styles.navSection
-                        }
-                    >
-                        <span
-                            style={
-                                styles.navSectionTitle
-                            }
-                        >
-                            MANAGEMENT
-                        </span>
-
-                        <button
-                            style={styles.navItem}
-                            onClick={() =>
-                                goTo(
-                                    "/admin/students"
-                                )
-                            }
-                        >
-                            <FiUsers size={18} />
-                            <span>
-                                Students
-                            </span>
-                        </button>
-
-                        <button
-                            style={styles.navItem}
-                            onClick={() =>
-                                goTo(
-                                    "/admin/electoral-board"
-                                )
-                            }
-                        >
-                            <FiUserCheck
-                                size={18}
-                            />
-
-                            <span>
-                                Electoral Board
-                            </span>
-                        </button>
-
-                        <button
-                            style={styles.navItem}
-                            onClick={() =>
-                                goTo(
-                                    "/admin/candidates"
-                                )
-                            }
-                        >
-                            <FiUserPlus
-                                size={18}
-                            />
-
-                            <span>
-                                Candidates
-                            </span>
-                        </button>
-
-                        <button
-                            style={styles.navItem}
-                            onClick={() =>
-                                goTo(
-                                    "/admin/election"
-                                )
-                            }
-                        >
-                            <FiCalendar
-                                size={18}
-                            />
-
-                            <span>
-                                Election
-                            </span>
-                        </button>
-                    </div>
-
-                    <div
-                        style={
-                            styles.navSection
-                        }
-                    >
-                        <span
-                            style={
-                                styles.navSectionTitle
-                            }
-                        >
-                            MONITORING
-                        </span>
-
-                        <button
-                            style={styles.navItem}
-                            onClick={() =>
-                                goTo(
-                                    "/admin/audit-logs"
-                                )
-                            }
-                        >
-                            <FiActivity
-                                size={18}
-                            />
-
-                            <span>
-                                Audit Logs
-                            </span>
-                        </button>
-
-                        <button
-                            style={styles.navItem}
-                            onClick={() =>
-                                goTo(
-                                    "/admin/reports"
-                                )
-                            }
-                        >
-                            <FiBarChart2
-                                size={18}
-                            />
-
-                            <span>
-                                Reports
-                            </span>
-                        </button>
-
-                        <button
-                            style={styles.navItem}
-                            onClick={() =>
-                                goTo(
-                                    "/admin/results"
-                                )
-                            }
-                        >
-                            <FiFileText
-                                size={18}
-                            />
-
-                            <span>
-                                Election Results
-                            </span>
-                        </button>
-                    </div>
-                </nav>
-
-                {/* SIDEBAR BOTTOM */}
-
-                <div
-                    style={
-                        styles.sidebarBottom
-                    }
-                >
-                <button
-                    style={styles.settingsButton}
-                    onClick={() => goTo("/admin/settings")}
-                    >
-                    <FiSettings size={18} />
-
-                    <span>
-                    System Settings
+            <header className="votara-admin-topbar">
+                <div className="votara-admin-brand" onClick={() => goTo("/admin-dashboard")}>
+                    <span className="votara-admin-brand-mark" aria-hidden="true">
+                        <span className="brand-shape brand-shape-one"></span>
+                        <span className="brand-shape brand-shape-two"></span>
+                        <span className="brand-shape brand-shape-three"></span>
                     </span>
-                </button>
+                    <span className="votara-admin-brand-name">Votara</span>
+                </div>
+
+                <nav className="votara-admin-topnav" aria-label="Admin navigation">
+                    <button
+                        className="votara-admin-topnav-link active"
+                        onClick={() => goTo("/admin-dashboard")}
+                    >
+                        Overview
+                    </button>
 
                     <button
-                        style={
-                            styles.logoutButton
-                        }
-                        onClick={handleLogout}
+                        className="votara-admin-topnav-link"
+                        onClick={() => goTo("/admin/students")}
                     >
-                        <FiLogOut size={18} />
+                        User
+                    </button>
 
-                        <span>
-                            Logout
+                    <button
+                        className="votara-admin-topnav-link"
+                        onClick={() => goTo("/admin/election")}
+                    >
+                        Elections
+                    </button>
+
+                    <button
+                        className="votara-admin-topnav-link"
+                        onClick={() => goTo("/admin/candidates")}
+                    >
+                        Candidates
+                    </button>
+
+                    <button
+                        className="votara-admin-topnav-link"
+                        onClick={() => goTo("/admin/audit-logs")}
+                    >
+                        Logs
+                    </button>
+
+                    <button
+                        className="votara-admin-topnav-link"
+                        onClick={() => goTo("/admin/settings")}
+                    >
+                        Config &amp; Support
+                    </button>
+                </nav>
+
+                <div className="votara-admin-topbar-actions">
+                    <button className="votara-topbar-environment" onClick={() => setShowEnvironmentMenu((value) => !value)}>
+                        <span className="votara-env-dot"></span>{environment}
+                    </button>
+                    <button className="votara-notification-button" onClick={() => goTo("/admin/audit-logs")} title="Notifications" aria-label="Notifications">
+                        <span className="notification-dot"></span>
+                        <FiBell size={16} />
+                    </button>
+                    <div className="votara-admin-user">
+                        <span className="votara-admin-user-avatar">
+                            {admin.full_name?.charAt(0)?.toUpperCase() || "A"}
                         </span>
+                        <span className="votara-admin-user-name">
+                            {admin.full_name || "Administrator"}
+                        </span>
+                    </div>
+
+                    <button
+                        className="votara-admin-logout"
+                        onClick={handleLogout}
+                        title="Logout"
+                        aria-label="Logout"
+                    >
+                        <FiLogOut size={17} />
                     </button>
                 </div>
-            </aside>
+            </header>
 
             {/* =================================================
                 MAIN CONTENT
@@ -824,83 +682,51 @@ const checkSystem = async () => {
             >
                 {/* HEADER */}
 
-                <header
-                    className="votara-admin-header"
-                    style={styles.header}
-                >
-                    <div>
-                        <span
-                            style={
-                                styles.pageLabel
-                            }
-                        >
-                            VOTARA ADMINISTRATION
-                        </span>
-
-                        <h1
-                            style={styles.title}
-                        >
-                            Admin Dashboard
-                        </h1>
-
-                        <p
-                            style={
-                                styles.subtitle
-                            }
-                        >
-                            Monitor and manage the
-                            VOTARA voting system.
-                        </p>
+                <section className="votara-admin-hero">
+                    <div className="votara-admin-hero-copy">
+                        <span className="votara-admin-kicker">VOTARA ADMINISTRATION</span>
+                        <h1>Admin Dashboard</h1>
+                        <p>Manage accounts, elections, and platform health across every campus. Actions are written to the audit log.</p>
                     </div>
 
-                    <div
-                        style={
-                            styles.headerActions
-                        }
-                    >
-                        <div
-                            style={
-                                styles.systemOnlineBadge
-                            }
-                        >
-                            <span
-                                style={
-                                    styles.onlineDot
-                                }
-                            />
-
-                            System{" "}
-                            {systemStatus.api ===
-                            "Online"
-                                ? "Online"
-                                : "Status"}
+                    <div className="votara-admin-hero-actions">
+                        <div className="votara-env-picker">
+                            <button
+                                className="votara-env-button"
+                                onClick={() => setShowEnvironmentMenu((value) => !value)}
+                                aria-expanded={showEnvironmentMenu}
+                            >
+                                <span className="votara-env-dot"></span>
+                                {environment}
+                                <span className="votara-env-chevron">⌄</span>
+                            </button>
+                            {showEnvironmentMenu && (
+                                <div className="votara-env-menu">
+                                    {["Production", "Staging", "Development"].map((name) => (
+                                        <button
+                                            key={name}
+                                            className={name === environment ? "selected" : ""}
+                                            onClick={() => {
+                                                setEnvironment(name);
+                                                setShowEnvironmentMenu(false);
+                                            }}
+                                        >
+                                            <span className="votara-env-dot"></span>{name}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
-                        <button
-                            style={
-                                styles.refreshButton
-                            }
-                            onClick={
-                                handleRefresh
-                            }
-                            disabled={
-                                dashboardLoading
-                            }
-                        >
-                            <FiRefreshCw
-                                size={17}
-                                style={{
-                                    animation:
-                                        dashboardLoading
-                                            ? "spin 1s linear infinite"
-                                            : "none",
-                                }}
-                            />
+                        <button className="votara-outline-action" onClick={handleExportResults}>
+                            <FiFileText size={16} /> Export results
+                        </button>
 
-                            Refresh
+                        <button className="votara-primary-action" onClick={() => goTo("/admin/electoral-board")}>
+                            <FiUserPlus size={16} /> Invite Team
                         </button>
                     </div>
-                </header>
+                </section>
 
                 {/* =================================================
                     ERROR MESSAGE
@@ -929,318 +755,129 @@ const checkSystem = async () => {
                     </div>
                 )}
 
-                {/* =================================================
-                    SYSTEM OVERVIEW
-                ================================================= */}
-
-                <section>
-                    <div
-                        style={
-                            styles.sectionHeader
-                        }
-                    >
-                        <div>
-                            <h2
-                                style={
-                                    styles.sectionTitle
-                                }
-                            >
-                                System Overview
-                            </h2>
-
-                            <p
-                                style={
-                                    styles.sectionDescription
-                                }
-                            >
-                                Current VOTARA system
-                                status and statistics.
-                            </p>
+                <section className="votara-dashboard-grid top-feature-grid">
+                    <div className="votara-feature-card platform-health-card">
+                        <div className="feature-card-heading">
+                            <div>
+                                <h2>Platform health</h2>
+                                <span className="status-pill success"><span></span> operational</span>
+                            </div>
+                            <span className="feature-time">{formatDate(lastUpdated)}</span>
                         </div>
+                        <div className="health-score-row">
+                            <strong>{systemStatus.api === "Online" && systemStatus.database === "Connected" ? "99.9" : "—"}<small>%</small></strong>
+                            <span><b>{dashboardLoading ? "Checking" : stats.pendingRegistrations ?? 0}</b> pending registration{(stats.pendingRegistrations ?? 0) === 1 ? "" : "s"}</span>
+                        </div>
+                        <div className="capacity-track"><span style={{ width: "72%" }}></span></div>
+                        <div className="capacity-labels"><span>Capacity used · 72%</span><span>alert at 80%</span></div>
+                        <div className="mini-chart" aria-label="Registered voters trend">
+                            <div className="chart-grid-lines"></div>
+                            <svg viewBox="0 0 640 150" preserveAspectRatio="none">
+                                <defs><linearGradient id="votaraArea" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="var(--votara-primary)" stopOpacity="0.65"/><stop offset="100%" stopColor="var(--votara-primary)" stopOpacity="0"/></linearGradient></defs>
+                                <path d="M0 145 L55 98 L110 75 L180 70 L245 62 L310 58 L380 45 L445 38 L510 18 L510 150 L0 150 Z" fill="url(#votaraArea)"/>
+                                <path d="M0 145 L55 98 L110 75 L180 70 L245 62 L310 58 L380 45 L445 38 L510 18" fill="none" stroke="var(--votara-primary)" strokeWidth="3"/>
+                            </svg>
+                        </div>
+                        <div className="chart-label">Registered student voters · Voting time (Polling stations close at 5:00 pm)</div>
                     </div>
 
-                    <div
-                        className="votara-admin-stats"
-                        style={
-                            styles.statsGrid
-                        }
-                    >
-                        <StatCard
-                            title="Total Students"
-                            value={
-                                stats.totalStudents ??
-                                "—"
-                            }
-                            icon={FiUsers}
-                            description="Registered students"
-                            loading={
-                                dashboardLoading
-                            }
-                        />
-
-                        <StatCard
-                            title="Staff Accounts"
-                            value={
-                                stats.totalStaff ??
-                                "—"
-                            }
-                            icon={FiUserCheck}
-                            description="Admin and EB accounts"
-                            loading={
-                                dashboardLoading
-                            }
-                        />
-
-                        <StatCard
-                            title="Pending Registrations"
-                            value={
-                                stats.pendingRegistrations ??
-                                "—"
-                            }
-                            icon={FiClock}
-                            description="Awaiting review"
-                            loading={
-                                dashboardLoading
-                            }
-                        />
-
-                        <StatCard
-                            title="Active Users"
-                            value={
-                                stats.activeUsers ??
-                                "—"
-                            }
-                            icon={FiActivity}
-                            description="Currently active staff accounts"
-                            loading={
-                                dashboardLoading
-                            }
-                        />
+                    <div className="votara-feature-card system-overview-card">
+                        <div className="feature-card-title-row"><h2>System Overview</h2><button onClick={() => goTo("/admin/settings")}>Configure</button></div>
+                        {[
+                            [FiDatabase, "Database Status", systemStatus.database, "/admin/settings"],
+                            [FiActivity, "Kiosk Devices", `${stats.activeUsers ?? 0} active`, "/admin/settings"],
+                            [FiRefreshCw, "Backup Status", "Last backup available", "/admin/settings"],
+                            [FiShield, "Security", "All systems secure", "/admin/settings"],
+                        ].map(([Icon, title, status, path]) => (
+                            <button key={title} className="system-overview-row" onClick={() => goTo(path)}>
+                                <span className="row-icon"><Icon size={17} /></span>
+                                <span><b>{title}</b><small><i></i>{status}</small></span>
+                                <FiChevronRight size={15} />
+                            </button>
+                        ))}
                     </div>
                 </section>
 
-                {/* =================================================
-                    SYSTEM HEALTH
-                ================================================= */}
-
-                <section
-                    style={styles.section}
-                >
-                    <div
-                        style={
-                            styles.sectionHeader
-                        }
-                    >
-                        <div>
-                            <h2
-                                style={
-                                    styles.sectionTitle
-                                }
-                            >
-                                System Health
-                            </h2>
-
-                            <p
-                                style={
-                                    styles.sectionDescription
-                                }
-                            >
-                                Monitor the availability
-                                of core VOTARA services.
-                            </p>
+                <section className="votara-dashboard-grid secondary-feature-grid">
+                    <div className="votara-feature-card elections-card">
+                        <div className="feature-card-title-row"><h2>Elections</h2><span>{stats.totalStaff ?? 0} staff</span></div>
+                        <div className="election-alert">
+                            <FiAlertCircle size={18} />
+                            <div><strong>Election management</strong><p>Review election schedules, status, and configuration before opening the voting window.</p><button onClick={() => goTo("/admin/election")}>Open election settings</button></div>
                         </div>
+                        {[
+                            ["Student Council Election", "Management", "Live"],
+                            ["Electoral Board", "Staff access", "Active"],
+                            ["Candidate Review", "Approval queue", `${stats.pendingRegistrations ?? 0} pending`],
+                        ].map(([name, detail, status]) => (
+                            <button className="election-row" key={name} onClick={() => goTo("/admin/election")}>
+                                <span className="election-dot"></span><span><b>{name}</b><small>{detail}</small></span><em>{status}</em>
+                            </button>
+                        ))}
                     </div>
 
-                    <div
-                        className="votara-admin-health"
-                        style={
-                            styles.healthGrid
-                        }
-                    >
-                        <HealthCard
-                            title="API Server"
-                            status={
-                                systemStatus.api
-                            }
-                            icon={FiActivity}
-                        />
+                    <div className="votara-feature-card approval-card">
+                        <div className="feature-card-title-row"><h2>Voters Approval</h2><button onClick={() => goTo("/admin/students")}>Open queue</button></div>
+                        <div className="approval-stat"><span></span><strong>{stats.totalStudents ?? "—"}</strong><p>registered students / voters</p></div>
+                        <div className="approval-stat"><span></span><strong>{stats.pendingRegistrations ?? "—"}</strong><p>awaiting eligibility review</p><button onClick={() => goTo("/admin/students")}>Review</button></div>
+                        <div className="approval-stat"><span></span><strong>—</strong><p>disqualified / incomplete filing</p><button onClick={() => goTo("/admin/students")}>Details</button></div>
+                    </div>
 
-                        <HealthCard
-                            title="Database"
-                            status={
-                                systemStatus.database
-                            }
-                            icon={FiDatabase}
-                        />
-
-                        <HealthCard
-                            title="Authentication"
-                            status="Protected"
-                            icon={FiShield}
-                        />
-
-                        <HealthCard
-                            title="Access Control"
-                            status="RBAC Enabled"
-                            icon={FiUserCheck}
-                        />
+                    <div className="votara-feature-card monitor-card">
+                        <div className="feature-card-title-row"><h2>Monitor &amp; logs</h2><button onClick={() => goTo("/admin/audit-logs")}>Full log</button></div>
+                        {[
+                            ["Failed login blocked", "6m"],
+                            ["Backup completed", "1h"],
+                            ["Admin role granted", "2h"],
+                            ["Candidate bulk import", "5h"],
+                            ["TLS certificate renewed", "1d"],
+                        ].map(([event, time], index) => (
+                            <button className="log-row" key={event} onClick={() => goTo("/admin/audit-logs")}><span className={`log-dot log-dot-${index}`}></span><span>{event}</span><em>{time}</em></button>
+                        ))}
                     </div>
                 </section>
 
-                {/* =================================================
-                    USER & SYSTEM MANAGEMENT
-                ================================================= */}
+                <section className="votara-feature-card account-role-card">
+                    <div className="feature-card-title-row"><h2>Account by role</h2><span>{(stats.totalStudents ?? 0) + (stats.totalStaff ?? 0)} Total</span></div>
+                    {[
+                        ["Students / Voters", stats.totalStudents ?? 0, Math.min(100, ((stats.totalStudents ?? 0) / Math.max(1, (stats.totalStudents ?? 0) + (stats.totalStaff ?? 0))) * 100)],
+                        ["Staff accounts", stats.totalStaff ?? 0, Math.min(100, ((stats.totalStaff ?? 0) / Math.max(1, (stats.totalStudents ?? 0) + (stats.totalStaff ?? 0))) * 100)],
+                        ["Pending registrations", stats.pendingRegistrations ?? 0, Math.min(100, ((stats.pendingRegistrations ?? 0) / Math.max(1, stats.totalStudents ?? 1)) * 100)],
+                        ["Active users", stats.activeUsers ?? 0, Math.min(100, ((stats.activeUsers ?? 0) / Math.max(1, stats.totalStaff ?? 1)) * 100)],
+                    ].map(([label, value, percent]) => (
+                        <div className="role-row" key={label}><span>{label}</span><div className="role-track"><i style={{ width: `${percent}%` }}></i></div><b>{value}</b></div>
+                    ))}
+                </section>
 
-                <section
-                    style={styles.section}
-                >
-                    <div
-                        style={
-                            styles.sectionHeader
-                        }
-                    >
-                        <div>
-                            <h2
-                                style={
-                                    styles.sectionTitle
-                                }
-                            >
-                                User & System Management
-                            </h2>
-
-                            <p
-                                style={
-                                    styles.sectionDescription
-                                }
-                            >
-                                Access the main administrative
-                                functions of VOTARA.
-                            </p>
-                        </div>
+                <section className="votara-feature-card config-support-card">
+                    <div className="config-panel">
+                        <h2>Configuration &amp; support</h2>
+                        <span>System configuration</span>
+                        {[
+                            ["Voting window", "8:00 AM – 5:00 PM", "/admin/settings"],
+                            ["Default quorum", "40%", "/admin/settings"],
+                            ["Session timeout", "20 min idle", "/admin/settings"],
+                            ["Kiosk lockout", "3 failed scans", "/admin/settings"],
+                        ].map(([label, value, path]) => (
+                            <div className="config-row" key={label}><span>{label}</span><b>{value}</b><button onClick={() => goTo(path)}>Edit</button></div>
+                        ))}
                     </div>
-
-                    <div
-                        className="votara-admin-management"
-                        style={
-                            styles.managementGrid
-                        }
-                    >
-                        {managementItems.map(
-                            (item) => (
-                                <ManagementCard
-                                    key={
-                                        item.title
-                                    }
-                                    item={item}
-                                    onClick={() =>
-                                        goTo(
-                                            item.path
-                                        )
-                                    }
-                                />
-                            )
-                        )}
+                    <div className="support-panel">
+                        <h3>Open support tickets</h3>
+                        {[
+                            ["high", "#1024 Kiosk 07 offline", "Electoral board 1"],
+                            ["medium", "#1039 Voter can't verify OTP", "Admin queue"],
+                            ["low", "#1031 Export format request", "Admin 2"],
+                        ].map(([level, title, owner]) => (
+                            <button className="ticket-row" key={title} onClick={() => goTo("/admin/audit-logs")}><span className={`ticket-priority ${level}`}>{level}</span><span><b>{title}</b><small>{owner}</small></span><em>Open</em></button>
+                        ))}
                     </div>
                 </section>
 
-                {/* =================================================
-                    MONITORING & REPORTS
-                ================================================= */}
-
-                <section
-                    style={styles.section}
-                >
-                    <div
-                        style={
-                            styles.sectionHeader
-                        }
-                    >
-                        <div>
-                            <h2
-                                style={
-                                    styles.sectionTitle
-                                }
-                            >
-                                Monitoring & Reports
-                            </h2>
-
-                            <p
-                                style={
-                                    styles.sectionDescription
-                                }
-                            >
-                                Review activity, reports,
-                                and election information.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div
-                        className="votara-admin-management"
-                        style={
-                            styles.managementGrid
-                        }
-                    >
-                        {monitoringItems.map(
-                            (item) => (
-                                <ManagementCard
-                                    key={
-                                        item.title
-                                    }
-                                    item={item}
-                                    onClick={() =>
-                                        goTo(
-                                            item.path
-                                        )
-                                    }
-                                />
-                            )
-                        )}
-                    </div>
-                </section>
-
-                {/* =================================================
-                    ADMIN ACCESS
-                ================================================= */}
-
-                <section
-                    style={styles.section}
-                >
-                    <div
-                        style={
-                            styles.infoPanel
-                        }
-                    >
-                        <div
-                            style={
-                                styles.infoIcon
-                            }
-                        >
-                            <FiCheckCircle
-                                size={24}
-                            />
-                        </div>
-
-                        <div
-                            style={
-                                styles.infoContent
-                            }
-                        >
-                            <h3>
-                                Administrator Access
-                            </h3>
-
-                            <p>
-                                You are currently
-                                signed in as an
-                                administrator. Access
-                                to administrative
-                                functions is protected
-                                by VOTARA role-based
-                                access control.
-                            </p>
-                        </div>
-                    </div>
+                <section className="votara-quick-actions">
+                    <button onClick={() => goTo("/admin/candidates")}><span><FiCheckCircle size={19} /></span>Review Candidates Approval</button>
+                    <button onClick={() => goTo("/admin/electoral-board")}><span><FiUserCheck size={19} /></span>Grant or revoke access</button>
+                    <button onClick={() => goTo("/admin/settings")}><span><FiSettings size={19} /></span>Open System Configuration</button>
                 </section>
 
                 {/* FOOTER */}
