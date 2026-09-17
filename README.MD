@@ -1,0 +1,1 @@
+The VOTARA Online Voting System begins when students access the landing page and choose to register or log in. New students can register online by submitting their information and required documents or register in person using their physical Student ID. .
