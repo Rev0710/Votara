@@ -1,62 +1,667 @@
+# About VOTARA
+
 VOTARA --- Online Voting System
 
-Team VOTARA
-A modern, secure, and structured web-based student election system.
+Team **VOTARA** A modern, secure, and structured web-based student election system.
 
-Project Overview
-VOTARA is a department-level online voting system designed to reduce
-registration and election-day delays, simplify Electoral Board (EB)
-administration, and provide a controlled digital voting workflow for
-students, EB members, and administrators.
-Brand Guidelines
-Brand Identity
-VOTARA represents a modern, clean, forward-thinking aesthetic using a
-geometric logo mark, readable typography, and a consistent blue-centered
-visual identity.
-Logo Variations
-- Primary Light Version: Blue icon with dark text on light/white
-  backgrounds.
-- Monochrome Dark Version: Solid black icon and typography on
-  light backgrounds.
-- Inverted / Dark Mode Version: Bright blue icon and typography on
-  dark backgrounds.
-Color Palette
-  Color                   Hex                     Usage
-  Deep                    #1A192B               Dark backgrounds and
-                                                  primary text contrast
-  White                   #FFFFFF               Light backgrounds and
-                                                  negative space
-  Serenade                #FFE8D6               Accent backgrounds and
-                                                  warm pastel areas
-  Blue Screen             #0055FF               Primary brand color,
-                                                  CTA elements, logo
-                                                  emblem
-  G Nova                  #50C8FF               Secondary blue,
-                                                  highlights, digital
-                                              elements
-Typography
-- Font: Poppins, sans-serif
-- Weights: Regular, Medium, Bold
-- Characters: Uppercase A--Z, lowercase a--z, numbers 0--9, and
-  common symbols.
-Usage Guidelines
-- Maintain clear space around the logo.
-- Preserve logo proportions and orientation.
-- Maintain strong contrast.
-- Do not alter the default logo colors without a design requirement.
-System Roles
-  Role                                Responsibilities
-  Student / User                  Registration, account setup,
-                                      password change, profile photo,
-                                      voting
-  Electoral Board                 Registration, late enrollee, party
-                                      list, candidate, election, kiosk,
-                                      monitoring, results, reports, audit
-  Admin                           System-level administration,
-                                      staff/account oversight,
-                                  monitoring, reports, audit review
-Overall Process
-```mermaid
+Project Overview VOTARA is a department-level online voting system designed to reduce registration and election-day delays, simplify Electoral Board (EB) administration, and provide a controlled digital voting workflow for students, EB members, and administrators. Brand Guidelines Brand Identity VOTARA represents a modern, clean, forward-thinking aesthetic using a geometric logo mark, readable typography, and a consistent blue-centered visual identity. Logo Variations
+
+Primary Light Version: Blue icon with dark text on light/white backgrounds.
+Monochrome Dark Version: Solid black icon and typography on light backgrounds.
+Inverted / Dark Mode Version: Bright blue icon and typography on dark backgrounds. Color Palette Color Hex Usage Deep #1A192B Dark backgrounds and primary text contrast White #FFFFFF Light backgrounds and negative space Serenade #FFE8D6 Accent backgrounds and warm pastel areas Blue Screen #0055FF Primary brand color, CTA elements, logo emblem G Nova #50C8FF Secondary blue, highlights, digital elements Typography
+Font: Poppins, sans-serif
+Weights: Regular, Medium, Bold
+Characters: Uppercase A--Z, lowercase a--z, numbers 0--9, and common symbols. Usage Guidelines
+Maintain clear space around the logo.
+Preserve logo proportions and orientation.
+Maintain strong contrast.
+
+### Main Goals
+
+- Simplify student registration.
+- Provide OTP-based verification.
+- Allow students to submit required registration documents.
+- Support registration selfie capture.
+- Support late enrollee registration.
+- Provide Electoral Board review and approval.
+- Manage party lists and candidates.
+- Configure elections and eligible year levels.
+- Provide controlled student voting.
+- Monitor voting participation.
+- Generate election results and reports.
+- Maintain audit records.
+- Provide administrative oversight.
+- Provide a temporary election-day kiosk workflow.
+
+
+# Project Objectives
+
+VOTARA aims to:
+
+1. Provide a convenient online student registration process.
+2. Reduce manual registration and verification delays.
+3. Provide controlled access to the student voting system.
+4. Allow the Electoral Board to manage the election lifecycle.
+5. Support students who enroll after the original student roster is prepared.
+6. Improve account security through JWT and password hashing.
+7. Require students to establish a personal password before normal dashboard access.
+8. Require student profile completion before proceeding to the normal dashboard.
+9. Provide organized election monitoring and reporting.
+10. Maintain structured records of election-related activities.
+
+# System Roles
+
+VOTARA consists of three primary system roles.
+
+| Role | Main Responsibilities |
+|---|---|
+| **Student / User** | Registration, OTP verification, account setup, password management, profile photo, and voting |
+| **Electoral Board (EB)** | Registration management, late enrollee management, party lists, candidates, elections, kiosk, voting monitoring, results, reports, audit logs, and settings |
+| **Admin** | System administration, staff/account management, system monitoring, reports, and audit oversight |
+
+---
+
+# System Overview
+
+The overall VOTARA process follows this structure:
+
+```text
+STUDENT / USER
+     |
+     +-- Student Registration
+     |
+     +-- OTP Verification
+     |
+     +-- Registration Requirements
+     |
+     +-- Document Submission
+     |
+     +-- Registration Selfie
+     |
+     +-- Application Submission
+     |
+     v
+ELECTORAL BOARD
+     |
+     +-- Registration Management
+     |
+     +-- Late Enrollee Management
+     |
+     +-- Party List Management
+     |
+     +-- Candidate Management
+     |
+     +-- Election Management
+     |
+     +-- Kiosk Management
+     |
+     +-- Voting Monitoring
+     |
+     +-- Results & Reports
+     |
+     +-- Audit Logs
+     |
+     +-- Settings
+     |
+     v
+STUDENT ACCOUNT
+     |
+     +-- Temporary Password
+     |
+     +-- First Login
+     |
+     +-- Change Personal Password
+     |
+     +-- Complete Profile Photo
+     |
+     v
+STUDENT DASHBOARD
+     |
+     +-- Election Eligibility Check
+     |
+     +-- Voting
+     |
+     +-- Voting Participation
+     |
+     v
+RESULTS & REPORTS
+     |
+     v
+ADMINISTRATIVE OVERSIGHT
+
+1. Student enters Student ID and registration information.
+2. System verifies the student's information.
+3. Student completes OTP verification.
+4. Student proceeds to Registration Requirements.
+5. Student submits the required documents.
+6. Student provides a registration selfie.
+7. Registration application is submitted.
+8. Electoral Board reviews the application.
+9. EB chooses one of the following actions:
+   - Approve
+   - Reject
+   - Correction
+10. If approved, the student account is created or activated.
+11. A temporary password is generated.
+12. The temporary password is sent to the student's registered email.
+13. Student logs in using the temporary password.
+14. Student is required to change the password.
+15. Student completes the required profile photo.
+16. Student proceeds to the Student Dashboard.
+
+Student enters Student ID
+          |
+          v
+Student ID not found
+          |
+          v
+Late Enrollee Prompt
+          |
+          +------------------+
+          |                  |
+         YES                 NO
+          |                  |
+          v                  v
+Late Enrollee          Return to
+Registration           Landing Page
+          |
+          v
+Enter Full Name
+          |
+          v
+Select Year Level
+          |
+          v
+Registration Requirements
+          |
+          +-- School ID Front
+          |
+          +-- School ID Back
+          |
+          +-- Registration Form
+          |
+          +-- Registration Selfie
+          |
+          v
+Submit Application
+          |
+          v
+EB Late Enrollee Management
+          |
+          +-----------------------------+
+          |             |               |
+        APPROVE       REJECT        CORRECTION
+          |             |               |
+          v             v               v
+Create/Activate     Reason          Student
+Student Record      Required        Corrects
+          |                             |
+          v                             |
+Create/Activate                       |
+Student Account                       |
+          |                             |
+          v                             |
+Generate Temporary Password             |
+          |                             |
+          v                             |
+Send Approval Email                     |
+          |                             |
+          v                             |
+Student First Login                     |
+          |                             |
+          v                             |
+Change Personal Password                |
+          |                             |
+          v                             |
+Complete Profile Photo                  |
+          |                             |
+          v                             |
+Student Dashboard <---------------------+
+
+Late Enrollee Approval
+When the Electoral Board approves a late enrollee:
+1. The system validates the registration.
+2. The student's identity information is checked.
+3. If the student does not yet exist in the official students table, the system creates the student record.
+4. A student account is created or activated.
+5. A temporary password is generated.
+6. The password is securely hashed.
+7. The account is marked with must_change_password = true.
+8. An approval email is sent to the registered email address.
+9. A student notification is created.
+10. The student logs in using the temporary password.
+11. The student must create a personal password.
+12. The student must complete their profile photo.
+13. The student can then access the dashboard.
+
+Temporary Password
+       |
+       v
+Student Login
+       |
+       v
+Authentication
+       |
+       v
+Temporary Password Accepted
+       |
+       v
+Force Password Change
+       |
+       v
+Student Creates Personal Password
+       |
+       v
+Profile Photo Requirement
+       |
+       v
+Student Takes / Uploads Photo
+       |
+       v
+Student Dashboard
+
+Student Dashboard
+       |
+       v
+Check Election Availability
+       |
+       v
+Check Student Eligibility
+       |
+       v
+Check Year Level
+       |
+       v
+Display Applicable Positions
+       |
+       v
+Select Candidates
+       |
+       v
+Validate Required Choices
+       |
+       v
+Review Ballot
+       |
+       v
+Confirm Vote
+       |
+       v
+Submit Ballot
+       |
+       v
+Record Voting Participation
+       |
+       v
+Voting Complete
+
+Electoral Board Modules
+The Electoral Board dashboard contains the following primary modules:
+1. Registration Management
+2. Late Enrollee Management
+3. Party List Management
+4. Candidate Management
+5. Election Management
+6. Kiosk Management
+7. Voting Monitoring
+8. Results & Reports
+9. Audit Logs
+10. Settings
+
+
+Registration Management
+The Electoral Board can:
+
+- View registration applications.
+- Search and filter applicants.
+- Review submitted registration information.
+- View submitted documents.
+- View registration selfies.
+- Approve applications.
+- Reject applications.
+- Request corrections.
+
+Late Enrollee Management
+The Electoral Board can:
+- View late enrollee applications.
+- Review late enrollee information.
+- View submitted school ID documents.
+- View registration forms.
+- View the registration selfie.
+- Review year-level information.
+- Approve applications.
+- Reject applications with a reason.
+- Request corrections with a reason.
+
+Party List Management
+The Electoral Board can manage party lists associated with an election.
+Functions include:
+- Create party lists.
+- Edit party list information.
+- Review party list status.
+- Approve party lists.
+- Reject party lists.
+- Activate party lists.
+- Deactivate party lists.
+Candidate Management
+The Electoral Board manages candidates participating in an election.
+Functions include:
+- Add candidates.
+- Select registered students.
+- Assign candidates to positions.
+- Review candidate information.
+- Activate candidates.
+- Deactivate candidates.
+- Prepare candidates for an election.
+Election Management
+The Electoral Board can configure:
+- Election title.
+- Election description.
+- Election date.
+- Election start time.
+- Election end time.
+- Election status.
+- Participating year levels.
+- Election positions.
+- Required positions.
+- Position eligibility.
+
+Kiosk Management
+Kiosk Management provides a temporary software-based session that can be operated by an Electoral Board member during election operations.
+The kiosk does not require a dedicated physical kiosk device.
+A kiosk session can contain:
+
+- Session ID
+- Election ID
+- EB operator
+- Session status
+- Start time
+- End time
+- Last activity
+- Number of students served
+- Creation timestamp
+- Update timestamp
+
+EB Login
+   |
+   v
+Kiosk Management
+   |
+   v
+Select Election
+   |
+   v
+Start Temporary Kiosk Session
+   |
+   v
+Serve Eligible Students
+   |
+   v
+Track Session Activity
+   |
+   v
+Close Kiosk Session
+
+Voting Monitoring
+Voting Monitoring allows the Electoral Board to monitor election participation.
+The module can provide information such as:
+- Total eligible voters.
+- Number of students who have voted.
+- Number of students who have not voted.
+- Voting participation statistics.
+- Current election status.
+
+Results & Reports
+The Results & Reports module provides election information for the Electoral Board.
+It can include:
+- Candidate vote totals.
+- Position results.
+- Election summaries.
+- Voting participation statistics.
+- Election reports.
+
+Audit Logs
+Audit Logs provide records of important Electoral Board and administrative activities.
+Examples include:
+- Authentication activities.
+- Registration actions.
+- Late enrollee actions.
+- Party list actions.
+- Candidate actions.
+- Election configuration actions.
+- Administrative actions.
+
+Security and Authentication
+VOTARA uses multiple security mechanisms.
+
+Authentication:
+- JWT-based authentication.
+- Role-based authorization.
+- Protected API endpoints.
+- Active account validation.
+- Token expiration.
+- Student authentication.
+- Electoral Board authentication.
+- Admin authentication.
+
+Password Security:
+- bcryptjs password hashing.
+- Temporary passwords for newly approved accounts.
+- Forced first-login password change.
+- Personal student passwords.
+- Password requirement validation.
+- must_change_password account state.
+
+Registration Security:
+
+- Student ID validation.
+- OTP verification.
+- Registration application review.
+- Registration document submission.
+- Registration selfie.
+- Electoral Board approval.
+- Electoral Board rejection.
+- Correction workflow.
+
+elections
+ |
+ +-- 1:M election_year_levels
+ |
+ +-- 1:M positions
+ |      |
+ |      +-- 1:M position_year_levels
+ |      |
+ |      +-- 1:M candidates
+ |
+ +-- 1:M party_lists
+ |
+ +-- 1:M vote_participations
+ |
+ +-- 1:M ballots
+        |
+        +-- 1:M ballot_votes
+
+
+students
+ |
+ +-- 1:1 student_accounts
+ |
+ +-- 1:M vote_participations
+ |
+ +-- 1:M candidates
+
+
+registration_applications
+ |
+ +-- 1:M registration_documents
+ |
+ +-- 1:M identity_verifications
+
+
+staff_users
+ |
+ +-- 1:M audit_logs
+
+ Technology Stack
+
+Frontend
+- React.js
+- Vite
+- React Router
+- Axios
+- React Icons
+- Poppins
+- Responsive CSS
+
+Backend
+- Node.js
+- Express.js
+- JSON Web Token (jsonwebtoken)
+- bcryptjs
+- dotenv
+- CORS
+- express-validator
+- Nodemon
+
+Database and Storage
+- Supabase
+- PostgreSQL
+- Supabase Storage
+
+Email
+- Gmail-based email delivery.
+- SMTP configuration.
+- Registration-related emails.
+- Approval emails.
+- Temporary-password delivery.
+
+Development Tools
+- Visual Studio Code
+- Git
+- GitHub
+- Supabase Dashboard
+- Postman
+- Browser Developer Tools
+- npm
+- PowerShell / Windows Terminal
+
+Note: html5-qrcode existed in the project's dependency history, but QR-based voting and QR-based verification are not part of the finalized VOTARA workflow.
+
+
+VOTARA/
+│
+├── client/
+│   ├── src/
+│   │   ├── components/
+│   │   │
+│   │   ├── pages/
+│   │   │   ├── public/
+│   │   │   ├── student/
+│   │   │   ├── electoralBoard/
+│   │   │   └── admin/
+│   │   │
+│   │   ├── services/
+│   │   ├── utils/
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   │
+│   ├── package.json
+│   └── vite.config.js
+│
+├── server/
+│   ├── src/
+│   │   ├── config/
+│   │   ├── controllers/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   └── middleware/
+│   │
+│   ├── server.js
+│   └── package.json
+│
+├── .gitignore
+└── README.md
+
+#Finalized Scope
+The following decisions represent the finalized VOTARA scope.
+Voting
+
+- VOTARA uses a web-based voting process.
+- Voting eligibility is controlled by configured election rules.
+- Student year level determines applicable year-level representation.
+- Required positions must be completed before ballot submission.
+
+Year-Level Rules
+- 1st Year students do not use the general year-level representative.
+- 2nd Year has a 2nd Year Representative.
+- 3rd Year has a 3rd Year Representative.
+- 4th Year has a 4th Year Representative.
+
+
+Team VOTARA
+Team VOTARA
+VOTARA is developed collaboratively by Team VOTARA.
+
+Development Areas
+Area	Responsibility
+Frontend Development	    React, Vite, responsive user interfaces
+Backend Development	        Node.js, Express, REST APIs
+Database Development	    Supabase, PostgreSQL, database relationships
+Authentication & Security	JWT, bcrypt, authorization, account protection
+Election Development	    Elections, positions, candidates, party lists
+Voting & Results	        Ballots, voting participation, results
+Testing & QA	            Functional and integration testing
+UI/UX & Branding	        VOTARA design system and interface consistency
+Documentation	            Technical and project documentation
+
+
+Testing Strategy
+Student Testing
+The student side should be tested for:
+
+- Valid registration.
+- Invalid Student ID.
+- OTP verification.
+- Registration requirements.
+- Document submission.
+- Registration selfie.
+- Normal approval.
+- Late enrollee registration.
+- Late enrollee approval.
+- Late enrollee rejection.
+- Late enrollee correction.
+- Temporary-password login.
+- Forced password change.
+- Profile photo requirement.
+- Year-level eligibility.
+- Election access.
+- Vote submission.
+- Duplicate voting prevention.
+
+Electoral Board Testing
+The EB side should be tested for:
+- EB authentication.
+- Registration Management.
+- Late Enrollee Management.
+- Party List Management.
+- Candidate Management.
+- Election Management.
+- Kiosk Management.
+- Voting Monitoring.
+- Results & Reports.
+- Audit Logs.
+- Settings.
+
+Admin Testing
+The Admin side should be tested for:
+- Admin authentication.
+- Staff/account management.
+- Administrative oversight.
+- System monitoring.
+- Reports.
+- Audit information.
+
+
 flowchart TD
     A[Student / User] --> B{Student ID in Official Roster?}
     B -->|Yes| C[Normal Registration]
@@ -99,358 +704,77 @@ flowchart TD
     AD --> AD2[Staff / Account Management]
     AD --> AD3[System Monitoring]
     AD --> AD4[Reports / Audit Review]
-```
-Electoral Board Workflow
-Electoral Board
- ├── Registration Management
- ├── Late Enrollee Management
- ├── Party List Management
- ├── Candidate Management
- ├── Election Management
- ├── Kiosk Management
- ├── Voting Monitoring
- ├── Results & Reports
- ├── Audit Logs
- └── Settings
-Late Enrollee Workflow
-Student ID Not Found
-        ↓
-Late Enrollee Registration
-        ↓
-Full Name + Year Level
-        ↓
-School ID Front + Back
-        ↓
-Registration Form
-        ↓
-Registration Selfie
-        ↓
-EB Review
-   ┌────┼────────────┐
-Approve Reject   Correction
-   ↓       ↓          ↓
-Create    Reason   Student Corrects
-Student    ↓          ↓
-Account  Finished   Resubmit
-   ↓
-Temporary Password
-   ↓
-Approval Email
-   ↓
-First Login
-   ↓
-Change Password
-   ↓
-Profile Photo
-   ↓
-Dashboard
-When a late enrollee is approved, the system creates the student record
-if it does not already exist, creates/activates the student account,
-generates a temporary password, sends the approval email, and requires
-password change and profile completion before dashboard access.
-Election Rules
-General year-level representative positions apply only to 2nd Year,
-3rd Year, and 4th Year.
-  Year       General Voting   Representative
-  1st Year   No               No general 1st Year Representative
-  2nd Year   Yes              2nd Year Representative
-  3rd Year   Yes              3rd Year Representative
-  4th Year   Yes              4th Year Representative
-Final Positions
-1. President
-2. Vice President
-3. Secretary
-4. Ass. Secretary
-5. Treasurer
-6. Ass. Treasurer
-7. Auditor
-8. Business Manager
-9. Public Information Officer
-10. Sergeant at Arms
-11. 2nd Year Representative
-12. 3rd Year Representative
-13. 4th Year Representative
-Student Authentication Flow
-Temporary Password
-       ↓
-Student Login
-       ↓
-Force Personal Password Change
-       ↓
-Take / Upload Profile Photo
-       ↓
-Student Dashboard
-VOTARA uses JWT authentication, role checks, active-account validation,
-bcrypt password hashing, OTP verification, and protected API endpoints.
-Kiosk Management
-Kiosk Management is a temporary software session operated by an EB
-member. It does not require a dedicated physical kiosk device.
-A kiosk session records: - Session ID - Election ID - EB operator -
-Session status - Start/end time - Last activity - Number of students
-served - Creation/update timestamps
-EB Login
-   ↓
-Kiosk Management
-   ↓
-Select Election
-   ↓
-Start Temporary Session
-   ↓
-Serve Eligible Students
-   ↓
-Track Activity
-   ↓
-Close Session
-Kiosk sessions track operational activity rather than student ballot
-choices.
-Database / ERD
-VOTARA uses Supabase PostgreSQL.
-Main Tables
-  Table                         Purpose
-  students                    Official student roster
-  student_accounts            Student authentication/account data
-  staff_users                 EB and Admin accounts
-  registration_applications   Registration applications
-  registration_documents      Submitted registration requirements
-  identity_verifications      Identity/selfie verification
-  otp_codes                   OTP records
-  notifications               Student notifications
-  elections                   Election configuration
-  election_year_levels        Participating year levels
-  positions                   Election positions
-  position_year_levels        Position eligibility
-  candidates                  Election candidates
-  party_lists                 Party list records
-  vote_participations         Student voting participation
-  ballots                     Submitted ballots
-  ballot_votes                Candidate selections
-  audit_logs                  EB/Admin activity records
-Relationship Overview
-elections 1:M election_year_levels
-elections 1:M positions
-positions 1:M position_year_levels
-positions 1:M candidates
-elections 1:M party_lists
-elections 1:M vote_participations
-elections 1:M ballots
-ballots 1:M ballot_votes
-candidates 1:M ballot_votes
-students 1:M vote_participations
-students 1:M candidates
-registration_applications 1:M registration_documents
-registration_applications 1:M identity_verifications
-students 1:1 student_accounts
-staff_users 1:M audit_logs
-Technology Stack
-Frontend
-- React.js
-- Vite
-- React Router
-- Axios
-- React Icons
-- Poppins
-- Responsive CSS/UI
-Backend
-- Node.js
-- Express.js
-- JWT / jsonwebtoken
-- bcryptjs
-- dotenv
-- cors
-- express-validator
-- Nodemon
-Database & Storage
-- Supabase
-- PostgreSQL
-- Supabase Storage
-Email
-- Gmail email delivery through the configured server email service
-- Approval and registration-related email notifications
-Development Tools
-- Visual Studio Code
-- Git
-- GitHub
-- Supabase Dashboard
-- Browser Developer Tools
-- Postman
-- npm
-- PowerShell / Windows Terminal
-html5-qrcode exists in the project's dependency history, but
-QR-based voting/verification is not part of the finalized VOTARA
-scope.
 
-Project Structure
-VOTARA/
-├── client/
-│   └── src/
-│       ├── components/
-│       ├── pages/
-│       │   ├── public/
-│       │   ├── student/
-│       │   ├── electoralBoard/
-│       │   └── admin/
-│       ├── services/
-│       ├── utils/
-│       ├── App.jsx
-│       └── main.jsx
-├── server/
-│   ├── src/
-│   │   ├── config/
-│   │   ├── controllers/
-│   │   ├── routes/
-│   │   ├── services/
-│   │   └── middleware/
-│   ├── server.js
-│   └── package.json
-├── .gitignore
-└── README.md
-Development Status
-Estimated Overall Progress: ~80%
-This is a practical development estimate rather than a formal
-software-completion measurement.
-Completed / Functional
-- VOTARA branding and UI foundation
-- Landing/navigation
-- Student registration
-- OTP verification
-- Registration requirements
-- Document upload
-- Registration selfie
-- Registration Management
-- Late Enrollee Management
-- Late enrollee approval/account creation
-- Approval email workflow
-- Student authentication
-- Password-change flow
-- Profile-photo requirement
-- Party List Management
-- Candidate Management
-- Election Management
-- Year-level configuration
-- Voting Monitoring
-- Results & Reports
-- Audit Logs interface
-- Settings interface
-- Supabase/PostgreSQL integration
-- JWT authentication
-- bcrypt password hashing
-Remaining / Integration
-- Kiosk Management
-- Kiosk database/session integration
-- Full end-to-end testing
-- Comprehensive security testing
-- Automatic audit logging across every module
-- Final UI/UX polish
-- Production deployment verification
-- Final documentation and testing evidence
+
 Development Roadmap
-Foundation                         ████████████████████ 100%
-Authentication & Registration     ████████████████████ 100%
-EB Management                     ████████████████████ 100%
-Voting & Results                  ██████████████████░░  90%
-Kiosk                             ██████░░░░░░░░░░░░░░  30%
-Testing & Integration             ██████░░░░░░░░░░░░░░  30%
 
-Overall                           ████████████████░░░░ ~80%
-Finalized Scope Decisions
-- No QR-based voting or verification.
-- No separate In-Person Verification module.
-- Candidate management remains under the Electoral Board.
-- Two-person approval is reserved for appropriate election
-  opening/closing controls.
-- General year representatives apply only to 2nd, 3rd, and 4th Year.
-- 1st Year has no general year representative position.
-- Late enrollees can be added to the official student roster through
-  the EB approval workflow.
-Environment Variables
-Never commit real secrets to GitHub.
-SUPABASE_URL=
-SUPABASE_SECRET_KEY=
-JWT_SECRET=
-EMAIL_HOST=
-EMAIL_PORT=
-EMAIL_USER=
-EMAIL_PASS=
-DEFAULT_STUDENT_PASSWORD=
-PORT=5000
-Keep .env excluded through .gitignore.
-Local Development
-Backend
-cd server
-npm install
-npm run dev
-Default backend:
-http://localhost:5000
-Frontend
-cd client
-npm install
-npm run dev
-Default Vite development server:
-http://localhost:5173
-Git / GitHub Workflow
-git pull origin main
-git status
-git add .
-git commit -m "Describe your changes"
-git push origin <your-branch>
-Recommended feature branches include:
-feature/student-registration
-feature/late-enrollee
-feature/election-management
-feature/kiosk
-feature/admin
-feature/reports
-Test locally before merging changes into main.
-Testing Strategy
-Student
-- Registration and OTP
-- Registration requirements
-- Selfie capture
-- Normal approval
-- Late enrollee approval/rejection/correction
-- Temporary password
-- Forced password change
-- Profile photo
-- Year-level eligibility
-- Vote submission
-- Duplicate-vote prevention
-Electoral Board
-- Authentication
-- Registration Management
-- Late Enrollee Management
-- Party Lists
-- Candidates
-- Elections
-- Kiosk
-- Voting Monitoring
-- Results & Reports
-- Audit Logs
-- Settings
-Admin
-- Authentication
-- Staff/account management
-- Administrative oversight
-- Reports
-- Audit review
-Team VOTARA
-Team VOTARA is the development team behind the system.
-Suggested responsibility areas: - Frontend Development - Backend
-Development - Database Development - Authentication & Security -
-Election Module Development - Voting & Results - Testing & Quality
-Assurance - UI/UX & Branding - Documentation
-Individual member names and final assignments can be added here.
-Next Development Priorities
+Foundation
+████████████████████ 100%
+
+Authentication & Registration
+████████████████████ 100%
+
+EB Management
+████████████████████ 100%
+
+Voting & Results
+██████████████████░░  90%
+
+Kiosk
+██████░░░░░░░░░░░░░░  30%
+
+Testing & Integration
+██████░░░░░░░░░░░░░░  30%
+
+Overall Development
+████████████████░░░░ ~80%
+
+
+
+Future Development
+The immediate development priorities are:
+
 1. Kiosk Management
-2. Kiosk database/session integration
-3. Student → EB → Election end-to-end testing
-4. Security and permission testing
-5. Automatic audit logging completion
-6. UI/UX final polish
-7. Production deployment testing
-8. Final documentation
-9. VOTARA release
-💙 VOTARA
-Modernizing Student Elections Through a Clean, Secure, and Structured
-Digital Voting Experience.
-Built with React, Node.js, Express, Supabase, PostgreSQL, JWT, bcrypt,
-and Team VOTARA.
+        |
+        v
+2. Kiosk Session Database Integration
+        |
+        v
+3. Full Student-to-Election End-to-End Testing
+        |
+        v
+4. Security and Permission Testing
+        |
+        v
+5. Automatic Audit Logging Completion
+        |
+        v
+6. Final UI/UX Polish
+        |
+        v
+7. Production Deployment Testing
+        |
+        v
+8. Final Documentation
+        |
+        v
+9. VOTARA Release
+
+Team Members
+Add the official team members below:
+Team VOTARA
+
+1. John Rev Dela Rosa
+2. Ryan Tacaisan
+3. Matthew Chin
+4. Jeremie Balondon
+5. Mark Lester Bachoco
+6. Shenea Jane Alamon
+
+VOTARA
+Modernizing Student Elections Through a Clean, Secure, and Structured Digital Voting Experience.
+
+Built with
+React • Vite • Node.js • Express • Supabase • PostgreSQL • JWT • bcryptjs
+Developed by
+Team VOTARA
