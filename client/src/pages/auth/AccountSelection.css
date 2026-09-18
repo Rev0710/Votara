@@ -1,500 +1,531 @@
-/* =========================================
-   PAGE
-========================================= */
+/* =========================================================
+   VOTARA - ADMIN LOGIN / ACCOUNT SELECTION
+   Design-only styles.
+   Keeps the Admin Login panel on the LEFT, matching the
+   Electoral Board page's proportions and visual language.
+   ========================================================= */
+
+* {
+    box-sizing: border-box;
+}
 
 .account-selection-page {
     min-height: 100vh;
-
-    background: #e9efff;
-
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-
-    padding: 20px;
-
+    padding: 24px;
+    background:
+        radial-gradient(circle at 1px 1px, rgba(65, 94, 226, 0.726) 1px, transparent 1px);
+    background-size: 18px 18px;
     font-family: Arial, Helvetica, sans-serif;
 }
 
-
-/* =========================================
-   MAIN CARD
-========================================= */
-
 .account-selection-card {
-    width: 100%;
-    max-width: 1180px;
-
-    min-height: 650px;
-
+    width: min(936px, 100%);
+    min-height: 580px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     background: #ffffff;
-
-    position: relative;
-
-    padding: 40px 55px;
-
     overflow: hidden;
-
-    animation: accountCardEnter 0.55s ease-out both;
+    border-radius: 4px;
 }
 
+/* =========================================================
+   LEFT VOTARA BRAND PANEL
+   ========================================================= */
 
-/* =========================================
-   LOGO
-========================================= */
+.account-selection-left {
+    position: relative;
+    min-height: 0;
+    height: calc(100% - 40px);
+    margin: 20px 0 20px 18px;
+    padding: 38px 42px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    border-radius: 16px;
+    color: #ffffff;
+    background-color: #1c1b35;
+    background-image:
+        radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px);
+    background-size: 22px 22px;
+    border-radius: 16px 16px 16px 16px;
+}
 
 .account-selection-logo {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-
+    gap: 9px;
     width: fit-content;
-    height: 42px;
-
-    color: #0648ff;
+    color: #2457f5;
     text-decoration: none;
-
-    font-size: 30px;
-    font-weight: 600;
-    line-height: 1;
-
-    position: relative;
-    z-index: 5;
-
-    border: none;
-    outline: none;
-    background: transparent;
-
-    padding: 0;
-    margin: 0;
-
-    cursor: pointer;
+    font-size: 24px;
+    font-weight: 500;
 }
-
-
-/* =========================================
-   LOGO MARK
-========================================= */
 
 .account-selection-logo-mark {
     position: relative;
-
-    width: 42px;
-    height: 42px;
-
+    width: 25px;
+    height: 25px;
     display: inline-block;
-    flex-shrink: 0;
 }
 
-
-/* =========================================
-   TOP-LEFT TRIANGLE
-========================================= */
-
-.account-selection-logo-mark .triangle-top {
+.logo-shape {
     position: absolute;
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+    background: #2457f5;
+    transform: rotate(45deg);
+}
 
-    width: 0;
-    height: 0;
-
-    border-left: 11px solid transparent;
-    border-right: 11px solid transparent;
-    border-top: 16px solid #0648ff;
-
-    left: 1px;
+.logo-one {
     top: 1px;
+    left: 2px;
 }
 
-
-/* =========================================
-   TOP-RIGHT CIRCLE
-========================================= */
-
-.account-selection-logo-mark .circle {
-    position: absolute;
-
-    width: 17px;
-    height: 17px;
-
-    background: #0648ff;
-    border-radius: 50%;
-
-    right: 1px;
+.logo-two {
     top: 1px;
+    right: 2px;
 }
 
-
-/* =========================================
-   BOTTOM-LEFT SHAPE
-========================================= */
-
-.account-selection-logo-mark::before {
-    content: "";
-
-    position: absolute;
-
-    width: 21px;
-    height: 21px;
-
-    background: #0648ff;
-    border-radius: 50%;
-
-    left: 0;
+.logo-three {
     bottom: 1px;
-
-    clip-path: polygon(
-        0 0,
-        100% 0,
-        100% 50%,
-        50% 50%,
-        50% 100%,
-        0 100%
-    );
+    left: 2px;
 }
 
-
-/* =========================================
-   BOTTOM-RIGHT TRIANGLE
-========================================= */
-
-.account-selection-logo-mark .triangle-bottom {
-    position: absolute;
-
-    width: 0;
-    height: 0;
-
-    border-left: 11px solid transparent;
-    border-right: 11px solid transparent;
-    border-bottom: 17px solid #0648ff;
-
-    right: 0;
-    bottom: 0;
+.logo-four {
+    bottom: 1px;
+    right: 2px;
 }
 
-
-/* =========================================
-   HOVER
-========================================= */
-
-.account-selection-logo:hover {
-    opacity: 0.8;
+.account-selection-message {
+    max-width: 360px;
+    margin-left: 8px;
+    margin-bottom: 20px;
 }
 
-
-/* =========================================
-   CONTENT
-========================================= */
-
-.account-selection-content {
-    width: 100%;
-
-    max-width: 900px;
-
-    margin: 55px auto 0;
-
-    text-align: center;
-
-    animation: contentEnter 0.65s ease-out 0.1s both;
-}
-
-
-/* =========================================
-   HEADING
-========================================= */
-
-.account-selection-heading {
-    margin-bottom: 40px;
-}
-
-.account-selection-heading h1 {
-    margin: 0 0 12px;
-
-    color: #111111;
-
-    font-size: 36px;
-
+.account-selection-message h2 {
+    margin: 0 0 7px;
+    color: #ffffff;
+    font-size: 23px;
+    line-height: 1.15;
     font-weight: 700;
 }
 
-.account-selection-heading p {
-    margin: 0;
-
-    color: #555555;
-
-    font-size: 15px;
+.account-selection-message p {
+    margin: 2px 0;
+    color: #ffffff;
+    font-size: 12px;
+    line-height: 1.45;
 }
 
+/* Bottom switch-login box */
 
-/* =========================================
-   ACCOUNT CARDS
-========================================= */
-
-.account-cards {
+.account-selection-electoral-box {
+    width: calc(100% - 8px);
+    margin: 0 4px;
+    padding: 16px 18px;
+    min-height: 84px;
     display: flex;
-
-    justify-content: center;
-
-    gap: 35px;
-
-    width: 100%;
-}
-
-
-/* =========================================
-   INDIVIDUAL CARD
-========================================= */
-
-.account-card {
-    width: 390px;
-
-    background: #ffffff;
-
-    border: 1px solid #e2e7f5;
-
-    border-radius: 20px;
-
-    overflow: hidden;
-
-    cursor: pointer;
-
-    text-align: left;
-
-    box-shadow: 0 8px 25px rgba(35, 70, 150, 0.08);
-
-    transition:
-        transform 0.25s ease,
-        box-shadow 0.25s ease,
-        border-color 0.25s ease;
-}
-
-.account-card:hover {
-    transform: translateY(-8px);
-
-    border-color: #8ba5ff;
-
-    box-shadow: 0 18px 35px rgba(35, 70, 150, 0.15);
-}
-
-
-/* =========================================
-   IMAGE
-========================================= */
-
-.account-image-container {
-    width: 100%;
-
-    height: 230px;
-
-    display: flex;
-
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-
-    background: #f7f8ff;
-
-    overflow: hidden;
+    gap: 9px;
+    border-radius: 15px;
+    background: rgba(126, 126, 154, 0.34);
 }
 
-.account-image {
-    width: 210px;
-    height: 210px;
-
-    object-fit: contain;
-
-    transition: transform 0.3s ease;
+.account-selection-electoral-box p {
+    margin: 0;
+    align-self: flex-start;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
 }
 
-.account-card:hover .account-image {
-    transform: scale(1.05);
+.account-selection-electoral-box button {
+    min-width: 145px;
+    height: 28px;
+    padding: 0 15px;
+    border: 0;
+    border-radius: 999px;
+    background: #2457f5;
+    color: #ffffff;
+    font-size: 9px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-
-/* =========================================
-   CARD CONTENT
-========================================= */
-
-.account-card-content {
-    padding: 25px 28px 30px;
+.account-selection-electoral-box button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 12px rgba(36, 87, 245, 0.25);
 }
 
-.account-card-content h2 {
-    margin: 0 0 10px;
+/* =========================================================
+   RIGHT LOGIN PANEL
+   ========================================================= */
 
+.account-selection-right {
+    min-height: 580px;
+    padding: 42px 58px;
+    display: flex;
+    background: #ffffff;
+}
+
+.account-selection-back {
+    position: absolute;
+    color: #222222;
+    font-size: 12px;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.account-selection-form-container {
+    width: 100%;
+    max-width: 330px;
+    margin: 42px auto 0;
+}
+
+.account-selection-form-container h1 {
+    margin: 0 0 13px;
     color: #111111;
-
-    font-size: 24px;
-
+    font-size: 28px;
+    line-height: 1.1;
     font-weight: 700;
 }
 
-.account-card-content p {
-    min-height: 48px;
-
-    margin: 0 0 20px;
-
-    color: #666666;
-
-    font-size: 14px;
-
+.account-selection-subtitle {
+    margin: 0 0 42px;
+    color: #333333;
+    font-size: 11px;
     line-height: 1.5;
 }
 
+.admin-login-info {
+    margin: 11px 0 0;
+    max-width: 255px;
+    color: #4b4b55;
+    font-size: 9px;
+    line-height: 1.45;
+}
 
-/* =========================================
-   CARD BUTTON
-========================================= */
+/* Error */
 
-.account-card-button {
+.account-selection-error {
+    margin-bottom: 16px;
+    padding: 10px 12px;
+    border: 1px solid #e0a0a0;
+    border-radius: 8px;
+    background: #fff5f5;
+    color: #a12626;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.account-selection-form {
     width: 100%;
-
-    height: 42px;
-
-    border: none;
-
-    border-radius: 22px;
-
-    background: #1648ff;
-
-    color: #ffffff;
-
-    font-size: 14px;
-
-    cursor: pointer;
-
-    transition:
-        background 0.2s ease,
-        transform 0.2s ease;
 }
 
-.account-card:hover .account-card-button {
-    background: #0d39d9;
+.account-selection-field {
+    position: relative;
+    width: 100%;
+    margin-bottom: 10px;
 }
 
+.account-selection-field input {
+    width: 100%;
+    height: 35px;
+    padding: 0 68px 0 14px;
+    border: 1px solid #8c9cda;
+    border-radius: 999px;
+    outline: none;
+    background: #ffffff;
+    color: #222222;
+    font-family: inherit;
+    font-size: 10px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
 
-/* =========================================
-   BACK
-========================================= */
+.account-selection-field input::placeholder {
+    color: #555555;
+    opacity: 1;
+}
 
-.account-selection-back {
-    display: inline-block;
+.account-selection-field input:focus {
+    border-color: #2457f5;
+    box-shadow: 0 0 0 2px rgba(36, 87, 245, 0.08);
+}
 
-    margin-top: 30px;
+.account-selection-field input:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
 
-    color: #1648ff;
-
-    text-decoration: none;
-
+.account-selection-show {
+    position: absolute;
+    top: 50%;
+    right: 5px;
+    transform: translateY(-50%);
+    height: 25px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 999px;
+    background: #f2f2f5;
+    color: #333333;
+    font-family: inherit;
     font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
 }
 
-.account-selection-back:hover {
+.account-selection-show:hover {
+    background: #e9e9ee;
+}
+
+.account-selection-login-button {
+    display: block;
+    width: 105px;
+    height: 32px;
+    margin: 20px auto 0;
+    border: 0;
+    border-radius: 999px;
+    background: #2457f5;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.account-selection-login-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(36, 87, 245, 0.22);
+}
+
+.account-selection-login-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* =========================================================
+   REGISTER
+   ========================================================= */
+
+.account-selection-register {
+    margin-top: 31px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: #333333;
+    font-size: 10px;
+    line-height: 1.4;
+    text-align: center;
+}
+
+.account-selection-register a {
+    color: #2457f5;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.account-selection-register a:hover {
     text-decoration: underline;
 }
 
-
-/* =========================================
-   ANIMATIONS
-========================================= */
-
-@keyframes accountCardEnter {
-    from {
-        opacity: 0;
-
-        transform: translateY(25px);
-    }
-
-    to {
-        opacity: 1;
-
-        transform: translateY(0);
-    }
-}
-
-@keyframes logoEnter {
-    from {
-        opacity: 0;
-
-        transform: translateY(-15px);
-    }
-
-    to {
-        opacity: 1;
-
-        transform: translateY(0);
-    }
-}
-
-@keyframes contentEnter {
-    from {
-        opacity: 0;
-
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-
-        transform: translateY(0);
-    }
-}
-
-
-/* =========================================
+/* =========================================================
    RESPONSIVE
-========================================= */
+   ========================================================= */
 
-@media (max-width: 850px) {
+@media (max-width: 760px) {
+    .account-selection-page {
+        padding: 12px;
+    }
 
     .account-selection-card {
-        padding: 30px;
+        grid-template-columns: 1fr;
+        max-width: 520px;
     }
 
-    .account-cards {
-        flex-direction: column;
-
-        align-items: center;
+    .account-selection-left {
+        min-height: 420px;
+        height: auto;
+        margin: 0;
+        border-radius: 16px 16px 0 0;
     }
 
-    .account-card {
-        width: 100%;
-
-        max-width: 390px;
+    .account-selection-right {
+        min-height: 500px;
+        padding: 36px 32px;
     }
 
-    .account-selection-content {
-        margin-top: 40px;
+    .account-selection-form-container {
+        margin-top: 36px;
+    }
+}
+
+@media (max-width: 480px) {
+    .account-selection-left {
+        padding: 30px 26px;
+    }
+
+    .account-selection-right {
+        padding: 32px 24px;
+    }
+
+    .account-selection-message h2 {
+        font-size: 20px;
+    }
+
+    .account-selection-form-container h1 {
+        font-size: 25px;
     }
 }
 
 
-@media (max-width: 500px) {
+/* =========================================================
+   SMOOTH ROUTE TRANSITION
+   The Admin page's Votara panel is the shared visual element.
+   Chrome animates it from the Electoral Board position on the
+   RIGHT to the Admin position on the LEFT.
+   ========================================================= */
 
-    .account-selection-page {
-        padding: 10px;
+.account-selection-left {
+    view-transition-name: votara-brand-panel;
+}
+
+/* Do not animate the whole page/card. The shared panel is the
+   element that moves between the two layouts. */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+}
+
+::view-transition-old(votara-brand-panel),
+::view-transition-new(votara-brand-panel) {
+    animation-duration: 800ms;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    animation-fill-mode: both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(votara-brand-panel),
+    ::view-transition-new(votara-brand-panel) {
+        animation-duration: 1ms;
+    }
+}
+
+
+
+
+/* =========================================================
+   ADMIN LOGIN - INPUT SECTION INTRO / OUT
+   ========================================================= */
+
+/* Page intro: the complete input section gently rises in. */
+.account-selection-form {
+    animation: admin-input-section-intro 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.account-selection-field {
+    animation: admin-input-field-intro 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.account-selection-field:nth-child(1) {
+    animation-delay: 100ms;
+}
+
+.account-selection-field:nth-child(2) {
+    animation-delay: 170ms;
+}
+
+.account-selection-field:nth-child(3) {
+    animation-delay: 240ms;
+}
+
+.account-selection-login-button {
+    animation: admin-input-support-intro 620ms cubic-bezier(0.22, 1, 0.36, 1) 300ms both;
+}
+
+.account-selection-register {
+    animation: admin-input-support-intro 620ms cubic-bezier(0.22, 1, 0.36, 1) 360ms both;
+}
+
+@keyframes admin-input-section-intro {
+    from {
+        opacity: 0;
+        transform: translateY(22px);
     }
 
-    .account-selection-card {
-        padding: 25px 20px;
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes admin-input-field-intro {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
     }
 
-    .account-selection-logo {
-        font-size: 27px;
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes admin-input-support-intro {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
     }
 
-    .account-selection-heading h1 {
-        font-size: 29px;
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Admin -> Electoral Board: input section exits RIGHT. */
+::view-transition-old(admin-login-input-section) {
+    animation: admin-input-section-out 520ms cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+::view-transition-new(admin-login-input-section) {
+    animation: admin-input-section-intro 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes admin-input-section-out {
+    from {
+        opacity: 1;
+        transform: translateX(0);
     }
 
-    .account-selection-heading p {
-        font-size: 14px;
+    to {
+        opacity: 0;
+        transform: translateX(38px);
     }
+}
 
-    .account-image-container {
-        height: 200px;
-    }
-
-    .account-image {
-        width: 175px;
-        height: 175px;
+@media (prefers-reduced-motion: reduce) {
+    .account-selection-form,
+    .account-selection-field,
+    .account-selection-login-button,
+    .account-selection-register,
+    ::view-transition-old(admin-login-input-section),
+    ::view-transition-new(admin-login-input-section) {
+        animation: none !important;
+        transition: none !important;
     }
 }

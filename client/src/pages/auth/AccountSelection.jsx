@@ -1,253 +1,506 @@
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./AccountSelection.css";
 
+const API_BASE_URL =
+    import.meta.env.VITE_API_URL ||
+    "http://localhost:5000/api";
+
 const AccountSelection = () => {
+
     const navigate = useNavigate();
 
-    // =========================================================
-    // GO TO SHARED STAFF LOGIN
-    // =========================================================
+    const goToElectoralBoard = () => {
+        const changePage = () => navigate("/admin-login");
 
-    const handleStaffLogin = () => {
-        navigate("/admin-login");
+        if (document.startViewTransition) {
+            document.startViewTransition(changePage);
+        } else {
+            changePage();
+        }
     };
 
+    const [formData, setFormData] = useState({
+        email: "",
+        password: "",
+        securityCode: "",
+    });
+
+    const [showPassword, setShowPassword] =
+        useState(false);
+
+    const [showSecurityCode, setShowSecurityCode] =
+        useState(false);
+
+    const [loading, setLoading] =
+        useState(false);
+
+    const [error, setError] =
+        useState("");
+
+
     // =========================================================
-    // RENDER
+    // INPUT CHANGE
     // =========================================================
+
+    const handleChange = (event) => {
+
+        const {
+            name,
+            value,
+        } = event.target;
+
+        setFormData((previous) => ({
+            ...previous,
+            [name]: value,
+        }));
+
+        setError("");
+    };
+
+
+    // =========================================================
+    // ADMIN LOGIN
+    // =========================================================
+
+    const handleAdminLogin = async (event) => {
+
+        event.preventDefault();
+
+        setError("");
+
+
+        // =====================================================
+        // REQUIRED FIELDS
+        // =====================================================
+
+        if (
+            !formData.email.trim() ||
+            !formData.password ||
+            !formData.securityCode.trim()
+        ) {
+
+            setError(
+                "Please enter your email, password, and security code."
+            );
+
+            return;
+        }
+
+
+        try {
+
+            setLoading(true);
+
+
+            const response = await fetch(
+                `${API_BASE_URL}/staff-auth/login`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json",
+                    },
+
+                    body: JSON.stringify({
+                        email:
+                            formData.email
+                                .trim()
+                                .toLowerCase(),
+
+                        password:
+                            formData.password,
+
+                        securityCode:
+                            formData.securityCode
+                                .trim(),
+                    }),
+                }
+            );
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                setError(
+                    data.message ||
+                    "Unable to login."
+                );
+
+                return;
+            }
+
+
+            // =================================================
+            // ADMIN ONLY
+            // =================================================
+
+            if (
+                !data.user ||
+                data.user.role !== "admin"
+            ) {
+
+                setError(
+                    "This account is not an Administrator account. Please use the Electoral Board login page."
+                );
+
+                return;
+            }
+
+
+            // =================================================
+            // SAVE ADMIN SESSION
+            // =================================================
+
+            localStorage.setItem(
+                "votaraStaffToken",
+                data.token
+            );
+
+            localStorage.setItem(
+                "votaraStaffUser",
+                JSON.stringify(data.user)
+            );
+
+
+            // =================================================
+            // PASSWORD CHANGE
+            // =================================================
+
+            if (
+                data.user.mustChangePassword
+            ) {
+
+                navigate(
+                    "/staff-change-password",
+                    {
+                        replace: true,
+                    }
+                );
+
+                return;
+            }
+
+
+            // =================================================
+            // ADMIN DASHBOARD
+            // =================================================
+
+            navigate(
+                "/admin-dashboard",
+                {
+                    replace: true,
+                }
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "Admin login error:",
+                error
+            );
+
+            setError(
+                "Unable to connect to the VOTARA server. Please make sure the backend is running."
+            );
+
+        } finally {
+
+            setLoading(false);
+        }
+    };
+
 
     return (
+
         <div className="account-selection-page">
 
-            <div className="account-selection-container">
-
-                {/* =================================================
-                    VOTARA LOGO
-                ================================================= */}
-
-                <Link
-                    to="/"
-                    className="account-selection-logo"
-                >
-                    <span className="account-selection-logo-mark">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </span>
-
-                    <span>
-                        Votara
-                    </span>
-                </Link>
+            <div className="account-selection-card">
 
 
                 {/* =================================================
-                    ACCOUNT SELECTION
+                    LEFT VOTARA PANEL
                 ================================================= */}
 
-                <div className="account-selection-content">
+                <div className="account-selection-left">
 
-                    <div className="account-selection-heading">
 
-                        <h1>
-                            Staff Account Access
-                        </h1>
+                    {/* =================================================
+                        LOGO
+                    ================================================= */}
+
+                    <Link
+                        to="/"
+                        className="account-selection-logo"
+                    >
+
+                        <span className="account-selection-logo-mark">
+
+                            <span className="logo-shape logo-one"></span>
+                            <span className="logo-shape logo-two"></span>
+                            <span className="logo-shape logo-three"></span>
+                            <span className="logo-shape logo-four"></span>
+
+                        </span>
+
+                        <span>
+                            Votara
+                        </span>
+
+                    </Link>
+
+
+                    {/* =================================================
+                        LEFT MESSAGE
+                    ================================================= */}
+
+                    <div className="account-selection-message">
+
+                        <h2>
+                            Secure, transparent elections
+                        </h2>
 
                         <p>
-                            Sign in using your staff account.
-                            VOTARA will automatically identify
-                            whether you are an Administrator or
-                            Electoral Board member.
+                            for BSIT students at Western Institute of Technology.
+                        </p>
+
+                        <p>
+                            Every vote verified, every result trusted.
                         </p>
 
                     </div>
 
 
                     {/* =================================================
-                        ADMIN / STAFF LOGIN CARD
+                        ELECTORAL BOARD LOGIN
                     ================================================= */}
 
-                    <div
-                        className="account-cards"
-                        style={{
-                            display: "flex",
-                            justifyContent: "center"
-                        }}
-                    >
+                    <div className="account-selection-electoral-box">
 
-                        <div
-                            className="account-card"
-                            style={{
-                                width: "100%",
-                                maxWidth: "380px"
-                            }}
+                        <p>
+                            Not a Admin member?
+                        </p>
+
+                        <button
+                            type="button"
+                            onClick={goToElectoralBoard}
+                        >
+                            LOGIN AS ELECTORAL BOARD
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                {/* =================================================
+                    RIGHT ADMIN LOGIN
+                ================================================= */}
+
+                <div className="account-selection-right">
+
+
+                    {/* =================================================
+                        BACK
+                    ================================================= */}
+
+                    <Link
+                        to="/register"
+                        className="account-selection-back"
+                    >
+                        ← back
+                    </Link>
+
+
+                    {/* =================================================
+                        CONTENT
+                    ================================================= */}
+
+                    <div className="account-selection-form-container">
+
+
+                        <h1>
+                            Admin Login!
+                        </h1>
+
+
+                        <p className="account-selection-subtitle">
+                            Login as Admin on Western Institute
+                            of Technology Votara platform.
+                        </p>
+
+
+                        {/* =================================================
+                            ERROR
+                        ================================================= */}
+
+                        {error && (
+
+                            <div className="account-selection-error">
+                                {error}
+                            </div>
+
+                        )}
+
+
+                        {/* =================================================
+                            FORM
+                        ================================================= */}
+
+                        <form
+                            onSubmit={handleAdminLogin}
+                            className="account-selection-form"
+                            style={{ viewTransitionName: "admin-login-input-section" }}
                         >
 
-                            <div className="account-image-container">
 
-                                <img
-                                    src="/src/images/Admin.png"
-                                    alt="Administrator"
-                                    className="account-image"
+                            {/* EMAIL */}
+
+                            <div className="account-selection-field">
+
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={
+                                        formData.email
+                                    }
+                                    onChange={
+                                        handleChange
+                                    }
+                                    placeholder="Email"
+                                    autoComplete="email"
+                                    disabled={loading}
                                 />
 
                             </div>
 
 
-                            <div className="account-card-content">
+                            {/* PASSWORD */}
 
-                                <h2>
-                                    Admin / Staff Login
-                                </h2>
+                            <div className="account-selection-field">
 
-                                <p>
-                                    Sign in using your personal
-                                    email and password. Your login
-                                    code determines whether your
-                                    account is an Administrator or
-                                    Electoral Board account.
-                                </p>
-
-
-                                {/* =================================================
-                                    LOGIN BUTTON
-                                ================================================= */}
+                                <input
+                                    type={
+                                        showPassword
+                                            ? "text"
+                                            : "password"
+                                    }
+                                    name="password"
+                                    value={
+                                        formData.password
+                                    }
+                                    onChange={
+                                        handleChange
+                                    }
+                                    placeholder="Password"
+                                    autoComplete="current-password"
+                                    disabled={loading}
+                                />
 
                                 <button
                                     type="button"
-                                    onClick={
-                                        handleStaffLogin
+                                    className="account-selection-show"
+                                    onClick={() =>
+                                        setShowPassword(
+                                            (previous) =>
+                                                !previous
+                                        )
                                     }
-                                    className="account-card-button"
                                 >
-                                    Login as Admin / Staff →
+                                    {showPassword
+                                        ? "ꗃ"
+                                        : "🔒︎"}
                                 </button>
-
-
-                                {/* =================================================
-                                    ADMIN REGISTRATION
-                                ================================================= */}
-
-                                <div
-                                    style={{
-                                        marginTop: "18px",
-                                        textAlign: "center",
-                                        fontSize: "13px",
-                                        color: "#667085"
-                                    }}
-                                >
-
-                                    <span>
-                                        Need to create an Admin
-                                        account?{" "}
-                                    </span>
-
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            navigate(
-                                                "/admin/register"
-                                            )
-                                        }
-                                        style={{
-                                            border: "none",
-                                            background:
-                                                "transparent",
-                                            color:
-                                                "#1554d1",
-                                            fontWeight:
-                                                "700",
-                                            cursor:
-                                                "pointer",
-                                            padding:
-                                                "0",
-                                            fontSize:
-                                                "13px"
-                                        }}
-                                    >
-                                        Register as Admin
-                                    </button>
-
-                                </div>
 
                             </div>
 
+
+                                
+                            {/* LOGIN CODE */}
+
+                            <div className="account-selection-field">
+
+                                <input
+                                    type={
+                                        showSecurityCode
+                                            ? "text"
+                                            : "password"
+                                    }
+                                    name="securityCode"
+                                    value={
+                                        formData.securityCode
+                                    }
+                                    onChange={
+                                        handleChange
+                                    }
+                                    placeholder="Login Code"
+                                    autoComplete="off"
+                                    disabled={loading}
+                                />
+
+                                <button
+                                    type="button"
+                                    className="account-selection-show"
+                                    onClick={() =>
+                                        setShowSecurityCode(
+                                            (previous) =>
+                                                !previous
+                                        )
+                                    }
+                                >
+                                    {showSecurityCode
+                                        ? "ꗃ"
+                                        : "🔒︎"}
+                                </button>
+
+                            </div>
+
+                            <p className="admin-login-info">
+                                The system automatically identifies
+                                you are Admin
+                                member.
+                            </p>
+
+                            {/* =================================================
+                                LOGIN BUTTON
+                            ================================================= */}
+
+                            <button
+                                type="submit"
+                                className="account-selection-login-button"
+                                disabled={loading}
+                            >
+                                {loading
+                                    ? "Logging in..."
+                                    : "Login"}
+                            </button>
+
+                        </form>
+
+
+
+                        {/* =================================================
+                            REGISTER
+                        ================================================= */}
+
+                        <div className="account-selection-register">
+
+                            <span>
+                                Need to create an Admin account?
+                            </span>
+
+                            <Link to="/admin/register">
+                                Register as Admin
+                            </Link>
+
                         </div>
 
                     </div>
-
-
-                    {/* =================================================
-                        LOGIN CODE INFORMATION
-                    ================================================= */}
-
-                    <div
-                        style={{
-                            maxWidth: "700px",
-                            margin:
-                                "24px auto 0",
-                            padding:
-                                "16px 20px",
-                            background:
-                                "#f5f8ff",
-                            border:
-                                "1px solid #dce7ff",
-                            borderRadius:
-                                "12px",
-                            textAlign:
-                                "center"
-                        }}
-                    >
-
-                        <div
-                            style={{
-                                fontSize:
-                                    "12px",
-                                fontWeight:
-                                    "700",
-                                color:
-                                    "#266EFF",
-                                marginBottom:
-                                    "5px"
-                            }}
-                        >
-                            Secure Staff Access
-                        </div>
-
-                        <p
-                            style={{
-                                margin:
-                                    "0",
-                                fontSize:
-                                    "12px",
-                                lineHeight:
-                                    "1.6",
-                                color:
-                                    "#667085"
-                            }}
-                        >
-                            VOTARA automatically identifies
-                            your staff role from your account
-                            and the login code you provide.
-                            Electoral Board accounts are created
-                            by an Administrator and cannot be
-                            publicly registered.
-                        </p>
-
-                    </div>
-
-
-                    {/* =================================================
-                        BACK TO HOME
-                    ================================================= */}
-
-                    <Link
-                        to="/"
-                        className="account-selection-back"
-                    >
-                        ← Back to Votara
-                    </Link>
 
                 </div>
 

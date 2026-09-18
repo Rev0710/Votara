@@ -1,0 +1,598 @@
+/* =========================================================
+   VOTARA - ELECTORAL BOARD LOGIN
+   Design-only stylesheet.
+   IMPORTANT: The form stays on the LEFT and the Votara
+   branding panel stays on the RIGHT by design.
+   ========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+.staff-login-page {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background:
+        radial-gradient(
+            circle at 1px 1px,
+            rgba(65, 94, 226, 0.726) 1px,
+            transparent 1px
+        );
+    background-size: 18px 18px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.staff-login-container {
+    width: min(936px, 100%);
+    min-height: 580px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: #ffffff;
+    overflow: hidden;
+    border-radius: 4px;
+}
+
+/* =========================================================
+   LEFT - LOGIN FORM
+   ========================================================= */
+
+.staff-login-form-side {
+    min-height: 580px;
+    background: #ffffff;
+    padding: 42px 58px;
+}
+
+.staff-login-form-wrapper {
+    width: 100%;
+    max-width: 330px;
+    margin: 0 auto;
+}
+
+/* Back link */
+
+.staff-login-back {
+    display: inline-block;
+    margin-bottom: 42px;
+    color: #111111;
+    font-size: 12px;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* Heading */
+
+.staff-login-heading {
+    margin-bottom: 31px;
+}
+
+.staff-login-heading h1 {
+    margin: 0 0 13px;
+    color: #111111;
+    font-size: 28px;
+    line-height: 1.1;
+    font-weight: 700;
+}
+
+.staff-login-heading p {
+    margin: 0;
+    max-width: 310px;
+    color: #333333;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+/* Error */
+
+.staff-login-error {
+    margin-bottom: 16px;
+    padding: 10px 12px;
+    border: 1px solid #e0a0a0;
+    border-radius: 8px;
+    background: #fff5f5;
+    color: #a12626;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+/* =========================================================
+   FORM FIELDS
+   ========================================================= */
+
+.staff-login-form {
+    width: 100%;
+}
+
+.staff-login-field {
+    position: relative;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.staff-login-field input {
+    width: 100%;
+    height: 37px;
+    padding: 0 68px 0 14px;
+    border: 1px solid #5275ff;
+    border-radius: 999px;
+    outline: none;
+    background: #ffffff;
+    color: #222222;
+    font-family: inherit;
+    font-size: 10px;
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.staff-login-field input::placeholder {
+    color: #555555;
+    opacity: 1;
+}
+
+.staff-login-field input:focus {
+    border-color: #2457f5;
+    box-shadow: 0 0 0 2px rgba(36, 87, 245, 0.08);
+}
+
+.staff-login-field input:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+/* Show / Hide button */
+
+.staff-login-toggle {
+    position: absolute;
+    top: 50%;
+    right: 5px;
+    transform: translateY(-50%);
+    height: 27px;
+    min-width: 39px;
+    padding: 0 9px;
+    border: 0;
+    border-radius: 999px;
+    background: #f1f1f5;
+    color: #222222;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.staff-login-toggle:hover {
+    background: #e8e8ee;
+}
+
+/* Information below fields */
+
+.staff-login-info {
+    margin: 11px 0 0;
+    max-width: 255px;
+    color: #4b4b55;
+    font-size: 9px;
+    line-height: 1.45;
+}
+
+/* Login button */
+
+.staff-login-button {
+    display: block;
+    width: 112px;
+    height: 33px;
+    margin: 20px auto 0;
+    border: 0;
+    border-radius: 999px;
+    background: #2457f5;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.staff-login-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(36, 87, 245, 0.22);
+}
+
+.staff-login-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Registration */
+
+.staff-login-register {
+    margin-top: 31px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: #333333;
+    font-size: 10px;
+    line-height: 1.4;
+    text-align: center;
+}
+
+.staff-login-register a {
+    color: #2457f5;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.staff-login-register a:hover {
+    text-decoration: underline;
+}
+
+/* =========================================================
+   RIGHT - VOTARA BRAND PANEL
+   ========================================================= */
+
+.staff-login-brand-side {
+    position: relative;
+    min-height: 0;
+    height: calc(100% - 40px);
+    margin: 20px 18px 20px 0;
+    padding: 38px 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    border-radius: 16px;
+    color: #ffffff;
+    background-color: #1c1b35;
+    isolation: isolate;
+}
+
+/* Dot pattern */
+
+.staff-login-dots {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+        radial-gradient(
+            circle,
+            rgba(255, 255, 255, 0.12) 1px,
+            transparent 1px
+        );
+    background-size: 22px 22px;
+}
+
+/* Logo */
+
+.staff-login-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    width: fit-content;
+    color: #2457f5;
+    text-decoration: none;
+    font-size: 24px;
+    font-weight: 500;
+}
+
+.staff-login-logo-mark {
+    position: relative;
+    width: 25px;
+    height: 25px;
+    display: inline-block;
+}
+
+.staff-login-logo .logo-shape {
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+    background: #2457f5;
+    transform: rotate(45deg);
+}
+
+.staff-login-logo .logo-one {
+    top: 1px;
+    left: 2px;
+}
+
+.staff-login-logo .logo-two {
+    top: 1px;
+    right: 2px;
+}
+
+.staff-login-logo .logo-three {
+    bottom: 1px;
+    left: 2px;
+}
+
+.staff-login-logo .logo-four {
+    right: 2px;
+    bottom: 1px;
+}
+
+/* Brand message */
+
+.staff-login-brand-message {
+    width: 100%;
+    max-width: 360px;
+    margin-left: 0;
+    margin-bottom: 20px;
+}
+
+.staff-login-brand-message h2 {
+    margin: 0 0 7px;
+    color: #ffffff;
+    font-size: 23px;
+    line-height: 1.15;
+    font-weight: 700;
+}
+
+.staff-login-brand-message p {
+    margin: 2px 0;
+    color: #ffffff;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.staff-login-brand-message span {
+    display: block;
+    margin-top: 1px;
+    color: #ffffff;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+/* Alternate account box */
+
+.staff-login-alternate {
+    width: 100%;
+    min-height: 84px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    border-radius: 15px;
+    background: rgba(126, 126, 154, 0.34);
+}
+
+.staff-login-alternate p {
+    width: 100%;
+    margin: 0;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.staff-login-alternate a {
+    min-width: 145px;
+    height: 28px;
+    padding: 0 15px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #2457f5;
+    color: #ffffff;
+    font-size: 9px;
+    font-weight: 700;
+    text-decoration: none;
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.staff-login-alternate a:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 12px rgba(36, 87, 245, 0.25);
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 760px) {
+    .staff-login-page {
+        padding: 12px;
+    }
+
+    .staff-login-container {
+        grid-template-columns: 1fr;
+        max-width: 520px;
+    }
+
+    .staff-login-form-side {
+        min-height: 500px;
+        padding: 36px 32px;
+    }
+
+    .staff-login-brand-side {
+        min-height: 420px;
+        height: auto;
+        margin: 0;
+        padding: 30px 26px;
+        border-radius: 0 0 16px 16px;
+    }
+
+    .staff-login-form-wrapper {
+        max-width: 360px;
+    }
+}
+
+@media (max-width: 480px) {
+    .staff-login-form-side {
+        padding: 32px 24px;
+    }
+
+    .staff-login-brand-side {
+        padding: 28px 24px;
+    }
+
+    .staff-login-heading h1 {
+        font-size: 25px;
+    }
+
+    .staff-login-brand-message h2 {
+        font-size: 20px;
+    }
+}
+
+
+/* =========================================================
+   SMOOTH ROUTE TRANSITION
+   The Electoral Board page's Votara panel is the shared
+   visual element. Chrome animates it from the RIGHT to the
+   Admin page's LEFT position.
+   ========================================================= */
+
+.staff-login-brand-side {
+    view-transition-name: votara-brand-panel;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+}
+
+::view-transition-old(votara-brand-panel),
+::view-transition-new(votara-brand-panel) {
+    animation-duration: 800ms;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    animation-fill-mode: both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(votara-brand-panel),
+    ::view-transition-new(votara-brand-panel) {
+        animation-duration: 1ms;
+    }
+}
+
+
+
+
+/* =========================================================
+   ELECTORAL BOARD LOGIN - INPUT SECTION ANIMATION
+   ---------------------------------------------------------
+   Intro:
+     The input section gently rises and fades in when the
+     Electoral Board login page first appears.
+
+   Out:
+     During route navigation, the input section gently moves
+     left and fades away.
+
+   This is isolated to the Electoral Board input section.
+   ========================================================= */
+
+/* Initial page intro */
+.staff-login-form {
+    animation: staff-input-section-intro 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.staff-login-field {
+    animation: staff-input-field-intro 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.staff-login-field:nth-child(1) {
+    animation-delay: 100ms;
+}
+
+.staff-login-field:nth-child(2) {
+    animation-delay: 170ms;
+}
+
+.staff-login-field:nth-child(3) {
+    animation-delay: 240ms;
+}
+
+.staff-login-info {
+    animation: staff-input-support-intro 620ms cubic-bezier(0.22, 1, 0.36, 1) 300ms both;
+}
+
+.staff-login-button {
+    animation: staff-input-support-intro 620ms cubic-bezier(0.22, 1, 0.36, 1) 350ms both;
+}
+
+.staff-login-register {
+    animation: staff-input-support-intro 620ms cubic-bezier(0.22, 1, 0.36, 1) 400ms both;
+}
+
+@keyframes staff-input-section-intro {
+    from {
+        opacity: 0;
+        transform: translateY(22px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes staff-input-field-intro {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes staff-input-support-intro {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Route-level out animation for the named input section.
+   The root itself remains static, so the Votara panel transition
+   is not disturbed. */
+::view-transition-old(staff-login-input-section) {
+    animation: staff-input-section-out 520ms cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+::view-transition-new(staff-login-input-section) {
+    animation: staff-input-section-intro 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes staff-input-section-out {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(-38px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .staff-login-form,
+    .staff-login-field,
+    .staff-login-info,
+    .staff-login-button,
+    .staff-login-register,
+    ::view-transition-old(staff-login-input-section),
+    ::view-transition-new(staff-login-input-section) {
+        animation: none !important;
+        transition: none !important;
+    }
+}
