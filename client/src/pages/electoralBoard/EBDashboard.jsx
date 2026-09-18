@@ -1,6 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import Registrations from "./Registrations";
+import LateEnrolleeManagement from "./LateEnrolleeManagement";
+import PartyListManagement from "./PartyListManagement";
+import ElectionManagement from "./ElectionManagement";
+import CandidateManagement from "./CandidateManagement";
+import VotingMonitoring from "./VotingMonitoring";
+import ResultsReports from "./ResultsReports";
+import AuditLogs from "./AuditLogs";
+import Settings from "./Settings";
 
 // =====================================================
 // ELECTORAL BOARD DASHBOARD
@@ -10,42 +19,56 @@ const EBDashboard = () => {
     const navigate = useNavigate();
 
     const [ebUser, setEbUser] = useState(null);
-    const [activeSection, setActiveSection] = useState("dashboard");
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [activeSection, setActiveSection] =
+        useState("dashboard");
+    const [sidebarOpen, setSidebarOpen] =
+        useState(false);
 
     // =====================================================
     // LOAD EB USER
     // =====================================================
 
     useEffect(() => {
-        const savedUser = localStorage.getItem("votaraEBUser");
+        const savedUser =
+            localStorage.getItem("votaraEBUser");
 
         if (savedUser) {
             try {
                 setEbUser(JSON.parse(savedUser));
             } catch (error) {
-                console.error("Invalid EB user data.");
-                localStorage.removeItem("votaraEBUser");
+                console.error(
+                    "Invalid EB user data."
+                );
+
+                localStorage.removeItem(
+                    "votaraEBUser"
+                );
             }
         }
     }, []);
-
     // =====================================================
     // LOGOUT
     // =====================================================
 
     const handleLogout = () => {
-    // Remove current Staff/EB authentication
-    localStorage.removeItem("votaraStaffToken");
-    localStorage.removeItem("votaraStaffUser");
+        localStorage.removeItem(
+            "votaraStaffToken"
+        );
 
-    // Remove old EB authentication if it still exists
-    localStorage.removeItem("votaraEBToken");
-    localStorage.removeItem("votaraEBUser");
+        localStorage.removeItem(
+            "votaraStaffUser"
+        );
 
-    // Return to Account Selection
-    navigate("/account-selection");
-};
+        localStorage.removeItem(
+            "votaraEBToken"
+        );
+
+        localStorage.removeItem(
+            "votaraEBUser"
+        );
+
+        navigate("/account-selection");
+    };
 
     // =====================================================
     // SIDEBAR NAVIGATION
@@ -70,7 +93,7 @@ const EBDashboard = () => {
         "Electoral Board Account";
 
     // =====================================================
-    // MENU
+    // EB MENU
     // =====================================================
 
     const menuItems = [
@@ -85,6 +108,16 @@ const EBDashboard = () => {
             icon: "▤",
         },
         {
+            id: "lateEnrollees",
+            label: "Late Enrollee Management",
+            icon: "◈",
+        },
+        {
+            id: "partyLists",
+            label: "Party List Management",
+            icon: "▰",
+        },
+        {
             id: "candidates",
             label: "Candidate Management",
             icon: "♙",
@@ -95,23 +128,18 @@ const EBDashboard = () => {
             icon: "◉",
         },
         {
-            id: "qr",
-            label: "QR Verification",
-            icon: "▣",
-        },
-        {
             id: "monitoring",
             label: "Voting Monitoring",
             icon: "◫",
         },
         {
             id: "results",
-            label: "Election Results",
+            label: "Results & Reports",
             icon: "▥",
         },
         {
             id: "logs",
-            label: "Verification Logs",
+            label: "Audit Logs",
             icon: "◌",
         },
     ];
@@ -130,7 +158,9 @@ const EBDashboard = () => {
             {sidebarOpen && (
                 <div
                     style={styles.overlay}
-                    onClick={() => setSidebarOpen(false)}
+                    onClick={() =>
+                        setSidebarOpen(false)
+                    }
                 />
             )}
 
@@ -141,13 +171,16 @@ const EBDashboard = () => {
             <aside
                 style={{
                     ...styles.sidebar,
-                    ...(sidebarOpen ? styles.sidebarMobileOpen : {}),
+                    ...(sidebarOpen
+                        ? styles.sidebarMobileOpen
+                        : {}),
                 }}
             >
 
                 {/* LOGO */}
 
                 <div style={styles.logoContainer}>
+
                     <div style={styles.logoIcon}>
                         V
                     </div>
@@ -161,6 +194,7 @@ const EBDashboard = () => {
                             Electoral Board
                         </div>
                     </div>
+
                 </div>
 
                 {/* NAVIGATION */}
@@ -174,21 +208,30 @@ const EBDashboard = () => {
                     {menuItems.map((item) => (
                         <button
                             key={item.id}
-                            onClick={() => handleNavigation(item.id)}
+                            onClick={() =>
+                                handleNavigation(
+                                    item.id
+                                )
+                            }
                             style={{
                                 ...styles.navItem,
-                                ...(activeSection === item.id
+                                ...(activeSection ===
+                                item.id
                                     ? styles.navItemActive
                                     : {}),
                             }}
                         >
-                            <span style={styles.navIcon}>
+
+                            <span
+                                style={styles.navIcon}
+                            >
                                 {item.icon}
                             </span>
 
                             <span>
                                 {item.label}
                             </span>
+
                         </button>
                     ))}
 
@@ -200,7 +243,9 @@ const EBDashboard = () => {
 
                     <button
                         onClick={() =>
-                            handleNavigation("settings")
+                            handleNavigation(
+                                "settings"
+                            )
                         }
                         style={styles.footerButton}
                     >
@@ -237,29 +282,54 @@ const EBDashboard = () => {
                         <button
                             style={styles.menuButton}
                             onClick={() =>
-                                setSidebarOpen(!sidebarOpen)
+                                setSidebarOpen(
+                                    !sidebarOpen
+                                )
                             }
                         >
                             ☰
                         </button>
 
                         <div>
-                            <h1 style={styles.pageTitle}>
-                                {activeSection === "dashboard"
+
+                            <h1
+                                style={
+                                    styles.pageTitle
+                                }
+                            >
+                                {activeSection ===
+                                "dashboard"
                                     ? "Electoral Board Dashboard"
-                                    : getSectionTitle(activeSection)}
+                                    : getSectionTitle(
+                                          activeSection
+                                      )}
                             </h1>
 
-                            <p style={styles.pageSubtitle}>
-                                Manage and monitor the VOTARA election process.
+                            <p
+                                style={
+                                    styles.pageSubtitle
+                                }
+                            >
+                                Manage and monitor the
+                                VOTARA election process.
                             </p>
+
                         </div>
 
                     </div>
 
-                    <div style={styles.profileArea}>
+                    <div
+                        style={
+                            styles.profileArea
+                        }
+                    >
 
-                        <div style={styles.profileText}>
+                        <div
+                            style={
+                                styles.profileText
+                            }
+                        >
+
                             <strong>
                                 {displayName}
                             </strong>
@@ -267,10 +337,15 @@ const EBDashboard = () => {
                             <span>
                                 {displayEmail}
                             </span>
+
                         </div>
 
-                        <div style={styles.avatar}>
-                            {getInitials(displayName)}
+                        <div
+                            style={styles.avatar}
+                        >
+                            {getInitials(
+                                displayName
+                            )}
                         </div>
 
                     </div>
@@ -287,29 +362,64 @@ const EBDashboard = () => {
                         DASHBOARD OVERVIEW
                     ================================================= */}
 
-                    {activeSection === "dashboard" && (
+                    {activeSection ===
+                        "dashboard" && (
                         <>
-                            <div style={styles.welcomeCard}>
+
+                            <div
+                                style={
+                                    styles.welcomeCard
+                                }
+                            >
 
                                 <div>
-                                    <div style={styles.welcomeLabel}>
+
+                                    <div
+                                        style={
+                                            styles.welcomeLabel
+                                        }
+                                    >
                                         ELECTORAL BOARD
                                     </div>
 
-                                    <h2 style={styles.welcomeTitle}>
-                                        Welcome, {getFirstName(displayName)}!
+                                    <h2
+                                        style={
+                                            styles.welcomeTitle
+                                        }
+                                    >
+                                        Welcome,{" "}
+                                        {getFirstName(
+                                            displayName
+                                        )}
+                                        !
                                     </h2>
 
-                                    <p style={styles.welcomeDescription}>
-                                        This dashboard is your control center
-                                        for student registration, candidate
-                                        verification, election management,
-                                        QR verification, voting monitoring,
-                                        and election results.
+                                    <p
+                                        style={
+                                            styles.welcomeDescription
+                                        }
+                                    >
+                                        This dashboard is
+                                        your control center
+                                        for student
+                                        registration,
+                                        verification,
+                                        late enrollee
+                                        management, party
+                                        lists, candidates,
+                                        election management,
+                                        voting monitoring,
+                                        results, and audit
+                                        logs.
                                     </p>
+
                                 </div>
 
-                                <div style={styles.welcomeIcon}>
+                                <div
+                                    style={
+                                        styles.welcomeIcon
+                                    }
+                                >
                                     V
                                 </div>
 
@@ -319,19 +429,41 @@ const EBDashboard = () => {
                                 ELECTION STATUS
                             ================================================= */}
 
-                            <div style={styles.sectionHeader}>
+                            <div
+                                style={
+                                    styles.sectionHeader
+                                }
+                            >
+
                                 <div>
-                                    <h2 style={styles.sectionTitle}>
+
+                                    <h2
+                                        style={
+                                            styles.sectionTitle
+                                        }
+                                    >
                                         Election Overview
                                     </h2>
 
-                                    <p style={styles.sectionDescription}>
-                                        Current status of the election process.
+                                    <p
+                                        style={
+                                            styles.sectionDescription
+                                        }
+                                    >
+                                        Current status of
+                                        the election
+                                        process.
                                     </p>
+
                                 </div>
+
                             </div>
 
-                            <div style={styles.statsGrid}>
+                            <div
+                                style={
+                                    styles.statsGrid
+                                }
+                            >
 
                                 <StatCard
                                     title="Pending Registrations"
@@ -339,7 +471,9 @@ const EBDashboard = () => {
                                     description="Awaiting EB review"
                                     icon="▤"
                                     onClick={() =>
-                                        handleNavigation("registrations")
+                                        handleNavigation(
+                                            "registrations"
+                                        )
                                     }
                                 />
 
@@ -349,17 +483,21 @@ const EBDashboard = () => {
                                     description="Approved voters"
                                     icon="✓"
                                     onClick={() =>
-                                        handleNavigation("registrations")
+                                        handleNavigation(
+                                            "registrations"
+                                        )
                                     }
                                 />
 
                                 <StatCard
-                                    title="Approved Candidates"
+                                    title="Active Candidates"
                                     value="0"
-                                    description="Eligible candidates"
+                                    description="Candidates prepared for election"
                                     icon="♙"
                                     onClick={() =>
-                                        handleNavigation("candidates")
+                                        handleNavigation(
+                                            "candidates"
+                                        )
                                     }
                                 />
 
@@ -369,7 +507,9 @@ const EBDashboard = () => {
                                     description="Recorded ballots"
                                     icon="◉"
                                     onClick={() =>
-                                        handleNavigation("monitoring")
+                                        handleNavigation(
+                                            "monitoring"
+                                        )
                                     }
                                 />
 
@@ -379,57 +519,100 @@ const EBDashboard = () => {
                                 IMPORTANT EB FUNCTIONS
                             ================================================= */}
 
-                            <div style={styles.sectionHeader}>
+                            <div
+                                style={
+                                    styles.sectionHeader
+                                }
+                            >
+
                                 <div>
-                                    <h2 style={styles.sectionTitle}>
-                                        Electoral Board Operations
+
+                                    <h2
+                                        style={
+                                            styles.sectionTitle
+                                        }
+                                    >
+                                        Electoral Board
+                                        Operations
                                     </h2>
 
-                                    <p style={styles.sectionDescription}>
-                                        Important actions for the election process.
+                                    <p
+                                        style={
+                                            styles.sectionDescription
+                                        }
+                                    >
+                                        Important operations
+                                        for the election
+                                        process.
                                     </p>
+
                                 </div>
+
                             </div>
 
-                            <div style={styles.operationsGrid}>
+                            <div
+                                style={
+                                    styles.operationsGrid
+                                }
+                            >
 
                                 <OperationCard
                                     icon="▤"
                                     title="Registration Management"
-                                    description="Review student applications, verify requirements, and approve or reject registrations."
+                                    description="Review student applications, verify requirements, and manage registration decisions."
                                     buttonText="Manage Registrations"
                                     onClick={() =>
-                                        handleNavigation("registrations")
+                                        handleNavigation(
+                                            "registrations"
+                                        )
+                                    }
+                                />
+
+                                <OperationCard
+                                    icon="◈"
+                                    title="Late Enrollee Management"
+                                    description="Verify late enrollee applications, submitted requirements, enrollment information, and student eligibility."
+                                    buttonText="Manage Late Enrollees"
+                                    onClick={() =>
+                                        handleNavigation(
+                                            "lateEnrollees"
+                                        )
+                                    }
+                                />
+
+                                <OperationCard
+                                    icon="▰"
+                                    title="Party List Management"
+                                    description="Create, edit, review, approve, reject, activate, and deactivate party lists."
+                                    buttonText="Manage Party Lists"
+                                    onClick={() =>
+                                        handleNavigation(
+                                            "partyLists"
+                                        )
                                     }
                                 />
 
                                 <OperationCard
                                     icon="♙"
                                     title="Candidate Management"
-                                    description="Review candidate applications and manage candidate eligibility."
+                                    description="Add candidates, assign positions, manage candidate information, and control candidate status."
                                     buttonText="Manage Candidates"
                                     onClick={() =>
-                                        handleNavigation("candidates")
+                                        handleNavigation(
+                                            "candidates"
+                                        )
                                     }
                                 />
 
                                 <OperationCard
                                     icon="◉"
                                     title="Election Management"
-                                    description="Configure the election date, voting period, and election status."
+                                    description="Configure the election date, voting period, positions, year-level access, and election status."
                                     buttonText="Manage Election"
                                     onClick={() =>
-                                        handleNavigation("election")
-                                    }
-                                />
-
-                                <OperationCard
-                                    icon="▣"
-                                    title="QR Verification"
-                                    description="Verify student identity and process QR codes during on-campus voting."
-                                    buttonText="Open QR Verification"
-                                    onClick={() =>
-                                        handleNavigation("qr")
+                                        handleNavigation(
+                                            "election"
+                                        )
                                     }
                                 />
 
@@ -439,45 +622,68 @@ const EBDashboard = () => {
                                 SECURITY / INTEGRITY
                             ================================================= */}
 
-                            <div style={styles.sectionHeader}>
+                            <div
+                                style={
+                                    styles.sectionHeader
+                                }
+                            >
+
                                 <div>
-                                    <h2 style={styles.sectionTitle}>
+
+                                    <h2
+                                        style={
+                                            styles.sectionTitle
+                                        }
+                                    >
                                         Election Security
                                     </h2>
 
-                                    <p style={styles.sectionDescription}>
-                                        VOTARA election integrity and monitoring.
+                                    <p
+                                        style={
+                                            styles.sectionDescription
+                                        }
+                                    >
+                                        VOTARA election
+                                        integrity and
+                                        accountability.
                                     </p>
+
                                 </div>
+
                             </div>
 
-                            <div style={styles.securityGrid}>
+                            <div
+                                style={
+                                    styles.securityGrid
+                                }
+                            >
 
                                 <SecurityCard
                                     title="Identity Verification"
-                                    description="Student identity must be verified before voting."
+                                    description="Student identity must be verified before the student becomes eligible for the election process."
                                     status="Active"
                                 />
 
                                 <SecurityCard
                                     title="Vote Integrity"
-                                    description="Ballots are recorded using server-authoritative validation and integrity protection."
+                                    description="Ballots are protected using server-authoritative validation and database integrity controls."
                                     status="Active"
                                 />
 
                                 <SecurityCard
                                     title="Audit Trail"
-                                    description="Important election actions are recorded for review and accountability."
+                                    description="Important registration, verification, election, and administrative actions can be recorded for accountability."
                                     status="Active"
                                 />
 
                                 <SecurityCard
                                     title="Role-Based Access"
-                                    description="Electoral Board functions are protected by authenticated access."
+                                    description="Electoral Board functions are protected by authenticated role-based access."
                                     status="Active"
                                 />
 
                             </div>
+
                         </>
                     )}
 
@@ -485,8 +691,9 @@ const EBDashboard = () => {
                         REGISTRATIONS
                     ================================================= */}
 
-                    {activeSection === "registrations" && (
-                            <Registrations
+                    {activeSection ===
+                        "registrations" && (
+                        <Registrations
                             title="Registration Management"
                             icon="▤"
                             description="Review, verify, approve, reject, or request corrections for student registration applications."
@@ -502,151 +709,77 @@ const EBDashboard = () => {
                     )}
 
                     {/* =================================================
-                        CANDIDATES
+                        LATE ENROLLEES
                     ================================================= */}
 
-                    {activeSection === "candidates" && (
-                        <ModulePlaceholder
-                            title="Candidate Management"
-                            icon="♙"
-                            description="Manage and verify candidates who will appear on the official ballot."
-                            steps={[
-                                "View candidate applications",
-                                "Review candidate information",
-                                "Review candidate requirements",
-                                "Approve or reject candidates",
-                                "Manage candidate status",
-                                "Prepare approved candidates for election",
-                            ]}
-                        />
+                    {activeSection ===
+                        "lateEnrollees" && (
+                        <LateEnrolleeManagement />
                     )}
 
                     {/* =================================================
-                        ELECTION
+                        PARTY LIST MANAGEMENT
                     ================================================= */}
 
-                    {activeSection === "election" && (
-                        <ModulePlaceholder
-                            title="Election Management"
-                            icon="◉"
-                            description="Configure and monitor the election schedule and voting period."
-                            steps={[
-                                "Set election date",
-                                "Set voting start and end time",
-                                "Manage election status",
-                                "Prepare ballot positions",
-                                "Configure year-level representatives",
-                                "Open and close voting",
-                            ]}
-                        />
+                    {activeSection === "partyLists" && (
+                        <PartyListManagement />
                     )}
 
                     {/* =================================================
-                        QR VERIFICATION
-                    ================================================= */}
+                            CANDIDATES
+                        ================================================= */}
 
-                    {activeSection === "qr" && (
-                        <ModulePlaceholder
-                            title="QR Verification"
-                            icon="▣"
-                            description="Verify students during on-campus voting using their VOTARA QR code and physical identification."
-                            steps={[
-                                "Select the year level being served",
-                                "Scan student's VOTARA QR code",
-                                "Check QR validity and expiration",
-                                "Verify student's physical ID",
-                                "Confirm identity",
-                                "Record verification",
-                                "Allow eligible student to proceed to kiosk voting",
-                            ]}
-                        />
-                    )}
+                        {activeSection === "candidates" && (
+                            <CandidateManagement />
+                        )}
 
                     {/* =================================================
-                        MONITORING
+                            ELECTION MANAGEMENT
+                        ================================================= */}
+
+                        {activeSection === "election" && (
+                            <ElectionManagement />
+                        )}
+
+                    {/* =================================================
+                       Voting MONITORING
                     ================================================= */}
 
                     {activeSection === "monitoring" && (
-                        <ModulePlaceholder
-                            title="Voting Monitoring"
-                            icon="◫"
-                            description="Monitor election participation without exposing confidential ballot choices."
-                            steps={[
-                                "View total registered voters",
-                                "View verified voters",
-                                "View remote voting activity",
-                                "View kiosk voting activity",
-                                "Monitor voting progress",
-                                "Monitor election status",
-                            ]}
-                        />
+                        <VotingMonitoring />
                     )}
 
                     {/* =================================================
-                        RESULTS
-                    ================================================= */}
+                            RESULTS & REPORTS
+                        ================================================= */}
 
-                    {activeSection === "results" && (
-                        <ModulePlaceholder
-                            title="Election Results"
-                            icon="▥"
-                            description="View election results after voting has been properly closed."
-                            steps={[
-                                "Confirm voting period has ended",
-                                "Verify election status",
-                                "Process valid ballots",
-                                "Calculate candidate totals",
-                                "Display official results",
-                                "Preserve election audit records",
-                            ]}
-                        />
-                    )}
+                        {activeSection === "results" && (
+                            <ResultsReports />
+                        )}
+
+                        {/* =================================================
+                            AUDIT LOGS
+                        ================================================= */}
+
+                        {activeSection === "logs" && (
+                            <AuditLogs />
+                        )}
 
                     {/* =================================================
-                        LOGS
-                    ================================================= */}
+                            SETTINGS
+                        ================================================= */}
 
-                    {activeSection === "logs" && (
-                        <ModulePlaceholder
-                            title="Verification Logs"
-                            icon="◌"
-                            description="Review important Electoral Board verification and election activity."
-                            steps={[
-                                "View identity verification records",
-                                "View QR verification activity",
-                                "View registration review activity",
-                                "View approval and rejection activity",
-                                "Review election-related actions",
-                                "Review tamper-evident audit records",
-                            ]}
-                        />
-                    )}
+                        {activeSection === "settings" && (
+                            <Settings />
+                        )}
 
-                    {/* =================================================
-                        SETTINGS
-                    ================================================= */}
+                            </section>
 
-                    {activeSection === "settings" && (
-                        <ModulePlaceholder
-                            title="Electoral Board Settings"
-                            icon="⚙"
-                            description="Manage Electoral Board account and dashboard settings."
-                            steps={[
-                                "View account information",
-                                "Review account role",
-                                "Manage account security",
-                                "Review login activity",
-                            ]}
-                        />
-                    )}
+                        </main>
 
-                </section>
-
-            </main>
-
-        </div>
-    );
-};
+                    </div>
+                );
+            };
 
 // =====================================================
 // STAT CARD
@@ -664,6 +797,7 @@ const StatCard = ({
             onClick={onClick}
             style={styles.statCard}
         >
+
             <div style={styles.statTop}>
 
                 <div style={styles.statIcon}>
@@ -714,7 +848,11 @@ const OperationCard = ({
                 {title}
             </h3>
 
-            <p style={styles.operationDescription}>
+            <p
+                style={
+                    styles.operationDescription
+                }
+            >
                 {description}
             </p>
 
@@ -723,6 +861,7 @@ const OperationCard = ({
                 style={styles.operationButton}
             >
                 {buttonText}
+
                 <span>→</span>
             </button>
 
@@ -748,17 +887,27 @@ const SecurityCard = ({
                     ✓
                 </div>
 
-                <span style={styles.activeBadge}>
+                <span
+                    style={
+                        styles.activeBadge
+                    }
+                >
                     {status}
                 </span>
 
             </div>
 
-            <h3 style={styles.securityTitle}>
+            <h3
+                style={styles.securityTitle}
+            >
                 {title}
             </h3>
 
-            <p style={styles.securityDescription}>
+            <p
+                style={
+                    styles.securityDescription
+                }
+            >
                 {description}
             </p>
 
@@ -786,59 +935,96 @@ const ModulePlaceholder = ({
                 </div>
 
                 <div>
-                    <h2 style={styles.moduleTitle}>
+
+                    <h2
+                        style={
+                            styles.moduleTitle
+                        }
+                    >
                         {title}
                     </h2>
 
-                    <p style={styles.moduleDescription}>
+                    <p
+                        style={
+                            styles.moduleDescription
+                        }
+                    >
                         {description}
                     </p>
+
                 </div>
 
             </div>
 
             <div style={styles.moduleNotice}>
+
                 <div style={styles.noticeIcon}>
                     !
                 </div>
 
                 <div>
+
                     <strong>
-                        Module ready for integration
+                        Module ready for
+                        integration
                     </strong>
 
                     <p>
-                        The dashboard section is prepared.
-                        The next step is connecting this module
-                        to the VOTARA backend and Supabase.
+                        The dashboard section is
+                        prepared. The next step is
+                        connecting this module to
+                        the VOTARA backend and
+                        Supabase.
                     </p>
+
                 </div>
+
             </div>
 
             <div style={styles.processCard}>
 
-                <h3 style={styles.processTitle}>
+                <h3
+                    style={
+                        styles.processTitle
+                    }
+                >
                     Important Process
                 </h3>
 
-                <div style={styles.processList}>
+                <div
+                    style={
+                        styles.processList
+                    }
+                >
 
-                    {steps.map((step, index) => (
-                        <div
-                            key={index}
-                            style={styles.processItem}
-                        >
+                    {steps.map(
+                        (step, index) => (
+                            <div
+                                key={index}
+                                style={
+                                    styles.processItem
+                                }
+                            >
 
-                            <div style={styles.processNumber}>
-                                {index + 1}
+                                <div
+                                    style={
+                                        styles.processNumber
+                                    }
+                                >
+                                    {index + 1}
+                                </div>
+
+                                <div
+                                    style={
+                                        styles.processText
+                                    }
+                                >
+                                    {step}
+                                </div>
+
                             </div>
-
-                            <div style={styles.processText}>
-                                {step}
-                            </div>
-
-                        </div>
-                    ))}
+                        )
+                    )}
 
                 </div>
 
@@ -861,7 +1047,9 @@ const getInitials = (name) => {
         .filter(Boolean);
 
     if (parts.length === 1) {
-        return parts[0].substring(0, 2).toUpperCase();
+        return parts[0]
+            .substring(0, 2)
+            .toUpperCase();
     }
 
     return (
@@ -873,22 +1061,45 @@ const getInitials = (name) => {
 const getFirstName = (name) => {
     if (!name) return "Member";
 
-    return name.trim().split(/\s+/)[0];
+    return name
+        .trim()
+        .split(/\s+/)[0];
 };
 
 const getSectionTitle = (section) => {
     const titles = {
-        registrations: "Registration Management",
-        candidates: "Candidate Management",
-        election: "Election Management",
-        qr: "QR Verification",
-        monitoring: "Voting Monitoring",
-        results: "Election Results",
-        logs: "Verification Logs",
-        settings: "Settings",
+        registrations:
+            "Registration Management",
+
+        lateEnrollees:
+            "Late Enrollee Management",
+
+        partyLists:
+            "Party List Management",
+
+        candidates:
+            "Candidate Management",
+
+        election:
+            "Election Management",
+
+        monitoring:
+            "Voting Monitoring",
+
+        results:
+            "Results & Reports",
+
+        logs:
+            "Audit Logs",
+
+        settings:
+            "Settings",
     };
 
-    return titles[section] || "Electoral Board Dashboard";
+    return (
+        titles[section] ||
+        "Electoral Board Dashboard"
+    );
 };
 
 // =====================================================
@@ -908,7 +1119,8 @@ const styles = {
     overlay: {
         position: "fixed",
         inset: 0,
-        background: "rgba(0, 0, 0, 0.45)",
+        background:
+            "rgba(0, 0, 0, 0.45)",
         zIndex: 90,
     },
 
@@ -930,7 +1142,8 @@ const styles = {
     },
 
     sidebarMobileOpen: {
-        transform: "translateX(0)",
+        transform:
+            "translateX(0)",
     },
 
     logoContainer: {
@@ -999,7 +1212,8 @@ const styles = {
         textAlign: "left",
         fontSize: "13px",
         fontWeight: "500",
-        transition: "all 0.2s ease",
+        transition:
+            "all 0.2s ease",
     },
 
     navItemActive: {
@@ -1040,7 +1254,8 @@ const styles = {
     logoutButton: {
         width: "100%",
         border: "none",
-        background: "rgba(255,255,255,0.05)",
+        background:
+            "rgba(255,255,255,0.05)",
         color: "#ffb0b0",
         padding: "12px",
         display: "flex",
@@ -1055,17 +1270,20 @@ const styles = {
 
     main: {
         marginLeft: "270px",
-        width: "calc(100% - 270px)",
+        width:
+            "calc(100% - 270px)",
         minHeight: "100vh",
     },
 
     topbar: {
         height: "90px",
         background: "#ffffff",
-        borderBottom: "1px solid #e7ebf2",
+        borderBottom:
+            "1px solid #e7ebf2",
         display: "flex",
         alignItems: "center",
-        justifyContent: "space-between",
+        justifyContent:
+            "space-between",
         padding: "0 34px",
         position: "sticky",
         top: 0,
@@ -1115,10 +1333,6 @@ const styles = {
         gap: "2px",
     },
 
-    profileTextStrong: {
-        fontSize: "13px",
-    },
-
     avatar: {
         width: "42px",
         height: "42px",
@@ -1146,7 +1360,8 @@ const styles = {
         color: "#ffffff",
         display: "flex",
         alignItems: "center",
-        justifyContent: "space-between",
+        justifyContent:
+            "space-between",
         overflow: "hidden",
         position: "relative",
         marginBottom: "32px",
@@ -1178,7 +1393,8 @@ const styles = {
         width: "110px",
         height: "110px",
         borderRadius: "28px",
-        background: "rgba(255,255,255,0.08)",
+        background:
+            "rgba(255,255,255,0.08)",
         border:
             "1px solid rgba(255,255,255,0.12)",
         display: "flex",
@@ -1191,7 +1407,8 @@ const styles = {
 
     sectionHeader: {
         display: "flex",
-        justifyContent: "space-between",
+        justifyContent:
+            "space-between",
         alignItems: "center",
         marginBottom: "17px",
     },
@@ -1218,13 +1435,15 @@ const styles = {
     },
 
     statCard: {
-        border: "1px solid #e7ebf2",
+        border:
+            "1px solid #e7ebf2",
         background: "#ffffff",
         borderRadius: "15px",
         padding: "20px",
         textAlign: "left",
         cursor: "pointer",
-        transition: "transform 0.2s ease",
+        transition:
+            "transform 0.2s ease",
         boxShadow:
             "0 5px 18px rgba(24, 39, 75, 0.04)",
     },
@@ -1232,7 +1451,8 @@ const styles = {
     statTop: {
         display: "flex",
         alignItems: "center",
-        justifyContent: "space-between",
+        justifyContent:
+            "space-between",
     },
 
     statIcon: {
@@ -1276,14 +1496,15 @@ const styles = {
     operationsGrid: {
         display: "grid",
         gridTemplateColumns:
-            "repeat(4, minmax(0, 1fr))",
+            "repeat(3, minmax(0, 1fr))",
         gap: "16px",
         marginBottom: "34px",
     },
 
     operationCard: {
         background: "#ffffff",
-        border: "1px solid #e7ebf2",
+        border:
+            "1px solid #e7ebf2",
         borderRadius: "15px",
         padding: "21px",
         boxShadow:
@@ -1330,7 +1551,8 @@ const styles = {
         fontWeight: "700",
         display: "flex",
         alignItems: "center",
-        justifyContent: "space-between",
+        justifyContent:
+            "space-between",
     },
 
     securityGrid: {
@@ -1342,14 +1564,16 @@ const styles = {
 
     securityCard: {
         background: "#ffffff",
-        border: "1px solid #e7ebf2",
+        border:
+            "1px solid #e7ebf2",
         borderRadius: "15px",
         padding: "19px",
     },
 
     securityTop: {
         display: "flex",
-        justifyContent: "space-between",
+        justifyContent:
+            "space-between",
         alignItems: "center",
     },
 
@@ -1389,7 +1613,8 @@ const styles = {
 
     moduleHeader: {
         background: "#ffffff",
-        border: "1px solid #e7ebf2",
+        border:
+            "1px solid #e7ebf2",
         borderRadius: "17px",
         padding: "25px",
         display: "flex",
@@ -1428,7 +1653,8 @@ const styles = {
         gap: "14px",
         alignItems: "flex-start",
         background: "#fff8e7",
-        border: "1px solid #f4e0a8",
+        border:
+            "1px solid #f4e0a8",
         borderRadius: "14px",
         padding: "18px",
         marginBottom: "20px",
@@ -1449,7 +1675,8 @@ const styles = {
 
     processCard: {
         background: "#ffffff",
-        border: "1px solid #e7ebf2",
+        border:
+            "1px solid #e7ebf2",
         borderRadius: "17px",
         padding: "25px",
     },
@@ -1499,11 +1726,21 @@ const styles = {
 // RESPONSIVE STYLE
 // =====================================================
 
-if (typeof document !== "undefined") {
-    const styleId = "votara-eb-dashboard-responsive";
+if (
+    typeof document !== "undefined"
+) {
+    const styleId =
+        "votara-eb-dashboard-responsive";
 
-    if (!document.getElementById(styleId)) {
-        const style = document.createElement("style");
+    if (
+        !document.getElementById(
+            styleId
+        )
+    ) {
+        const style =
+            document.createElement(
+                "style"
+            );
 
         style.id = styleId;
 
@@ -1521,19 +1758,17 @@ if (typeof document !== "undefined") {
             }
 
             @media (max-width: 900px) {
-                /* Dashboard adapts naturally through the browser width */
+                /* Dashboard adapts naturally */
             }
 
             @media (max-width: 768px) {
-
-                .votara-eb-dashboard-mobile {
-                    display: block;
-                }
-
+                /* Mobile dashboard */
             }
         `;
 
-        document.head.appendChild(style);
+        document.head.appendChild(
+            style
+        );
     }
 }
 

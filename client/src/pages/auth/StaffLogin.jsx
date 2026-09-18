@@ -252,7 +252,7 @@ if (
                         ========================================= */}
 
                         <Link
-                            to="/register"
+                            to="/account-selection"
                             className="staff-login-back"
                         >
                             ← back
@@ -317,7 +317,7 @@ if (
                                     onChange={
                                         handleChange
                                     }
-                                    placeholder="Email"
+                                    placeholder="EMAIL"
                                     autoComplete="email"
                                     disabled={loading}
                                 />
@@ -360,8 +360,8 @@ if (
                                     className="staff-login-toggle"
                                 >
                                     {showPassword
-                                        ? "ꗃ"
-                                        : "🔒︎"}
+                                        ? "Hide"
+                                        : "Show"}
                                 </button>
 
                             </div>
@@ -402,8 +402,8 @@ if (
                                     className="staff-login-toggle"
                                 >
                                     {showSecurityCode
-                                        ? "ꗃ"
-                                        : "🔒︎"}
+                                        ? "Hide"
+                                        : "Show"}
                                 </button>
 
                             </div>
@@ -415,7 +415,7 @@ if (
 
                             <p className="staff-login-info">
                                 The system automatically identifies
-                                you are Electoral
+                                whether you are an Admin or Electoral
                                 Board member.
                             </p>
 
@@ -532,7 +532,7 @@ if (
                     <div className="staff-login-alternate">
 
                         <p>
-                            Not a Electoral Board member?
+                            Not a staff member?
                         </p>
 
                         <Link

@@ -12,6 +12,19 @@ const StudentLogin = () => {
     const [loading, setLoading] = useState(false);
 
     // =====================================================
+    // HELPER
+    // Get a value whether the backend returns it directly
+    // or inside data.student.
+    // =====================================================
+
+    const getStudentFlag = (data, flagName) => {
+        return (
+            data?.[flagName] === true ||
+            data?.student?.[flagName] === true
+        );
+    };
+
+    // =====================================================
     // LOGIN
     // =====================================================
 
@@ -20,8 +33,13 @@ const StudentLogin = () => {
 
         setError("");
 
-        // Basic validation
-        if (!studentId.trim() || !password) {
+        // =================================================
+        // VALIDATION
+        // =================================================
+
+        const normalizedStudentId = studentId.trim();
+
+        if (!normalizedStudentId || !password) {
             setError(
                 "Please enter your Student ID and password."
             );
@@ -36,95 +54,199 @@ const StudentLogin = () => {
             // =================================================
 
             const data = await studentLogin(
-                studentId.trim(),
+                normalizedStudentId,
                 password
             );
 
-            console.log("✅ Login successful:", data);
+            console.log(
+                "✅ Student login successful."
+            );
 
             // =================================================
-            // SAVE JWT TOKEN
+            // CHECK TOKEN
             // =================================================
 
-            if (data.token) {
-                localStorage.setItem(
-                    "votaraToken",
-                    data.token
+            if (!data?.token) {
+                throw new Error(
+                    "Login was successful, but no authentication token was returned."
                 );
-
-                console.log("🔐 JWT token saved.");
             }
+
+            // =================================================
+            // CLEAR OLD ROLE TOKENS
+            //
+            // This prevents an old Admin/EB session from
+            // interfering with the Student session.
+            // =================================================
+
+            localStorage.removeItem(
+                "votaraStaffToken"
+            );
+
+            localStorage.removeItem(
+                "votaraEBToken"
+            );
+
+            localStorage.removeItem(
+                "votaraStaffUser"
+            );
+
+            localStorage.removeItem(
+                "votaraEBUser"
+            );
+
+            // =================================================
+            // SAVE STUDENT JWT
+            // =================================================
+
+            localStorage.setItem(
+                "votaraToken",
+                data.token
+            );
+
+            console.log(
+                "🔐 Student JWT saved."
+            );
 
             // =================================================
             // SAVE STUDENT INFORMATION
             // =================================================
 
             if (data.student) {
+
                 localStorage.setItem(
                     "votaraStudent",
                     JSON.stringify(data.student)
                 );
+
             }
 
             // =================================================
-            // STEP 1
-            // CHANGE TEMPORARY PASSWORD
+            // DETERMINE ONBOARDING STATUS
+            //
+            // Supports both:
+            //
+            // data.mustChangePassword
+            //
+            // OR
+            //
+            // data.student.mustChangePassword
             // =================================================
 
-            if (data.mustChangePassword === true) {
+            const mustChangePassword =
+                getStudentFlag(
+                    data,
+                    "mustChangePassword"
+                );
+
+            const needsProfilePicture =
+                getStudentFlag(
+                    data,
+                    "needsProfilePicture"
+                );
+
+            // =================================================
+            // DEBUG INFORMATION
+            // =================================================
+
+            console.log(
+                "🔐 Must change password:",
+                mustChangePassword
+            );
+
+            console.log(
+                "📸 Needs profile picture:",
+                needsProfilePicture
+            );
+
+            // =================================================
+            // STEP 1
+            // FORCE PASSWORD CHANGE
+            // =================================================
+
+            if (mustChangePassword) {
 
                 console.log(
                     "🔐 Student must change temporary password."
                 );
 
-                navigate("/change-password", {
-                    replace: true,
-                });
+                navigate(
+                    "/change-password",
+                    {
+                        replace: true,
+                    }
+                );
 
                 return;
             }
 
             // =================================================
             // STEP 2
-            // PROFILE PICTURE
+            // FORCE PROFILE PHOTO
             // =================================================
 
-            if (data.needsProfilePicture === true) {
+            if (needsProfilePicture) {
 
                 console.log(
-                    "📸 Student must upload a profile picture."
+                    "📸 Student must take/upload profile picture."
                 );
 
-                navigate("/upload-profile-picture", {
-                    replace: true,
-                });
+                navigate(
+                    "/upload-profile-picture",
+                    {
+                        replace: true,
+                    }
+                );
 
                 return;
             }
 
             // =================================================
             // STEP 3
-            // EVERYTHING COMPLETE
+            // ONBOARDING COMPLETE
             // =================================================
 
             console.log(
                 "🎉 Student onboarding complete."
             );
 
-            navigate("/student-dashboard", {
-                replace: true,
-            });
+            navigate(
+                "/student-dashboard",
+                {
+                    replace: true,
+                }
+            );
 
         } catch (error) {
 
             console.error(
-                "❌ Login error:",
+                "❌ Student login error:",
                 error
             );
 
+            // =================================================
+            // CLEANUP TOKEN IF LOGIN FAILED AFTER TOKEN SET
+            // =================================================
+
+            localStorage.removeItem(
+                "votaraToken"
+            );
+
+            localStorage.removeItem(
+                "votaraStudent"
+            );
+
+            // =================================================
+            // FRIENDLY ERROR MESSAGE
+            // =================================================
+
+            const errorMessage =
+                error?.response?.data?.message ||
+                error?.message ||
+                "Unable to login. Please check your Student ID and password.";
+
             setError(
-                error.message ||
-                "Unable to login. Please try again."
+                errorMessage
             );
 
         } finally {
@@ -132,6 +254,21 @@ const StudentLogin = () => {
             setLoading(false);
 
         }
+    };
+
+    // =====================================================
+    // BACK TO LANDING PAGE
+    // =====================================================
+
+    const handleBack = () => {
+
+        if (loading) {
+            return;
+        }
+
+        navigate(
+            "/"
+        );
     };
 
     return (
@@ -145,13 +282,16 @@ const StudentLogin = () => {
 
                 <div className="student-login-left">
 
-                    {/* VOTARA LOGO */}
+                    {/* =================================================
+                        VOTARA LOGO
+                    ================================================= */}
 
                     <button
                         type="button"
                         className="student-login-logo"
-                        onClick={() => navigate("/")}
+                        onClick={handleBack}
                         aria-label="Go to VOTARA home"
+                        disabled={loading}
                     >
 
                         <span className="student-login-logo-mark">
@@ -172,7 +312,7 @@ const StudentLogin = () => {
 
 
                     {/* =================================================
-                        REGISTER VECTOR ILLUSTRATION
+                        LOGIN ILLUSTRATION
                     ================================================= */}
 
                     <div className="student-login-visual">
@@ -196,9 +336,18 @@ const StudentLogin = () => {
 
                     <div className="student-login-form-container">
 
+                        {/* =================================================
+                            TITLE
+                        ================================================= */}
+
                         <h1>
                             Welcome !
                         </h1>
+
+
+                        {/* =================================================
+                            DESCRIPTION
+                        ================================================= */}
 
                         <p className="login-description">
                             Login as a voter on Western Institute
@@ -214,7 +363,10 @@ const StudentLogin = () => {
                         ================================================= */}
 
                         {error && (
-                            <div className="login-error">
+                            <div
+                                className="login-error"
+                                role="alert"
+                            >
                                 {error}
                             </div>
                         )}
@@ -224,54 +376,76 @@ const StudentLogin = () => {
                             LOGIN FORM
                         ================================================= */}
 
-                        <form onSubmit={handleSubmit}>
+                        <form
+                            onSubmit={handleSubmit}
+                            noValidate={false}
+                        >
 
-                            {/* STUDENT ID */}
+                            {/* =================================================
+                                STUDENT ID
+                            ================================================= */}
 
                             <div className="login-input-group">
 
                                 <input
                                     id="studentId"
+                                    name="studentId"
                                     type="text"
                                     value={studentId}
-                                    onChange={(e) =>
+                                    onChange={(e) => {
                                         setStudentId(
                                             e.target.value
-                                        )
-                                    }
+                                        );
+
+                                        if (error) {
+                                            setError("");
+                                        }
+                                    }}
                                     placeholder="Student ID No."
                                     maxLength={5}
+                                    inputMode="numeric"
+                                    autoComplete="username"
                                     required
                                     disabled={loading}
-                                    autoComplete="username"
+                                    aria-label="Student ID"
                                 />
 
                             </div>
 
 
-                            {/* PASSWORD */}
+                            {/* =================================================
+                                PASSWORD
+                            ================================================= */}
 
                             <div className="login-input-group">
 
                                 <input
                                     id="password"
+                                    name="password"
                                     type="password"
                                     value={password}
-                                    onChange={(e) =>
+                                    onChange={(e) => {
                                         setPassword(
                                             e.target.value
-                                        )
-                                    }
+                                        );
+
+                                        if (error) {
+                                            setError("");
+                                        }
+                                    }}
                                     placeholder="Password"
+                                    autoComplete="current-password"
                                     required
                                     disabled={loading}
-                                    autoComplete="current-password"
+                                    aria-label="Password"
                                 />
 
                             </div>
 
 
-                            {/* LOGIN BUTTON */}
+                            {/* =================================================
+                                LOGIN BUTTON
+                            ================================================= */}
 
                             <button
                                 type="submit"
@@ -280,16 +454,19 @@ const StudentLogin = () => {
                             >
                                 {loading
                                     ? "Logging in..."
-                                    : "Login"}
+                                    : "Login"
+                                }
                             </button>
 
 
-                            {/* BACK BUTTON */}
+                            {/* =================================================
+                                BACK BUTTON
+                            ================================================= */}
 
                             <button
                                 type="button"
                                 className="student-login-back-button"
-                                onClick={() => navigate("/")}
+                                onClick={handleBack}
                                 disabled={loading}
                             >
                                 ← Back

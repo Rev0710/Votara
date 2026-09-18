@@ -8,6 +8,7 @@ const {
     verifyRegistrationOTP,
     resendRegistrationOTP,
     submitRegistration,
+    getRegistrationStatus,
 
     // Electoral Board
     getEBDashboardStats,
@@ -76,6 +77,30 @@ router.post(
 router.post(
     "/submit",
     submitRegistration
+);
+
+
+// -----------------------------------------------------
+// GET REGISTRATION STATUS
+//
+// Used by the student to check:
+//
+// pending_review
+// needs_correction
+// approved
+// rejected
+// cancelled
+//
+// Example:
+//
+// GET /api/registration/status
+//     ?studentId=99991
+//     &email=student@gmail.com
+// -----------------------------------------------------
+
+router.get(
+    "/status",
+    getRegistrationStatus
 );
 
 

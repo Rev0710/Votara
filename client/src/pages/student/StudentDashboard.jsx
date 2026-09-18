@@ -1,7 +1,19 @@
-// StudentDashboard.jsx
-
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./StudentDashboard.css";
+
+import {
+    getActiveElection,
+    getElectionConfiguration,
+} from "../../services/electionService";
+
+import {
+    getApprovedCandidatesForElection,
+} from "../../services/candidateService";
+
+import {
+    submitVote,
+    checkVoteStatus,
+} from "../../services/votingService";
 
 // =====================================================
 // LOGO
@@ -17,1247 +29,1888 @@ import dashboardIcon from "/src/images/homealt.png";
 import voteIcon from "/src/images/votealt.png";
 import guidelinesIcon from "/src/images/guidelinesalt.png";
 import settingsIcon from "/src/images/settingalt.png";
-import qrCodeIcon from "/src/images/Qr-code.png";
 
 import dashboardActiveIcon from "/src/images/home.png";
 import voteActiveIcon from "/src/images/review.png";
 import guidelinesActiveIcon from "/src/images/guidelines.png";
 import settingsActiveIcon from "/src/images/setting.png";
-import qrCodeActiveIcon from "/src/images/Qrcodealt.png";
+
+// =====================================================
+// HELPERS
+// =====================================================
+
+const normalizeYearLevel = (value) => {
+    if (!value) return "";
+
+    const text = String(value).trim().toLowerCase();
+
+    if (text.includes("1st") || text === "1") return "1st Year";
+    if (text.includes("2nd") || text === "2") return "2nd Year";
+    if (text.includes("3rd") || text === "3") return "3rd Year";
+    if (text.includes("4th") || text === "4") return "4th Year";
+
+    return String(value).trim();
+};
+
+const extractArray = (response, key) => {
+    if (Array.isArray(response)) return response;
+    if (Array.isArray(response?.[key])) return response[key];
+    if (Array.isArray(response?.data)) return response.data;
+    if (Array.isArray(response?.data?.[key])) return response.data[key];
+
+    return [];
+};
+
+const extractElection = (response) => {
+    if (!response) return null;
+
+    if (response.election) return response.election;
+    if (response.data?.election) return response.data.election;
+
+    if (response.data && !Array.isArray(response.data)) {
+        return response.data;
+    }
+
+    return response;
+};
+
+const formatDate = (value) => {
+    if (!value) return "Date to be announced";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    return date.toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+    });
+};
+
+const formatTime = (value) => {
+    if (!value) return "";
+
+    const [hourText, minute = "00"] = String(value).split(":");
+    const hour = Number(hourText);
+
+    if (Number.isNaN(hour)) {
+        return value;
+    }
+
+    return `${hour % 12 || 12}:${minute} ${
+        hour >= 12 ? "PM" : "AM"
+    }`;
+};
 
 // =====================================================
 // COMPONENT
 // =====================================================
 
 function StudentDashboard() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [activeMenu, setActiveMenu] = useState("dashboard");
+    // =================================================
+    // GENERAL DASHBOARD STATE
+    // =================================================
 
-  const [student, setStudent] = useState(null);
-  const [loading, setLoading] = useState(true);
+    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [activeMenu, setActiveMenu] = useState("dashboard");
 
-  const [searchValue, setSearchValue] = useState("");
-  const [calendarTab, setCalendarTab] = useState("Today");
-  const [selectedFaq, setSelectedFaq] = useState(null);
+    const [student, setStudent] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-  // Vote states
-  const [selectedVotes, setSelectedVotes] = useState({
-    president: null,
-    vicePresident: null,
-  });
+    const [searchValue, setSearchValue] = useState("");
+    const [calendarTab, setCalendarTab] = useState("Today");
+    const [selectedFaq, setSelectedFaq] = useState(null);
 
-  // Settings states
-  const [settingsModal, setSettingsModal] = useState(null);
+    const [settingsModal, setSettingsModal] = useState(null);
 
-  // =====================================================
-  // FETCH STUDENT
-  // =====================================================
+    // =================================================
+    // ELECTION / VOTING STATE
+    // =================================================
 
-  useEffect(() => {
-    const fetchStudent = async () => {
-      try {
-        const token = localStorage.getItem("votaraToken");
+    const [election, setElection] = useState(null);
+    const [positions, setPositions] = useState([]);
+    const [candidates, setCandidates] = useState([]);
 
-        const response = await fetch(
-          "http://localhost:5000/api/auth/me",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+    // Stores selections as:
+    // { positionId: candidateId }
+    const [selectedVotes, setSelectedVotes] = useState({});
+
+    const [electionLoading, setElectionLoading] = useState(true);
+    const [electionError, setElectionError] = useState("");
+
+    const [voteLoading, setVoteLoading] = useState(false);
+    const [hasVoted, setHasVoted] = useState(false);
+
+    // =================================================
+    // FETCH CURRENT STUDENT
+    // =================================================
+
+    useEffect(() => {
+        const fetchStudent = async () => {
+            try {
+                const token = localStorage.getItem("votaraToken");
+
+                if (!token) {
+                    setStudent(null);
+                    return;
+                }
+
+                const response = await fetch(
+                    "http://localhost:5000/api/auth/me",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+
+                const data = await response.json();
+
+                if (data.success && data.student) {
+                    setStudent(data.student);
+                }
+            } catch (error) {
+                console.error(
+                    "Unable to load student:",
+                    error
+                );
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchStudent();
+    }, []);
+
+    // =================================================
+    // LOAD ACTIVE ELECTION
+    // =================================================
+
+    useEffect(() => {
+        let mounted = true;
+
+        const loadElectionData = async () => {
+            try {
+                setElectionLoading(true);
+                setElectionError("");
+
+                const electionResponse =
+                    await getActiveElection();
+
+                if (!mounted) return;
+
+                const activeElection =
+                    extractElection(electionResponse);
+
+                if (!activeElection?.id) {
+                    setElection(null);
+                    setPositions([]);
+                    setCandidates([]);
+                    setHasVoted(false);
+                    return;
+                }
+
+                setElection(activeElection);
+
+                const [
+                    configurationResponse,
+                    candidateResponse,
+                ] = await Promise.all([
+                    getElectionConfiguration(
+                        activeElection.id
+                    ),
+                    getApprovedCandidatesForElection(
+                        activeElection.id
+                    ),
+                ]);
+
+                if (!mounted) return;
+
+                setPositions(
+                    extractArray(
+                        configurationResponse,
+                        "positions"
+                    )
+                );
+
+                setCandidates(
+                    extractArray(
+                        candidateResponse,
+                        "candidates"
+                    )
+                );
+
+                // Check whether this student already voted.
+                try {
+                    const voteStatus =
+                        await checkVoteStatus(
+                            activeElection.id
+                        );
+
+                    if (!mounted) return;
+
+                    setHasVoted(
+                        Boolean(
+                            voteStatus?.hasVoted ??
+                            voteStatus?.data?.hasVoted
+                        )
+                    );
+                } catch (statusError) {
+                    console.warn(
+                        "Unable to check vote status:",
+                        statusError
+                    );
+                }
+            } catch (error) {
+                console.error(
+                    "Unable to load election data:",
+                    error
+                );
+
+                if (!mounted) return;
+
+                setElection(null);
+                setPositions([]);
+                setCandidates([]);
+
+                setElectionError(
+                    error?.response?.data?.message ||
+                    error?.message ||
+                    "Unable to load the current election."
+                );
+            } finally {
+                if (mounted) {
+                    setElectionLoading(false);
+                }
+            }
+        };
+
+        loadElectionData();
+
+        return () => {
+            mounted = false;
+        };
+    }, []);
+
+    // =================================================
+    // STUDENT INFORMATION
+    // =================================================
+
+    const fullName =
+        student?.fullName || "Student";
+
+    const firstName =
+        fullName.split(" ")[0] || "Student";
+
+    const initials = fullName
+        .split(" ")
+        .filter(Boolean)
+        .map((name) => name.charAt(0))
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
+
+    const profilePicture =
+        student?.profilePicture;
+
+    const studentYearLevel =
+        normalizeYearLevel(
+            student?.yearLevel
         );
 
-        const data = await response.json();
+    // =================================================
+    // SIDEBAR ITEMS
+    // =================================================
 
-        if (data.success && data.student) {
-          setStudent(data.student);
-        }
-      } catch (error) {
-        console.error("Unable to load student:", error);
-      } finally {
-        setLoading(false);
-      }
+    const sidebarItems = [
+        {
+            id: "dashboard",
+            label: "Dashboard",
+            icon: dashboardIcon,
+            activeIcon: dashboardActiveIcon,
+        },
+        {
+            id: "vote",
+            label: "Vote",
+            icon: voteIcon,
+            activeIcon: voteActiveIcon,
+        },
+        {
+            id: "guidelines",
+            label: "VOTERS GUIDELINES",
+            icon: guidelinesIcon,
+            activeIcon: guidelinesActiveIcon,
+        },
+        {
+            id: "settings",
+            label: "Settings",
+            icon: settingsIcon,
+            activeIcon: settingsActiveIcon,
+        },
+    ];
+
+    // =================================================
+    // ELIGIBLE POSITIONS
+    // =================================================
+
+    const eligiblePositions = useMemo(() => {
+        return positions
+            .filter(
+                (position) =>
+                    position?.is_active !== false
+            )
+            .filter((position) => {
+                const access =
+                    position?.position_year_levels ||
+                    position?.positionYearLevels ||
+                    position?.year_levels ||
+                    position?.yearLevels ||
+                    [];
+
+                // No configured year-level access means
+                // the position is available to everyone.
+                if (
+                    !Array.isArray(access) ||
+                    access.length === 0
+                ) {
+                    return true;
+                }
+
+                return access.some((item) => {
+                    const year =
+                        typeof item === "string"
+                            ? item
+                            : item?.year_level ||
+                              item?.yearLevel;
+
+                    return (
+                        normalizeYearLevel(
+                            year
+                        ) === studentYearLevel
+                    );
+                });
+            })
+            .sort(
+                (a, b) =>
+                    Number(
+                        a.display_order || 0
+                    ) -
+                    Number(
+                        b.display_order || 0
+                    )
+            );
+    }, [
+        positions,
+        studentYearLevel,
+    ]);
+
+    // =================================================
+    // GROUP APPROVED CANDIDATES BY POSITION
+    // =================================================
+
+    const candidatesByPosition = useMemo(() => {
+        const grouped = {};
+
+        eligiblePositions.forEach(
+            (position) => {
+                grouped[position.id] =
+                    candidates.filter(
+                        (candidate) =>
+                            candidate.position_id ===
+                                position.id &&
+                            candidate.approval_status ===
+                                "approved" &&
+                            candidate.is_active !==
+                                false
+                    );
+            }
+        );
+
+        return grouped;
+    }, [
+        candidates,
+        eligiblePositions,
+    ]);
+
+    // =================================================
+    // MENU CHANGE
+    // =================================================
+
+    const handleMenuClick = (id) => {
+        if (id === activeMenu) return;
+
+        setActiveMenu(id);
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+        });
     };
 
-    fetchStudent();
-  }, []);
+    // =================================================
+    // FAQ
+    // =================================================
 
-  // =====================================================
-  // SIDEBAR ITEMS
-  // =====================================================
+    const faqs = [
+        {
+            question: "QUESTION 1",
+            answer:
+                "You can participate in the election by selecting the Vote section from the sidebar.",
+        },
+        {
+            question: "QUESTION 2",
+            answer:
+                "Review the available candidates and select your preferred candidate before submitting your vote.",
+        },
+        {
+            question: "QUESTION 3",
+            answer:
+                "Once your vote is submitted and confirmed, your participation will be recorded.",
+        },
+    ];
 
-  const sidebarItems = [
-    {
-      id: "dashboard",
-      label: "Dashboard",
-      icon: dashboardIcon,
-      activeIcon: dashboardActiveIcon,
-    },
-    {
-      id: "vote",
-      label: "Vote",
-      icon: voteIcon,
-      activeIcon: voteActiveIcon,
-    },
-    {
-      id: "guidelines",
-      label: "VOTERS GUIDELINES",
-      icon: guidelinesIcon,
-      activeIcon: guidelinesActiveIcon,
-    },
-    {
-      id: "settings",
-      label: "Settings",
-      icon: settingsIcon,
-      activeIcon: settingsActiveIcon,
-    },
-    {
-      id: "qr",
-      label: "QR Code",
-      icon: qrCodeIcon,
-      activeIcon: qrCodeActiveIcon,
-    },
-  ];
+    // =================================================
+    // SETTINGS
+    // =================================================
 
-  // =====================================================
-  // STUDENT INFORMATION
-  // =====================================================
+    const settingsItems = [
+        "Edit profile",
+        "Change password",
+        "Report an Issue",
+        "About us",
+        "Terms of Service",
+        "Privacy Policy",
+        "Contact us",
+    ];
 
-  const fullName = student?.fullName || "Arthur Morgan";
+    // =================================================
+    // SELECT CANDIDATE
+    // =================================================
 
-  const firstName = fullName.split(" ")[0] || "Arthur";
+    const handleVoteSelect = (
+        positionId,
+        candidateId
+    ) => {
+        if (hasVoted || voteLoading) {
+            return;
+        }
 
-  const initials = fullName
-    .split(" ")
-    .map((name) => name.charAt(0))
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+        setSelectedVotes((previous) => ({
+            ...previous,
+            [positionId]: candidateId,
+        }));
+    };
 
-  const profilePicture = student?.profilePicture;
+    // =================================================
+    // VIEW CANDIDATE DETAILS
+    // =================================================
 
-  // =====================================================
-  // MENU CHANGE
-  // =====================================================
+    const handleViewDetails = (candidate) => {
+        const name =
+            candidate?.full_name ||
+            candidate?.fullName ||
+            candidate?.name ||
+            "Candidate";
 
-  const handleMenuClick = (id) => {
-    if (id === activeMenu) return;
+        alert(`Candidate: ${name}`);
+    };
 
-    setActiveMenu(id);
+    // =================================================
+    // SUBMIT VOTE
+    // =================================================
 
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
+    const handleSubmitVotes = async () => {
+        if (!election?.id) {
+            alert(
+                "There is no active election available."
+            );
+            return;
+        }
 
-  // =====================================================
-  // FAQ
-  // =====================================================
+        if (hasVoted) {
+            alert(
+                "You have already submitted your vote for this election."
+            );
+            return;
+        }
 
-  const faqs = [
-    {
-      question: "QUESTION 1",
-      answer:
-        "You can participate in the election by selecting the Vote section from the sidebar.",
-    },
-    {
-      question: "QUESTION 2",
-      answer:
-        "Review the available candidates and select your preferred candidate before submitting your vote.",
-    },
-    {
-      question: "QUESTION 3",
-      answer:
-        "Once your vote is submitted and confirmed, your participation will be recorded.",
-    },
-  ];
+        // Required positions must have a selection.
+        const requiredPositions =
+            eligiblePositions.filter(
+                (position) =>
+                    position.is_required !== false
+            );
 
-  // =====================================================
-  // CANDIDATES
-  // =====================================================
+        const missingPositions =
+            requiredPositions.filter(
+                (position) =>
+                    !selectedVotes[
+                        position.id
+                    ]
+            );
 
-  const candidates = {
-    president: [
-      {
-        id: "president-felisha",
-        name: "Felisha",
-        image: "/src/images/candidate.png",
-      },
-      {
-        id: "president-roberto",
-        name: "Roberto",
-        image: "/src/images/candidate.png",
-      },
-      {
-        id: "president-mary",
-        name: "Mary",
-        image: "/src/images/candidate.png",
-      },
-    ],
+        if (missingPositions.length > 0) {
+            const missingNames =
+                missingPositions
+                    .map(
+                        (position) =>
+                            position.name
+                    )
+                    .join(", ");
 
-    vicePresident: [
-      {
-        id: "vice-felisha",
-        name: "Felisha",
-        image: "/src/images/candidate.png",
-      },
-      {
-        id: "vice-roberto",
-        name: "Roberto",
-        image: "/src/images/candidate.png",
-      },
-      {
-        id: "vice-mary",
-        name: "Mary",
-        image: "/src/images/candidate.png",
-      },
-    ],
-  };
+            alert(
+                `Please select a candidate for: ${missingNames}`
+            );
 
-  // =====================================================
-  // VOTE FUNCTIONS
-  // =====================================================
+            return;
+        }
 
-  const handleVoteSelect = (position, candidateId) => {
-    setSelectedVotes((previous) => ({
-      ...previous,
-      [position]: candidateId,
-    }));
-  };
-
-  const handleViewDetails = (candidate) => {
-    alert(`Candidate: ${candidate.name}`);
-  };
-
-  const handleSubmitVotes = () => {
-    if (
-      !selectedVotes.president ||
-      !selectedVotes.vicePresident
-    ) {
-      alert(
-        "Please select one candidate for President and Vice President."
-      );
-
-      return;
-    }
-
-    alert(
-      "Your votes have been selected successfully. You can now connect this button to your vote submission API."
-    );
-
-    console.log("Selected votes:", selectedVotes);
-  };
-
-  // =====================================================
-  // LOGOUT
-  // =====================================================
-
-  const handleLogout = () => {
-    localStorage.removeItem("votaraToken");
-    localStorage.removeItem("student");
-
-    window.location.href = "/";
-  };
-
-  // =====================================================
-  // SETTINGS
-  // =====================================================
-
-  const settingsItems = [
-    "Edit profile",
-    "Change password",
-    "Report an Issue",
-    "About us",
-    "Terms of Service",
-    "Privacy Policy",
-    "Contact us",
-  ];
-
-  // =====================================================
-  // SEARCH
-  // =====================================================
-
-  const handleSearch = () => {
-    if (!searchValue.trim()) return;
-
-    const query = searchValue.toLowerCase();
-
-    if (query.includes("vote")) {
-      handleMenuClick("vote");
-    } else if (
-      query.includes("guideline") ||
-      query.includes("voter")
-    ) {
-      handleMenuClick("guidelines");
-    } else if (query.includes("setting")) {
-      handleMenuClick("settings");
-    } else if (query.includes("qr")) {
-      handleMenuClick("qr");
-    } else if (query.includes("dashboard")) {
-      handleMenuClick("dashboard");
-    } else {
-      alert(`No page found for "${searchValue}"`);
-    }
-
-    setSearchValue("");
-  };
-
-  // =====================================================
-  // LOADING
-  // =====================================================
-
-  if (loading) {
-    return (
-      <div className="dashboard-loading">
-        Loading...
-      </div>
-    );
-  }
-
-  // =====================================================
-  // RENDER VOTE CARDS
-  // =====================================================
-
-  const renderCandidateCards = (
-    position,
-    candidateList
-  ) =>
-    candidateList.map((candidate) => {
-      const isSelected =
-        selectedVotes[position] === candidate.id;
-
-      return (
-        <article
-          className={`candidate-card ${
-            isSelected ? "candidate-selected" : ""
-          }`}
-          key={candidate.id}
-        >
-          <div className="candidate-card-top">
-            <h3>{candidate.name}</h3>
-
-            <div className="candidate-image-container">
-              <img
-                src={candidate.image}
-                alt={candidate.name}
-                className="candidate-image"
-              />
-            </div>
-          </div>
-
-          <div className="candidate-card-bottom">
-            <button
-              type="button"
-              className="candidate-vote-button"
-              onClick={() =>
-                handleVoteSelect(
-                  position,
-                  candidate.id
+        // Convert the UI state into the backend
+        // format expected by /api/voting/submit.
+        const selections =
+            eligiblePositions
+                .filter(
+                    (position) =>
+                        selectedVotes[
+                            position.id
+                        ]
                 )
-              }
-            >
-              {isSelected
-                ? "SELECTED"
-                : "VOTE"}
-            </button>
+                .map((position) => ({
+                    positionId:
+                        position.id,
+                    candidateId:
+                        selectedVotes[
+                            position.id
+                        ],
+                }));
 
-            <button
-              type="button"
-              className="candidate-details-button"
-              onClick={() =>
-                handleViewDetails(candidate)
-              }
-            >
-              View Details
-            </button>
-          </div>
-        </article>
-      );
-    });
+        if (selections.length === 0) {
+            alert(
+                "Please select your candidates before submitting."
+            );
+            return;
+        }
 
-  // =====================================================
-  // MAIN PAGE CONTENT
-  // =====================================================
+        try {
+            setVoteLoading(true);
 
-  const renderMainContent = () => {
+            const result =
+                await submitVote(
+                    election.id,
+                    selections
+                );
+
+            if (!result?.success) {
+                throw new Error(
+                    result?.message ||
+                    "Unable to submit your vote."
+                );
+            }
+
+            setHasVoted(true);
+            setSelectedVotes({});
+
+            alert(
+                result?.message ||
+                "Your vote has been successfully recorded."
+            );
+
+            console.log(
+                "Vote submission result:",
+                result
+            );
+        } catch (error) {
+            console.error(
+                "Vote submission error:",
+                error
+            );
+
+            alert(
+                error?.response?.data?.message ||
+                error?.message ||
+                "Unable to submit your vote. Please try again."
+            );
+        } finally {
+            setVoteLoading(false);
+        }
+    };
+
     // =================================================
-    // DASHBOARD
+    // LOGOUT
     // =================================================
 
-    if (activeMenu === "dashboard") {
-      return (
-        <main
-          className="dashboard-main content-page-animation"
-        >
-          <section className="welcome-section">
-            <h1>
-              Hello <strong>{firstName}!</strong>
-            </h1>
+    const handleLogout = () => {
+        localStorage.removeItem(
+            "votaraToken"
+        );
 
-            <p>Welcome to Votara</p>
-          </section>
+        localStorage.removeItem(
+            "votaraStudent"
+        );
 
-          <div className="dashboard-grid">
-            {/* LEFT COLUMN */}
+        window.location.href = "/";
+    };
 
-            <div className="left-column">
-              <section className="election-card main-hover-card">
-                <h2>Ongoing Elections</h2>
+    // =================================================
+    // SEARCH
+    // =================================================
 
-                <h3>
-                  President Student
-                  <br />
-                  Council
-                </h3>
+    const handleSearch = () => {
+        const query =
+            searchValue.trim().toLowerCase();
 
-                <button
-                  type="button"
-                  className="vote-button"
-                  onClick={() =>
-                    handleMenuClick("vote")
-                  }
-                >
-                  Vote
-                </button>
-              </section>
+        if (!query) return;
 
-              <section className="results-card main-hover-card">
-                <div className="results-header">
-                  <h3>Live Results</h3>
+        if (query.includes("vote")) {
+            handleMenuClick("vote");
+        } else if (
+            query.includes("guideline") ||
+            query.includes("voter")
+        ) {
+            handleMenuClick(
+                "guidelines"
+            );
+        } else if (
+            query.includes("setting")
+        ) {
+            handleMenuClick(
+                "settings"
+            );
+        } else if (
+            query.includes("dashboard")
+        ) {
+            handleMenuClick(
+                "dashboard"
+            );
+        } else {
+            alert(
+                `No page found for "${searchValue}"`
+            );
+        }
+
+        setSearchValue("");
+    };
+
+    // =================================================
+    // RENDER CANDIDATE CARDS
+    // =================================================
+
+    const renderCandidateCards = (
+        position
+    ) => {
+        const candidateList =
+            candidatesByPosition[
+                position.id
+            ] || [];
+
+        if (
+            candidateList.length ===
+            0
+        ) {
+            return (
+                <div className="candidate-empty">
+                    No approved candidates are
+                    currently available for this
+                    position.
                 </div>
+            );
+        }
 
-                <div className="position-title">
-                  <button
-                    type="button"
-                    className="chart-arrow"
-                  >
-                    ‹
-                  </button>
+        return candidateList.map(
+            (candidate) => {
+                const candidateName =
+                    candidate.full_name ||
+                    candidate.fullName ||
+                    candidate.name ||
+                    "Candidate";
 
-                  <h2>
-                    President Student Council
-                  </h2>
+                const candidateImage =
+                    candidate.profile_picture ||
+                    candidate.profilePicture ||
+                    "/src/images/candidate.png";
 
-                  <button
-                    type="button"
-                    className="chart-arrow"
-                  >
-                    ›
-                  </button>
-                </div>
+                const isSelected =
+                    selectedVotes[
+                        position.id
+                    ] === candidate.id;
 
-                <div className="chart">
-                  <div className="chart-row">
-                    <span className="candidate-name">
-                      Ryan
-                    </span>
+                return (
+                    <article
+                        className={`candidate-card ${
+                            isSelected
+                                ? "candidate-selected"
+                                : ""
+                        }`}
+                        key={candidate.id}
+                    >
+                        <div className="candidate-card-top">
+                            <h3>
+                                {candidateName}
+                            </h3>
 
-                    <div className="bar-area">
-                      <div
-                        className="bar ryan"
-                        style={{
-                          width: "35%",
-                        }}
-                      />
+                            <div className="candidate-image-container">
+                                <img
+                                    src={
+                                        candidateImage
+                                    }
+                                    alt={
+                                        candidateName
+                                    }
+                                    className="candidate-image"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="candidate-card-bottom">
+                            <button
+                                type="button"
+                                className="candidate-vote-button"
+                                disabled={
+                                    hasVoted ||
+                                    voteLoading
+                                }
+                                onClick={() =>
+                                    handleVoteSelect(
+                                        position.id,
+                                        candidate.id
+                                    )
+                                }
+                            >
+                                {isSelected
+                                    ? "SELECTED"
+                                    : "VOTE"}
+                            </button>
+
+                            <button
+                                type="button"
+                                className="candidate-details-button"
+                                onClick={() =>
+                                    handleViewDetails(
+                                        candidate
+                                    )
+                                }
+                            >
+                                View Details
+                            </button>
+                        </div>
+                    </article>
+                );
+            }
+        );
+    };
+
+    // =================================================
+    // LOADING SCREEN
+    // =================================================
+
+    if (loading) {
+        return (
+            <div className="dashboard-loading">
+                Loading...
+            </div>
+        );
+    }
+
+    // =================================================
+    // MAIN PAGE CONTENT
+    // =================================================
+
+    const renderMainContent = () => {
+        // =================================================
+        // DASHBOARD
+        // =================================================
+
+        if (
+            activeMenu ===
+            "dashboard"
+        ) {
+            return (
+                <main className="dashboard-main content-page-animation">
+                    <section className="welcome-section">
+                        <h1>
+                            Hello{" "}
+                            <strong>
+                                {firstName}!
+                            </strong>
+                        </h1>
+
+                        <p>
+                            Welcome to Votara
+                        </p>
+                    </section>
+
+                    <div className="dashboard-grid">
+                        {/* LEFT COLUMN */}
+
+                        <div className="left-column">
+                            <section className="election-card main-hover-card">
+                                <h2>
+                                    Ongoing Elections
+                                </h2>
+
+                                <h3>
+                                    {election?.title ||
+                                        "No active election"}
+                                </h3>
+
+                                {election && (
+                                    <p>
+                                        {formatDate(
+                                            election.election_date
+                                        )}
+
+                                        <br />
+
+                                        {formatTime(
+                                            election.start_time
+                                        )}
+
+                                        {election.end_time
+                                            ? ` - ${formatTime(
+                                                  election.end_time
+                                              )}`
+                                            : ""}
+                                    </p>
+                                )}
+
+                                <button
+                                    type="button"
+                                    className="vote-button"
+                                    disabled={
+                                        !election ||
+                                        hasVoted
+                                    }
+                                    onClick={() =>
+                                        handleMenuClick(
+                                            "vote"
+                                        )
+                                    }
+                                >
+                                    {hasVoted
+                                        ? "VOTE SUBMITTED"
+                                        : "Vote"}
+                                </button>
+                            </section>
+
+                            <section className="results-card main-hover-card">
+                                <div className="results-header">
+                                    <h3>
+                                        Election Information
+                                    </h3>
+                                </div>
+
+                                <div className="position-title">
+                                    <h2>
+                                        {election?.title ||
+                                            "No active election"}
+                                    </h2>
+                                </div>
+
+                                <div className="chart">
+                                    <div className="chart-row">
+                                        <span className="candidate-name">
+                                            Election
+                                        </span>
+
+                                        <div className="bar-area">
+                                            <div
+                                                className="bar"
+                                                style={{
+                                                    width:
+                                                        election
+                                                            ? "100%"
+                                                            : "0%",
+                                                }}
+                                            />
+                                        </div>
+
+                                        <span className="vote-count">
+                                            {election?.status ||
+                                                "Inactive"}
+                                        </span>
+                                    </div>
+
+                                    <div className="chart-row">
+                                        <span className="candidate-name">
+                                            Your Status
+                                        </span>
+
+                                        <div className="bar-area">
+                                            <div
+                                                className="bar"
+                                                style={{
+                                                    width:
+                                                        hasVoted
+                                                            ? "100%"
+                                                            : "50%",
+                                                }}
+                                            />
+                                        </div>
+
+                                        <span className="vote-count">
+                                            {hasVoted
+                                                ? "Voted"
+                                                : "Not Voted"}
+                                        </span>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section className="announcement-card main-hover-card">
+                                <h3>
+                                    Announcements
+                                </h3>
+
+                                <p>
+                                    {election
+                                        ? `Voting schedule: ${formatDate(
+                                              election.election_date
+                                          )}`
+                                        : "No active election announcement."}
+                                </p>
+
+                                <div className="announcement-line" />
+
+                                <button type="button">
+                                    See all ›
+                                </button>
+                            </section>
+
+                            <section className="faq-section">
+                                <h3>
+                                    FAQs
+                                </h3>
+
+                                <div className="faq-list">
+                                    {faqs.map(
+                                        (
+                                            faq,
+                                            index
+                                        ) => (
+                                            <div
+                                                className="faq-item"
+                                                key={
+                                                    index
+                                                }
+                                            >
+                                                <button
+                                                    type="button"
+                                                    className={`faq-button ${
+                                                        selectedFaq ===
+                                                        index
+                                                            ? "faq-active"
+                                                            : ""
+                                                    }`}
+                                                    onClick={() =>
+                                                        setSelectedFaq(
+                                                            selectedFaq ===
+                                                                index
+                                                                ? null
+                                                                : index
+                                                        )
+                                                    }
+                                                >
+                                                    {
+                                                        faq.question
+                                                    }
+                                                </button>
+
+                                                {selectedFaq ===
+                                                    index && (
+                                                    <div className="faq-answer">
+                                                        {
+                                                            faq.answer
+                                                        }
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )
+                                    )}
+                                </div>
+                            </section>
+                        </div>
+
+                        {/* RIGHT COLUMN */}
+
+                        <div className="right-column">
+                            <section className="calendar-card main-hover-card">
+                                <h3>
+                                    Calendar
+                                </h3>
+
+                                <div className="calendar-tabs">
+                                    {[
+                                        "Today",
+                                        "Next week",
+                                        "This Month",
+                                    ].map(
+                                        (
+                                            tab
+                                        ) => (
+                                            <button
+                                                type="button"
+                                                key={
+                                                    tab
+                                                }
+                                                className={
+                                                    calendarTab ===
+                                                    tab
+                                                        ? "selected-tab"
+                                                        : ""
+                                                }
+                                                onClick={() =>
+                                                    setCalendarTab(
+                                                        tab
+                                                    )
+                                                }
+                                            >
+                                                {
+                                                    tab
+                                                }
+                                            </button>
+                                        )
+                                    )}
+                                </div>
+
+                                <div className="time-row">
+                                    <span>
+                                        7:00
+                                    </span>
+                                    <span>
+                                        8:00
+                                    </span>
+                                    <span>
+                                        9:00
+                                    </span>
+                                    <span>
+                                        10:00
+                                    </span>
+                                    <span>
+                                        11:00
+                                    </span>
+                                </div>
+
+                                <div className="calendar-line" />
+
+                                <div className="election-time">
+                                    <div className="date">
+                                        <strong>
+                                            {election
+                                                ? new Date(
+                                                      election.election_date
+                                                  ).toLocaleDateString(
+                                                      "en-US",
+                                                      {
+                                                          month: "long",
+                                                      }
+                                                  )
+                                                : "Election"}
+                                        </strong>
+
+                                        <span>
+                                            {election
+                                                ? new Date(
+                                                      election.election_date
+                                                  ).getDate()
+                                                : "--"}
+                                        </span>
+                                    </div>
+
+                                    <div className="countdown">
+                                        <small>
+                                            {election?.title ||
+                                                "No active election"}
+                                        </small>
+
+                                        <div className="countdown-values">
+                                            <span>
+                                                <strong>
+                                                    {election
+                                                        ? "OPEN"
+                                                        : "--"}
+                                                </strong>
+                                                STATUS
+                                            </span>
+
+                                            <span>
+                                                <strong>
+                                                    {studentYearLevel ||
+                                                        "--"}
+                                                </strong>
+                                                YEAR
+                                            </span>
+
+                                            <span>
+                                                <strong>
+                                                    {
+                                                        eligiblePositions.length
+                                                    }
+                                                </strong>
+                                                POSITIONS
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section className="process-card main-hover-card">
+                                <h3>
+                                    Voting Process
+                                </h3>
+
+                                <div className="process-list">
+                                    {[
+                                        [
+                                            "1",
+                                            "Verify identity",
+                                            "Confirm your student ID to unlock ballots",
+                                        ],
+                                        [
+                                            "2",
+                                            "Review candidates",
+                                            "Check profiles and platforms before choosing",
+                                        ],
+                                        [
+                                            "3",
+                                            "Cast your vote",
+                                            "Select one candidate per position",
+                                        ],
+                                        [
+                                            "4",
+                                            "Submit and confirm",
+                                            "Get a confirmation once your vote is recorded",
+                                        ],
+                                    ].map(
+                                        (
+                                            [
+                                                number,
+                                                title,
+                                                description,
+                                            ],
+                                            index
+                                        ) => (
+                                            <div
+                                                className={`process-item ${
+                                                    index ===
+                                                    3
+                                                        ? "last"
+                                                        : ""
+                                                }`}
+                                                key={
+                                                    number
+                                                }
+                                            >
+                                                <div className="process-number">
+                                                    {
+                                                        number
+                                                    }
+                                                </div>
+
+                                                <div className="process-text">
+                                                    <strong>
+                                                        {
+                                                            title
+                                                        }
+                                                    </strong>
+
+                                                    <span>
+                                                        {
+                                                            description
+                                                        }
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )
+                                    )}
+                                </div>
+                            </section>
+                        </div>
                     </div>
+                </main>
+            );
+        }
 
-                    <span className="vote-count">
-                      16
-                    </span>
-                  </div>
+        // =================================================
+        // VOTE PAGE
+        // =================================================
 
-                  <div className="chart-row">
-                    <span className="candidate-name">
-                      Rev
-                    </span>
+        if (
+            activeMenu ===
+            "vote"
+        ) {
+            return (
+                <main className="vote-main content-page-animation">
+                    <section className="vote-heading">
+                        <h1>
+                            {hasVoted
+                                ? "Your Vote Has Been Submitted"
+                                : "You May Now Cast Your Votes!"}
+                        </h1>
 
-                    <div className="bar-area">
-                      <div
-                        className="bar rev"
-                        style={{
-                          width: "88%",
-                        }}
-                      />
-                    </div>
+                        {election && (
+                            <p>
+                                {
+                                    election.title
+                                }
+                            </p>
+                        )}
 
-                    <span className="vote-count">
-                      45
-                    </span>
-                  </div>
+                        {studentYearLevel && (
+                            <p>
+                                Year Level:{" "}
+                                <strong>
+                                    {
+                                        studentYearLevel
+                                    }
+                                </strong>
+                            </p>
+                        )}
+                    </section>
 
-                  <div className="chart-row">
-                    <span className="candidate-name">
-                      Mathew
-                    </span>
+                    {electionLoading && (
+                        <section className="vote-position-section">
+                            <div className="vote-position-heading">
+                                <h2>
+                                    Loading election...
+                                </h2>
+                            </div>
+                        </section>
+                    )}
 
-                    <div className="bar-area">
-                      <div
-                        className="bar mathew"
-                        style={{
-                          width: "52%",
-                        }}
-                      />
-                    </div>
+                    {!electionLoading &&
+                        electionError && (
+                            <section className="vote-position-section">
+                                <div className="vote-position-heading">
+                                    <h2>
+                                        Unable to load election
+                                    </h2>
 
-                    <span className="vote-count">
-                      27
-                    </span>
-                  </div>
+                                    <p>
+                                        {
+                                            electionError
+                                        }
+                                    </p>
+                                </div>
+                            </section>
+                        )}
 
-                  <div className="chart-row">
-                    <span className="candidate-name">
-                      Mark
-                    </span>
+                    {!electionLoading &&
+                        !electionError &&
+                        !election && (
+                            <section className="vote-position-section">
+                                <div className="vote-position-heading">
+                                    <h2>
+                                        No Active Election
+                                    </h2>
 
-                    <div className="bar-area">
-                      <div
-                        className="bar mark"
-                        style={{
-                          width: "74%",
-                        }}
-                      />
-                    </div>
+                                    <p>
+                                        There is currently
+                                        no published active
+                                        election available.
+                                    </p>
+                                </div>
+                            </section>
+                        )}
 
-                    <span className="vote-count">
-                      38
-                    </span>
-                  </div>
-                </div>
-              </section>
+                    {election &&
+                        eligiblePositions.length ===
+                            0 && (
+                            <section className="vote-position-section">
+                                <div className="vote-position-heading">
+                                    <h2>
+                                        No Available Positions
+                                    </h2>
 
-              <section className="announcement-card main-hover-card">
-                <h3>Announcements</h3>
+                                    <p>
+                                        There are currently
+                                        no voting positions
+                                        available for your
+                                        year level.
+                                    </p>
+                                </div>
+                            </section>
+                        )}
 
-                <p>
-                  Polls close in before 4pm
-                </p>
+                    {election &&
+                        eligiblePositions.map(
+                            (position) => (
+                                <section
+                                    className="vote-position-section"
+                                    key={
+                                        position.id
+                                    }
+                                >
+                                    <div className="vote-position-heading">
+                                        <h2>
+                                            {
+                                                position.name
+                                            }
+                                        </h2>
 
-                <div className="announcement-line" />
+                                        <p>
+                                            {position.is_required !==
+                                            false
+                                                ? "You must select one candidate for this position."
+                                                : "This position is optional."}
+                                        </p>
 
-                <button type="button">
-                  See all ›
-                </button>
-              </section>
+                                        {position.description && (
+                                            <p>
+                                                {
+                                                    position.description
+                                                }
+                                            </p>
+                                        )}
+                                    </div>
 
-              <section className="faq-section">
-                <h3>FAQs</h3>
-
-                <div className="faq-list">
-                  {faqs.map(
-                    (faq, index) => (
-                      <div
-                        className="faq-item"
-                        key={index}
-                      >
-                        <button
-                          type="button"
-                          className={`faq-button ${
-                            selectedFaq ===
-                            index
-                              ? "faq-active"
-                              : ""
-                          }`}
-                          onClick={() =>
-                            setSelectedFaq(
-                              selectedFaq ===
-                                index
-                                ? null
-                                : index
+                                    <div className="candidate-grid">
+                                        {renderCandidateCards(
+                                            position
+                                        )}
+                                    </div>
+                                </section>
                             )
-                          }
+                        )}
+
+                    {election &&
+                        eligiblePositions.length >
+                            0 && (
+                            <section className="vote-submit-section">
+                                <p>
+                                    {hasVoted
+                                        ? "Your vote for this election has already been recorded."
+                                        : "Double check your choices before submitting your votes."}
+                                </p>
+
+                                <button
+                                    type="button"
+                                    className="submit-vote-button"
+                                    disabled={
+                                        hasVoted ||
+                                        voteLoading
+                                    }
+                                    onClick={
+                                        handleSubmitVotes
+                                    }
+                                >
+                                    {voteLoading
+                                        ? "SUBMITTING..."
+                                        : hasVoted
+                                        ? "VOTE SUBMITTED"
+                                        : "SUBMIT VOTE"}
+                                </button>
+                            </section>
+                        )}
+                </main>
+            );
+        }
+
+        // =================================================
+        // GUIDELINES PAGE
+        // =================================================
+
+        if (
+            activeMenu ===
+            "guidelines"
+        ) {
+            const guidelines = [
+                "Before voting, take the time to research the candidates and issues on the ballot.",
+                "Make sure you are eligible to vote in the election.",
+                "Only currently enrolled students are eligible to participate.",
+                "Each authenticated account or student ID is restricted to a single submission.",
+                "Voters will only see candidates and positions relevant to their specific year level and department.",
+                "Personal IDs are separated from cast ballots in the database to ensure anonymity.",
+                "Cast your vote within the official voting schedule and portal availability hours.",
+                "Ensure you have a stable internet connection before submitting your ballot.",
+                "Review your chosen candidates carefully before finalizing your submission, as votes cannot be changed once submitted.",
+                "Do not share your login credentials or authentication code with anyone.",
+                "Report any technical glitches or voting issues to the election committee immediately.",
+                "Log out of your account after successfully submitting your ballot to protect your privacy.",
+            ];
+
+            return (
+                <main className="guidelines-main content-page-animation">
+                    <section className="guidelines-container">
+                        <h1>
+                            Voters Guidelines
+                        </h1>
+
+                        <div className="guidelines-list">
+                            {guidelines.map(
+                                (
+                                    guideline,
+                                    index
+                                ) => (
+                                    <button
+                                        type="button"
+                                        className="guideline-item"
+                                        key={
+                                            index
+                                        }
+                                        onClick={() =>
+                                            alert(
+                                                guideline
+                                            )
+                                        }
+                                    >
+                                        <span className="guideline-dot" />
+
+                                        <span>
+                                            {
+                                                guideline
+                                            }
+                                        </span>
+                                    </button>
+                                )
+                            )}
+                        </div>
+                    </section>
+                </main>
+            );
+        }
+
+        // =================================================
+        // SETTINGS PAGE
+        // =================================================
+
+        if (
+            activeMenu ===
+            "settings"
+        ) {
+            return (
+                <main className="settings-main content-page-animation">
+                    <section className="settings-container">
+                        <h1>
+                            ACCOUNT
+                        </h1>
+
+                        <div className="settings-grid">
+                            <div className="settings-column">
+                                {settingsItems
+                                    .slice(
+                                        0,
+                                        4
+                                    )
+                                    .map(
+                                        (
+                                            item
+                                        ) => (
+                                            <button
+                                                type="button"
+                                                className="settings-item"
+                                                key={
+                                                    item
+                                                }
+                                                onClick={() =>
+                                                    setSettingsModal(
+                                                        item
+                                                    )
+                                                }
+                                            >
+                                                <span className="settings-left">
+                                                    <span className="settings-dot">
+                                                        ●
+                                                    </span>
+
+                                                    {
+                                                        item
+                                                    }
+                                                </span>
+
+                                                <span>
+                                                    ›
+                                                </span>
+                                            </button>
+                                        )
+                                    )}
+                            </div>
+
+                            <div className="settings-column">
+                                {settingsItems
+                                    .slice(
+                                        4
+                                    )
+                                    .map(
+                                        (
+                                            item
+                                        ) => (
+                                            <button
+                                                type="button"
+                                                className="settings-item"
+                                                key={
+                                                    item
+                                                }
+                                                onClick={() =>
+                                                    setSettingsModal(
+                                                        item
+                                                    )
+                                                }
+                                            >
+                                                <span className="settings-left">
+                                                    <span className="settings-dot">
+                                                        ●
+                                                    </span>
+
+                                                    {
+                                                        item
+                                                    }
+                                                </span>
+
+                                                <span>
+                                                    ›
+                                                </span>
+                                            </button>
+                                        )
+                                    )}
+                            </div>
+                        </div>
+                    </section>
+                </main>
+            );
+        }
+
+        return null;
+    };
+
+    // =================================================
+    // MAIN RETURN
+    // =================================================
+
+    return (
+        <div className="student-dashboard">
+            {/* ================= NAVBAR ================= */}
+
+            <header className="top-navbar">
+                <div className="nav-left">
+                    <button
+                        type="button"
+                        className="menu-toggle"
+                        onClick={() =>
+                            setSidebarOpen(
+                                (previous) =>
+                                    !previous
+                            )
+                        }
+                        aria-label="Toggle sidebar"
+                    >
+                        <span />
+                        <span />
+                        <span />
+                    </button>
+
+                    <div className="brand">
+                        <img
+                            src={
+                                votaraLogoSrc
+                            }
+                            alt="Votara"
+                            className="votara-logo"
+                        />
+
+                        <span>
+                            Votara
+                        </span>
+                    </div>
+                </div>
+
+                {/* SEARCH */}
+
+                <div className="search-container">
+                    <input
+                        type="text"
+                        placeholder="Search"
+                        value={
+                            searchValue
+                        }
+                        onChange={(
+                            event
+                        ) =>
+                            setSearchValue(
+                                event.target.value
+                            )
+                        }
+                        onKeyDown={(
+                            event
+                        ) => {
+                            if (
+                                event.key ===
+                                "Enter"
+                            ) {
+                                handleSearch();
+                            }
+                        }}
+                    />
+
+                    <button
+                        type="button"
+                        className="search-button"
+                        aria-label="Search"
+                        onClick={
+                            handleSearch
+                        }
+                    >
+                        ⌕
+                    </button>
+                </div>
+
+                {/* RIGHT NAV */}
+
+                <div className="nav-right">
+                    <button
+                        type="button"
+                        className="nav-icon-button"
+                        aria-label="Notifications"
+                        onClick={() =>
+                            alert(
+                                "You have no new notifications."
+                            )
+                        }
+                    >
+                        <img
+                            src="/src/images/bell.png"
+                            alt="Notifications"
+                            className="nav-icon-image"
+                        />
+                    </button>
+
+                    <button
+                        type="button"
+                        className="help-button"
+                        aria-label="Help"
+                        onClick={() =>
+                            handleMenuClick(
+                                "guidelines"
+                            )
+                        }
+                    >
+                        ?
+                    </button>
+
+                    <div className="nav-profile">
+                        {profilePicture ? (
+                            <img
+                                src={
+                                    profilePicture
+                                }
+                                alt={
+                                    fullName
+                                }
+                                className="nav-profile-image"
+                            />
+                        ) : (
+                            <div className="nav-profile-placeholder">
+                                {
+                                    initials
+                                }
+                            </div>
+                        )}
+
+                        <span>
+                            {
+                                firstName
+                            }
+                        </span>
+                    </div>
+                </div>
+            </header>
+
+            <div className="dashboard-body">
+                {/* ================= SIDEBAR ================= */}
+
+                <aside
+                    className={`sidebar ${
+                        sidebarOpen
+                            ? "sidebar-open"
+                            : "sidebar-collapsed"
+                    }`}
+                >
+                    <div className="sidebar-profile">
+                        {profilePicture ? (
+                            <img
+                                src={
+                                    profilePicture
+                                }
+                                alt={
+                                    fullName
+                                }
+                                className="profile-picture"
+                            />
+                        ) : (
+                            <div className="profile-placeholder">
+                                {
+                                    initials
+                                }
+                            </div>
+                        )}
+
+                        <div className="profile-details">
+                            <h3>
+                                {
+                                    fullName
+                                }
+                            </h3>
+
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setSettingsModal(
+                                        "Edit profile"
+                                    )
+                                }
+                            >
+                                Show Profile
+                            </button>
+                        </div>
+                    </div>
+
+                    <nav className="sidebar-menu">
+                        {sidebarItems.map(
+                            (item) => {
+                                const isActive =
+                                    activeMenu ===
+                                    item.id;
+
+                                return (
+                                    <button
+                                        key={
+                                            item.id
+                                        }
+                                        type="button"
+                                        className={`sidebar-item ${
+                                            isActive
+                                                ? "active"
+                                                : ""
+                                        }`}
+                                        onClick={() =>
+                                            handleMenuClick(
+                                                item.id
+                                            )
+                                        }
+                                    >
+                                        <span className="sidebar-icon-wrapper">
+                                            <img
+                                                src={
+                                                    item.icon
+                                                }
+                                                alt=""
+                                                className={`sidebar-menu-icon normal-icon ${
+                                                    isActive
+                                                        ? "hide-icon"
+                                                        : ""
+                                                }`}
+                                            />
+
+                                            <img
+                                                src={
+                                                    item.activeIcon
+                                                }
+                                                alt=""
+                                                className={`sidebar-menu-icon active-icon ${
+                                                    isActive
+                                                        ? "show-icon"
+                                                        : ""
+                                                }`}
+                                            />
+                                        </span>
+
+                                        <span className="sidebar-label">
+                                            {
+                                                item.label
+                                            }
+                                        </span>
+                                    </button>
+                                );
+                            }
+                        )}
+                    </nav>
+
+                    <div className="sidebar-bottom">
+                        <button
+                            type="button"
+                            className="logout-button"
+                            onClick={
+                                handleLogout
+                            }
                         >
-                          {faq.question}
+                            <img
+                                src="/src/images/logoutalt.png"
+                                alt="Log out"
+                                className="logout-image"
+                            />
+
+                            <span className="logout-text">
+                                Log out
+                            </span>
+                        </button>
+                    </div>
+                </aside>
+
+                {/* ================= CONTENT ================= */}
+
+                {renderMainContent()}
+            </div>
+
+            {/* ================= SETTINGS MODAL ================= */}
+
+            {settingsModal && (
+                <div
+                    className="settings-modal-overlay"
+                    onClick={() =>
+                        setSettingsModal(
+                            null
+                        )
+                    }
+                >
+                    <div
+                        className="settings-modal"
+                        onClick={(event) =>
+                            event.stopPropagation()
+                        }
+                    >
+                        <button
+                            type="button"
+                            className="modal-close"
+                            onClick={() =>
+                                setSettingsModal(
+                                    null
+                                )
+                            }
+                        >
+                            ×
                         </button>
 
-                        {selectedFaq ===
-                          index && (
-                          <div className="faq-answer">
-                            {faq.answer}
-                          </div>
-                        )}
-                      </div>
-                    )
-                  )}
-                </div>
-              </section>
-            </div>
+                        <h2>
+                            {
+                                settingsModal
+                            }
+                        </h2>
 
-            {/* RIGHT COLUMN */}
+                        <p>
+                            This section is ready
+                            to be connected to its
+                            corresponding feature
+                            or API.
+                        </p>
 
-            <div className="right-column">
-              <section className="calendar-card main-hover-card">
-                <h3>Calendar</h3>
-
-                <div className="calendar-tabs">
-                  {[
-                    "Today",
-                    "Next week",
-                    "This Month",
-                  ].map((tab) => (
-                    <button
-                      type="button"
-                      key={tab}
-                      className={
-                        calendarTab === tab
-                          ? "selected-tab"
-                          : ""
-                      }
-                      onClick={() =>
-                        setCalendarTab(tab)
-                      }
-                    >
-                      {tab}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="time-row">
-                  <span>7:00</span>
-                  <span>8:00</span>
-                  <span>9:00</span>
-                  <span>10:00</span>
-                  <span>11:00</span>
-                </div>
-
-                <div className="calendar-line" />
-
-                <div className="election-time">
-                  <div className="date">
-                    <strong>September</strong>
-                    <span>10</span>
-                  </div>
-
-                  <div className="countdown">
-                    <small>
-                      President Student Council
-                    </small>
-
-                    <div className="countdown-values">
-                      <span>
-                        <strong>00</strong>
-                        DAYS
-                      </span>
-
-                      <span>
-                        <strong>07</strong>
-                        HOURS
-                      </span>
-
-                      <span>
-                        <strong>42</strong>
-                        MINS
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              <section className="process-card main-hover-card">
-                <h3>Voting Process</h3>
-
-                <div className="process-list">
-                  {[
-                    [
-                      "1",
-                      "Verify identity",
-                      "Confirm your student ID to unlock ballots",
-                    ],
-                    [
-                      "2",
-                      "Review candidates",
-                      "Check profiles and platforms before choosing",
-                    ],
-                    [
-                      "3",
-                      "Cast your vote",
-                      "Select one candidate per position",
-                    ],
-                    [
-                      "4",
-                      "Submit and confirm",
-                      "Get a confirmation once your vote is recorded",
-                    ],
-                    [
-                      "5",
-                      "Present QR",
-                      "",
-                    ],
-                  ].map(
-                    (
-                      [
-                        number,
-                        title,
-                        description,
-                      ],
-                      index
-                    ) => (
-                      <div
-                        className={`process-item ${
-                          index === 4
-                            ? "last"
-                            : ""
-                        }`}
-                        key={number}
-                      >
-                        <div
-                          className={`process-number ${
-                            index === 4
-                              ? "inactive"
-                              : ""
-                          }`}
+                        <button
+                            type="button"
+                            className="modal-confirm-button"
+                            onClick={() =>
+                                setSettingsModal(
+                                    null
+                                )
+                            }
                         >
-                          {number}
-                        </div>
-
-                        <div className="process-text">
-                          <strong>
-                            {title}
-                          </strong>
-
-                          {description && (
-                            <span>
-                              {description}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  )}
+                            Close
+                        </button>
+                    </div>
                 </div>
-              </section>
-            </div>
-          </div>
-        </main>
-      );
-    }
-
-    // =================================================
-    // VOTE PAGE
-    // =================================================
-
-    if (activeMenu === "vote") {
-      return (
-        <main
-          className="vote-main content-page-animation"
-        >
-          <section className="vote-heading">
-            <h1>
-              You May Now Cast Your Votes!
-            </h1>
-          </section>
-
-          <section className="vote-position-section">
-            <div className="vote-position-heading">
-              <h2>
-                President Student Council
-              </h2>
-
-              <p>
-                You can only vote for one
-                Candidate
-              </p>
-            </div>
-
-            <div className="candidate-grid">
-              {renderCandidateCards(
-                "president",
-                candidates.president
-              )}
-            </div>
-          </section>
-
-          <section className="vote-position-section">
-            <div className="vote-position-heading">
-              <h2>
-                Vice President Student Council
-              </h2>
-
-              <p>
-                You can only vote for one
-                Candidate
-              </p>
-            </div>
-
-            <div className="candidate-grid">
-              {renderCandidateCards(
-                "vicePresident",
-                candidates.vicePresident
-              )}
-            </div>
-          </section>
-
-          <section className="vote-submit-section">
-            <p>
-              Double check your choices before
-              submitting your votes
-            </p>
-
-            <button
-              type="button"
-              className="submit-vote-button"
-              onClick={handleSubmitVotes}
-            >
-              SUBMIT VOTE
-            </button>
-          </section>
-        </main>
-      );
-    }
-
-    // =================================================
-    // GUIDELINES PAGE
-    // =================================================
-
-    if (activeMenu === "guidelines") {
-      const guidelines = [
-        "Before voting, take the time to research the candidates and issues on the ballot.",
-        "Make sure you are eligible to vote in the election.",
-        "Only currently enrolled students are eligible to participate.",
-        "Each authenticated account or student ID is restricted to a single submission.",
-        "Voters will only see candidates and positions relevant to their specific year level and department.",
-        "Personal IDs are separated from cast ballots in the database to ensure anonymity.",
-        "Cast your vote within the official voting schedule and portal availability hours.",
-        "Ensure you have a stable internet connection before submitting your ballot.",
-        "Cast your vote within the official voting schedule and portal availability hours.",
-        "Review your chosen candidates carefully before finalizing your submission, as votes cannot be changed once submitted.",
-        "Do not share your login credentials or authentication code with anyone.",
-        "Report any technical glitches or voting issues to the election committee immediately.",
-        "Log out of your account after successfully submitting your ballot to protect your privacy.",
-      ];
-
-      return (
-        <main
-          className="guidelines-main content-page-animation"
-        >
-          <section className="guidelines-container">
-            <h1>
-              Voters Guidelines
-            </h1>
-
-            <div className="guidelines-list">
-              {guidelines.map(
-                (guideline, index) => (
-                  <button
-                    type="button"
-                    className="guideline-item"
-                    key={index}
-                    onClick={() =>
-                      alert(guideline)
-                    }
-                  >
-                    <span className="guideline-dot" />
-
-                    <span>
-                      {guideline}
-                    </span>
-                  </button>
-                )
-              )}
-            </div>
-          </section>
-        </main>
-      );
-    }
-
-    // =================================================
-    // SETTINGS PAGE
-    // =================================================
-
-    if (activeMenu === "settings") {
-      return (
-        <main
-          className="settings-main content-page-animation"
-        >
-          <section className="settings-container">
-            <h1>ACCOUNT</h1>
-
-            <div className="settings-grid">
-              <div className="settings-column">
-                {settingsItems
-                  .slice(0, 4)
-                  .map((item) => (
-                    <button
-                      type="button"
-                      className="settings-item"
-                      key={item}
-                      onClick={() =>
-                        setSettingsModal(item)
-                      }
-                    >
-                      <span className="settings-left">
-                        <span className="settings-dot">
-                          ●
-                        </span>
-
-                        {item}
-                      </span>
-
-                      <span>›</span>
-                    </button>
-                  ))}
-              </div>
-
-              <div className="settings-column">
-                {settingsItems
-                  .slice(4)
-                  .map((item) => (
-                    <button
-                      type="button"
-                      className="settings-item"
-                      key={item}
-                      onClick={() =>
-                        setSettingsModal(item)
-                      }
-                    >
-                      <span className="settings-left">
-                        <span className="settings-dot">
-                          ●
-                        </span>
-
-                        {item}
-                      </span>
-
-                      <span>›</span>
-                    </button>
-                  ))}
-              </div>
-            </div>
-          </section>
-        </main>
-      );
-    }
-
-    // =================================================
-    // QR PAGE
-    // =================================================
-
-    if (activeMenu === "qr") {
-      return (
-        <main
-          className="qr-main content-page-animation"
-        >
-          <section className="qr-container">
-            <div className="qr-image-wrapper">
-              <img
-                src={qrCodeIcon}
-                alt="Voting QR Code"
-                className="large-qr-code"
-              />
-            </div>
-
-            <div className="qr-guide">
-              <h2>Guide:</h2>
-
-              <div>
-                <p>
-                  The student proceeds to their
-                  designated precinct after casting
-                  their online ballot.
-                </p>
-
-                <p>
-                  The student presents a valid
-                  Physical ID card alongside their
-                  digital Voting Receipt featuring the
-                  QR code.
-                </p>
-
-                <p>
-                  The Electoral Board member opens
-                  the Precinct Scanner Interface on
-                  the official scanner device. Hold
-                  the QR code approximately 4 to 8
-                  inches away from the scanner
-                  camera, ensuring full visibility and
-                  proper lighting. Wait for the system
-                  confirmation on the screen.
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              className="qr-action-button"
-              onClick={() =>
-                alert(
-                  "Your QR code is ready to present to the precinct scanner."
-                )
-              }
-            >
-              VIEW VOTING RECEIPT
-            </button>
-          </section>
-        </main>
-      );
-    }
-
-    return null;
-  };
-
-  // =====================================================
-  // RETURN
-  // =====================================================
-
-  return (
-    <div className="student-dashboard">
-      {/* ================= NAVBAR ================= */}
-
-      <header className="top-navbar">
-        <div className="nav-left">
-          <button
-            type="button"
-            className="menu-toggle"
-            onClick={() =>
-              setSidebarOpen(
-                (previous) => !previous
-              )
-            }
-            aria-label="Toggle sidebar"
-          >
-            <span />
-            <span />
-            <span />
-          </button>
-
-          <div className="brand">
-            <img
-              src={votaraLogoSrc}
-              alt="Votara"
-              className="votara-logo"
-            />
-
-            <span>Votara</span>
-          </div>
-        </div>
-
-        {/* SEARCH */}
-
-        <div className="search-container">
-          <input
-            type="text"
-            placeholder="Search"
-            value={searchValue}
-            onChange={(event) =>
-              setSearchValue(event.target.value)
-            }
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                handleSearch();
-              }
-            }}
-          />
-
-          <button
-            type="button"
-            className="search-button"
-            aria-label="Search"
-            onClick={handleSearch}
-          >
-            ⌕
-          </button>
-        </div>
-
-        {/* RIGHT NAV */}
-
-        <div className="nav-right">
-          <button
-            type="button"
-            className="nav-icon-button"
-            aria-label="Notifications"
-            onClick={() =>
-              alert("You have no new notifications.")
-            }
-          >
-            <img
-              src="/src/images/bell.png"
-              alt="Notifications"
-              className="nav-icon-image"
-            />
-          </button>
-
-          <button
-            type="button"
-            className="help-button"
-            aria-label="Help"
-            onClick={() =>
-              handleMenuClick("guidelines")
-            }
-          >
-            ?
-          </button>
-
-          <div className="nav-profile">
-            {profilePicture ? (
-              <img
-                src={profilePicture}
-                alt={fullName}
-                className="nav-profile-image"
-              />
-            ) : (
-              <div className="nav-profile-placeholder">
-                {initials}
-              </div>
             )}
-
-            <span>{firstName}</span>
-          </div>
         </div>
-      </header>
-
-      <div className="dashboard-body">
-        {/* ================= SIDEBAR ================= */}
-
-        <aside
-          className={`sidebar ${
-            sidebarOpen
-              ? "sidebar-open"
-              : "sidebar-collapsed"
-          }`}
-        >
-          <div className="sidebar-profile">
-            {profilePicture ? (
-              <img
-                src={profilePicture}
-                alt={fullName}
-                className="profile-picture"
-              />
-            ) : (
-              <div className="profile-placeholder">
-                {initials}
-              </div>
-            )}
-
-            <div className="profile-details">
-              <h3>{fullName}</h3>
-
-              <button
-                type="button"
-                onClick={() =>
-                  setSettingsModal("Edit profile")
-                }
-              >
-                Show Profile
-              </button>
-            </div>
-          </div>
-
-          <nav className="sidebar-menu">
-            {sidebarItems.map((item) => {
-              const isActive =
-                activeMenu === item.id;
-
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={`sidebar-item ${
-                    isActive ? "active" : ""
-                  }`}
-                  onClick={() =>
-                    handleMenuClick(item.id)
-                  }
-                >
-                  <span className="sidebar-icon-wrapper">
-                    <img
-                      src={item.icon}
-                      alt=""
-                      className={`sidebar-menu-icon normal-icon ${
-                        isActive
-                          ? "hide-icon"
-                          : ""
-                      }`}
-                    />
-
-                    <img
-                      src={item.activeIcon}
-                      alt=""
-                      className={`sidebar-menu-icon active-icon ${
-                        isActive
-                          ? "show-icon"
-                          : ""
-                      }`}
-                    />
-                  </span>
-
-                  <span className="sidebar-label">
-                    {item.label}
-                  </span>
-                </button>
-              );
-            })}
-          </nav>
-
-          <div className="sidebar-bottom">
-            <button
-              type="button"
-              className="logout-button"
-              onClick={handleLogout}
-            >
-              <img
-                src="/src/images/logoutalt.png"
-                alt="Log out"
-                className="logout-image"
-              />
-
-              <span className="logout-text">
-                Log out
-              </span>
-            </button>
-          </div>
-        </aside>
-
-        {/* ================= CONTENT ================= */}
-
-        {renderMainContent()}
-      </div>
-
-      {/* ================= SETTINGS MODAL ================= */}
-
-      {settingsModal && (
-        <div
-          className="settings-modal-overlay"
-          onClick={() =>
-            setSettingsModal(null)
-          }
-        >
-          <div
-            className="settings-modal"
-            onClick={(event) =>
-              event.stopPropagation()
-            }
-          >
-            <button
-              type="button"
-              className="modal-close"
-              onClick={() =>
-                setSettingsModal(null)
-              }
-            >
-              ×
-            </button>
-
-            <h2>{settingsModal}</h2>
-
-            <p>
-              This section is ready to be connected
-              to its corresponding feature or API.
-            </p>
-
-            <button
-              type="button"
-              className="modal-confirm-button"
-              onClick={() =>
-                setSettingsModal(null)
-              }
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+    );
 }
 
 export default StudentDashboard;
