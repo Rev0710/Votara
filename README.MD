@@ -1,7 +1,3 @@
-The VOTARA Online Voting System begins when students access the landing page and choose to register or log in. New students can register online by submitting their information and required documents or register in person using their physical Student ID. 
-
-
-
 # Votara Brand Guidelines
 
 Welcome to the brand identity documentation for **Votara**. This document outlines the key visual assets, brand colors, and typography required to maintain visual consistency across all physical and digital collateral.
