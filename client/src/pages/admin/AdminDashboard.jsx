@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./AdminDashboard.css";
+import InviteTeamPopUp from "./InviteTeamPopUp";
 import {
     FiUsers,
     FiUserCheck,
@@ -94,10 +95,33 @@ const applySystemTheme = () => {
         );
 
         // Theme
-        root.setAttribute(
-            "data-theme",
-            settings.theme || "light"
-        );
+        const theme = settings.theme || "light";
+
+root.setAttribute("data-theme", theme);
+
+// =====================================================
+// THEME COLORS
+// =====================================================
+
+if (theme === "light") {
+    root.style.setProperty("--admin-bg", "#F6F8FC");
+    root.style.setProperty("--admin-card", "#FFFFFF");
+    root.style.setProperty("--admin-text", "#101828");
+    root.style.setProperty("--admin-text-secondary", "#475467");
+    root.style.setProperty("--admin-text-muted", "#667085");
+    root.style.setProperty("--admin-border", "#E4E7EC");
+    root.style.setProperty("--admin-hover", "#F2F4F7");
+    root.style.setProperty("--admin-input-bg", "#FFFFFF");
+} else {
+    root.style.setProperty("--admin-bg", "#0B1020");
+    root.style.setProperty("--admin-card", "#151B2E");
+    root.style.setProperty("--admin-text", "#F8FAFC");
+    root.style.setProperty("--admin-text-secondary", "#CBD5E1");
+    root.style.setProperty("--admin-text-muted", "#94A3B8");
+    root.style.setProperty("--admin-border", "rgba(255,255,255,0.10)");
+    root.style.setProperty("--admin-hover", "rgba(255,255,255,0.06)");
+    root.style.setProperty("--admin-input-bg", "#10172A");
+}
     } catch (error) {
         console.error(
             "Unable to apply system theme:",
@@ -121,6 +145,16 @@ function AdminDashboard() {
     const navigate = useNavigate();
 
     const [admin, setAdmin] = useState(null);
+
+    const [showInviteModal, setShowInviteModal] = useState(false);
+
+    const openInviteModal = () => {
+    setShowInviteModal(true);
+};
+
+const closeInviteModal = () => {
+    setShowInviteModal(false);
+};
 
     // =====================================================
 // APPLY SYSTEM SETTINGS THEME
@@ -584,7 +618,12 @@ const checkSystem = async () => {
     // =====================================================
 
     return (
+        
         <div style={styles.page}>
+            <InviteTeamPopUp
+    isOpen={showInviteModal}
+    onClose={closeInviteModal}
+/>
             {/* =================================================
                 TOP NAVIGATION
                 Design-only replacement for the old sidebar.
@@ -724,8 +763,12 @@ const checkSystem = async () => {
                             <FiFileText size={16} /> Export results
                         </button>
 
-                        <button className="votara-primary-action" onClick={() => goTo("/admin/electoral-board")}>
-                            <FiUserPlus size={16} /> Invite Team
+                        <button
+                        className="votara-primary-action"
+                        onClick={openInviteModal}
+                        >
+                        <FiUserPlus size={16} />
+                        Invite Team
                         </button>
                     </div>
                 </section>
@@ -1321,7 +1364,7 @@ const styles = {
 
     subtitle: {
         margin: 0,
-        color: "#667085",
+        color: "var(--admin-text-secondary)",
         fontSize: "14px",
     },
 
@@ -1393,7 +1436,7 @@ border: "1px solid var(--admin-border)",
 
     sectionDescription: {
         margin: "4px 0 0",
-        color: "#667085",
+        color: "var(--admin-text-secondary)",
         fontSize: "12px",
     },
 
@@ -1432,7 +1475,7 @@ border: "1px solid var(--admin-border)",
     },
 
     statLabel: {
-        color: "#667085",
+        color: "var(--admin-text-secondary)",
         fontSize: "12px",
         fontWeight: 600,
     },
@@ -1446,7 +1489,7 @@ border: "1px solid var(--admin-border)",
     statDescription: {
         display: "block",
         marginTop: "4px",
-        color: "#98A2B3",
+        color: "var(--admin-text-secondary)",
         fontSize: "11px",
     },
 
@@ -1543,7 +1586,7 @@ border: "1px solid var(--admin-border)",
     },
 
     chevron: {
-        color: "#98A2B3",
+        color: "var(--admin-text-secondary)",
         flexShrink: 0,
     },
 
@@ -1582,7 +1625,7 @@ border: "1px solid var(--admin-border)",
         display: "flex",
         justifyContent: "space-between",
         gap: "20px",
-        color: "#98A2B3",
+        color: "var(--admin-text-secondary)",
         fontSize: "11px",
     },
 

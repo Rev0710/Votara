@@ -821,3 +821,292 @@ html[data-theme="light"] .votara-admin-main .info-panel h3 {
 [data-theme="light"] .account-role-card .role-row > b {
     color: #282a3b !important;
 }
+/* =========================================================
+   VOTARA ADMIN DASHBOARD — THEME FIX
+   ========================================================= */
+
+/* ---------- LIGHT MODE ---------- */
+
+[data-theme="light"] {
+    --admin-bg: #F6F8FC;
+    --admin-card: #FFFFFF;
+    --admin-text: #101828;
+    --admin-text-secondary: #475467;
+    --admin-text-muted: #667085;
+    --admin-border: #E4E7EC;
+    --admin-hover: #F2F4F7;
+    --admin-input-bg: #FFFFFF;
+}
+
+
+/* ---------- DARK MODE ---------- */
+
+[data-theme="dark"] {
+    --admin-bg: #0B1020;
+    --admin-card: #151B2E;
+    --admin-text: #F8FAFC;
+    --admin-text-secondary: #CBD5E1;
+    --admin-text-muted: #94A3B8;
+    --admin-border: rgba(255,255,255,0.10);
+    --admin-hover: rgba(255,255,255,0.06);
+    --admin-input-bg: #10172A;
+}
+
+
+/* =========================================================
+   MAIN DASHBOARD
+   ========================================================= */
+
+.votara-admin-main {
+    background: var(--admin-bg);
+    color: var(--admin-text);
+}
+
+
+/* =========================================================
+   FEATURE CARDS
+   ========================================================= */
+
+.votara-feature-card {
+    background: var(--admin-card) !important;
+    border-color: var(--admin-border) !important;
+    color: var(--admin-text) !important;
+}
+
+
+/* Card headings */
+
+.votara-feature-card h2,
+.votara-feature-card h3,
+.votara-feature-card strong,
+.votara-feature-card b {
+    color: var(--admin-text);
+}
+
+
+/* Secondary text */
+
+.votara-feature-card p,
+.votara-feature-card small {
+    color: var(--admin-text-secondary);
+}
+
+
+/* =========================================================
+   ELECTIONS
+   ========================================================= */
+
+.elections-card .feature-card-title-row span {
+    color: var(--admin-text-secondary);
+}
+
+.election-alert {
+    color: var(--admin-text);
+}
+
+.election-alert p {
+    color: var(--admin-text-secondary);
+}
+
+.election-row {
+    color: var(--admin-text) !important;
+    border-color: var(--admin-border) !important;
+}
+
+.election-row small {
+    color: var(--admin-text-secondary) !important;
+}
+
+.election-row em {
+    color: var(--admin-text-secondary) !important;
+}
+
+
+/* =========================================================
+   VOTERS APPROVAL
+   ========================================================= */
+
+.approval-stat {
+    color: var(--admin-text);
+    border-color: var(--admin-border);
+}
+
+.approval-stat strong {
+    color: var(--admin-text) !important;
+}
+
+.approval-stat p {
+    color: var(--admin-text-secondary) !important;
+}
+
+.approval-stat button {
+    color: var(--votara-primary) !important;
+}
+
+
+/* =========================================================
+   MONITOR & LOGS
+   ========================================================= */
+
+.monitor-card {
+    color: var(--admin-text);
+}
+
+.log-row {
+    color: var(--admin-text) !important;
+    border-color: var(--admin-border) !important;
+}
+
+.log-row span:not([class*="log-dot"]) {
+    color: var(--admin-text-secondary) !important;
+}
+
+.log-row em {
+    color: var(--admin-text-muted) !important;
+}
+
+
+/* =========================================================
+   SYSTEM OVERVIEW
+   ========================================================= */
+
+.system-overview-card {
+    color: var(--admin-text);
+}
+
+.system-overview-row {
+    color: var(--admin-text) !important;
+    border-color: var(--admin-border) !important;
+}
+
+.system-overview-row b {
+    color: var(--admin-text) !important;
+}
+
+.system-overview-row small {
+    color: var(--admin-text-secondary) !important;
+}
+
+.system-overview-row > svg {
+    color: var(--admin-text-muted);
+}
+
+
+/* =========================================================
+   ACCOUNT BY ROLE
+   ========================================================= */
+
+.account-role-card {
+    color: var(--admin-text);
+}
+
+.role-row {
+    color: var(--admin-text);
+}
+
+.role-row > span {
+    color: var(--admin-text-secondary);
+}
+
+.role-row > b {
+    color: var(--admin-text);
+}
+
+
+/* =========================================================
+   CONFIGURATION & SUPPORT
+   ========================================================= */
+
+.config-support-card {
+    color: var(--admin-text);
+}
+
+.config-panel,
+.support-panel {
+    color: var(--admin-text);
+}
+
+.config-panel > span {
+    color: var(--admin-text-secondary);
+}
+
+.config-row {
+    color: var(--admin-text);
+    border-color: var(--admin-border);
+}
+
+.config-row > span {
+    color: var(--admin-text-secondary);
+}
+
+.config-row > b {
+    color: var(--admin-text);
+}
+
+.config-row button {
+    color: var(--votara-primary);
+}
+
+
+/* =========================================================
+   SUPPORT TICKETS
+   ========================================================= */
+
+.ticket-row {
+    color: var(--admin-text) !important;
+    border-color: var(--admin-border) !important;
+}
+
+.ticket-row b {
+    color: var(--admin-text) !important;
+}
+
+.ticket-row small {
+    color: var(--admin-text-secondary) !important;
+}
+
+.ticket-row em {
+    color: var(--admin-text-muted) !important;
+}
+
+
+/* =========================================================
+   QUICK ACTIONS
+   ========================================================= */
+
+.votara-quick-actions button {
+    background: var(--admin-card) !important;
+    border-color: var(--admin-border) !important;
+    color: var(--admin-text) !important;
+}
+
+.votara-quick-actions button:hover {
+    background: var(--admin-hover) !important;
+}
+
+
+/* =========================================================
+   FEATURE CARD BUTTONS
+   ========================================================= */
+
+.votara-feature-card button {
+    color: var(--admin-text);
+}
+
+.votara-feature-card button:hover {
+    background: var(--admin-hover);
+}
+[data-theme="light"] .votara-admin-main {
+    background: #F6F8FC;
+}
+
+[data-theme="dark"] .votara-admin-main {
+    background: #0B1020;
+}
+[data-theme="light"] .votara-feature-card {
+    background: #FFFFFF !important;
+}
+
+[data-theme="dark"] .votara-feature-card {
+    background: #151B2E !important;
+}
