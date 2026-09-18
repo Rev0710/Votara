@@ -1,496 +1,810 @@
+// ============================================================
+// VOTARA - STUDENT AUTHENTICATION CONTROLLER
+// Supabase + bcrypt + JWT
+// ============================================================
+
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const Student = require("../models/Student");
+const crypto = require("crypto");
 
-// =====================================================
+const supabase = require("../config/supabase");
+
+// ============================================================
+// CONFIGURATION
+// ============================================================
+
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+    console.warn("⚠️ JWT_SECRET is not configured in server/.env");
+}
+
+// Existing VOTARA private bucket
+const PROFILE_BUCKET = "student-verification";
+
+// ============================================================
+// HELPERS
+// ============================================================
+
+function normalizeStudentId(value) {
+    return String(value || "").trim();
+}
+
+function normalizeEmail(value) {
+    return String(value || "").trim().toLowerCase();
+}
+
+// ------------------------------------------------------------
+// Password validation
+// ------------------------------------------------------------
+
+function validatePassword(password) {
+    const value = String(password || "");
+
+    if (value.length < 8) {
+        return "Password must be at least 8 characters long.";
+    }
+
+    if (!/[A-Z]/.test(value)) {
+        return "Password must contain at least one uppercase letter.";
+    }
+
+    if (!/[a-z]/.test(value)) {
+        return "Password must contain at least one lowercase letter.";
+    }
+
+    if (!/[0-9]/.test(value)) {
+        return "Password must contain at least one number.";
+    }
+
+    if (!/[^A-Za-z0-9]/.test(value)) {
+        return "Password must contain at least one special character.";
+    }
+
+    return null;
+}
+
+// ------------------------------------------------------------
+// JWT creation
+// ------------------------------------------------------------
+
+function createStudentToken(student) {
+    if (!JWT_SECRET) {
+        throw new Error("JWT_SECRET is not configured.");
+    }
+
+    return jwt.sign(
+        {
+            id: student.id,
+            studentId: student.student_id,
+            role: "student",
+        },
+        JWT_SECRET,
+        {
+            expiresIn: "8h",
+        }
+    );
+}
+
+// ------------------------------------------------------------
+// Get complete student information
+// ------------------------------------------------------------
+
+async function getStudentData(studentId) {
+    const normalizedStudentId = normalizeStudentId(studentId);
+
+    // --------------------------------------------------------
+    // Official enrollment record
+    // --------------------------------------------------------
+
+    const { data: rosterStudent, error: rosterError } =
+        await supabase
+            .from("students")
+            .select(
+                `
+                id,
+                student_id,
+                full_name,
+                year_level,
+                enrollment_status
+                `
+            )
+            .eq("student_id", normalizedStudentId)
+            .maybeSingle();
+
+    if (rosterError) {
+        throw new Error(
+            `Failed to retrieve student roster record: ${rosterError.message}`
+        );
+    }
+
+    if (!rosterStudent) {
+        return null;
+    }
+
+    // --------------------------------------------------------
+    // Student account
+    // --------------------------------------------------------
+
+    const { data: account, error: accountError } =
+        await supabase
+            .from("student_accounts")
+            .select(
+                `
+                id,
+                student_id,
+                registration_id,
+                email,
+                must_change_password,
+                account_status,
+                profile_photo_storage_path,
+                last_login_at,
+                created_at,
+                updated_at
+                `
+            )
+            .eq("student_id", normalizedStudentId)
+            .maybeSingle();
+
+    if (accountError) {
+        throw new Error(
+            `Failed to retrieve student account: ${accountError.message}`
+        );
+    }
+
+    // --------------------------------------------------------
+    // Latest registration application
+    // --------------------------------------------------------
+
+    const { data: registration, error: registrationError } =
+        await supabase
+            .from("registration_applications")
+            .select(
+                `
+                id,
+                student_id,
+                registration_type,
+                application_status,
+                email,
+                full_name,
+                year_level,
+                birthday,
+                contact_number,
+                province,
+                barangay,
+                city,
+                submitted_at,
+                reviewed_at,
+                rejection_reason,
+                correction_message
+                `
+            )
+            .eq("student_id", normalizedStudentId)
+            .order("created_at", {
+                ascending: false,
+            })
+            .limit(1)
+            .maybeSingle();
+
+    if (registrationError) {
+        throw new Error(
+            `Failed to retrieve registration application: ${registrationError.message}`
+        );
+    }
+
+    return {
+        rosterStudent,
+        account,
+        registration,
+    };
+}
+
+// ============================================================
 // STUDENT LOGIN
-// =====================================================
+// ============================================================
 
 const studentLogin = async (req, res) => {
     try {
-        const { studentId, password } = req.body;
+        const studentId = normalizeStudentId(req.body.studentId);
+        const password = String(req.body.password || "");
 
         if (!studentId || !password) {
             return res.status(400).json({
                 success: false,
-                message:
-                    "Student ID and password are required.",
+                message: "Student ID and password are required.",
             });
         }
 
-        const cleanStudentId =
-            String(studentId).trim();
+        // ----------------------------------------------------
+        // 1. Find official student
+        // ----------------------------------------------------
 
-        // =================================================
-        // FIND STUDENT
-        // =================================================
+        const { data: rosterStudent, error: rosterError } =
+            await supabase
+                .from("students")
+                .select(
+                    `
+                    id,
+                    student_id,
+                    full_name,
+                    year_level,
+                    enrollment_status
+                    `
+                )
+                .eq("student_id", studentId)
+                .maybeSingle();
 
-        const student =
-            await Student.findOne({
-                studentId: cleanStudentId,
+        if (rosterError) {
+            console.error(
+                "Student roster lookup error:",
+                rosterError
+            );
+
+            return res.status(500).json({
+                success: false,
+                message: "Unable to verify student information.",
             });
+        }
 
-        if (!student) {
-            return res.status(404).json({
+        if (!rosterStudent) {
+            return res.status(401).json({
                 success: false,
                 message:
-                    "Student ID not found.",
+                    "Student ID was not found in the official enrollment record.",
             });
         }
 
-        // =================================================
-        // STUDENT MUST REGISTER FIRST
-        // =================================================
+        // ----------------------------------------------------
+        // 2. Verify active enrollment
+        // ----------------------------------------------------
 
         if (
-            student.registrationStatus !==
-            "submitted"
+            String(rosterStudent.enrollment_status || "")
+                .toUpperCase() !== "ACTIVE"
         ) {
             return res.status(403).json({
                 success: false,
                 message:
-                    "Your registration has not been completed. Please register first.",
+                    "This student account is not currently eligible for voting.",
             });
         }
 
-        // =================================================
-        // PASSWORD CHECK
-        // =================================================
+        // ----------------------------------------------------
+        // 3. Find student account
+        // ----------------------------------------------------
 
-        const defaultPassword =
-            process.env.DEFAULT_STUDENT_PASSWORD;
+        const { data: account, error: accountError } =
+            await supabase
+                .from("student_accounts")
+                .select(
+                    `
+                    id,
+                    student_id,
+                    registration_id,
+                    email,
+                    password_hash,
+                    must_change_password,
+                    account_status,
+                    profile_photo_storage_path,
+                    last_login_at,
+                    created_at,
+                    updated_at
+                    `
+                )
+                .eq("student_id", studentId)
+                .maybeSingle();
 
-        let passwordCorrect = false;
+        if (accountError) {
+            console.error(
+                "Student account lookup error:",
+                accountError
+            );
 
-        // =================================================
-        // FIRST LOGIN
-        // =================================================
-
-        if (!student.passwordHash) {
-
-            if (!defaultPassword) {
-                return res.status(500).json({
-                    success: false,
-                    message:
-                        "Default student password is not configured on the server.",
-                });
-            }
-
-            passwordCorrect =
-                password === defaultPassword;
-
-        } else {
-
-            // =================================================
-            // NORMAL LOGIN
-            // =================================================
-
-            passwordCorrect =
-                await bcrypt.compare(
-                    password,
-                    student.passwordHash
-                );
+            return res.status(500).json({
+                success: false,
+                message: "Unable to retrieve student account.",
+            });
         }
 
-        // =================================================
-        // INCORRECT PASSWORD
-        // =================================================
+        // ----------------------------------------------------
+        // 4. Account does not exist
+        // ----------------------------------------------------
 
-        if (!passwordCorrect) {
-            return res.status(401).json({
+        if (!account) {
+            return res.status(403).json({
                 success: false,
                 message:
-                    "Incorrect password.",
+                    "Your student account has not been activated yet. Please wait for Electoral Board approval.",
             });
         }
 
-        // =================================================
-        // SETUP STATUS
-        // =================================================
+        // ----------------------------------------------------
+        // 5. Check account status
+        // ----------------------------------------------------
+
+        if (account.account_status !== "active") {
+            return res.status(403).json({
+                success: false,
+                message:
+                    "Your student account is currently disabled. Please contact the Electoral Board.",
+            });
+        }
+
+        // ----------------------------------------------------
+        // 6. Verify password
+        // ----------------------------------------------------
+
+        if (!account.password_hash) {
+            return res.status(403).json({
+                success: false,
+                message:
+                    "Your account does not have a valid password yet. Please contact the Electoral Board.",
+            });
+        }
+
+        const passwordMatches = await bcrypt.compare(
+            password,
+            account.password_hash
+        );
+
+        if (!passwordMatches) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid Student ID or password.",
+            });
+        }
+
+        // ----------------------------------------------------
+        // 7. Update last login
+        // ----------------------------------------------------
+
+        const { error: loginUpdateError } =
+            await supabase
+                .from("student_accounts")
+                .update({
+                    last_login_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                })
+                .eq("id", account.id);
+
+        if (loginUpdateError) {
+            console.warn(
+                "⚠️ Could not update last_login_at:",
+                loginUpdateError.message
+            );
+        }
+
+        // ----------------------------------------------------
+        // 8. Create JWT
+        // ----------------------------------------------------
+
+        const token = createStudentToken(rosterStudent);
+
+        // ----------------------------------------------------
+        // 9. Determine next step
+        // ----------------------------------------------------
 
         const mustChangePassword =
-            !student.passwordHash ||
-            student.mustChangePassword === true;
+            account.must_change_password === true;
 
         const needsProfilePicture =
-            !student.profilePicture;
+            !account.profile_photo_storage_path;
 
         let nextStep = "dashboard";
 
         if (mustChangePassword) {
-
-            nextStep = "change-password";
-
+            nextStep = "change_password";
         } else if (needsProfilePicture) {
-
-            nextStep = "profile-picture";
-
+            nextStep = "upload_profile_picture";
         }
 
-        const setupComplete =
-            !mustChangePassword &&
-            !needsProfilePicture;
-
-        // =================================================
-        // CREATE JWT
-        // =================================================
-
-        const token =
-            jwt.sign(
-                {
-                    studentId:
-                        student.studentId,
-
-                    role: "student",
-                },
-                process.env.JWT_SECRET,
-                {
-                    expiresIn:
-                        process.env.JWT_EXPIRES_IN ||
-                        "1d",
-                }
-            );
-
-        // =================================================
-        // LOGIN RESPONSE
-        // =================================================
+        // ----------------------------------------------------
+        // 10. Voting status
+        //
+        // IMPORTANT:
+        // The current students table does not contain has_voted.
+        // We therefore do not invent a database field here.
+        // ----------------------------------------------------
 
         return res.status(200).json({
-
             success: true,
-
-            message:
-                "Login successful.",
+            message: mustChangePassword
+                ? "Login successful. Please change your temporary password."
+                : "Login successful.",
 
             token,
 
-            // Password status
-            mustChangePassword,
-
-            // Photo status
-            needsProfilePicture,
-
-            // Overall setup status
-            setupComplete,
-
-            // Frontend should navigate here
-            nextStep,
-
             student: {
+                id: rosterStudent.id,
+                studentId: rosterStudent.student_id,
+                fullName: rosterStudent.full_name,
+                yearLevel: rosterStudent.year_level,
 
-                studentId:
-                    student.studentId,
-
-                fullName:
-                    student.fullName,
-
-                yearLevel:
-                    student.yearLevel,
-
-                email:
-                    student.email,
-
-                profilePicture:
-                    student.profilePicture,
+                email: account.email,
 
                 registrationStatus:
-                    student.registrationStatus,
+                    account.registration_id
+                        ? "approved"
+                        : "not_registered",
+
+                registrationId: account.registration_id,
+
+                mustChangePassword,
+
+                needsProfilePicture,
+
+                profilePicture:
+                    account.profile_photo_storage_path || null,
+
+                hasVoted: false,
+
+                nextStep,
             },
         });
-
     } catch (error) {
-
-        console.error(
-            "❌ Student login error:"
-        );
-
-        console.error(error);
+        console.error("❌ Student login error:", error);
 
         return res.status(500).json({
             success: false,
-            message:
-                "Unable to login.",
+            message: "An unexpected error occurred during login.",
         });
     }
 };
 
-
-// =====================================================
+// ============================================================
 // CHANGE TEMPORARY PASSWORD
-// =====================================================
+// ============================================================
 
-const changeTemporaryPassword = async (
-    req,
-    res
-) => {
-
+const changeTemporaryPassword = async (req, res) => {
     try {
-
-        const studentId =
-            req.student.studentId;
-
-        const {
-            newPassword,
-            confirmPassword,
-        } = req.body;
-
-        // =================================================
-        // REQUIRED FIELDS
-        // =================================================
-
-        if (
-            !newPassword ||
-            !confirmPassword
-        ) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Please enter and confirm your new password.",
-            });
-        }
-
-        // =================================================
-        // PASSWORD MATCH
-        // =================================================
-
-        if (
-            newPassword !==
-            confirmPassword
-        ) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Passwords do not match.",
-            });
-        }
-
-        // =================================================
-        // PASSWORD SECURITY REQUIREMENTS
-        // =================================================
-
-        if (newPassword.length < 8) {
-
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Password must be at least 8 characters.",
-            });
-
-        }
-
-        if (!/[A-Z]/.test(newPassword)) {
-
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Password must contain at least one uppercase letter.",
-            });
-
-        }
-
-        if (!/[a-z]/.test(newPassword)) {
-
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Password must contain at least one lowercase letter.",
-            });
-
-        }
-
-        if (!/[0-9]/.test(newPassword)) {
-
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Password must contain at least one number.",
-            });
-
-        }
-
-        if (!/[^A-Za-z0-9]/.test(newPassword)) {
-
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Password must contain at least one special character.",
-            });
-
-        }
-
-        // =================================================
-        // FIND STUDENT
-        // =================================================
-
-        const student =
-            await Student.findOne({
-                studentId,
-            });
-
-        if (!student) {
-            return res.status(404).json({
-                success: false,
-                message:
-                    "Student not found.",
-            });
-        }
-
-        // =================================================
-        // REGISTRATION CHECK
-        // =================================================
-
-        if (
-            student.registrationStatus !==
-            "submitted"
-        ) {
-            return res.status(403).json({
-                success: false,
-                message:
-                    "Student registration is not completed.",
-            });
-        }
-
-        // =================================================
-        // HASH PASSWORD
-        // =================================================
-
-        const passwordHash =
-            await bcrypt.hash(
-                newPassword,
-                10
-            );
-
-        student.passwordHash =
-            passwordHash;
-
-        student.mustChangePassword =
-            false;
-
-        await student.save();
-
-        console.log(
-            `✅ Password changed for Student ID ${student.studentId}`
+        const studentId = normalizeStudentId(
+            req.student?.studentId ||
+                req.body.studentId
         );
 
-        // =================================================
-        // CHECK PHOTO
-        // =================================================
+        const newPassword = String(
+            req.body.newPassword ||
+                req.body.password ||
+                ""
+        );
 
-        const needsProfilePicture =
-            !student.profilePicture;
+        const confirmPassword = String(
+            req.body.confirmPassword ||
+                ""
+        );
+
+        if (!studentId) {
+            return res.status(401).json({
+                success: false,
+                message: "Student authentication is required.",
+            });
+        }
+
+        if (!newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "New password is required.",
+            });
+        }
+
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "Passwords do not match.",
+            });
+        }
+
+        const passwordError = validatePassword(newPassword);
+
+        if (passwordError) {
+            return res.status(400).json({
+                success: false,
+                message: passwordError,
+            });
+        }
+
+        // ----------------------------------------------------
+        // Find account
+        // ----------------------------------------------------
+
+        const { data: account, error: accountError } =
+            await supabase
+                .from("student_accounts")
+                .select(
+                    `
+                    id,
+                    student_id,
+                    email,
+                    account_status,
+                    must_change_password
+                    `
+                )
+                .eq("student_id", studentId)
+                .maybeSingle();
+
+        if (accountError) {
+            console.error(
+                "Password account lookup error:",
+                accountError
+            );
+
+            return res.status(500).json({
+                success: false,
+                message: "Unable to retrieve student account.",
+            });
+        }
+
+        if (!account) {
+            return res.status(404).json({
+                success: false,
+                message: "Student account was not found.",
+            });
+        }
+
+        if (account.account_status !== "active") {
+            return res.status(403).json({
+                success: false,
+                message: "Your student account is disabled.",
+            });
+        }
+
+        // ----------------------------------------------------
+        // Hash new password
+        // ----------------------------------------------------
+
+        const passwordHash = await bcrypt.hash(
+            newPassword,
+            12
+        );
+
+        // ----------------------------------------------------
+        // Update account
+        // ----------------------------------------------------
+
+        const { data: updatedAccount, error: updateError } =
+            await supabase
+                .from("student_accounts")
+                .update({
+                    password_hash: passwordHash,
+                    must_change_password: false,
+                    updated_at: new Date().toISOString(),
+                })
+                .eq("id", account.id)
+                .select(
+                    `
+                    id,
+                    student_id,
+                    email,
+                    must_change_password,
+                    account_status,
+                    profile_photo_storage_path
+                    `
+                )
+                .single();
+
+        if (updateError) {
+            console.error(
+                "Password update error:",
+                updateError
+            );
+
+            return res.status(500).json({
+                success: false,
+                message: "Failed to update your password.",
+            });
+        }
+
+        // ----------------------------------------------------
+        // Get official student record
+        // ----------------------------------------------------
+
+        const { data: rosterStudent, error: rosterError } =
+            await supabase
+                .from("students")
+                .select(
+                    `
+                    id,
+                    student_id,
+                    full_name,
+                    year_level,
+                    enrollment_status
+                    `
+                )
+                .eq("student_id", studentId)
+                .maybeSingle();
+
+        if (rosterError || !rosterStudent) {
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Password was updated, but student information could not be retrieved.",
+            });
+        }
+
+        // ----------------------------------------------------
+        // Create fresh JWT
+        // ----------------------------------------------------
+
+        const token = createStudentToken(rosterStudent);
 
         return res.status(200).json({
-
             success: true,
-
             message:
                 "Password changed successfully.",
 
-            needsProfilePicture,
-            
+            token,
+
             student: {
-        studentId: student.studentId,
-        fullName: student.fullName,
-        yearLevel: student.yearLevel,
-        email: student.email,
-        profilePicture: student.profilePicture,
-        registrationStatus:
-            student.registrationStatus,
-    },
+                id: rosterStudent.id,
+                studentId: rosterStudent.student_id,
+                fullName: rosterStudent.full_name,
+                yearLevel: rosterStudent.year_level,
+                email: updatedAccount.email,
 
-            nextStep:
-                needsProfilePicture
-                    ? "profile-picture"
-                    : "dashboard",
+                mustChangePassword: false,
+
+                needsProfilePicture:
+                    !updatedAccount.profile_photo_storage_path,
+
+                profilePicture:
+                    updatedAccount.profile_photo_storage_path ||
+                    null,
+
+                nextStep:
+                    updatedAccount.profile_photo_storage_path
+                        ? "dashboard"
+                        : "upload_profile_picture",
+            },
         });
-
     } catch (error) {
-
         console.error(
-            "❌ Change password error:"
+            "❌ Change temporary password error:",
+            error
         );
-
-        console.error(error);
 
         return res.status(500).json({
             success: false,
             message:
-                "Unable to change password.",
+                "An unexpected error occurred while changing your password.",
         });
     }
 };
 
-
-// =====================================================
+// ============================================================
 // UPLOAD PROFILE PICTURE
-// =====================================================
+// ============================================================
 
-const uploadProfilePicture = async (
-    req,
-    res
-) => {
-
+const uploadProfilePicture = async (req, res) => {
     try {
+        const studentId = normalizeStudentId(
+            req.student?.studentId ||
+                req.body.studentId
+        );
 
-        const studentId =
-            req.student.studentId;
+        if (!studentId) {
+            return res.status(401).json({
+                success: false,
+                message: "Student authentication is required.",
+            });
+        }
 
-        const {
-            profilePicture,
-        } = req.body;
+        // ----------------------------------------------------
+        // Accept the existing frontend's profilePicture field.
+        //
+        // Supports:
+        // data:image/jpeg;base64,...
+        // data:image/png;base64,...
+        // ----------------------------------------------------
 
-        // =================================================
-        // REQUIRED
-        // =================================================
+        const profilePicture =
+            req.body.profilePicture ||
+            req.body.photo ||
+            req.body.image;
 
         if (!profilePicture) {
             return res.status(400).json({
                 success: false,
-                message:
-                    "Profile picture is required.",
+                message: "Profile picture is required.",
             });
         }
 
-        // =================================================
-        // IMAGE VALIDATION
-        // =================================================
-
         if (
-            !profilePicture.startsWith(
-                "data:image/"
-            )
+            typeof profilePicture !== "string" ||
+            !profilePicture.startsWith("data:image/")
         ) {
             return res.status(400).json({
                 success: false,
                 message:
-                    "Invalid image format.",
+                    "Invalid profile picture format. Please upload an image.",
             });
         }
 
-        // =================================================
-        // FIND STUDENT
-        // =================================================
+        // ----------------------------------------------------
+        // Parse data URL
+        // ----------------------------------------------------
 
-        const student =
-            await Student.findOne({
-                studentId,
-            });
+        const match = profilePicture.match(
+            /^data:(image\/(?:jpeg|jpg|png|webp));base64,(.+)$/i
+        );
 
-        if (!student) {
-            return res.status(404).json({
+        if (!match) {
+            return res.status(400).json({
                 success: false,
                 message:
-                    "Student not found.",
+                    "Only JPEG, PNG, and WebP profile pictures are supported.",
             });
         }
 
-        // =================================================
-        // PASSWORD MUST BE CHANGED FIRST
-        // =================================================
+        const contentType = match[1].toLowerCase();
+        const base64Data = match[2];
 
-        if (
-            student.mustChangePassword === true
-        ) {
+        const imageBuffer = Buffer.from(
+            base64Data,
+            "base64"
+        );
+
+        // ----------------------------------------------------
+        // Limit profile picture to 5 MB
+        // ----------------------------------------------------
+
+        const MAX_SIZE = 5 * 1024 * 1024;
+
+        if (imageBuffer.length > MAX_SIZE) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Profile picture must not exceed 5 MB.",
+            });
+        }
+
+        // ----------------------------------------------------
+        // Find student account
+        // ----------------------------------------------------
+
+        const { data: account, error: accountError } =
+            await supabase
+                .from("student_accounts")
+                .select(
+                    `
+                    id,
+                    student_id,
+                    must_change_password,
+                    account_status,
+                    profile_photo_storage_path
+                    `
+                )
+                .eq("student_id", studentId)
+                .maybeSingle();
+
+        if (accountError) {
+            console.error(
+                "Profile account lookup error:",
+                accountError
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Unable to retrieve your student account.",
+            });
+        }
+
+        if (!account) {
+            return res.status(404).json({
+                success: false,
+                message: "Student account was not found.",
+            });
+        }
+
+        if (account.account_status !== "active") {
+            return res.status(403).json({
+                success: false,
+                message:
+                    "Your student account is disabled.",
+            });
+        }
+
+        if (account.must_change_password) {
             return res.status(403).json({
                 success: false,
                 message:
@@ -498,190 +812,409 @@ const uploadProfilePicture = async (
             });
         }
 
-        // =================================================
-        // SAVE PHOTO
-        // =================================================
+        // ----------------------------------------------------
+        // Determine extension
+        // ----------------------------------------------------
 
-        student.profilePicture =
-            profilePicture;
+        let extension = "jpg";
 
-        student.profilePictureUploadedAt =
-            new Date();
+        if (contentType === "image/png") {
+            extension = "png";
+        } else if (contentType === "image/webp") {
+            extension = "webp";
+        }
 
-        await student.save();
+        // ----------------------------------------------------
+        // Generate unique storage path
+        // ----------------------------------------------------
 
-        console.log(
-            `📸 Profile picture uploaded for Student ID ${student.studentId}`
-        );
+        const uniqueName = crypto
+            .randomBytes(16)
+            .toString("hex");
 
-        // =================================================
-        // SETUP IS NOW COMPLETE
-        // =================================================
+        const storagePath =
+            `student-profiles/${studentId}/profile-${uniqueName}.${extension}`;
+
+        // ----------------------------------------------------
+        // Upload to private Supabase Storage bucket
+        // ----------------------------------------------------
+
+        const { error: uploadError } =
+            await supabase.storage
+                .from(PROFILE_BUCKET)
+                .upload(
+                    storagePath,
+                    imageBuffer,
+                    {
+                        contentType,
+                        upsert: false,
+                    }
+                );
+
+        if (uploadError) {
+            console.error(
+                "Profile picture upload error:",
+                uploadError
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Failed to upload your profile picture.",
+            });
+        }
+
+        // ----------------------------------------------------
+        // Delete previous profile picture if one exists
+        // ----------------------------------------------------
+
+        if (account.profile_photo_storage_path) {
+            const { error: deleteError } =
+                await supabase.storage
+                    .from(PROFILE_BUCKET)
+                    .remove([
+                        account.profile_photo_storage_path,
+                    ]);
+
+            if (deleteError) {
+                console.warn(
+                    "⚠️ Previous profile picture could not be deleted:",
+                    deleteError.message
+                );
+            }
+        }
+
+        // ----------------------------------------------------
+        // Save storage path
+        // ----------------------------------------------------
+
+        const { data: updatedAccount, error: updateError } =
+            await supabase
+                .from("student_accounts")
+                .update({
+                    profile_photo_storage_path:
+                        storagePath,
+                    updated_at:
+                        new Date().toISOString(),
+                })
+                .eq("id", account.id)
+                .select(
+                    `
+                    id,
+                    student_id,
+                    email,
+                    must_change_password,
+                    account_status,
+                    profile_photo_storage_path
+                    `
+                )
+                .single();
+
+        if (updateError) {
+            console.error(
+                "Profile account update error:",
+                updateError
+            );
+
+            // Try to remove newly uploaded file if DB update failed
+            await supabase.storage
+                .from(PROFILE_BUCKET)
+                .remove([storagePath]);
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Profile picture was uploaded but could not be saved to your account.",
+            });
+        }
 
         return res.status(200).json({
-
             success: true,
-
             message:
                 "Profile picture uploaded successfully.",
 
             profilePicture:
-                student.profilePicture,
+                updatedAccount.profile_photo_storage_path,
 
-            setupComplete:
-                true,
+            student: {
+                studentId:
+                    updatedAccount.student_id,
 
-            nextStep:
-                "dashboard",
+                email:
+                    updatedAccount.email,
+
+                needsProfilePicture: false,
+
+                profilePicture:
+                    updatedAccount.profile_photo_storage_path,
+
+                nextStep: "dashboard",
+            },
         });
-
     } catch (error) {
-
         console.error(
-            "❌ Profile picture upload error:"
+            "❌ Upload profile picture error:",
+            error
         );
-
-        console.error(error);
 
         return res.status(500).json({
             success: false,
             message:
-                "Unable to upload profile picture.",
+                "An unexpected error occurred while uploading your profile picture.",
         });
     }
 };
 
-
-// =====================================================
+// ============================================================
 // GET CURRENT STUDENT
-// =====================================================
+// ============================================================
 
-const getCurrentStudent = async (
-    req,
-    res
-) => {
-
+const getCurrentStudent = async (req, res) => {
     try {
+        const studentId = normalizeStudentId(
+            req.student?.studentId
+        );
 
-        const student =
-            await Student.findOne({
-                studentId:
-                    req.student.studentId,
+        if (!studentId) {
+            return res.status(401).json({
+                success: false,
+                message: "Student authentication is required.",
             });
+        }
 
-        if (!student) {
+        // ----------------------------------------------------
+        // Official student record
+        // ----------------------------------------------------
+
+        const { data: rosterStudent, error: rosterError } =
+            await supabase
+                .from("students")
+                .select(
+                    `
+                    id,
+                    student_id,
+                    full_name,
+                    year_level,
+                    enrollment_status
+                    `
+                )
+                .eq("student_id", studentId)
+                .maybeSingle();
+
+        if (rosterError) {
+            console.error(
+                "Current student roster error:",
+                rosterError
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Unable to retrieve student information.",
+            });
+        }
+
+        if (!rosterStudent) {
             return res.status(404).json({
                 success: false,
                 message:
-                    "Student not found.",
+                    "Student record was not found.",
             });
         }
 
-        // =================================================
-        // CHECK SETUP
-        // =================================================
-
-        const mustChangePassword =
-            !student.passwordHash ||
-            student.mustChangePassword === true;
-
-        const needsProfilePicture =
-            !student.profilePicture;
-
-        // =================================================
-        // DO NOT ALLOW DASHBOARD ACCESS YET
-        // =================================================
+        // ----------------------------------------------------
+        // Verify active enrollment
+        // ----------------------------------------------------
 
         if (
-            mustChangePassword ||
-            needsProfilePicture
+            String(rosterStudent.enrollment_status || "")
+                .toUpperCase() !== "ACTIVE"
         ) {
-
-            let nextStep =
-                "change-password";
-
-            if (
-                !mustChangePassword &&
-                needsProfilePicture
-            ) {
-                nextStep =
-                    "profile-picture";
-            }
-
             return res.status(403).json({
-
                 success: false,
-
-                setupComplete:
-                    false,
-
-                mustChangePassword,
-
-                needsProfilePicture,
-
-                nextStep,
-
                 message:
-                    "Please complete your account setup before accessing the dashboard.",
+                    "This student is not currently active.",
             });
         }
 
-        // =================================================
-        // EVERYTHING COMPLETE
-        // =================================================
+        // ----------------------------------------------------
+        // Student account
+        // ----------------------------------------------------
+
+        const { data: account, error: accountError } =
+            await supabase
+                .from("student_accounts")
+                .select(
+                    `
+                    id,
+                    student_id,
+                    registration_id,
+                    email,
+                    must_change_password,
+                    account_status,
+                    profile_photo_storage_path,
+                    last_login_at
+                    `
+                )
+                .eq("student_id", studentId)
+                .maybeSingle();
+
+        if (accountError) {
+            console.error(
+                "Current student account error:",
+                accountError
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Unable to retrieve student account.",
+            });
+        }
+
+        if (!account) {
+            return res.status(404).json({
+                success: false,
+                message:
+                    "Student account was not found.",
+            });
+        }
+
+        if (account.account_status !== "active") {
+            return res.status(403).json({
+                success: false,
+                message:
+                    "Your student account is disabled.",
+            });
+        }
+
+        // ----------------------------------------------------
+        // Registration application
+        // ----------------------------------------------------
+
+        let registration = null;
+
+        if (account.registration_id) {
+            const {
+                data,
+                error,
+            } = await supabase
+                .from("registration_applications")
+                .select(
+                    `
+                    id,
+                    student_id,
+                    registration_type,
+                    application_status,
+                    email,
+                    full_name,
+                    year_level,
+                    birthday,
+                    contact_number,
+                    province,
+                    barangay,
+                    city,
+                    submitted_at,
+                    reviewed_at
+                    `
+                )
+                .eq("id", account.registration_id)
+                .maybeSingle();
+
+            if (error) {
+                console.warn(
+                    "⚠️ Registration lookup failed:",
+                    error.message
+                );
+            } else {
+                registration = data;
+            }
+        }
 
         return res.status(200).json({
-
             success: true,
 
-            setupComplete:
-                true,
-
             student: {
+                id: rosterStudent.id,
 
                 studentId:
-                    student.studentId,
+                    rosterStudent.student_id,
 
                 fullName:
-                    student.fullName,
+                    rosterStudent.full_name,
 
                 yearLevel:
-                    student.yearLevel,
+                    rosterStudent.year_level,
 
                 email:
-                    student.email,
-
-                profilePicture:
-                    student.profilePicture,
+                    account.email,
 
                 registrationStatus:
-                    student.registrationStatus,
+                    registration?.application_status ||
+                    "approved",
 
-                hasVoted:
-                    student.hasVoted,
+                registrationType:
+                    registration?.registration_type ||
+                    "normal",
+
+                registrationId:
+                    account.registration_id,
+
+                birthday:
+                    registration?.birthday || "",
+
+                contactNumber:
+                    registration?.contact_number || "",
+
+                province:
+                    registration?.province || "",
+
+                barangay:
+                    registration?.barangay || "",
+
+                city:
+                    registration?.city || "",
+
+                mustChangePassword:
+                    account.must_change_password,
+
+                needsProfilePicture:
+                    !account.profile_photo_storage_path,
+
+                profilePicture:
+                    account.profile_photo_storage_path ||
+                    null,
+
+                hasVoted: false,
+
+                lastLoginAt:
+                    account.last_login_at,
+
+                nextStep:
+                    account.must_change_password
+                        ? "change_password"
+                        : !account.profile_photo_storage_path
+                        ? "upload_profile_picture"
+                        : "dashboard",
             },
         });
-
     } catch (error) {
-
         console.error(
-            "❌ Get student error:"
+            "❌ Get current student error:",
+            error
         );
-
-        console.error(error);
 
         return res.status(500).json({
             success: false,
             message:
-                "Unable to get student information.",
+                "An unexpected error occurred while retrieving your account.",
         });
     }
 };
 
-
-// =====================================================
-// EXPORT
-// =====================================================
+// ============================================================
+// EXPORTS
+// ============================================================
 
 module.exports = {
     studentLogin,

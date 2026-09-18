@@ -771,3 +771,425 @@
 
     pointer-events: none;
 }
+
+/* =====================================================
+   LATE ENROLLEE MODAL OVERLAY
+===================================================== */
+
+.late-enrollee-overlay {
+    position: fixed;
+
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    background: rgba(15, 23, 42, 0.48);
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    z-index: 9999;
+
+    animation: lateEnrolleeOverlayIn 0.2s ease-out both;
+}
+
+
+/* =====================================================
+   LATE ENROLLEE MODAL
+===================================================== */
+
+.late-enrollee-modal {
+    width: 100%;
+
+    max-width: 460px;
+
+    background: #ffffff;
+
+    border-radius: 18px;
+
+    padding: 34px 32px 28px;
+
+    text-align: center;
+
+    box-shadow:
+        0 25px 70px rgba(15, 23, 42, 0.22);
+
+    border: 1px solid #e5e7eb;
+
+    animation: lateEnrolleeModalIn 0.25s ease-out both;
+}
+
+
+/* =====================================================
+   MODAL ICON
+===================================================== */
+
+.late-enrollee-icon {
+    width: 58px;
+    height: 58px;
+
+    margin: 0 auto 18px;
+
+    border-radius: 50%;
+
+    background: #fff7ed;
+
+    border: 1px solid #fed7aa;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* =====================================================
+   ICON MARK
+===================================================== */
+
+.late-enrollee-icon span {
+    width: 30px;
+    height: 30px;
+
+    border-radius: 50%;
+
+    background: #f59e0b;
+
+    color: #ffffff;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-size: 19px;
+
+    font-weight: 700;
+}
+
+
+/* =====================================================
+   MODAL TITLE
+===================================================== */
+
+.late-enrollee-modal h2 {
+    margin: 0 0 15px;
+
+    color: #111827;
+
+    font-size: 25px;
+
+    line-height: 1.25;
+
+    font-weight: 700;
+}
+
+
+/* =====================================================
+   MAIN MESSAGE
+===================================================== */
+
+.late-enrollee-main-message {
+    margin: 0 auto 10px;
+
+    max-width: 390px;
+
+    color: #374151;
+
+    font-size: 14px;
+
+    line-height: 1.6;
+}
+
+
+/* =====================================================
+   SUB MESSAGE
+===================================================== */
+
+.late-enrollee-sub-message {
+    margin: 0 auto;
+
+    max-width: 390px;
+
+    color: #4b5563;
+
+    font-size: 14px;
+
+    line-height: 1.6;
+}
+
+
+/* =====================================================
+   STUDENT INFORMATION
+===================================================== */
+
+.late-enrollee-student-info {
+    margin: 22px auto 0;
+
+    max-width: 280px;
+
+    padding: 12px 16px;
+
+    background: #f8fafc;
+
+    border: 1px solid #e5e7eb;
+
+    border-radius: 10px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    text-align: left;
+}
+
+
+/* =====================================================
+   STUDENT INFO LABEL
+===================================================== */
+
+.late-enrollee-student-info span {
+    color: #6b7280;
+
+    font-size: 12px;
+
+    font-weight: 500;
+}
+
+
+/* =====================================================
+   STUDENT INFO VALUE
+===================================================== */
+
+.late-enrollee-student-info strong {
+    color: #111827;
+
+    font-size: 13px;
+
+    font-weight: 700;
+}
+
+
+/* =====================================================
+   ACTION BUTTONS
+===================================================== */
+
+.late-enrollee-actions {
+    width: 100%;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 12px;
+
+    margin-top: 27px;
+}
+
+
+/* =====================================================
+   NO BUTTON
+===================================================== */
+
+.late-enrollee-no-button,
+.late-enrollee-yes-button {
+    min-width: 125px;
+
+    height: 42px;
+
+    border-radius: 22px;
+
+    font-family: inherit;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+
+/* =====================================================
+   NO BUTTON
+===================================================== */
+
+.late-enrollee-no-button {
+    background: #ffffff;
+
+    color: #1648ff;
+
+    border: 1.5px solid #1648ff;
+}
+
+
+/* =====================================================
+   NO BUTTON HOVER
+===================================================== */
+
+.late-enrollee-no-button:hover {
+    background: #f3f6ff;
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 5px 14px rgba(22, 72, 255, 0.12);
+}
+
+
+/* =====================================================
+   YES BUTTON
+===================================================== */
+
+.late-enrollee-yes-button {
+    background: #1648ff;
+
+    color: #ffffff;
+
+    border: 1.5px solid #1648ff;
+}
+
+
+/* =====================================================
+   YES BUTTON HOVER
+===================================================== */
+
+.late-enrollee-yes-button:hover {
+    background: #0d39d9;
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 6px 16px rgba(22, 72, 255, 0.2);
+}
+
+
+/* =====================================================
+   BUTTON FOCUS
+===================================================== */
+
+.late-enrollee-no-button:focus-visible,
+.late-enrollee-yes-button:focus-visible {
+    outline: 2px solid #1648ff;
+
+    outline-offset: 3px;
+}
+
+
+/* =====================================================
+   MODAL NOTICE
+===================================================== */
+
+.late-enrollee-note {
+    margin: 19px auto 0;
+
+    max-width: 380px;
+
+    color: #6b7280;
+
+    font-size: 11px;
+
+    line-height: 1.55;
+}
+
+
+/* =====================================================
+   ANIMATION - OVERLAY
+===================================================== */
+
+@keyframes lateEnrolleeOverlayIn {
+
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+
+}
+
+
+/* =====================================================
+   ANIMATION - MODAL
+===================================================== */
+
+@keyframes lateEnrolleeModalIn {
+
+    from {
+        opacity: 0;
+
+        transform:
+            translateY(15px)
+            scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            translateY(0)
+            scale(1);
+    }
+
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 500px) {
+
+    .late-enrollee-overlay {
+        padding: 15px;
+    }
+
+    .late-enrollee-modal {
+        padding: 29px 21px 23px;
+
+        border-radius: 15px;
+    }
+
+    .late-enrollee-modal h2 {
+        font-size: 22px;
+    }
+
+    .late-enrollee-main-message,
+    .late-enrollee-sub-message {
+        font-size: 13px;
+    }
+
+    .late-enrollee-actions {
+        gap: 9px;
+    }
+
+    .late-enrollee-no-button,
+    .late-enrollee-yes-button {
+        min-width: 0;
+
+        flex: 1;
+
+        height: 40px;
+
+        font-size: 12px;
+    }
+
+    .late-enrollee-student-info {
+        max-width: 100%;
+    }
+
+}

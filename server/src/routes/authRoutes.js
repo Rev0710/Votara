@@ -3,6 +3,9 @@ const express = require("express");
 const {
     studentLogin,
     changeTemporaryPassword,
+} = require("../controllers/studentAuthController");
+
+const {
     uploadProfilePicture,
     getCurrentStudent,
 } = require("../controllers/authController");
@@ -10,6 +13,7 @@ const {
 const {
     protectStudent,
 } = require("../middleware/authMiddleware");
+
 
 const router =
     express.Router();
@@ -26,12 +30,11 @@ router.post(
 
 
 // =====================================================
-// CHANGE PASSWORD
+// CHANGE TEMPORARY PASSWORD
 // =====================================================
 
 router.post(
     "/change-password",
-    protectStudent,
     changeTemporaryPassword
 );
 

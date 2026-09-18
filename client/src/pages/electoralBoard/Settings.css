@@ -1,0 +1,682 @@
+/* =========================================================
+   VOTARA - ELECTORAL BOARD SETTINGS
+========================================================= */
+
+.settings-page {
+    width: 100%;
+    min-height: 100%;
+    padding: 28px;
+    background: #f8fafc;
+    color: #0f172a;
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.settings-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.settings-eyebrow {
+    margin-bottom: 7px;
+    color: #1e3a8a;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+}
+
+.settings-header h1 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 30px;
+    line-height: 1.15;
+    font-weight: 800;
+}
+
+.settings-header p {
+    margin: 8px 0 0;
+    color: #64748b;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+
+/* =========================================================
+   REFRESH BUTTON
+========================================================= */
+
+.settings-refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 0 16px;
+    border: 1px solid #dbe3ef;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #1e3a8a;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+}
+
+.settings-refresh-btn:hover:not(:disabled) {
+    border-color: #bfdbfe;
+    background: #eff6ff;
+    box-shadow: 0 5px 15px rgba(15, 23, 42, 0.06);
+}
+
+.settings-refresh-btn:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.settings-refresh-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.settings-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 15px 17px;
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    background: #fef2f2;
+}
+
+.settings-error-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #dc2626;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.settings-error strong {
+    display: block;
+    margin-bottom: 3px;
+    color: #991b1b;
+    font-size: 13px;
+}
+
+.settings-error p {
+    margin: 0;
+    color: #b91c1c;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   CARD
+========================================================= */
+
+.settings-card {
+    margin-bottom: 20px;
+    padding: 21px;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.045);
+}
+
+.settings-card-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.settings-card-eyebrow {
+    margin-bottom: 5px;
+    color: #94a3b8;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.15px;
+}
+
+.settings-card-heading h2 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 17px;
+    font-weight: 800;
+}
+
+.settings-card-heading p {
+    margin: 5px 0 0;
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+
+/* =========================================================
+   ACCOUNT STATUS
+========================================================= */
+
+.settings-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 28px;
+    padding: 0 10px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.settings-status.active {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+    color: #15803d;
+}
+
+.settings-status.inactive {
+    border-color: #fecaca;
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+.settings-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+
+/* =========================================================
+   PROFILE
+========================================================= */
+
+.settings-profile {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #f8fafc;
+}
+
+.settings-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    background: #2563eb;
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: 800;
+    box-shadow: 0 5px 14px rgba(37, 99, 235, 0.2);
+}
+
+.settings-profile-main {
+    min-width: 0;
+}
+
+.settings-profile-main h3 {
+    margin: 0;
+    overflow: hidden;
+    color: #1e293b;
+    font-size: 16px;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.settings-profile-main p {
+    margin: 4px 0 8px;
+    overflow: hidden;
+    color: #64748b;
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.settings-role-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 23px;
+    padding: 0 8px;
+    border: 1px solid #c7d2fe;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #4338ca;
+    font-size: 9px;
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   ACCOUNT INFORMATION
+========================================================= */
+
+.settings-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.settings-info-item {
+    padding: 13px;
+    border: 1px solid #edf2f7;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.settings-info-item span {
+    display: block;
+    margin-bottom: 5px;
+    color: #94a3b8;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
+
+.settings-info-item strong {
+    display: block;
+    overflow: hidden;
+    color: #334155;
+    font-size: 12px;
+    font-weight: 750;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.settings-value-success {
+    color: #15803d !important;
+}
+
+.settings-value-danger {
+    color: #b91c1c !important;
+}
+
+
+/* =========================================================
+   SECURITY
+========================================================= */
+
+.settings-security-icon,
+.settings-system-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: #eff6ff;
+    color: #1e3a8a;
+    font-size: 17px;
+    font-weight: 800;
+}
+
+.settings-security-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.settings-security-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px;
+    border: 1px solid #edf2f7;
+    border-radius: 11px;
+    background: #f8fafc;
+}
+
+.settings-security-item-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #1e3a8a;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.settings-security-item > div:nth-child(2) {
+    min-width: 0;
+    flex: 1;
+}
+
+.settings-security-item strong {
+    display: block;
+    color: #334155;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.settings-security-item p {
+    margin: 3px 0 0;
+    color: #94a3b8;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+.settings-security-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 24px;
+    padding: 0 9px;
+    border: 1px solid #bbf7d0;
+    border-radius: 999px;
+    background: #f0fdf4;
+    color: #15803d;
+    font-size: 9px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.settings-security-badge.neutral {
+    border-color: #e2e8f0;
+    background: #ffffff;
+    color: #64748b;
+}
+
+
+/* =========================================================
+   SYSTEM INFORMATION
+========================================================= */
+
+.settings-system-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.settings-system-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    min-height: 52px;
+    padding: 11px 13px;
+    border: 1px solid #edf2f7;
+    border-radius: 10px;
+    background: #f8fafc;
+}
+
+.settings-system-item span {
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.settings-system-item strong {
+    color: #334155;
+    font-size: 11px;
+    font-weight: 800;
+    text-align: right;
+}
+
+
+/* =========================================================
+   SECURITY NOTICE
+========================================================= */
+
+.settings-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding: 16px 17px;
+    border: 1px solid #dbeafe;
+    border-radius: 12px;
+    background: #eff6ff;
+}
+
+.settings-notice-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: #dbeafe;
+    color: #1e3a8a;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.settings-notice strong {
+    display: block;
+    margin-bottom: 4px;
+    color: #1e3a8a;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.settings-notice p {
+    margin: 0;
+    color: #475569;
+    font-size: 10px;
+    line-height: 1.65;
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.settings-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 5px 2px 15px;
+    color: #94a3b8;
+    font-size: 9px;
+}
+
+.settings-footer span:first-child {
+    color: #64748b;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   LOADING
+========================================================= */
+
+.settings-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 420px;
+    color: #64748b;
+}
+
+.settings-loading p {
+    margin: 12px 0 0;
+    font-size: 12px;
+}
+
+.settings-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #dbeafe;
+    border-top-color: #1e3a8a;
+    border-radius: 50%;
+    animation: settingsSpin 0.8s linear infinite;
+}
+
+@keyframes settingsSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* =========================================================
+   LARGE TABLET
+========================================================= */
+
+@media (max-width: 1000px) {
+
+    .settings-page {
+        padding: 22px;
+    }
+
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 760px) {
+
+    .settings-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .settings-refresh-btn {
+        align-self: flex-start;
+    }
+
+    .settings-info-grid,
+    .settings-system-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .settings-security-item {
+        align-items: flex-start;
+    }
+
+    .settings-security-badge {
+        margin-left: auto;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 560px) {
+
+    .settings-page {
+        padding: 15px;
+    }
+
+    .settings-header h1 {
+        font-size: 25px;
+    }
+
+    .settings-card {
+        padding: 16px;
+    }
+
+    .settings-card-heading {
+        flex-direction: column;
+    }
+
+    .settings-security-icon,
+    .settings-system-icon {
+        display: none;
+    }
+
+    .settings-profile {
+        align-items: flex-start;
+    }
+
+    .settings-avatar {
+        width: 52px;
+        height: 52px;
+        font-size: 18px;
+    }
+
+    .settings-security-item {
+        flex-wrap: wrap;
+    }
+
+    .settings-security-item > div:nth-child(2) {
+        flex-basis: calc(100% - 48px);
+    }
+
+    .settings-security-badge {
+        margin-left: 46px;
+    }
+
+    .settings-system-item {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .settings-system-item strong {
+        text-align: left;
+    }
+
+    .settings-footer {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .settings-spinner {
+        animation: none;
+    }
+
+    .settings-refresh-btn {
+        transition: none;
+    }
+
+}

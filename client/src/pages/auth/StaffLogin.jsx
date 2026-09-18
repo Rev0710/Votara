@@ -5,184 +5,178 @@ const API_BASE_URL =
     import.meta.env.VITE_API_URL ||
     "http://localhost:5000/api";
 
-
 // =====================================================
 // SHARED ADMIN / ELECTORAL BOARD LOGIN
 // =====================================================
 
 const StaffLogin = () => {
+    const navigate = useNavigate();
 
-    const navigate =
-        useNavigate();
+    const [formData, setFormData] = useState({
+        email: "",
+        password: "",
+        securityCode: "",
+    });
 
+    const [showPassword, setShowPassword] = useState(false);
+    const [showSecurityCode, setShowSecurityCode] = useState(false);
 
-    const [formData, setFormData] =
-        useState({
-
-            email: "",
-
-            password: "",
-
-            securityCode: "",
-
-        });
-
-
-    const [showPassword, setShowPassword] =
-        useState(false);
-
-
-    const [showSecurityCode, setShowSecurityCode] =
-        useState(false);
-
-
-    const [loading, setLoading] =
-        useState(false);
-
-
-    const [error, setError] =
-        useState("");
-
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
     // =================================================
     // HANDLE INPUT
     // =================================================
 
-    const handleChange = (
-        event
-    ) => {
+    const handleChange = (event) => {
+        const { name, value } = event.target;
 
-        const {
-            name,
-            value,
-        } = event.target;
-
-
-        setFormData(
-            previous => ({
-                ...previous,
-                [name]: value,
-            })
-        );
-
+        setFormData((previous) => ({
+            ...previous,
+            [name]: value,
+        }));
 
         setError("");
     };
-
 
     // =================================================
     // SUBMIT LOGIN
     // =================================================
 
-    const handleSubmit = async (
-        event
-    ) => {
-
+    const handleSubmit = async (event) => {
         event.preventDefault();
-
 
         setError("");
 
+        // ---------------------------------------------
+        // VALIDATE REQUIRED FIELDS
+        // ---------------------------------------------
 
-        if (
-            !formData.email.trim() ||
-            !formData.password ||
-            !formData.securityCode.trim()
-        ) {
+        const email = formData.email.trim().toLowerCase();
+        const password = formData.password;
+        const securityCode = formData.securityCode.trim();
 
+        if (!email || !password || !securityCode) {
             setError(
                 "Please enter your email, password, and security code."
             );
-
             return;
         }
 
-
         try {
-
             setLoading(true);
 
+            // ---------------------------------------------
+            // REMOVE OLD STAFF SESSION
+            // ---------------------------------------------
+            // This prevents an old Admin/EB session from
+            // interfering with the newly authenticated user.
 
-            const response =
-                await fetch(
-                    `${API_BASE_URL}/staff-auth/login`,
-                    {
+            localStorage.removeItem("votaraStaffToken");
+            localStorage.removeItem("votaraStaffUser");
 
-                        method: "POST",
+            // ---------------------------------------------
+            // STAFF LOGIN REQUEST
+            // ---------------------------------------------
 
-                        headers: {
+            const response = await fetch(
+                `${API_BASE_URL}/staff-auth/login`,
+                {
+                    method: "POST",
 
-                            "Content-Type":
-                                "application/json",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
 
-                        },
+                    body: JSON.stringify({
+                        email,
+                        password,
+                        securityCode,
+                    }),
+                }
+            );
 
-                        body:
-                            JSON.stringify({
+            // ---------------------------------------------
+            // SAFELY READ SERVER RESPONSE
+            // ---------------------------------------------
 
-                                email:
-                                    formData.email
-                                        .trim()
-                                        .toLowerCase(),
+            let data = {};
 
-                                password:
-                                    formData.password,
+            try {
+                data = await response.json();
+            } catch {
+                data = {};
+            }
 
-                                securityCode:
-                                    formData.securityCode
-                                        .trim(),
+            // ---------------------------------------------
+            // LOGIN ERROR
+            // ---------------------------------------------
 
-                            }),
-
-                    }
+            if (!response.ok) {
+                console.error(
+                    "Staff login failed:",
+                    response.status,
+                    data
                 );
-
-
-            const data =
-                await response.json();
-
-
-            if (
-                !response.ok
-            ) {
 
                 setError(
                     data.message ||
-                    "Unable to login."
+                        "Unable to login. Please check your credentials and security code."
                 );
 
                 return;
             }
 
+            // ---------------------------------------------
+            // VALIDATE LOGIN RESPONSE
+            // ---------------------------------------------
 
-            // =================================================
-            // SAVE UNIFIED STAFF SESSION
+            if (!data.token || !data.user) {
+                console.error(
+                    "Invalid staff login response:",
+                    data
+                );
+
+                setError(
+                    "Login succeeded, but the server returned an invalid session."
+                );
+
+                return;
+            }
+
+            // ---------------------------------------------
+            // NORMALIZE USER ROLE
+            // ---------------------------------------------
+
+            const user = {
+                ...data.user,
+                role:
+                    typeof data.user.role === "string"
+                        ? data.user.role.trim().toLowerCase()
+                        : "",
+            };
+
+            // ---------------------------------------------
+            // SAVE STAFF SESSION
             //
             // Password is NEVER stored.
-            // =================================================
+            // ---------------------------------------------
 
             localStorage.setItem(
                 "votaraStaffToken",
                 data.token
             );
 
-
             localStorage.setItem(
                 "votaraStaffUser",
-                JSON.stringify(
-                    data.user
-                )
+                JSON.stringify(user)
             );
 
+            // ---------------------------------------------
+            // PASSWORD CHANGE REQUIREMENT
+            // ---------------------------------------------
 
-            // =================================================
-            // ROLE CHECK
-            // =================================================
-
-            if (
-                data.user.mustChangePassword
-            ) {
-
+            if (user.mustChangePassword === true) {
                 navigate(
                     "/staff-change-password",
                     {
@@ -193,12 +187,11 @@ const StaffLogin = () => {
                 return;
             }
 
+            // ---------------------------------------------
+            // ADMIN
+            // ---------------------------------------------
 
-            if (
-                data.user.role ===
-                "admin"
-            ) {
-
+            if (user.role === "admin") {
                 navigate(
                     "/admin-dashboard",
                     {
@@ -209,12 +202,11 @@ const StaffLogin = () => {
                 return;
             }
 
+            // ---------------------------------------------
+            // ELECTORAL BOARD
+            // ---------------------------------------------
 
-            if (
-                data.user.role ===
-                "electoral_board"
-            ) {
-
+            if (user.role === "electoral_board") {
                 navigate(
                     "/electoral-board/dashboard",
                     {
@@ -225,14 +217,23 @@ const StaffLogin = () => {
                 return;
             }
 
+            // ---------------------------------------------
+            // UNKNOWN ROLE
+            // ---------------------------------------------
+
+            console.error(
+                "Unknown staff role:",
+                user.role
+            );
+
+            // Remove invalid session
+            localStorage.removeItem("votaraStaffToken");
+            localStorage.removeItem("votaraStaffUser");
 
             setError(
                 "Your account role is not recognized."
             );
-
-
         } catch (error) {
-
             console.error(
                 "Staff login error:",
                 error
@@ -241,16 +242,12 @@ const StaffLogin = () => {
             setError(
                 "Unable to connect to the VOTARA server. Please make sure the backend is running."
             );
-
         } finally {
-
             setLoading(false);
         }
     };
 
-
     return (
-
         <div
             style={{
                 minHeight: "100vh",
@@ -264,7 +261,6 @@ const StaffLogin = () => {
                     "Poppins, Arial, sans-serif",
             }}
         >
-
             <div
                 style={{
                     width: "100%",
@@ -276,7 +272,6 @@ const StaffLogin = () => {
                         "0 20px 50px rgba(15, 23, 42, 0.12)",
                 }}
             >
-
                 {/* =====================================
                     HEADER
                 ====================================== */}
@@ -287,7 +282,6 @@ const StaffLogin = () => {
                         marginBottom: "28px",
                     }}
                 >
-
                     <div
                         style={{
                             width: "64px",
@@ -297,14 +291,12 @@ const StaffLogin = () => {
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            background:
-                                "#eff6ff",
+                            background: "#eff6ff",
                             fontSize: "30px",
                         }}
                     >
                         🔐
                     </div>
-
 
                     <h1
                         style={{
@@ -316,86 +308,62 @@ const StaffLogin = () => {
                         Staff Login
                     </h1>
 
-
                     <p
                         style={{
-                            margin:
-                                "8px 0 0",
+                            margin: "8px 0 0",
                             color: "#64748b",
                             fontSize: "14px",
                         }}
                     >
                         Admin / Electoral Board
                     </p>
-
                 </div>
-
 
                 {/* =====================================
                     ERROR
                 ====================================== */}
 
                 {error && (
-
                     <div
                         style={{
                             marginBottom: "18px",
                             padding: "13px 15px",
                             borderRadius: "12px",
-                            background:
-                                "#fef2f2",
-                            border:
-                                "1px solid #fecaca",
-                            color:
-                                "#b91c1c",
+                            background: "#fef2f2",
+                            border: "1px solid #fecaca",
+                            color: "#b91c1c",
                             fontSize: "14px",
                         }}
                     >
                         {error}
                     </div>
-
                 )}
 
-
-                <form
-                    onSubmit={
-                        handleSubmit
-                    }
-                >
-
+                <form onSubmit={handleSubmit}>
                     {/* =================================
                         EMAIL
                     ================================== */}
 
-                    <label
-                        style={labelStyle}
-                    >
+                    <label style={labelStyle}>
                         Email Address
                     </label>
 
                     <input
                         type="email"
                         name="email"
-                        value={
-                            formData.email
-                        }
-                        onChange={
-                            handleChange
-                        }
+                        value={formData.email}
+                        onChange={handleChange}
                         placeholder="Enter your email"
                         autoComplete="email"
                         style={inputStyle}
                         disabled={loading}
                     />
 
-
                     {/* =================================
                         PASSWORD
                     ================================== */}
 
-                    <label
-                        style={labelStyle}
-                    >
+                    <label style={labelStyle}>
                         Password
                     </label>
 
@@ -404,7 +372,6 @@ const StaffLogin = () => {
                             position: "relative",
                         }}
                     >
-
                         <input
                             type={
                                 showPassword
@@ -412,12 +379,8 @@ const StaffLogin = () => {
                                     : "password"
                             }
                             name="password"
-                            value={
-                                formData.password
-                            }
-                            onChange={
-                                handleChange
-                            }
+                            value={formData.password}
+                            onChange={handleChange}
                             placeholder="Enter your password"
                             autoComplete="current-password"
                             style={{
@@ -431,29 +394,24 @@ const StaffLogin = () => {
                             type="button"
                             onClick={() =>
                                 setShowPassword(
-                                    previous =>
+                                    (previous) =>
                                         !previous
                                 )
                             }
                             style={toggleStyle}
+                            disabled={loading}
                         >
-                            {
-                                showPassword
-                                    ? "Hide"
-                                    : "Show"
-                            }
+                            {showPassword
+                                ? "Hide"
+                                : "Show"}
                         </button>
-
                     </div>
-
 
                     {/* =================================
                         SECURITY CODE
                     ================================== */}
 
-                    <label
-                        style={labelStyle}
-                    >
+                    <label style={labelStyle}>
                         Security Code
                     </label>
 
@@ -462,7 +420,6 @@ const StaffLogin = () => {
                             position: "relative",
                         }}
                     >
-
                         <input
                             type={
                                 showSecurityCode
@@ -470,14 +427,11 @@ const StaffLogin = () => {
                                     : "password"
                             }
                             name="securityCode"
-                            value={
-                                formData.securityCode
-                            }
-                            onChange={
-                                handleChange
-                            }
+                            value={formData.securityCode}
+                            onChange={handleChange}
                             placeholder="Enter your security code"
                             autoComplete="off"
+                            spellCheck="false"
                             style={{
                                 ...inputStyle,
                                 paddingRight: "75px",
@@ -489,21 +443,18 @@ const StaffLogin = () => {
                             type="button"
                             onClick={() =>
                                 setShowSecurityCode(
-                                    previous =>
+                                    (previous) =>
                                         !previous
                                 )
                             }
                             style={toggleStyle}
+                            disabled={loading}
                         >
-                            {
-                                showSecurityCode
-                                    ? "Hide"
-                                    : "Show"
-                            }
+                            {showSecurityCode
+                                ? "Hide"
+                                : "Show"}
                         </button>
-
                     </div>
-
 
                     <div
                         style={{
@@ -514,9 +465,10 @@ const StaffLogin = () => {
                             lineHeight: 1.5,
                         }}
                     >
-                        The system automatically identifies whether you are an Admin or Electoral Board member.
+                        The system automatically identifies
+                        whether you are an Admin or Electoral
+                        Board member.
                     </div>
-
 
                     {/* =================================
                         LOGIN
@@ -528,19 +480,14 @@ const StaffLogin = () => {
                         style={{
                             ...primaryButtonStyle,
                             width: "100%",
-                            opacity:
-                                loading
-                                    ? 0.7
-                                    : 1,
+                            opacity: loading ? 0.7 : 1,
                         }}
                     >
                         {loading
                             ? "Signing In..."
                             : "Login"}
                     </button>
-
                 </form>
-
 
                 {/* =====================================
                     ADMIN REGISTRATION
@@ -554,27 +501,18 @@ const StaffLogin = () => {
                         color: "#64748b",
                     }}
                 >
-
-                    Initial Admin?
-
-                    {" "}
-
+                    Initial Admin?{" "}
                     <Link
                         to="/admin/register"
                         style={{
-                            color:
-                                "#2563eb",
-                            fontWeight:
-                                "700",
-                            textDecoration:
-                                "none",
+                            color: "#2563eb",
+                            fontWeight: "700",
+                            textDecoration: "none",
                         }}
                     >
                         Create Admin Account
                     </Link>
-
                 </div>
-
 
                 {/* =====================================
                     BACK
@@ -586,119 +524,69 @@ const StaffLogin = () => {
                         textAlign: "center",
                     }}
                 >
-
                     <Link
                         to="/account-selection"
                         style={{
-                            color:
-                                "#64748b",
-                            fontSize:
-                                "13px",
-                            textDecoration:
-                                "none",
+                            color: "#64748b",
+                            fontSize: "13px",
+                            textDecoration: "none",
                         }}
                     >
                         ← Back to Account Selection
                     </Link>
-
                 </div>
-
             </div>
-
         </div>
     );
 };
-
 
 // =====================================================
 // STYLES
 // =====================================================
 
 const labelStyle = {
-
     display: "block",
-
     marginTop: "17px",
-
     marginBottom: "7px",
-
     color: "#334155",
-
     fontSize: "14px",
-
     fontWeight: "700",
-
 };
-
 
 const inputStyle = {
-
     width: "100%",
-
     boxSizing: "border-box",
-
     padding: "13px 14px",
-
-    border:
-        "1px solid #cbd5e1",
-
+    border: "1px solid #cbd5e1",
     borderRadius: "11px",
-
     outline: "none",
-
     fontSize: "14px",
-
     color: "#0f172a",
-
     background: "#ffffff",
-
 };
-
 
 const toggleStyle = {
-
     position: "absolute",
-
     right: "8px",
-
     top: "7px",
-
     border: "none",
-
     borderRadius: "8px",
-
     padding: "7px 10px",
-
     background: "#f1f5f9",
-
     color: "#334155",
-
     fontWeight: "600",
-
     cursor: "pointer",
-
 };
-
 
 const primaryButtonStyle = {
-
     border: "none",
-
     borderRadius: "11px",
-
     padding: "14px 18px",
-
     background: "#2563eb",
-
     color: "#ffffff",
-
     fontWeight: "700",
-
     fontSize: "14px",
-
     cursor: "pointer",
-
 };
-
 
 export default StaffLogin;

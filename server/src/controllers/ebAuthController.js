@@ -54,7 +54,7 @@ const registerEB = async (req, res) => {
             String(registrationCode).trim();
 
         // -------------------------------------------------
-        // Validate email format
+        // Validate email
         // -------------------------------------------------
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -67,7 +67,7 @@ const registerEB = async (req, res) => {
         }
 
         // -------------------------------------------------
-        // Check EB registration code configuration
+        // Check EB registration code
         // -------------------------------------------------
 
         if (!process.env.EB_REGISTRATION_CODE) {
@@ -81,10 +81,6 @@ const registerEB = async (req, res) => {
                     "EB registration is not configured on the server."
             });
         }
-
-        // -------------------------------------------------
-        // Validate EB registration code
-        // -------------------------------------------------
 
         const configuredCode =
             String(process.env.EB_REGISTRATION_CODE).trim();
@@ -120,7 +116,7 @@ const registerEB = async (req, res) => {
         }
 
         // -------------------------------------------------
-        // Check if email already exists
+        // Check existing email
         // -------------------------------------------------
 
         const {
@@ -145,10 +141,6 @@ const registerEB = async (req, res) => {
             });
         }
 
-        // -------------------------------------------------
-        // Existing email protection
-        // -------------------------------------------------
-
         if (existingUser) {
             return res.status(409).json({
                 success: false,
@@ -161,7 +153,8 @@ const registerEB = async (req, res) => {
         // Hash password
         // -------------------------------------------------
 
-        const passwordHash = await bcrypt.hash(password, 12);
+        const passwordHash =
+            await bcrypt.hash(password, 12);
 
         // -------------------------------------------------
         // Create EB account
@@ -177,7 +170,11 @@ const registerEB = async (req, res) => {
                     full_name: cleanFullName,
                     email: cleanEmail,
                     password_hash: passwordHash,
+
+                    // IMPORTANT:
+                    // EB accounts always use this exact role.
                     role: "electoral_board",
+
                     is_active: true,
                     failed_login_attempts: 0
                 }
@@ -197,7 +194,6 @@ const registerEB = async (req, res) => {
                 insertError.message
             );
 
-            // PostgreSQL unique violation
             if (insertError.code === "23505") {
                 return res.status(409).json({
                     success: false,
@@ -265,7 +261,7 @@ const loginEB = async (req, res) => {
             String(email).trim().toLowerCase();
 
         // -------------------------------------------------
-        // Find account
+        // Find EB account
         // -------------------------------------------------
 
         const {
@@ -303,10 +299,15 @@ const loginEB = async (req, res) => {
         }
 
         // -------------------------------------------------
-        // Verify role
+        // Verify EB role
         // -------------------------------------------------
 
-        if (user.role !== "electoral_board") {
+        const userRole =
+            String(user.role || "")
+                .trim()
+                .toLowerCase();
+
+        if (userRole !== "electoral_board") {
             return res.status(403).json({
                 success: false,
                 message:
@@ -318,7 +319,7 @@ const loginEB = async (req, res) => {
         // Verify active status
         // -------------------------------------------------
 
-        if (!user.is_active) {
+        if (user.is_active !== true) {
             return res.status(403).json({
                 success: false,
                 message:
@@ -373,8 +374,10 @@ const loginEB = async (req, res) => {
                     .update({
                         failed_login_attempts:
                             failedAttempts,
+
                         locked_until:
                             lockedUntil.toISOString(),
+
                         updated_at:
                             new Date().toISOString()
                     })
@@ -392,6 +395,7 @@ const loginEB = async (req, res) => {
                 .update({
                     failed_login_attempts:
                         failedAttempts,
+
                     updated_at:
                         new Date().toISOString()
                 })
@@ -420,37 +424,95 @@ const loginEB = async (req, res) => {
             })
             .eq("id", user.id);
 
+        // =================================================
+        // CREATE EB JWT
+        // =================================================
+        //
+        // IMPORTANT:
+        // Always explicitly issue the Electoral Board role.
+        //
+        // ebRegistrationController expects:
+        //
+        // decoded.role === "electoral_board"
+        //
+        // and:
+        //
+        // decoded.userId
+        // =================================================
+
+        const tokenPayload = {
+            userId: user.id,
+            email: user.email,
+
+            // IMPORTANT:
+            // Do NOT rely on an unnormalized DB value here.
+            role: "electoral_board",
+
+            fullName: user.full_name
+        };
+
+        const token =
+            jwt.sign(
+                tokenPayload,
+                process.env.JWT_SECRET,
+                {
+                    expiresIn: "8h"
+                }
+            );
+
         // -------------------------------------------------
-        // Create JWT
+        // Server-side verification
+        // -------------------------------------------------
+        // This confirms the token we just generated has
+        // the exact claims expected by EB APIs.
         // -------------------------------------------------
 
-        const token = jwt.sign(
-            {
-                userId: user.id,
-                email: user.email,
-                role: user.role,
-                fullName: user.full_name
-            },
-            process.env.JWT_SECRET,
-            {
-                expiresIn: "8h"
-            }
+        const verifiedToken =
+            jwt.verify(
+                token,
+                process.env.JWT_SECRET
+            );
+
+        console.log(
+            "================================="
         );
 
         console.log(
             `✅ EB login successful: ${user.email}`
         );
 
+        console.log(
+            "🔐 EB JWT verified:"
+        );
+
+        console.log({
+            userId: verifiedToken.userId,
+            role: verifiedToken.role,
+            email: verifiedToken.email
+        });
+
+        console.log(
+            "================================="
+        );
+
+        // -------------------------------------------------
+        // Return login response
+        // -------------------------------------------------
+
         return res.status(200).json({
             success: true,
             message:
                 "EB login successful.",
+
             token,
+
             user: {
                 id: user.id,
                 fullName: user.full_name,
                 email: user.email,
-                role: user.role
+
+                // Keep frontend user role consistent too.
+                role: "electoral_board"
             }
         });
 

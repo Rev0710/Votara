@@ -1,0 +1,514 @@
+.vm-page {
+    width: 100%;
+    min-height: 100%;
+    padding: 28px;
+    background: #f8fafc;
+    box-sizing: border-box;
+}
+
+.vm-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.vm-eyebrow {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: #1e3a8a;
+    margin-bottom: 7px;
+}
+
+.vm-header h1 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 30px;
+    font-weight: 800;
+}
+
+.vm-header p {
+    margin: 8px 0 0;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.vm-refresh-button {
+    border: 0;
+    border-radius: 10px;
+    padding: 11px 17px;
+    background: #1e3a8a;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.vm-refresh-button:hover {
+    opacity: 0.92;
+}
+
+.vm-refresh-button:disabled {
+    opacity: 0.65;
+    cursor: wait;
+}
+
+.vm-refresh-button span {
+    font-size: 17px;
+}
+
+.vm-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 13px;
+    padding: 16px;
+    margin-bottom: 22px;
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    background: #fef2f2;
+    color: #991b1b;
+}
+
+.vm-error-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #dc2626;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.vm-error strong {
+    font-size: 14px;
+}
+
+.vm-error p {
+    margin: 4px 0 0;
+    font-size: 13px;
+}
+
+.vm-election-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 22px;
+    margin-bottom: 22px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
+
+.vm-election-main {
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+}
+
+.vm-election-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #dbeafe;
+    color: #1e3a8a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 21px;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.vm-card-label {
+    display: block;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+
+.vm-election-card h2 {
+    margin: 5px 0 5px;
+    color: #0f172a;
+    font-size: 20px;
+}
+
+.vm-election-card p {
+    margin: 0;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.vm-election-meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 20px;
+    padding-top: 18px;
+}
+
+.vm-election-meta span {
+    display: block;
+    color: #64748b;
+    font-size: 11px;
+    margin-bottom: 5px;
+}
+
+.vm-election-meta strong {
+    color: #0f172a;
+    font-size: 13px;
+}
+
+.vm-status {
+    display: inline-flex;
+    width: fit-content;
+    padding: 5px 9px;
+    border-radius: 999px;
+    font-size: 10px !important;
+    font-weight: 800;
+}
+
+.vm-status-open {
+    background: #dcfce7;
+    color: #166534 !important;
+}
+
+.vm-status-scheduled {
+    background: #fef3c7;
+    color: #92400e !important;
+}
+
+.vm-status-closed {
+    background: #e2e8f0;
+    color: #475569 !important;
+}
+
+.vm-status-cancelled {
+    background: #fee2e2;
+    color: #991b1b !important;
+}
+
+.vm-status-draft {
+    background: #dbeafe;
+    color: #1e3a8a !important;
+}
+
+.vm-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+.vm-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
+
+.vm-stat-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    background: #eff6ff;
+    color: #1e3a8a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.vm-stat-card span {
+    display: block;
+    color: #64748b;
+    font-size: 11px;
+    margin-bottom: 4px;
+}
+
+.vm-stat-card strong {
+    color: #0f172a;
+    font-size: 22px;
+}
+
+.vm-panel {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 22px;
+    margin-bottom: 22px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
+
+.vm-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.vm-panel-header h2 {
+    margin: 5px 0 0;
+    font-size: 18px;
+    color: #0f172a;
+}
+
+.vm-progress-number {
+    color: #1e3a8a;
+    font-size: 24px;
+}
+
+.vm-progress-track {
+    width: 100%;
+    height: 12px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e2e8f0;
+}
+
+.vm-progress-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: #1e3a8a;
+    transition: width 0.4s ease;
+}
+
+.vm-progress-footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-top: 10px;
+    color: #64748b;
+    font-size: 12px;
+}
+
+.vm-year-levels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.vm-year-level {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #dbeafe;
+    background: #eff6ff;
+    color: #1e3a8a;
+    padding: 9px 13px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.vm-muted {
+    margin: 0;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.vm-ballot-count {
+    color: #1e3a8a;
+    font-size: 24px;
+}
+
+.vm-private-badge {
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #475569;
+    padding: 6px 10px;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.vm-activity-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.vm-activity-row {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 13px 0;
+    border-top: 1px solid #f1f5f9;
+}
+
+.vm-activity-row:first-child {
+    border-top: 0;
+}
+
+.vm-activity-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: #eff6ff;
+    color: #1e3a8a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.vm-activity-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.vm-activity-info strong {
+    color: #0f172a;
+    font-size: 13px;
+}
+
+.vm-activity-info span {
+    color: #64748b;
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+.vm-activity-row time {
+    color: #64748b;
+    font-size: 11px;
+}
+
+.vm-no-activity,
+.vm-empty-election,
+.vm-loading {
+    text-align: center;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 45px 20px;
+}
+
+.vm-no-activity-icon,
+.vm-empty-icon {
+    width: 44px;
+    height: 44px;
+    margin: 0 auto 12px;
+    border-radius: 50%;
+    background: #eff6ff;
+    color: #1e3a8a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+}
+
+.vm-empty-election h2,
+.vm-no-activity h3 {
+    margin: 0 0 7px;
+    color: #0f172a;
+}
+
+.vm-empty-election p,
+.vm-no-activity p {
+    max-width: 500px;
+    margin: 0 auto;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.vm-loading {
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.vm-loading h3 {
+    margin: 15px 0 5px;
+    color: #0f172a;
+}
+
+.vm-loading p {
+    margin: 0;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.vm-spinner {
+    width: 34px;
+    height: 34px;
+    border: 4px solid #dbeafe;
+    border-top-color: #1e3a8a;
+    border-radius: 50%;
+    animation: vm-spin 0.8s linear infinite;
+}
+
+@keyframes vm-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.vm-last-updated {
+    text-align: right;
+    color: #94a3b8;
+    font-size: 10px;
+    margin-top: 4px;
+}
+
+@media (max-width: 1100px) {
+    .vm-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 760px) {
+    .vm-page {
+        padding: 18px;
+    }
+
+    .vm-header {
+        flex-direction: column;
+    }
+
+    .vm-refresh-button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .vm-election-meta {
+        grid-template-columns: 1fr;
+    }
+
+    .vm-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .vm-progress-footer {
+        flex-direction: column;
+    }
+
+    .vm-panel-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .vm-activity-row {
+        align-items: flex-start;
+    }
+
+    .vm-activity-row time {
+        text-align: right;
+    }
+}

@@ -3,6 +3,7 @@ const express = require("express");
 const {
     getStudentRegistrations,
     getStudentRegistrationById,
+    reviewStudentRegistration,
 } = require("../controllers/ebRegistrationController");
 
 const router = express.Router();
@@ -23,6 +24,23 @@ router.get(
 router.get(
     "/registrations/:id",
     getStudentRegistrationById
+);
+
+// =========================================================
+// REVIEW STUDENT REGISTRATION APPLICATION
+//
+// Supported decisions:
+// - approve
+// - reject
+// - request_correction
+//
+// Endpoint:
+// PATCH /api/eb/registrations/:id/review
+// =========================================================
+
+router.patch(
+    "/registrations/:id/review",
+    reviewStudentRegistration
 );
 
 // =========================================================

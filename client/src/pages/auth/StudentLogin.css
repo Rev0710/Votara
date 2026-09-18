@@ -125,7 +125,9 @@
 }
 
 
-/* TOP TRIANGLE */
+/* =====================================================
+   TOP TRIANGLE
+===================================================== */
 
 .student-login-logo-mark .triangle-top {
     position: absolute;
@@ -142,7 +144,9 @@
 }
 
 
-/* TOP RIGHT CIRCLE */
+/* =====================================================
+   TOP RIGHT CIRCLE
+===================================================== */
 
 .student-login-logo-mark .circle {
     position: absolute;
@@ -159,7 +163,9 @@
 }
 
 
-/* BOTTOM LEFT SHAPE */
+/* =====================================================
+   BOTTOM LEFT SHAPE
+===================================================== */
 
 .student-login-logo-mark::before {
     content: "";
@@ -187,7 +193,9 @@
 }
 
 
-/* BOTTOM RIGHT TRIANGLE */
+/* =====================================================
+   BOTTOM RIGHT TRIANGLE
+===================================================== */
 
 .student-login-logo-mark .triangle-bottom {
     position: absolute;
@@ -204,10 +212,23 @@
 }
 
 
-/* LOGO HOVER */
+/* =====================================================
+   LOGO HOVER
+===================================================== */
 
-.student-login-logo:hover {
+.student-login-logo:hover:not(:disabled) {
     opacity: 0.8;
+}
+
+
+/* =====================================================
+   LOGO FOCUS
+===================================================== */
+
+.student-login-logo:focus-visible {
+    outline: 2px solid #1648ff;
+    outline-offset: 4px;
+    border-radius: 6px;
 }
 
 
@@ -224,6 +245,28 @@
     position: relative;
 
     flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* =====================================================
+   ILLUSTRATION IMAGE
+===================================================== */
+
+.student-login-illustration {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: contain;
+
+    user-select: none;
+
+    -webkit-user-drag: none;
 }
 
 
@@ -282,7 +325,9 @@
 }
 
 
-/* DEVICE SCREEN */
+/* =====================================================
+   DEVICE SCREEN
+===================================================== */
 
 .device-screen {
     position: absolute;
@@ -302,7 +347,9 @@
 }
 
 
-/* DEVICE AVATAR */
+/* =====================================================
+   DEVICE AVATAR
+===================================================== */
 
 .device-avatar {
     width: 45px;
@@ -346,7 +393,9 @@
 }
 
 
-/* DEVICE LINES */
+/* =====================================================
+   DEVICE LINES
+===================================================== */
 
 .device-line {
     height: 5px;
@@ -365,7 +414,9 @@
 }
 
 
-/* DEVICE BUTTON */
+/* =====================================================
+   DEVICE BUTTON
+===================================================== */
 
 .device-button {
     position: absolute;
@@ -395,7 +446,9 @@
 }
 
 
-/* PERSON ONE */
+/* =====================================================
+   PERSON ONE
+===================================================== */
 
 .person-one {
     left: 40px;
@@ -403,7 +456,9 @@
 }
 
 
-/* PERSON TWO */
+/* =====================================================
+   PERSON TWO
+===================================================== */
 
 .person-two {
     right: 35px;
@@ -411,7 +466,9 @@
 }
 
 
-/* HEAD */
+/* =====================================================
+   HEAD
+===================================================== */
 
 .person-head {
     width: 30px;
@@ -425,7 +482,9 @@
 }
 
 
-/* BODY */
+/* =====================================================
+   BODY
+===================================================== */
 
 .person-body {
     width: 38px;
@@ -439,7 +498,9 @@
 }
 
 
-/* LEGS */
+/* =====================================================
+   LEGS
+===================================================== */
 
 .person-leg {
     position: absolute;
@@ -551,6 +612,8 @@
     line-height: 1.5;
 
     border: 1px solid #ffd5d2;
+
+    animation: errorEnter 0.2s ease-out both;
 }
 
 
@@ -596,14 +659,18 @@
 }
 
 
-/* PLACEHOLDER */
+/* =====================================================
+   PLACEHOLDER
+===================================================== */
 
 .login-input-group input::placeholder {
     color: #888;
 }
 
 
-/* FOCUS */
+/* =====================================================
+   FOCUS
+===================================================== */
 
 .login-input-group input:focus {
     border-color: #1648ff;
@@ -613,7 +680,9 @@
 }
 
 
-/* DISABLED */
+/* =====================================================
+   DISABLED
+===================================================== */
 
 .login-input-group input:disabled {
     background: #f6f7fb;
@@ -660,7 +729,9 @@
 }
 
 
-/* HOVER */
+/* =====================================================
+   HOVER
+===================================================== */
 
 .student-login-button:hover:not(:disabled) {
     background: #0d39d9;
@@ -672,10 +743,102 @@
 }
 
 
-/* DISABLED */
+/* =====================================================
+   FOCUS
+===================================================== */
+
+.student-login-button:focus-visible {
+    outline: 2px solid #1648ff;
+
+    outline-offset: 3px;
+}
+
+
+/* =====================================================
+   DISABLED
+===================================================== */
 
 .student-login-button:disabled {
     background: #8aa8ff;
+
+    cursor: not-allowed;
+
+    transform: none;
+
+    box-shadow: none;
+}
+
+
+/* =====================================================
+   BACK BUTTON
+===================================================== */
+
+.student-login-back-button {
+    display: block;
+
+    width: 110px;
+
+    height: 38px;
+
+    border: 1.5px solid #1648ff;
+
+    border-radius: 20px;
+
+    background: #ffffff;
+
+    color: #1648ff;
+
+    font-size: 14px;
+
+    font-family: inherit;
+
+    font-weight: 500;
+
+    cursor: pointer;
+
+    margin: 12px auto 0;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+/* =====================================================
+   BACK BUTTON HOVER
+===================================================== */
+
+.student-login-back-button:hover:not(:disabled) {
+    background: #1648ff;
+
+    color: #ffffff;
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 6px 15px rgba(22, 72, 255, 0.15);
+}
+
+
+/* =====================================================
+   BACK BUTTON FOCUS
+===================================================== */
+
+.student-login-back-button:focus-visible {
+    outline: 2px solid #1648ff;
+
+    outline-offset: 3px;
+}
+
+
+/* =====================================================
+   BACK BUTTON DISABLED
+===================================================== */
+
+.student-login-back-button:disabled {
+    opacity: 0.6;
 
     cursor: not-allowed;
 
@@ -751,6 +914,23 @@
 }
 
 
+@keyframes errorEnter {
+    from {
+        opacity: 0;
+
+        transform:
+            translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            translateY(0);
+    }
+}
+
+
 /* =====================================================
    RESPONSIVE
 ===================================================== */
@@ -821,70 +1001,4 @@
     .login-description br {
         display: none;
     }
-}
-/* =====================================================
-   BACK BUTTON
-===================================================== */
-
-.student-login-back-button {
-    display: block;
-
-    width: 110px;
-
-    height: 38px;
-
-    border: 1.5px solid #1648ff;
-
-    border-radius: 20px;
-
-    background: #ffffff;
-
-    color: #1648ff;
-
-    font-size: 14px;
-
-    font-family: inherit;
-
-    font-weight: 500;
-
-    cursor: pointer;
-
-    margin: 12px auto 0;
-
-    transition:
-        background 0.2s ease,
-        color 0.2s ease,
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-
-/* =====================================================
-   BACK BUTTON HOVER
-===================================================== */
-
-.student-login-back-button:hover:not(:disabled) {
-    background: #1648ff;
-
-    color: #ffffff;
-
-    transform: translateY(-2px);
-
-    box-shadow:
-        0 6px 15px rgba(22, 72, 255, 0.15);
-}
-
-
-/* =====================================================
-   BACK BUTTON DISABLED
-===================================================== */
-
-.student-login-back-button:disabled {
-    opacity: 0.6;
-
-    cursor: not-allowed;
-
-    transform: none;
-
-    box-shadow: none;
 }

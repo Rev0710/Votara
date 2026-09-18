@@ -4,8 +4,12 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 
+const settingsRoutes = require("./src/routes/settingsRoutes");
+const auditLogsRoutes = require( "./src/routes/auditLogsRoutes" );
+const lateEnrolleeRoutes = require("./src/routes/lateEnrolleeRoutes");
+const candidateRoutes = require("./src/routes/candidateRoutes");
 const supabase = require("./src/config/supabase");
-
+const electionRoutes = require("./src/routes/electionRoutes");
 const adminAuthRoutes = require("./src/routes/adminAuthRoutes");
 const authRoutes = require("./src/routes/authRoutes");
 const ebAuthRoutes = require("./src/routes/ebAuthRoutes");
@@ -15,6 +19,17 @@ const registrationDocumentsRoutes = require("./src/routes/registrationDocumentsR
 const staffAuthRoutes = require("./src/routes/staffAuthRoutes");
 const adminRoutes = require("./src/routes/adminRoutes");
 const ebRegistrationRoutes = require("./src/routes/ebRegistrationRoutes");
+const votingRoutes = require("./src/routes/votingRoutes");
+const partyListRoutes = require("./src/routes/partyListRoutes");
+const votingMonitoringRoutes = require("./src/routes/votingMonitoringRoutes");
+
+// =====================================================
+// RESULTS & REPORTS ROUTE
+// =====================================================
+
+const resultsReportsRoutes = require(
+    "./src/routes/resultsReportsRoutes"
+);
 
 const app = express();
 
@@ -133,12 +148,93 @@ app.use(
 );
 
 // =====================================================
+// VOTING API
+// =====================================================
+
+app.use(
+    "/api/voting",
+    votingRoutes
+);
+
+// =====================================================
 // ELECTORAL BOARD REGISTRATION API
 // =====================================================
 
 app.use(
     "/api/eb",
     ebRegistrationRoutes
+);
+
+// =====================================================
+// ELECTION API
+// =====================================================
+
+app.use(
+    "/api/elections",
+    electionRoutes
+);
+
+// =====================================================
+// CANDIDATE API
+// =====================================================
+
+app.use(
+    "/api/candidates",
+    candidateRoutes
+);
+
+// =====================================================
+// PARTY LIST API
+// =====================================================
+
+app.use(
+    "/api/party-lists",
+    partyListRoutes
+);
+
+// =====================================================
+// VOTING MONITORING API
+// =====================================================
+
+app.use(
+    "/api/electoral-board/voting-monitoring",
+    votingMonitoringRoutes
+);
+
+// =====================================================
+// LATE ENROLLEE API
+// =====================================================
+
+app.use(
+    "/api/electoral-board/late-enrollees",
+    lateEnrolleeRoutes
+);
+
+// =====================================================
+// RESULTS & REPORTS API
+// =====================================================
+
+app.use(
+    "/api/electoral-board/results-reports",
+    resultsReportsRoutes
+);
+
+// =====================================================
+// AUDIT LOGS API
+// =====================================================
+
+app.use(
+    "/api/electoral-board/audit-logs",
+    auditLogsRoutes
+);
+
+// =====================================================
+// ELECTORAL BOARD SETTINGS API
+// =====================================================
+
+app.use(
+    "/api/electoral-board/settings",
+    settingsRoutes
 );
 
 // =====================================================
@@ -173,9 +269,7 @@ app.get("/api/health", (req, res) => {
 app.get(
     "/api/test-supabase",
     async (req, res) => {
-
         try {
-
             const {
                 data,
                 error,
@@ -187,73 +281,49 @@ app.get(
                 .limit(5);
 
             if (error) {
-
                 console.error(
                     "❌ Supabase test error:",
                     error
                 );
 
                 return res.status(500).json({
-
                     success: false,
-
                     message:
                         "Supabase connection failed.",
-
                     error:
                         error.message,
-
                 });
             }
 
             return res.status(200).json({
-
                 success: true,
-
                 message:
                     "Supabase connection successful.",
-
-                students:
-                    data,
-
+                students: data,
             });
-
         } catch (error) {
-
             console.error(
                 "❌ Supabase connection error:",
                 error
             );
 
             return res.status(500).json({
-
                 success: false,
-
                 message:
                     "Unable to connect to Supabase.",
-
             });
         }
     }
 );
 
 // =====================================================
-// TEMPORARY SUPABASE STUDENT LOOKUP TEST
-// =====================================================
-//
-// DEVELOPMENT TEST ONLY
-//
-// Example:
-// http://localhost:5000/api/test-supabase-student/99991
-//
+// SUPABASE STUDENT TEST ROUTE
 // =====================================================
 
 app.get(
     "/api/test-supabase-student/:studentId",
     async (req, res) => {
-
         try {
-
             const studentId =
                 String(
                     req.params.studentId
@@ -284,51 +354,37 @@ app.get(
             );
 
             if (error) {
-
                 console.error(
                     "❌ Supabase student test error:",
                     error
                 );
 
                 return res.status(500).json({
-
                     success: false,
-
                     error:
                         error.message,
-
                 });
             }
 
             return res.status(200).json({
-
                 success: true,
-
                 searchedStudentId:
                     studentId,
-
                 found:
                     Boolean(data),
-
                 student:
                     data,
-
             });
-
         } catch (error) {
-
             console.error(
                 "❌ Student lookup test failed:",
                 error
             );
 
             return res.status(500).json({
-
                 success: false,
-
                 message:
                     "Student lookup test failed.",
-
             });
         }
     }
@@ -394,14 +450,10 @@ app.use(
 
 app.use(
     (req, res) => {
-
         return res.status(404).json({
-
             success: false,
-
             message:
                 `Route not found: ${req.method} ${req.originalUrl}`,
-
         });
     }
 );
@@ -412,7 +464,6 @@ app.use(
 
 app.use(
     (error, req, res, next) => {
-
         console.error(
             "================================="
         );
@@ -434,12 +485,9 @@ app.use(
         );
 
         return res.status(500).json({
-
             success: false,
-
             message:
                 "An unexpected server error occurred.",
-
         });
     }
 );
@@ -449,7 +497,6 @@ app.use(
 // =====================================================
 
 const startServer = async () => {
-
     try {
 
         // =================================================
@@ -457,21 +504,18 @@ const startServer = async () => {
         // =================================================
 
         if (!process.env.JWT_SECRET) {
-
             throw new Error(
                 "JWT_SECRET is missing from .env"
             );
         }
 
         if (!process.env.SUPABASE_URL) {
-
             throw new Error(
                 "SUPABASE_URL is missing from .env"
             );
         }
 
         if (!process.env.SUPABASE_SECRET_KEY) {
-
             throw new Error(
                 "SUPABASE_SECRET_KEY is missing from .env"
             );
@@ -515,9 +559,12 @@ const startServer = async () => {
                 );
 
                 console.log(
-                    "================================="
+                    `📊 Results & Reports API: http://localhost:${PORT}/api/electoral-board/results-reports`
                 );
 
+                console.log(
+                    "================================="
+                );
             }
         );
 
@@ -548,7 +595,6 @@ const startServer = async () => {
                 "JWT_SECRET is missing"
             )
         ) {
-
             console.error(
                 "➡️ Add JWT_SECRET to server/.env."
             );
@@ -559,7 +605,6 @@ const startServer = async () => {
                 "SUPABASE_URL is missing"
             )
         ) {
-
             console.error(
                 "➡️ Add SUPABASE_URL to server/.env."
             );
@@ -570,7 +615,6 @@ const startServer = async () => {
                 "SUPABASE_SECRET_KEY is missing"
             )
         ) {
-
             console.error(
                 "➡️ Add SUPABASE_SECRET_KEY to server/.env."
             );

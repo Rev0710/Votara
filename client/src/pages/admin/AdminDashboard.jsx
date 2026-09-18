@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./AdminDashboard.css";
+import AdminFeatureCenter from "./AdminFeatureCenter";
+
 import {
     FiUsers,
     FiUserCheck,
@@ -111,7 +113,11 @@ const applySystemTheme = () => {
     }
 }; 
 
+{/* =================================================
+    ADMIN SYSTEM CONTROL CENTER
+================================================= */}
 
+<AdminFeatureCenter />
 
 // =========================================================
 // ADMIN DASHBOARD

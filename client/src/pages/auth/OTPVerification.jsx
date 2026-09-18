@@ -193,7 +193,10 @@ const OTPVerification = () => {
         pastedData
             .split("")
             .forEach(
-                (number, index) => {
+                (
+                    number,
+                    index
+                ) => {
                     newOtp[index] =
                         number;
                 }
@@ -336,6 +339,9 @@ const OTPVerification = () => {
              * OTP verification does NOT mean
              * EB/Admin approval.
              *
+             * OTP verification only confirms
+             * the student's email.
+             *
              * The student must still complete:
              *
              * 1. Personal information
@@ -343,9 +349,12 @@ const OTPVerification = () => {
              * 3. Real-time selfie
              * 4. Final registration submission
              *
-             * Therefore, we go to:
+             * The application MUST NOT become
+             * "pending_review" at this stage.
              *
-             * /student-registration
+             * "pending_review" should only happen
+             * after the documents and selfie are
+             * successfully uploaded.
              */
 
             // -------------------------------------------------
@@ -382,12 +391,31 @@ const OTPVerification = () => {
             );
 
             // -------------------------------------------------
-            // MARK OTP AS VERIFIED IN FRONTEND SESSION
+            // MARK OTP AS VERIFIED
             // -------------------------------------------------
 
             sessionStorage.setItem(
                 "votara_otp_verified",
                 "true"
+            );
+
+            // -------------------------------------------------
+            // CLEAR OLD REGISTRATION STATUS
+            // -------------------------------------------------
+
+            /*
+             * Remove stale status/correction values.
+             *
+             * This is important when testing multiple
+             * registrations in the same browser.
+             */
+
+            sessionStorage.removeItem(
+                "votara_registration_status"
+            );
+
+            sessionStorage.removeItem(
+                "votara_correction_message"
             );
 
             // -------------------------------------------------
@@ -402,6 +430,28 @@ const OTPVerification = () => {
                         data.student
                     )
                 );
+
+                // -------------------------------------------------
+                // USE SERVER AUTHORITATIVE INFORMATION
+                // -------------------------------------------------
+
+                if (
+                    data.student.fullName
+                ) {
+                    sessionStorage.setItem(
+                        "votara_full_name",
+                        data.student.fullName
+                    );
+                }
+
+                if (
+                    data.student.yearLevel
+                ) {
+                    sessionStorage.setItem(
+                        "votara_year_level",
+                        data.student.yearLevel
+                    );
+                }
             }
 
             // -------------------------------------------------
@@ -413,11 +463,41 @@ const OTPVerification = () => {
             );
 
             // -------------------------------------------------
-            // GO TO NEXT REGISTRATION STEP
+            // GO TO EXISTING REQUIREMENTS PAGE
             // -------------------------------------------------
 
+            /*
+             * IMPORTANT FLOW CHANGE
+             *
+             * DO NOT navigate to:
+             *
+             * /student-registration
+             *
+             * because that page does not exist.
+             *
+             * The existing VOTARA page that handles
+             * the remaining registration process is:
+             *
+             * /registration-requirements
+             *
+             * That page handles:
+             *
+             * - Personal information
+             * - Student ID Front
+             * - Student ID Back
+             * - Enrollment Proof
+             * - Supporting Document
+             * - Real-time Selfie
+             * - Final submission
+             *
+             * Only after that final submission should
+             * the backend change the application to:
+             *
+             * pending_review
+             */
+
             navigate(
-                "/student-registration",
+                "/registration-requirements",
                 {
                     replace: true,
                 }
