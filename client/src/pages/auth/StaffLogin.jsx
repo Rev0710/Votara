@@ -317,7 +317,7 @@ if (
                                     onChange={
                                         handleChange
                                     }
-                                    placeholder="EMAIL"
+                                    placeholder="Email"
                                     autoComplete="email"
                                     disabled={loading}
                                 />
@@ -360,8 +360,8 @@ if (
                                     className="staff-login-toggle"
                                 >
                                     {showPassword
-                                        ? "Hide"
-                                        : "Show"}
+                                        ? "ꗃ"
+                                        : "🔒︎"}
                                 </button>
 
                             </div>
@@ -402,8 +402,8 @@ if (
                                     className="staff-login-toggle"
                                 >
                                     {showSecurityCode
-                                        ? "Hide"
-                                        : "Show"}
+                                        ? "ꗃ"
+                                        : "🔒︎"}
                                 </button>
 
                             </div>
@@ -415,7 +415,7 @@ if (
 
                             <p className="staff-login-info">
                                 The system automatically identifies
-                                whether you are an Admin or Electoral
+                                you are Electoral
                                 Board member.
                             </p>
 
