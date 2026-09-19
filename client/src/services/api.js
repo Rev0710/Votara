@@ -1,14 +1,53 @@
 import axios from "axios";
 
+
+// =====================================================
+// API BASE URL
+// =====================================================
+//
+// Production:
+// https://votara-api-olij.onrender.com/api
+//
+// Local development:
+// http://localhost:5000/api
+//
+// Vercel uses VITE_API_BASE_URL when configured.
+// The production fallback prevents localhost from being
+// accidentally used when the Vercel environment variable
+// is missing.
+// =====================================================
+
+const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL ||
+    (
+        import.meta.env.PROD
+            ? "https://votara-api-olij.onrender.com/api"
+            : "http://localhost:5000/api"
+    );
+
+
+// =====================================================
+// DEBUG
+// =====================================================
+
+console.log(
+    "🌐 VOTARA API BASE URL:",
+    API_BASE_URL
+);
+
+
+// =====================================================
+// AXIOS INSTANCE
+// =====================================================
+
 const api = axios.create({
-    baseURL:
-        import.meta.env.VITE_API_URL ||
-        "http://localhost:5000/api",
+    baseURL: API_BASE_URL,
 
     headers: {
         "Content-Type": "application/json",
     },
 });
+
 
 // =====================================================
 // TOKEN HELPERS
@@ -23,6 +62,7 @@ const getStudentToken = () => {
     );
 };
 
+
 const getStaffToken = () => {
     return (
         localStorage.getItem("votaraStaffToken") ||
@@ -30,12 +70,14 @@ const getStaffToken = () => {
     );
 };
 
+
 const getEBToken = () => {
     return (
         localStorage.getItem("votaraEBToken") ||
         ""
     );
 };
+
 
 const getKioskToken = () => {
     return (
@@ -50,6 +92,7 @@ const getKioskToken = () => {
 // =====================================================
 
 const isVotingRequest = (url = "") => {
+
     const normalizedUrl =
         String(url).toLowerCase();
 
@@ -60,7 +103,9 @@ const isVotingRequest = (url = "") => {
     );
 };
 
+
 const isKioskRequest = (url = "") => {
+
     const normalizedUrl =
         String(url).toLowerCase();
 
@@ -76,28 +121,37 @@ const isKioskRequest = (url = "") => {
 // =====================================================
 
 api.interceptors.request.use(
+
     (config) => {
+
         const requestUrl =
             config.url || "";
+
 
         const kioskMode =
             localStorage.getItem(
                 "votaraKioskMode"
             ) === "true";
 
+
         const studentToken =
             getStudentToken();
+
 
         const ebToken =
             getEBToken();
 
+
         const staffToken =
             getStaffToken();
+
 
         const kioskToken =
             getKioskToken();
 
+
         let token = "";
+
 
         // -------------------------------------------------
         // KIOSK VOTING
@@ -111,8 +165,11 @@ api.interceptors.request.use(
             isVotingRequest(requestUrl) &&
             kioskToken
         ) {
+
             token = kioskToken;
+
         }
+
 
         // -------------------------------------------------
         // NORMAL STUDENT VOTING
@@ -124,8 +181,11 @@ api.interceptors.request.use(
             isVotingRequest(requestUrl) &&
             studentToken
         ) {
+
             token = studentToken;
+
         }
+
 
         // -------------------------------------------------
         // KIOSK NON-VOTING REQUEST
@@ -139,8 +199,11 @@ api.interceptors.request.use(
             isKioskRequest(requestUrl) &&
             kioskToken
         ) {
+
             token = kioskToken;
+
         }
+
 
         // -------------------------------------------------
         // ELECTORAL BOARD
@@ -149,41 +212,59 @@ api.interceptors.request.use(
         // EB-specific API calls use the EB token.
         //
         else if (ebToken) {
+
             token = ebToken;
+
         }
+
 
         // -------------------------------------------------
         // STAFF / ADMIN
         // -------------------------------------------------
+
         else if (staffToken) {
+
             token = staffToken;
+
         }
+
 
         // -------------------------------------------------
         // STUDENT FALLBACK
         // -------------------------------------------------
+
         else if (studentToken) {
+
             token = studentToken;
+
         }
+
 
         // -------------------------------------------------
         // ATTACH TOKEN
         // -------------------------------------------------
 
         if (token) {
+
             config.headers =
                 config.headers || {};
 
             config.headers.Authorization =
                 `Bearer ${token}`;
+
         }
 
+
         return config;
+
     },
 
     (error) => {
+
         return Promise.reject(error);
+
     }
+
 );
 
 
@@ -192,8 +273,11 @@ api.interceptors.request.use(
 // =====================================================
 
 api.interceptors.response.use(
+
     (response) => {
+
         return response;
+
     },
 
     (error) => {
@@ -206,13 +290,16 @@ api.interceptors.response.use(
                 error.response.data
             );
 
+
             const requestUrl =
                 error.config?.url || "";
+
 
             const kioskMode =
                 localStorage.getItem(
                     "votaraKioskMode"
                 ) === "true";
+
 
             const isKioskVotingRequest =
                 kioskMode &&
@@ -220,15 +307,16 @@ api.interceptors.response.use(
                     requestUrl
                 );
 
+
             // ------------------------------------------------
             // KIOSK SESSION EXPIRED
             // ------------------------------------------------
 
             if (
-                (error.response.status ===
-                    401 ||
-                    error.response.status ===
-                    403) &&
+                (
+                    error.response.status === 401 ||
+                    error.response.status === 403
+                ) &&
                 isKioskVotingRequest
             ) {
 
@@ -236,42 +324,59 @@ api.interceptors.response.use(
                     "Kiosk student session expired."
                 );
 
+
                 localStorage.removeItem(
                     "votaraKioskToken"
                 );
+
 
                 localStorage.removeItem(
                     "votaraKioskStudent"
                 );
 
+
                 localStorage.removeItem(
                     "votaraKioskElectionId"
                 );
+
 
                 localStorage.removeItem(
                     "votaraKioskSessionId"
                 );
 
+
                 localStorage.removeItem(
                     "votaraKioskOperationId"
                 );
 
+
                 localStorage.removeItem(
                     "votaraKioskMode"
                 );
+
             }
+
         }
 
         else {
+
             console.error(
                 "API Network Error:",
                 error.message
             );
+
         }
 
+
         return Promise.reject(error);
+
     }
+
 );
 
+
+// =====================================================
+// EXPORT
+// =====================================================
 
 export default api;
