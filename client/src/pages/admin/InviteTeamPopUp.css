@@ -1034,42 +1034,54 @@ max-height: calc(100dvh - 24px);
    WARNING ICON
    ========================================================= */
 
-.votara-admin-warning-icon {
-    width: 34px;
-    height: 34px;
+.votara-admin-warning-icon img {
+    display: block !important;
 
-    flex: 0 0 34px;
+    width: 30px !important;
+    height: 30px !important;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    filter: brightness(0) saturate(100%) invert(25%) sepia(95%) saturate(3500%) hue-rotate(350deg);
 
-    color: white;
+    max-width: 30px !important;
+    max-height: 30px !important;
 
-    margin-top: 2px;
+    min-width: 30px !important;
+    min-height: 30px !important;
+
+    object-fit: contain !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
-.votara-admin-warning-icon span {
-    width: 30px;
-    height: 30px;
+.votara-admin-warning-icon > span {
+    width: 30px !important;
+    height: 30px !important;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 
-    border:
-        2px solid rgba(255, 255, 255, 0.80);
+    font-size: 0 !important;
+    line-height: 0 !important;
+}
 
-    clip-path: polygon(
-        50% 0%,
-        100% 88%,
-        94% 100%,
-        6% 100%,
-        0% 88%
-    );
+/* Keep it smaller on phones */
+@media (max-width: 600px) {
+    .votara-admin-warning-icon {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        min-height: 44px !important;
 
-    font-size: 18px;
-    font-weight: 600;
+        border-radius: 10px !important;
+
+        font-size: 23px !important;
+    }
+
+    .votara-admin-warning-icon span {
+        font-size: 23px !important;
+    }
 }
 
 
@@ -1100,10 +1112,10 @@ max-height: calc(100dvh - 24px);
     margin: 0;
 
     color:
-        rgba(74, 84, 120, 0.68);
+        rgb(18, 22, 37);
 
     font-size: 13px;
-    font-weight: 400;
+    font-weight: 700;
 
     line-height: 1.35;
 }
@@ -1406,5 +1418,323 @@ max-height: calc(100dvh - 24px);
     .votara-invite-clear,
     .votara-invite-generate {
         width: 100%;
+    }
+}
+/* =========================================================
+   FINAL INPUT DESIGN — MATCH THE NEW INVITATION UI
+   Applied only to the Invite Team popup.
+   ========================================================= */
+
+/* Labels */
+.votara-invite-fields > label,
+.votara-invite-select-row label {
+    gap: 6px !important;
+
+    color: rgba(255, 255, 255, 0.88) !important;
+
+    font-size: 12px !important;
+    font-weight: 400 !important;
+    line-height: 1.2 !important;
+}
+
+/* Fullname / Email / all text inputs */
+.votara-invite-fields input,
+.votara-invite-fields select {
+    width: 100% !important;
+    height: 36px !important;
+    min-height: 36px !important;
+
+    box-sizing: border-box !important;
+
+    padding: 0 10px !important;
+
+    border: 1px solid rgba(255, 255, 255, 0.28) !important;
+    border-radius: 3px !important;
+
+    outline: none !important;
+
+    background: rgba(24, 26, 43, 0.22) !important;
+
+    color: rgba(255, 255, 255, 0.92) !important;
+
+    font-family: inherit !important;
+    font-size: 9px !important;
+    font-weight: 400 !important;
+
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease !important;
+}
+
+/* Placeholder */
+.votara-invite-fields input::placeholder {
+    color: rgba(255, 255, 255, 0.42) !important;
+}
+
+/* Focus */
+.votara-invite-fields input:focus,
+.votara-invite-fields select:focus {
+    border-color: rgba(70, 113, 255, 0.85) !important;
+
+    background: rgba(24, 26, 43, 0.38) !important;
+
+    box-shadow: 0 0 0 2px rgba(40, 99, 255, 0.10) !important;
+}
+
+/* Code Expires / Assign Role select */
+.votara-invite-fields select {
+    appearance: auto !important;
+    -webkit-appearance: auto !important;
+
+    cursor: pointer !important;
+
+    padding-right: 8px !important;
+}
+
+/* Select options */
+.votara-invite-fields select option {
+    background: #20223d !important;
+    color: #ffffff !important;
+}
+
+/* Keep the two selects evenly sized. */
+.votara-invite-select-row {
+    display: grid !important;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(0, 1fr) !important;
+
+    gap: 14px !important;
+
+    width: 100% !important;
+}
+
+/* =========================================================
+   OPTIONAL PROFILE UPLOAD AREA
+   Use className="votara-invite-profile-upload"
+   if you add the profile upload field to the JSX.
+   ========================================================= */
+
+.votara-invite-profile-upload {
+    width: 100% !important;
+}
+
+.votara-invite-profile-upload-label {
+    display: flex !important;
+    flex-direction: column !important;
+
+    gap: 6px !important;
+
+    color: rgba(255, 255, 255, 0.88) !important;
+
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+}
+
+.votara-invite-profile-upload-box {
+    width: 100% !important;
+    min-height: 70px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-direction: column !important;
+
+    gap: 6px !important;
+
+    box-sizing: border-box !important;
+
+    padding: 12px !important;
+
+    border: 1px dashed rgba(255, 255, 255, 0.28) !important;
+    border-radius: 4px !important;
+
+    background: rgba(255, 255, 255, 0.025) !important;
+
+    color: rgba(255, 255, 255, 0.72) !important;
+
+    cursor: pointer !important;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease !important;
+}
+
+.votara-invite-profile-upload-box:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(40, 99, 255, 0.55) !important;
+}
+
+.votara-invite-profile-upload-box span {
+    font-size: 8px !important;
+}
+
+.votara-invite-profile-upload-input {
+    display: none !important;
+}
+
+/* =========================================================
+   MOBILE INPUT DESIGN
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+    .votara-invite-fields > label,
+    .votara-invite-select-row label {
+        font-size: 10px !important;
+    }
+
+    .votara-invite-fields input,
+    .votara-invite-fields select {
+        height: 34px !important;
+        min-height: 34px !important;
+
+        padding: 0 9px !important;
+
+        font-size: 8px !important;
+    }
+
+    .votara-invite-select-row {
+        grid-template-columns: 1fr !important;
+        gap: 9px !important;
+    }
+
+    .votara-invite-profile-upload-label {
+        font-size: 10px !important;
+    }
+
+    .votara-invite-profile-upload-box {
+        min-height: 68px !important;
+    }
+}
+/* =========================================================
+   INVITE POPUP — SINGLE SCROLL CONTAINER FIX
+   Keeps scrolling, hides the scrollbar, and lets the user
+   reach the bottom action buttons.
+   ========================================================= */
+
+/* The OUTER popup is the only scroll container. */
+.votara-invite-background-card {
+    max-height: calc(100dvh - 32px) !important;
+
+    display: block !important;
+
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+
+    box-sizing: border-box !important;
+}
+
+/* Chrome / Edge / Safari */
+.votara-invite-background-card::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+/* Do NOT create a second nested scrollbar. */
+.votara-invite-background-card > .votara-invite-modal {
+    display: block !important;
+
+    flex: none !important;
+
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+
+    overflow: visible !important;
+
+    scrollbar-width: none !important;
+}
+
+.votara-invite-background-card > .votara-invite-modal::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+/* Make sure the complete form, including its buttons,
+   contributes to the popup's scrollable height. */
+.votara-invite-background-card > .votara-invite-modal form {
+    width: 100% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+}
+
+.votara-invite-background-card > .votara-invite-modal .votara-invite-fields {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    padding-bottom: 18px !important;
+}
+
+/* Keep the action buttons at the real bottom of the form. */
+.votara-invite-background-card > .votara-invite-modal .votara-invite-actions {
+    position: static !important;
+
+    display: flex !important;
+    flex-wrap: nowrap !important;
+
+    width: 100% !important;
+
+    margin-top: 14px !important;
+    margin-bottom: 4px !important;
+    padding-bottom: 4px !important;
+}
+
+/* =========================================================
+   VIEWPORT SIZES
+   ========================================================= */
+
+@media (max-height: 800px) and (min-width: 701px) {
+    .votara-invite-background-card {
+        max-height: calc(100dvh - 24px) !important;
+    }
+}
+
+@media (max-width: 700px) {
+    .votara-invite-overlay {
+        align-items: flex-start !important;
+        padding: 10px !important;
+
+        overflow-y: auto !important;
+        scrollbar-width: none !important;
+    }
+
+    .votara-invite-overlay::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+    }
+
+    .votara-invite-background-card {
+        width: calc(100vw - 20px) !important;
+        max-width: calc(100vw - 20px) !important;
+
+        max-height: calc(100dvh - 20px) !important;
+
+        margin: 0 auto !important;
+    }
+
+    .votara-invite-background-card > .votara-invite-modal {
+        padding-bottom: 8px !important;
+    }
+}
+
+@media (max-width: 520px) {
+    .votara-invite-background-card {
+        width: calc(100vw - 16px) !important;
+        max-width: calc(100vw - 16px) !important;
+
+        max-height: calc(100dvh - 16px) !important;
+    }
+
+    .votara-invite-background-card > .votara-invite-modal .votara-invite-actions {
+        gap: 8px !important;
     }
 }

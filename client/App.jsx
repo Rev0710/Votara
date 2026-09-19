@@ -19,6 +19,7 @@ import UploadProfilePicture from "./src/pages/auth/UploadProfilePicture";
 import AdminRegister from "./src/pages/auth/AdminRegister";
 import StaffLogin from "./src/pages/auth/StaffLogin";
 import StaffChangePassword from "./src/pages/auth/StaffChangePassword";
+import PageLoader from "./src/components/transitionloader/PageLoader.jsx";
 
 // =====================================================
 // ADMIN
@@ -283,6 +284,10 @@ const App = () => {
                 <Route
                     path="/admin-dashboard"
                     element={<AdminDashboard />}
+                />
+                <Route
+                    path="/page-loader"
+                    element={<PageLoader />}
                 />
 
                 {/* =================================================

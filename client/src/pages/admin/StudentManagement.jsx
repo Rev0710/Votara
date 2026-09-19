@@ -1,895 +1,672 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./StudentManagement.css";
+import PageLoader from "/src/components/transitionloader/PageLoader";
 
 function StudentManagement() {
     const navigate = useNavigate();
+    const profileInputRef = useRef(null);
 
     const [admin, setAdmin] = useState(null);
 
-    const [students, setStudents] = useState([
+    // Page transition loader used for navigation away from User & Access.
+    const [isPageTransitioning, setIsPageTransitioning] = useState(false);
+
+    const [selectedRole, setSelectedRole] = useState("admin");
+    const [fullName, setFullName] = useState("");
+    const [email, setEmail] = useState("");
+    const [role, setRole] = useState("Administrator");
+    const [expires, setExpires] = useState("7 days");
+    const [profileFile, setProfileFile] = useState(null);
+    const [generatedCode, setGeneratedCode] = useState("");
+    const [recentInvitations, setRecentInvitations] = useState([
         {
-            id: "2024-0001",
-            name: "Juan Dela Cruz",
-            email: "juan.delacruz@student.edu",
-            course: "BS Information Technology",
-            year: "4th Year",
+            id: 1,
+            name: "Sarah Fukiko",
+            email: "sarah@gmail.com",
+            role: "Admin",
             status: "Active",
-            registered: "Sep 10, 2026",
+            date: "Today",
         },
         {
-            id: "2024-0002",
-            name: "Maria Santos",
-            email: "maria.santos@student.edu",
-            course: "BS Computer Science",
-            year: "3rd Year",
-            status: "Active",
-            registered: "Sep 10, 2026",
-        },
-        {
-            id: "2024-0003",
-            name: "Mark Reyes",
-            email: "mark.reyes@student.edu",
-            course: "BS Information Technology",
-            year: "2nd Year",
+            id: 2,
+            name: "Sarah Fukiko",
+            email: "sarah@gmail.com",
+            role: "Electoral Board",
             status: "Pending",
-            registered: "Sep 9, 2026",
+            date: "Yesterday",
         },
         {
-            id: "2024-0004",
-            name: "Angela Garcia",
-            email: "angela.garcia@student.edu",
-            course: "BS Business Administration",
-            year: "4th Year",
-            status: "Active",
-            registered: "Sep 8, 2026",
+            id: 3,
+            name: "Sarah Fukiko",
+            email: "sarah@gmail.com",
+            role: "Electoral Board",
+            status: "Pending",
+            date: "Sep 18, 2026",
         },
         {
-            id: "2024-0005",
-            name: "Carlos Mendoza",
-            email: "carlos.mendoza@student.edu",
-            course: "BS Information Technology",
-            year: "1st Year",
-            status: "Inactive",
-            registered: "Sep 7, 2026",
+            id: 4,
+            name: "Sarah Fukiko",
+            email: "sarah@gmail.com",
+            role: "Electoral Board",
+            status: "Expired",
+            date: "Sep 17, 2026",
         },
     ]);
 
-    const [search, setSearch] = useState("");
-    const [statusFilter, setStatusFilter] = useState("All");
-    const [selectedStudent, setSelectedStudent] = useState(null);
+    const [showInvitationCode, setShowInvitationCode] = useState(false);
 
     // =====================================================
     // CHECK ADMIN SESSION
     // =====================================================
 
     useEffect(() => {
-        const token =
-            localStorage.getItem(
-                "votaraStaffToken"
-            );
-
-        const storedUser =
-            localStorage.getItem(
-                "votaraStaffUser"
-            );
+        const token = localStorage.getItem("votaraStaffToken");
+        const storedUser = localStorage.getItem("votaraStaffUser");
 
         if (!token || !storedUser) {
-            navigate("/admin-login", {
-                replace: true,
-            });
-
+            navigate("/admin-login", { replace: true });
             return;
         }
 
         try {
-            const user =
-                JSON.parse(storedUser);
+            const user = JSON.parse(storedUser);
 
             if (user.role !== "admin") {
-                navigate(
-                    "/electoral-board/dashboard",
-                    {
-                        replace: true,
-                    }
-                );
-
+                navigate("/electoral-board/dashboard", { replace: true });
                 return;
             }
 
             setAdmin(user);
-
         } catch (error) {
-            console.error(
-                "Invalid admin session:",
-                error
-            );
-
-            localStorage.removeItem(
-                "votaraStaffToken"
-            );
-
-            localStorage.removeItem(
-                "votaraStaffUser"
-            );
-
-            navigate("/admin-login", {
-                replace: true,
-            });
+            console.error("Invalid admin session:", error);
+            localStorage.removeItem("votaraStaffToken");
+            localStorage.removeItem("votaraStaffUser");
+            navigate("/admin-login", { replace: true });
         }
     }, [navigate]);
 
     // =====================================================
-    // FILTER STUDENTS
+    // PAGE NAVIGATION WITH TRANSITION
     // =====================================================
 
-    const filteredStudents = useMemo(() => {
-        return students.filter((student) => {
-            const searchValue =
-                search.toLowerCase().trim();
-
-            const matchesSearch =
-                student.id
-                    .toLowerCase()
-                    .includes(searchValue) ||
-                student.name
-                    .toLowerCase()
-                    .includes(searchValue) ||
-                student.email
-                    .toLowerCase()
-                    .includes(searchValue) ||
-                student.course
-                    .toLowerCase()
-                    .includes(searchValue);
-
-            const matchesStatus =
-                statusFilter === "All" ||
-                student.status === statusFilter;
-
-            return (
-                matchesSearch &&
-                matchesStatus
-            );
-        });
-    }, [
-        students,
-        search,
-        statusFilter,
-    ]);
-
-    // =====================================================
-    // STATISTICS
-    // =====================================================
-
-    const totalStudents =
-        students.length;
-
-    const activeStudents =
-        students.filter(
-            (student) =>
-                student.status === "Active"
-        ).length;
-
-    const pendingStudents =
-        students.filter(
-            (student) =>
-                student.status === "Pending"
-        ).length;
-
-    const inactiveStudents =
-        students.filter(
-            (student) =>
-                student.status === "Inactive"
-        ).length;
-
-    // =====================================================
-    // DELETE STUDENT
-    // =====================================================
-
-    const deleteStudent = (id) => {
-        const confirmed =
-            window.confirm(
-                "Are you sure you want to remove this student?"
-            );
-
-        if (!confirmed) {
+    const goTo = (path) => {
+        if (isPageTransitioning) {
             return;
         }
 
-        setStudents(
-            (currentStudents) =>
-                currentStudents.filter(
-                    (student) =>
-                        student.id !== id
-                )
-        );
+        setIsPageTransitioning(true);
+
+        window.setTimeout(() => {
+            navigate(path);
+        }, 700);
+    };
+
+    // =====================================================
+    // ROLE SELECTION
+    // =====================================================
+
+    const handleRoleCard = (nextRole) => {
+        setSelectedRole(nextRole);
+        setRole(nextRole === "admin" ? "Administrator" : "Electoral Board");
+    };
+
+    // =====================================================
+    // PROFILE UPLOAD
+    // =====================================================
+
+    const handleProfileChange = (event) => {
+        const file = event.target.files?.[0];
+
+        if (!file) return;
+
+        setProfileFile(file);
+    };
+
+    // =====================================================
+    // CLEAR FORM
+    // =====================================================
+
+    const clearForm = () => {
+        setFullName("");
+        setEmail("");
+        setRole("Administrator");
+        setExpires("7 days");
+        setSelectedRole("admin");
+        setProfileFile(null);
+        setGeneratedCode("");
+        setShowInvitationCode(false);
+
+        if (profileInputRef.current) {
+            profileInputRef.current.value = "";
+        }
+    };
+
+    // =====================================================
+    // GENERATE INVITATION
+    // =====================================================
+
+    const invitationCode = useMemo(() => {
+        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        let code = "";
+
+        for (let index = 0; index < 8; index += 1) {
+            code += chars[Math.floor(Math.random() * chars.length)];
+        }
+
+        return `VOT-${code.slice(0, 4)}-${code.slice(4)}`;
+    }, [showInvitationCode]);
+
+    const handleGenerateInvitation = () => {
+        if (!fullName.trim() || !email.trim()) {
+            window.alert("Please enter the full name and email address.");
+            return;
+        }
+
+        const code = invitationCode;
+
+        setGeneratedCode(code);
+        setShowInvitationCode(true);
+
+        setRecentInvitations((current) => [
+            {
+                id: Date.now(),
+                name: fullName.trim(),
+                email: email.trim(),
+                role: role === "Administrator" ? "Admin" : "Electoral Board",
+                status: "Pending",
+                date: "Just now",
+                code,
+            },
+            ...current,
+        ]);
+
+        setFullName("");
+        setEmail("");
+        setProfileFile(null);
+
+        if (profileInputRef.current) {
+            profileInputRef.current.value = "";
+        }
+    };
+
+    const handleCopyCode = async () => {
+        if (!generatedCode) return;
+
+        try {
+            await navigator.clipboard.writeText(generatedCode);
+            window.alert("Invitation code copied.");
+        } catch {
+            window.alert(`Invitation code: ${generatedCode}`);
+        }
     };
 
     // =====================================================
     // PAGE
     // =====================================================
 
+    if (!admin) {
+        return (
+            <div className="student-management-loading">
+                Loading...
+            </div>
+        );
+    }
+
     return (
         <div className="student-management">
 
-            {/* =================================================
-                BACK TO DASHBOARD
-            ================================================= */}
-
-            <button
-                type="button"
-                className="back-to-dashboard"
-                onClick={() =>
-                    navigate("/admin-dashboard")
-                }
-            >
-                <span>←</span>
-                Back to Dashboard
-            </button>
-
+            {isPageTransitioning && <PageLoader />}
 
             {/* =================================================
-                PAGE HEADER
+                TOP NAVIGATION
             ================================================= */}
 
-            <div className="student-management-header">
-
-                <div>
-                    <span className="student-management-label">
-                        STUDENT MANAGEMENT
+            <header className="student-management-topbar">
+                <button
+                    type="button"
+                    className="student-management-brand"
+                    onClick={() => goTo("/admin-dashboard")}
+                    aria-label="Go to Votara dashboard"
+                >
+                    <span className="student-management-logo">
+                        <img
+            src="/src/images/Votara.png"
+            alt="Votara Logo"
+            className="votara-admin-brand-logo"
+        />
                     </span>
 
-                    <h1>
-                        Student Management
-                    </h1>
-
-                    <p>
-                        View, manage, and monitor
-                        registered students in the
-                        VOTARA election system.
-                    </p>
-                </div>
-
-                <button
-                    className="add-student-btn"
-                    type="button"
-                >
-                    <span>+</span>
-                    Add Student
+                    <span className="votara-student-brand-name">Votara</span>
                 </button>
 
-            </div>
-
-
-            {/* =================================================
-                STATISTICS
-            ================================================= */}
-
-            <div className="student-stat-grid">
-
-                <div className="student-stat-card">
-
-                    <div className="student-stat-icon blue">
-                        <span>♙</span>
-                    </div>
-
-                    <div>
-                        <span className="student-stat-label">
-                            Total Students
-                        </span>
-
-                        <strong>
-                            {totalStudents}
-                        </strong>
-
-                        <small>
-                            Registered students
-                        </small>
-                    </div>
-
-                </div>
-
-
-                <div className="student-stat-card">
-
-                    <div className="student-stat-icon green">
-                        <span>✓</span>
-                    </div>
-
-                    <div>
-                        <span className="student-stat-label">
-                            Active Students
-                        </span>
-
-                        <strong>
-                            {activeStudents}
-                        </strong>
-
-                        <small>
-                            Eligible student accounts
-                        </small>
-                    </div>
-
-                </div>
-
-
-                <div className="student-stat-card">
-
-                    <div className="student-stat-icon orange">
-                        <span>◷</span>
-                    </div>
-
-                    <div>
-                        <span className="student-stat-label">
-                            Pending
-                        </span>
-
-                        <strong>
-                            {pendingStudents}
-                        </strong>
-
-                        <small>
-                            Awaiting verification
-                        </small>
-                    </div>
-
-                </div>
-
-
-                <div className="student-stat-card">
-
-                    <div className="student-stat-icon gray">
-                        <span>−</span>
-                    </div>
-
-                    <div>
-                        <span className="student-stat-label">
-                            Inactive
-                        </span>
-
-                        <strong>
-                            {inactiveStudents}
-                        </strong>
-
-                        <small>
-                            Inactive accounts
-                        </small>
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            {/* =================================================
-                STUDENTS TABLE
-            ================================================= */}
-
-            <div className="students-table-card">
-
-                {/* TABLE HEADER */}
-
-                <div className="students-table-header">
-
-                    <div>
-                        <h2>
-                            Registered Students
-                        </h2>
-
-                        <p>
-                            Manage all student accounts
-                            registered in VOTARA.
-                        </p>
-                    </div>
-
-
-                    <div className="student-tools">
-
-                        {/* SEARCH */}
-
-                        <div className="student-search">
-
-                            <span>⌕</span>
-
-                            <input
-                                type="text"
-                                placeholder="Search students..."
-                                value={search}
-                                onChange={(e) =>
-                                    setSearch(
-                                        e.target.value
-                                    )
-                                }
-                            />
-
-                        </div>
-
-
-                        {/* FILTER */}
-
-                        <select
-                            value={statusFilter}
-                            onChange={(e) =>
-                                setStatusFilter(
-                                    e.target.value
-                                )
-                            }
-                            className="student-filter"
-                        >
-                            <option value="All">
-                                All Status
-                            </option>
-
-                            <option value="Active">
-                                Active
-                            </option>
-
-                            <option value="Pending">
-                                Pending
-                            </option>
-
-                            <option value="Inactive">
-                                Inactive
-                            </option>
-                        </select>
-
-                    </div>
-
-                </div>
-
-
-                {/* TABLE */}
-
-                <div className="students-table-wrapper">
-
-                    <table className="students-table">
-
-                        <thead>
-
-                            <tr>
-
-                                <th>
-                                    Student
-                                </th>
-
-                                <th>
-                                    Student ID
-                                </th>
-
-                                <th>
-                                    Course / Year
-                                </th>
-
-                                <th>
-                                    Status
-                                </th>
-
-                                <th>
-                                    Registered
-                                </th>
-
-                                <th>
-                                    Action
-                                </th>
-
-                            </tr>
-
-                        </thead>
-
-
-                        <tbody>
-
-                            {filteredStudents.length >
-                            0 ? (
-
-                                filteredStudents.map(
-                                    (student) => (
-
-                                        <tr
-                                            key={
-                                                student.id
-                                            }
-                                        >
-
-                                            {/* STUDENT */}
-
-                                            <td>
-
-                                                <div className="student-name-cell">
-
-                                                    <div className="student-avatar">
-                                                        {student.name.charAt(
-                                                            0
-                                                        )}
-                                                    </div>
-
-                                                    <div>
-
-                                                        <strong>
-                                                            {
-                                                                student.name
-                                                            }
-                                                        </strong>
-
-                                                        <span>
-                                                            {
-                                                                student.email
-                                                            }
-                                                        </span>
-
-                                                    </div>
-
-                                                </div>
-
-                                            </td>
-
-
-                                            {/* ID */}
-
-                                            <td>
-
-                                                <span className="student-id">
-                                                    {
-                                                        student.id
-                                                    }
-                                                </span>
-
-                                            </td>
-
-
-                                            {/* COURSE */}
-
-                                            <td>
-
-                                                <div className="course-cell">
-
-                                                    <strong>
-                                                        {
-                                                            student.course
-                                                        }
-                                                    </strong>
-
-                                                    <span>
-                                                        {
-                                                            student.year
-                                                        }
-                                                    </span>
-
-                                                </div>
-
-                                            </td>
-
-
-                                            {/* STATUS */}
-
-                                            <td>
-
-                                                <span
-                                                    className={`student-status ${student.status.toLowerCase()}`}
-                                                >
-
-                                                    <span className="status-dot"></span>
-
-                                                    {
-                                                        student.status
-                                                    }
-
-                                                </span>
-
-                                            </td>
-
-
-                                            {/* REGISTERED */}
-
-                                            <td>
-
-                                                <span className="registered-date">
-                                                    {
-                                                        student.registered
-                                                    }
-                                                </span>
-
-                                            </td>
-
-
-                                            {/* ACTION */}
-
-                                            <td>
-
-                                                <div className="student-actions">
-
-                                                    <button
-                                                        type="button"
-                                                        className="action-btn view"
-                                                        onClick={() =>
-                                                            setSelectedStudent(
-                                                                student
-                                                            )
-                                                        }
-                                                    >
-                                                        View
-                                                    </button>
-
-                                                    <button
-                                                        type="button"
-                                                        className="action-btn delete"
-                                                        onClick={() =>
-                                                            deleteStudent(
-                                                                student.id
-                                                            )
-                                                        }
-                                                    >
-                                                        Delete
-                                                    </button>
-
-                                                </div>
-
-                                            </td>
-
-                                        </tr>
-
-                                    )
-                                )
-
-                            ) : (
-
-                                <tr>
-
-                                    <td
-                                        colSpan="6"
-                                    >
-
-                                        <div className="no-students">
-
-                                            <div>
-                                                ⌕
-                                            </div>
-
-                                            <strong>
-                                                No students found
-                                            </strong>
-
-                                            <span>
-                                                Try changing
-                                                your search
-                                                or filter.
-                                            </span>
-
-                                        </div>
-
-                                    </td>
-
-                                </tr>
-
-                            )}
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-
-                {/* =================================================
-                    TABLE FOOTER
-                ================================================= */}
-
-                <div className="students-table-footer">
-
-                    <span>
-                        Showing{" "}
-                        <strong>
-                            {
-                                filteredStudents.length
-                            }
-                        </strong>{" "}
-                        of{" "}
-                        <strong>
-                            {
-                                students.length
-                            }
-                        </strong>{" "}
-                        students
+                <nav
+                    className="student-management-nav"
+                    aria-label="Admin navigation"
+                >
+                    <button
+                        type="button"
+                        onClick={() => goTo("/admin-dashboard")}
+                    >
+                        Overview
+                    </button>
+
+                    <button
+                        type="button"
+                        className="active"
+                        onClick={() => goTo("/admin/students")}
+                    >
+                        User
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => goTo("/admin/election")}
+                    >
+                        Elections
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => goTo("/admin/candidates")}
+                    >
+                        Candidates
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => goTo("/admin/audit-logs")}
+                    >
+                        Logs
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => goTo("/admin/settings")}
+                    >
+                        Config &amp; Support
+                    </button>
+                </nav>
+
+                <div className="student-management-nav-right">
+                    <span className="production-pill">
+                        <span></span>
+                        Production
                     </span>
 
+                    <button
+                        type="button"
+                        className="notification-button"
+                        aria-label="Notifications"
+                    >
+                        ♧
+                    </button>
 
-                    <div className="pagination">
-
-                        <button
-                            type="button"
-                            disabled
-                        >
-                            ‹
-                        </button>
-
-                        <button
-                            type="button"
-                            className="active"
-                        >
-                            1
-                        </button>
-
-                        <button type="button">
-                            2
-                        </button>
-
-                        <button type="button">
-                            3
-                        </button>
-
-                        <button type="button">
-                            ›
-                        </button>
-
+                    <div className="admin-avatar">
+                        {admin.full_name?.charAt(0)?.toUpperCase() || "A"}
                     </div>
-
                 </div>
-
-            </div>
-
+            </header>
 
             {/* =================================================
-                STUDENT DETAILS MODAL
+                PAGE CONTENT
             ================================================= */}
 
-            {selectedStudent && (
+            <main className="student-management-content">
 
-                <div
-                    className="student-modal-overlay"
-                    onClick={() =>
-                        setSelectedStudent(null)
-                    }
-                >
+                <div className="student-management-heading">
+                    <div>
+                        <span className="page-badge">
+                            <span className="page-badge-dot"></span>
+                            User &amp; access management
+                        </span>
 
-                    <div
-                        className="student-modal"
-                        onClick={(e) =>
-                            e.stopPropagation()
-                        }
-                    >
+                        <h1>Invite a team member</h1>
 
-                        <div className="student-modal-header">
+                        <p>
+                            Issue a single-use invitation code for an administrator
+                            or electoral board member. The code is tied to one
+                            campus email and expires in seven days.
+                        </p>
+                    </div>
+                </div>
 
-                            <div>
+                <section className="user-access-layout">
 
-                                <h2>
-                                    Student Details
-                                </h2>
+                    {/* =================================================
+                        NEW INVITATION
+                    ================================================= */}
 
-                                <p>
-                                    Student account
-                                    information
-                                </p>
+                    <div className="invitation-card">
 
-                            </div>
+                        <div className="section-title">
+                            <h2>New Invitation</h2>
+                        </div>
 
+                        <div className="role-label">Role</div>
+
+                        <div className="role-selection">
 
                             <button
                                 type="button"
-                                className="modal-close"
-                                onClick={() =>
-                                    setSelectedStudent(
-                                        null
-                                    )
-                                }
+                                className={`role-card ${
+                                    selectedRole === "admin" ? "selected" : ""
+                                }`}
+                                onClick={() => handleRoleCard("admin")}
                             >
-                                ×
+                                <span className="role-card-icon">
+                                    ♢
+                                </span>
+
+                                <span className="role-card-content">
+                                    <strong>Administrator</strong>
+                                    <small>
+                                        Full system access, settings, users and
+                                        election management.
+                                    </small>
+                                </span>
+
+                                <span className="role-radio"></span>
+                            </button>
+
+                            <button
+                                type="button"
+                                className={`role-card ${
+                                    selectedRole === "electoral" ? "selected" : ""
+                                }`}
+                                onClick={() => handleRoleCard("electoral")}
+                            >
+                                <span className="role-card-icon electoral">
+                                    ♙
+                                </span>
+
+                                <span className="role-card-content">
+                                    <strong>Electoral Board</strong>
+                                    <small>
+                                        Manage elections, candidates and voting
+                                        operations.
+                                    </small>
+                                </span>
+
+                                <span className="role-radio"></span>
                             </button>
 
                         </div>
 
+                        {/* ADMIN-ONLY WARNING */}
 
-                        <div className="modal-student-profile">
+                        {selectedRole === "admin" && (
+                            <div className="admin-warning-card">
+                                <span className="warning-icon">△</span>
 
-                            <div className="modal-avatar">
-                                {selectedStudent.name.charAt(
-                                    0
-                                )}
+                                <div className="warning-content">
+                                    <strong>
+                                        Administrators can change election results infrastructure
+                                    </strong>
+
+                                    <p>
+                                        This role can edit any election, alter system
+                                        configuration, and revoke other admins. Only issue
+                                        it to staff who need platform-wide control.
+                                    </p>
+
+                                    <label className="confirmation-check">
+                                        <input type="checkbox" />
+                                        <span>
+                                            I confirm this person requires administrator access.
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="invitation-form">
+
+                            <label>
+                                <span>Fullname</span>
+                                <input
+                                    type="text"
+                                    placeholder="Enter full name"
+                                    value={fullName}
+                                    onChange={(event) =>
+                                        setFullName(event.target.value)
+                                    }
+                                />
+                            </label>
+
+                            <label>
+                                <span>Email</span>
+                                <input
+                                    type="email"
+                                    placeholder="Enter email address"
+                                    value={email}
+                                    onChange={(event) =>
+                                        setEmail(event.target.value)
+                                    }
+                                />
+                            </label>
+
+                            <div className="form-two-column">
+
+                                <label>
+                                    <span>Assign Role</span>
+                                    <select
+                                        value={role}
+                                        onChange={(event) => {
+                                            const value = event.target.value;
+                                            setRole(value);
+                                            setSelectedRole(
+                                                value === "Administrator"
+                                                    ? "admin"
+                                                    : "electoral"
+                                            );
+                                        }}
+                                    >
+                                        <option>Administrator</option>
+                                        <option>Electoral Board</option>
+                                    </select>
+                                </label>
+
+                                <label>
+                                    <span>Code Expires</span>
+                                    <select
+                                        value={expires}
+                                        onChange={(event) =>
+                                            setExpires(event.target.value)
+                                        }
+                                    >
+                                        <option>7 days</option>
+                                        <option>3 days</option>
+                                        <option>24 hours</option>
+                                        <option>12 hours</option>
+                                    </select>
+                                </label>
+
                             </div>
 
-                            <div>
+                            <div className="profile-upload-section">
+                                <span className="upload-title">
+                                    Upload Profile (Optional)
+                                </span>
 
-                                <h3>
-                                    {
-                                        selectedStudent.name
-                                    }
-                                </h3>
+                                <input
+                                    ref={profileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleProfileChange}
+                                    hidden
+                                />
 
-                                <p>
-                                    {
-                                        selectedStudent.email
+                                <button
+                                    type="button"
+                                    className={`profile-upload ${
+                                        profileFile ? "has-file" : ""
+                                    }`}
+                                    onClick={() =>
+                                        profileInputRef.current?.click()
                                     }
-                                </p>
+                                >
+                                    <span className="upload-icon">⇧</span>
+
+                                    <span>
+                                        {profileFile
+                                            ? profileFile.name
+                                            : "Upload Account Profile picture"}
+                                    </span>
+                                </button>
+                            </div>
+
+                            <div className="invitation-actions">
+
+                                <button
+                                    type="button"
+                                    className="clear-button"
+                                    onClick={clearForm}
+                                >
+                                    Clear
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className="generate-button"
+                                    onClick={handleGenerateInvitation}
+                                >
+                                    Generate Invitation Code
+                                    <span className="generate-arrow">↗</span>
+                                </button>
 
                             </div>
 
                         </div>
+                    </div>
 
+                    {/* =================================================
+                        RIGHT COLUMN
+                    ================================================= */}
 
-                        <div className="modal-details">
+                    <div className="user-access-right">
 
-                            <div>
+                        {/* INVITATION CODE */}
 
-                                <label>
-                                    Student ID
-                                </label>
+                        <div className="invitation-code-card">
 
-                                <strong>
-                                    {
-                                        selectedStudent.id
-                                    }
-                                </strong>
-
+                            <div className="right-card-header">
+                                <h2>Invitation code</h2>
                             </div>
 
+                            <div className="invitation-code-empty">
 
-                            <div>
+                                <div className="invitation-code-icon">
+                                    ✉
+                                </div>
 
-                                <label>
-                                    Course
-                                </label>
+                                {showInvitationCode ? (
+                                    <>
+                                        <strong>{generatedCode}</strong>
 
-                                <strong>
-                                    {
-                                        selectedStudent.course
-                                    }
-                                </strong>
+                                        <p>
+                                            This single-use invitation code is valid
+                                            for <b>{expires}</b>.
+                                        </p>
 
-                            </div>
+                                        <button
+                                            type="button"
+                                            className="copy-code-button"
+                                            onClick={handleCopyCode}
+                                        >
+                                            Copy Code
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <strong>No code yet</strong>
 
-
-                            <div>
-
-                                <label>
-                                    Year Level
-                                </label>
-
-                                <strong>
-                                    {
-                                        selectedStudent.year
-                                    }
-                                </strong>
-
-                            </div>
-
-
-                            <div>
-
-                                <label>
-                                    Status
-                                </label>
-
-                                <strong>
-                                    {
-                                        selectedStudent.status
-                                    }
-                                </strong>
+                                        <p>
+                                            Fill in the name and email, then generate.
+                                            The code appears here and is emailed at
+                                            the same time.
+                                        </p>
+                                    </>
+                                )}
 
                             </div>
+                        </div>
 
+                        {/* RECENT INVITATIONS */}
 
-                            <div>
+                        <div className="recent-invitations-card">
 
-                                <label>
-                                    Registered
-                                </label>
-
-                                <strong>
-                                    {
-                                        selectedStudent.registered
-                                    }
-                                </strong>
-
+                            <div className="right-card-header">
+                                <h2>Recent invitations</h2>
                             </div>
 
+                            <div className="recent-invitations-list">
+
+                                {recentInvitations.map((invitation) => (
+                                    <div
+                                        className="recent-invitation-row"
+                                        key={invitation.id}
+                                    >
+                                        <div className="recent-avatar">
+                                            {invitation.name
+                                                .charAt(0)
+                                                .toUpperCase()}
+                                        </div>
+
+                                        <div className="recent-person">
+                                            <strong>{invitation.name}</strong>
+
+                                            <span
+                                                className={`recent-role ${
+                                                    invitation.role
+                                                        .toLowerCase()
+                                                        .replace(/\s+/g, "-")
+                                                }`}
+                                            >
+                                                {invitation.role}
+                                            </span>
+                                        </div>
+
+                                        <span className="recent-email">
+                                            {invitation.email}
+                                        </span>
+
+                                        <span
+                                            className={`recent-status ${
+                                                invitation.status
+                                                    .toLowerCase()
+                                                    .replace(/\s+/g, "-")
+                                            }`}
+                                        >
+                                            {invitation.status}
+                                        </span>
+
+                                        <div className="recent-actions">
+                                            <button type="button">
+                                                {invitation.status === "Active"
+                                                    ? "Active"
+                                                    : invitation.status === "Expired"
+                                                    ? "Reissue"
+                                                    : "Resend"}
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                className="danger"
+                                            >
+                                                Revoke
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+
+                            </div>
                         </div>
 
                     </div>
+                </section>
 
-                </div>
-
-            )}
-
+            </main>
         </div>
     );
 }

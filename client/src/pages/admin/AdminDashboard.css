@@ -147,7 +147,7 @@
     inset: 0;
     z-index: -2;
     background:
-        radial-gradient(circle at 16px 16px, rgba(93, 105, 184, 0.30) 1px, transparent 1.5px) 0 0 / 32px 32px,
+        radial-gradient(circle at 6px 6px, rgba(50, 84, 111) 1px, transparent 1.5px) 0 0 / 32px 32px,
         radial-gradient(circle at 78% 20%, rgba(38, 110, 255, 0.08), transparent 28%),
         linear-gradient(180deg, #101125 0%, #10101f 100%);
 }
@@ -1109,4 +1109,98 @@ html[data-theme="light"] .votara-admin-main .info-panel h3 {
 
 [data-theme="dark"] .votara-feature-card {
     background: #151B2E !important;
+}
+
+/* =========================================================
+   VOTARA PAGE TRANSITION LOADER
+   Added without changing the existing dashboard design.
+   ========================================================= */
+
+.votara-page-transition-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+        radial-gradient(
+            circle at 50% 45%,
+            rgba(38, 110, 255, 0.13),
+            transparent 30%
+        ),
+        rgba(10, 12, 31, 0.96);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    animation: votara-page-loader-in 0.30s ease-out forwards;
+    pointer-events: all;
+}
+
+.votara-page-transition-dots {
+    position: relative;
+    width: 76px;
+    height: 52px;
+}
+
+.votara-page-transition-dots span {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border: 1.5px solid rgba(255, 255, 255, 0.95);
+    border-radius: 50%;
+    background: transparent;
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.08);
+    animation: votara-page-loader-dot 1.25s ease-in-out infinite;
+}
+
+.votara-page-transition-dots span:nth-child(1) {
+    left: 10px;
+    top: 25px;
+    animation-delay: 0s;
+}
+
+.votara-page-transition-dots span:nth-child(2) {
+    left: 33px;
+    top: 3px;
+    animation-delay: 0.13s;
+}
+
+.votara-page-transition-dots span:nth-child(3) {
+    left: 56px;
+    top: 25px;
+    animation-delay: 0.26s;
+}
+
+@keyframes votara-page-loader-dot {
+    0%,
+    100% {
+        transform: scale(0.72);
+        opacity: 0.40;
+    }
+
+    50% {
+        transform: scale(1.16);
+        opacity: 1;
+    }
+}
+
+@keyframes votara-page-loader-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .votara-page-transition-loader {
+        animation: none;
+    }
+
+    .votara-page-transition-dots span {
+        animation: none;
+        opacity: 0.8;
+    }
 }

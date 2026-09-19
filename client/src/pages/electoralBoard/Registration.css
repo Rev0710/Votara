@@ -1,0 +1,587 @@
+
+/* =========================================================
+   REGISTRATION MANAGEMENT — UI / MOBILE IMPROVEMENT
+   Scoped ONLY to .eb-page-registrations
+   Does not affect Party List, Election, or other pages.
+========================================================= */
+
+/* ---------- Base ---------- */
+
+.eb-page-registrations {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+}
+
+.eb-page-registrations > div {
+    width: 100% !important;
+    max-width: 1500px !important;
+    min-width: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    box-sizing: border-box !important;
+}
+
+.eb-page-registrations * {
+    box-sizing: border-box !important;
+}
+
+/* Keep long names readable. */
+.eb-page-registrations h1,
+.eb-page-registrations h2,
+.eb-page-registrations h3,
+.eb-page-registrations p,
+.eb-page-registrations span,
+.eb-page-registrations strong {
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+}
+
+/* =========================================================
+   DESKTOP
+========================================================= */
+
+.eb-page-registrations [style*="Registration Management"] {
+    white-space: normal !important;
+}
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+
+    .eb-page-registrations > div {
+        padding-left: 18px !important;
+        padding-right: 18px !important;
+    }
+
+    /* Four statistics remain compact on tablet. */
+    .eb-page-registrations [style*="repeat(4"] {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr)) !important;
+        gap: 12px !important;
+    }
+
+    .eb-page-registrations [style*="min-width: 950px"],
+    .eb-page-registrations [style*="minWidth"] {
+        min-width: 0 !important;
+    }
+}
+
+/* =========================================================
+   PHONE
+========================================================= */
+
+@media (max-width: 600px) {
+
+    /* ---------- PAGE ---------- */
+
+    .eb-page-registrations > div {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        padding:
+            12px 10px 30px !important;
+
+        margin: 0 !important;
+    }
+
+    /* ---------- HEADER ---------- */
+
+    /*
+       The original header places the title and Refresh button
+       side-by-side. On a narrow phone this leaves too little
+       room for "Registration Management", causing the title
+       to break into individual characters.
+
+       Make the header a full-width block and float Refresh
+       into the upper-right corner.
+    */
+
+    .eb-page-registrations > div > div:first-child {
+        position: relative !important;
+
+        display: block !important;
+
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+
+        margin:
+            0 0 16px !important;
+
+        padding:
+            0 0 2px !important;
+    }
+
+    /* Header's text column. */
+    .eb-page-registrations > div > div:first-child > div:first-child {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+
+        padding-right: 0 !important;
+    }
+
+    /* Back button */
+    .eb-page-registrations button {
+        box-sizing: border-box !important;
+    }
+
+    .eb-page-registrations > div > div:first-child button:first-child {
+        display: block !important;
+
+        margin:
+            0 0 13px !important;
+
+        padding: 0 !important;
+
+        font-size: 9px !important;
+        line-height: 1.3 !important;
+    }
+
+    /* Eyebrow */
+    .eb-page-registrations > div > div:first-child [style*="letterSpacing"] {
+        margin-bottom: 5px !important;
+
+        font-size: 8px !important;
+        line-height: 1.3 !important;
+        letter-spacing: 1.2px !important;
+    }
+
+    /* MAIN TITLE — never split into characters */
+    .eb-page-registrations > div > div:first-child h1 {
+        display: block !important;
+
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        font-size: 22px !important;
+        line-height: 1.18 !important;
+        letter-spacing: -0.35px !important;
+
+        white-space: normal !important;
+        word-break: normal !important;
+        overflow-wrap: break-word !important;
+    }
+
+    /* Description */
+    .eb-page-registrations > div > div:first-child p {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        margin:
+            7px 0 0 !important;
+
+        padding-right: 4px !important;
+
+        font-size: 10px !important;
+        line-height: 1.45 !important;
+
+        white-space: normal !important;
+        word-break: normal !important;
+        overflow-wrap: break-word !important;
+    }
+
+    /* Refresh button */
+    .eb-page-registrations > div > div:first-child button:last-child {
+        position: absolute !important;
+
+        top: 0 !important;
+        right: 0 !important;
+
+        width: 58px !important;
+        min-width: 58px !important;
+        max-width: 58px !important;
+
+        min-height: 38px !important;
+        height: auto !important;
+
+        padding:
+            7px 5px !important;
+
+        border-radius: 9px !important;
+
+        font-size: 8px !important;
+        line-height: 1.2 !important;
+
+        white-space: normal !important;
+        text-align: center !important;
+    }
+
+    /*
+       Give the title enough room even when Refresh is visible.
+       The title itself remains full width because Refresh is
+       positioned separately.
+    */
+    .eb-page-registrations > div > div:first-child h1 {
+        padding-right: 0 !important;
+    }
+
+    /* ---------- ALERTS ---------- */
+
+    .eb-page-registrations [style*="eaf9f1"],
+    .eb-page-registrations [style*="fff0f0"] {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        margin:
+            0 0 12px !important;
+
+        padding:
+            10px 12px !important;
+
+        font-size: 10px !important;
+        line-height: 1.4 !important;
+    }
+
+    /* ---------- STATISTICS ---------- */
+
+    .eb-page-registrations [style*="repeat(4"] {
+        display: grid !important;
+
+        grid-template-columns: 1fr !important;
+
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+
+        gap: 8px !important;
+
+        margin:
+            0 0 14px !important;
+    }
+
+    .eb-page-registrations [style*="repeat(4"] > * {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+
+        min-height: 66px !important;
+
+        padding:
+            11px 12px !important;
+
+        border-radius: 11px !important;
+
+        gap: 11px !important;
+    }
+
+    /* Icon */
+    .eb-page-registrations [style*="repeat(4"] > * > div:first-child {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+
+        border-radius: 9px !important;
+
+        font-size: 15px !important;
+    }
+
+    /* Stat value */
+    .eb-page-registrations [style*="repeat(4"] > * [style*="fontSize: 24px"],
+    .eb-page-registrations [style*="repeat(4"] > * [style*="font-size: 24px"] {
+        font-size: 18px !important;
+        line-height: 1 !important;
+    }
+
+    /* Stat title */
+    .eb-page-registrations [style*="repeat(4"] > * [style*="fontSize: 12px"],
+    .eb-page-registrations [style*="repeat(4"] > * [style*="font-size: 12px"] {
+        font-size: 9px !important;
+        line-height: 1.25 !important;
+    }
+
+    /* Stat description */
+    .eb-page-registrations [style*="repeat(4"] > * [style*="fontSize: 10px"],
+    .eb-page-registrations [style*="repeat(4"] > * [style*="font-size: 10px"] {
+        font-size: 7.5px !important;
+        line-height: 1.25 !important;
+    }
+
+    /* ---------- APPLICATION CARD ---------- */
+
+    .eb-page-registrations > div > div:nth-last-child(2) {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+
+        border-radius: 13px !important;
+    }
+
+    /* Header */
+    .eb-page-registrations [style*="Student Registration Applications"] {
+        font-size: 14px !important;
+        line-height: 1.25 !important;
+    }
+
+    .eb-page-registrations [style*="Verify submitted student"] {
+        font-size: 9px !important;
+        line-height: 1.4 !important;
+    }
+
+    /* ---------- FILTERS ---------- */
+
+    .eb-page-registrations [style*="display: flex"] {
+        min-width: 0 !important;
+    }
+
+    .eb-page-registrations [style*="Search Student ID"] {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    .eb-page-registrations select {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    /* Filters stack cleanly. */
+    .eb-page-registrations [style*="Search Student ID"]
+        {
+        width: 100% !important;
+    }
+
+    /* Target the filters container using its flex layout. */
+    .eb-page-registrations [style*="padding: 15px 20px"] {
+        display: grid !important;
+
+        grid-template-columns: 1fr !important;
+
+        width: 100% !important;
+        min-width: 0 !important;
+
+        padding:
+            10px 12px !important;
+
+        gap: 7px !important;
+    }
+
+    .eb-page-registrations input,
+    .eb-page-registrations select {
+        height: 36px !important;
+        min-height: 36px !important;
+
+        font-size: 10px !important;
+
+        border-radius: 8px !important;
+    }
+
+    /* ---------- TABLE ---------- */
+
+    /*
+       On phones the six desktop columns are converted into
+       stacked application cards. This is much easier to read
+       than a horizontally scrolling table.
+    */
+
+    .eb-page-registrations [style*="overflowX"] {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        overflow-x: hidden !important;
+    }
+
+    .eb-page-registrations table {
+        display: block !important;
+
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+
+        border-collapse: separate !important;
+    }
+
+    .eb-page-registrations thead {
+        display: none !important;
+    }
+
+    .eb-page-registrations tbody {
+        display: block !important;
+
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .eb-page-registrations tbody tr {
+        display: grid !important;
+
+        grid-template-columns: 1fr !important;
+
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+
+        padding:
+            6px 0 !important;
+
+        border-bottom:
+            1px solid #edf0f5 !important;
+    }
+
+    .eb-page-registrations tbody td {
+        display: grid !important;
+
+        grid-template-columns:
+            76px minmax(0, 1fr) !important;
+
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+
+        padding:
+            8px 12px !important;
+
+        border: none !important;
+
+        font-size: 9px !important;
+        line-height: 1.35 !important;
+
+        overflow-wrap: break-word !important;
+        word-break: normal !important;
+    }
+
+    .eb-page-registrations tbody td::before {
+        font-size: 7px !important;
+        font-weight: 800 !important;
+        color: #8a95a6 !important;
+
+        text-transform: uppercase !important;
+        letter-spacing: .35px !important;
+    }
+
+    .eb-page-registrations tbody td:nth-child(1)::before {
+        content: "Student";
+    }
+
+    .eb-page-registrations tbody td:nth-child(2)::before {
+        content: "Year Level";
+    }
+
+    .eb-page-registrations tbody td:nth-child(3)::before {
+        content: "Type";
+    }
+
+    .eb-page-registrations tbody td:nth-child(4)::before {
+        content: "Submitted";
+    }
+
+    .eb-page-registrations tbody td:nth-child(5)::before {
+        content: "Status";
+    }
+
+    .eb-page-registrations tbody td:nth-child(6)::before {
+        content: "Action";
+    }
+
+    /* Student cell */
+    .eb-page-registrations tbody td:first-child > div {
+        min-width: 0 !important;
+    }
+
+    .eb-page-registrations tbody td:first-child strong {
+        font-size: 10px !important;
+        line-height: 1.3 !important;
+
+        white-space: normal !important;
+        word-break: normal !important;
+        overflow-wrap: break-word !important;
+    }
+
+    .eb-page-registrations tbody td:first-child div div {
+        min-width: 0 !important;
+    }
+
+    .eb-page-registrations tbody td:first-child [style*="38px"] {
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+    }
+
+    .eb-page-registrations .studentId {
+        font-size: 8px !important;
+    }
+
+    /* Review button */
+    .eb-page-registrations tbody td:last-child {
+        display: flex !important;
+
+        align-items: center !important;
+        flex-wrap: wrap !important;
+
+        gap: 6px !important;
+    }
+
+    .eb-page-registrations tbody td:last-child::before {
+        width: 76px !important;
+        flex: 0 0 76px !important;
+    }
+
+    .eb-page-registrations tbody td:last-child button {
+        min-height: 31px !important;
+        height: 31px !important;
+
+        padding:
+            0 10px !important;
+
+        font-size: 9px !important;
+        white-space: nowrap !important;
+    }
+
+    /* ---------- FOOTER ---------- */
+
+    .eb-page-registrations [style*="Showing"] {
+        width: 100% !important;
+
+        padding:
+            10px 12px !important;
+
+        font-size: 8px !important;
+    }
+}
+
+/* =========================================================
+   VERY SMALL PHONES
+========================================================= */
+
+@media (max-width: 380px) {
+
+    .eb-page-registrations > div {
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+    }
+
+    .eb-page-registrations > div > div:first-child h1 {
+        font-size: 20px !important;
+    }
+
+    .eb-page-registrations > div > div:first-child button:last-child {
+        width: 52px !important;
+        min-width: 52px !important;
+        max-width: 52px !important;
+        font-size: 7px !important;
+    }
+
+    .eb-page-registrations tbody td {
+        grid-template-columns:
+            68px minmax(0, 1fr) !important;
+        padding-left: 9px !important;
+        padding-right: 9px !important;
+    }
+
+    .eb-page-registrations tbody td:last-child::before {
+        width: 68px !important;
+        flex-basis: 68px !important;
+    }
+}

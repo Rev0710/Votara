@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./AdminDashboard.css";
 import InviteTeamPopUp from "./InviteTeamPopUp";
+import PageLoader from "/src/components/transitionloader/PageLoader";
+
 import {
     FiUsers,
     FiUserCheck,
@@ -137,6 +139,7 @@ if (theme === "light") {
 
 
 
+
 // =========================================================
 // ADMIN DASHBOARD
 // =========================================================
@@ -194,6 +197,10 @@ useEffect(() => {
 }, []);
 
     const [loading, setLoading] = useState(true);
+
+    // Page transition loader
+    const [isPageTransitioning, setIsPageTransitioning] =
+        useState(false);
 
     const [dashboardLoading, setDashboardLoading] =
         useState(true);
@@ -464,7 +471,18 @@ const checkSystem = async () => {
     // =====================================================
 
     const goTo = (path) => {
-        navigate(path);
+        // Always show the page transition, including when returning
+        // to the dashboard from another navigation page.
+        if (isPageTransitioning) {
+            return;
+        }
+
+        setIsPageTransitioning(true);
+
+        // Start the transition first, then change the route.
+        window.setTimeout(() => {
+            navigate(path);
+        }, 700);
     };
 
     const handleExportResults = () => {
@@ -620,6 +638,8 @@ const checkSystem = async () => {
     return (
         
         <div style={styles.page}>
+            {isPageTransitioning && <PageLoader />}
+
             <InviteTeamPopUp
     isOpen={showInviteModal}
     onClose={closeInviteModal}

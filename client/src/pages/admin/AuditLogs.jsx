@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./AuditLogs.css";
+import PageLoader from "/src/components/transitionloader/PageLoader";
 
 function AuditLogs() {
     const navigate = useNavigate();
@@ -10,6 +11,19 @@ function AuditLogs() {
     const [actionFilter, setActionFilter] = useState("All");
     const [roleFilter, setRoleFilter] = useState("All");
     const [selectedLog, setSelectedLog] = useState(null);
+    const [navigationLoading, setNavigationLoading] = useState(false);
+
+    // Smooth page-to-page navigation loader.
+    // The delay is intentional so the transition feels smooth rather than abrupt.
+    const navigateWithLoading = (path) => {
+        if (navigationLoading) return;
+
+        setNavigationLoading(true);
+
+        window.setTimeout(() => {
+            navigate(path);
+        }, 700);
+    };
 
     // =====================================================
     // SAMPLE AUDIT LOG DATA
@@ -261,16 +275,6 @@ function AuditLogs() {
         ).length;
 
     // =====================================================
-    // CLEAR FILTERS
-    // =====================================================
-
-    const clearFilters = () => {
-        setSearch("");
-        setActionFilter("All");
-        setRoleFilter("All");
-    };
-
-    // =====================================================
     // EXPORT LOGS
     // =====================================================
 
@@ -363,664 +367,645 @@ function AuditLogs() {
         setSelectedLog(null);
     };
 
+    // =====================================================
+    // NEW AUDIT PAGE FILTERS
+    // =====================================================
+
+    const [categoryFilter, setCategoryFilter] = useState("All events");
+    const [severityFilters, setSeverityFilters] = useState([]);
+    const [liveMode, setLiveMode] = useState(true);
+
+    const getLogCategory = (log) => {
+        const action = log.action.toLowerCase();
+        const module = log.module.toLowerCase();
+
+        if (module.includes("authentication") || action.includes("login")) {
+            return "Authentication";
+        }
+
+        if (module.includes("election")) {
+            return "Elections";
+        }
+
+        if (module.includes("candidate")) {
+            return "Candidates";
+        }
+
+        if (
+            module.includes("account") ||
+            action.includes("account") ||
+            action.includes("student")
+        ) {
+            return "Accounts";
+        }
+
+        if (module.includes("kiosk")) {
+            return "Kiosk";
+        }
+
+        if (
+            action.includes("system") ||
+            module.includes("system")
+        ) {
+            return "System";
+        }
+
+        return "Security";
+    };
+
+    const getLogSeverity = (log) =>
+        log.status === "Failed" ? "Critical" : "Success";
+
+    const categoryItems = [
+        "All events",
+        "Authentication",
+        "Elections",
+        "Candidates",
+        "Accounts",
+        "System",
+        "Security",
+        "Kiosk",
+    ];
+
+    const categoryCounts = useMemo(() => {
+        const counts = {};
+
+        categoryItems.forEach((category) => {
+            counts[category] =
+                category === "All events"
+                    ? auditLogs.length
+                    : auditLogs.filter(
+                          (log) =>
+                              getLogCategory(log) === category
+                      ).length;
+        });
+
+        return counts;
+    }, [auditLogs]);
+
+    const visibleLogs = useMemo(() => {
+        return filteredLogs.filter((log) => {
+            const matchesCategory =
+                categoryFilter === "All events" ||
+                getLogCategory(log) === categoryFilter;
+
+            const severity =
+                getLogSeverity(log);
+
+            const matchesSeverity =
+                severityFilters.length === 0 ||
+                severityFilters.includes(severity);
+
+            return (
+                matchesCategory &&
+                matchesSeverity
+            );
+        });
+    }, [
+        filteredLogs,
+        categoryFilter,
+        severityFilters,
+    ]);
+
+    const toggleSeverity = (severity) => {
+        setSeverityFilters((current) =>
+            current.includes(severity)
+                ? current.filter(
+                      (item) => item !== severity
+                  )
+                : [...current, severity]
+        );
+    };
+
+    const clearFilters = () => {
+        setSearch("");
+        setActionFilter("All");
+        setRoleFilter("All");
+        setCategoryFilter("All events");
+        setSeverityFilters([]);
+    };
+
+    const severityCounts = {
+        Info: 0,
+        Success: successfulActions,
+        Warning: 0,
+        Critical: failedActions,
+    };
+
+    const securityCount = auditLogs.filter(
+        (log) =>
+            getLogCategory(log) === "Security" ||
+            log.status === "Failed"
+    ).length;
+
     return (
         <div className="audit-logs-page">
 
-            {/* =================================================
-                BACK TO DASHBOARD
-            ================================================= */}
-
-            <button
-                type="button"
-                className="audit-back-button"
-                onClick={() =>
-                    navigate("/admin-dashboard")
-                }
-            >
-                <span>←</span>
-                Back to Dashboard
-            </button>
-
+            {navigationLoading && <PageLoader />}
 
             {/* =================================================
-                HEADER
+                TOP NAVIGATION
             ================================================= */}
 
-            <div className="audit-page-header">
-
-                <div>
-
-                    <span className="audit-page-label">
-                        SYSTEM MONITORING
-                    </span>
-
-                    <h1>
-                        Audit Logs
-                    </h1>
-
-                    <p>
-                        Monitor and review important
-                        activities performed within
-                        the VOTARA system.
-                    </p>
-
-                </div>
-
-
+            <header className="audit-topbar">
                 <button
                     type="button"
-                    className="audit-export-button"
-                    onClick={exportLogs}
-                    disabled={
-                        filteredLogs.length === 0
+                    className="audit-brand"
+                    onClick={() =>
+                        navigateWithLoading("/admin-dashboard")
                     }
+                    aria-label="Go to VOTARA dashboard"
                 >
-                    <span>↓</span>
-                    Export Logs
+                    <span
+                        className="audit-brand-mark"
+                        aria-hidden="true"
+                    >
+                        <img
+            src="/src/images/Votara.png"
+            alt="Votara Logo"
+            className="votara-admin-brand-logo"
+        />
+                    </span>
+                    <span className="votara-audit-brand-name">Votara</span>
                 </button>
 
-            </div>
-
-
-            {/* =================================================
-                SECURITY NOTICE
-            ================================================= */}
-
-            <div className="audit-security-banner">
-
-                <div className="audit-security-icon">
-                    ✓
-                </div>
-
-                <div>
-
-                    <strong>
-                        Audit monitoring is active
-                    </strong>
-
-                    <p>
-                        Administrative and electoral
-                        activities are recorded for
-                        security and accountability.
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            {/* =================================================
-                STATISTICS
-            ================================================= */}
-
-            <div className="audit-stat-grid">
-
-                <div className="audit-stat-card">
-
-                    <div className="audit-stat-icon blue">
-                        ≡
-                    </div>
-
-                    <div>
-
-                        <span>
-                            Total Activities
-                        </span>
-
-                        <strong>
-                            {totalLogs}
-                        </strong>
-
-                        <small>
-                            Recorded activities
-                        </small>
-
-                    </div>
-
-                </div>
-
-
-                <div className="audit-stat-card">
-
-                    <div className="audit-stat-icon green">
-                        ✓
-                    </div>
-
-                    <div>
-
-                        <span>
-                            Successful
-                        </span>
-
-                        <strong>
-                            {successfulActions}
-                        </strong>
-
-                        <small>
-                            Completed actions
-                        </small>
-
-                    </div>
-
-                </div>
-
-
-                <div className="audit-stat-card">
-
-                    <div className="audit-stat-icon red">
-                        !
-                    </div>
-
-                    <div>
-
-                        <span>
-                            Failed
-                        </span>
-
-                        <strong>
-                            {failedActions}
-                        </strong>
-
-                        <small>
-                            Security events
-                        </small>
-
-                    </div>
-
-                </div>
-
-
-                <div className="audit-stat-card">
-
-                    <div className="audit-stat-icon purple">
-                        ⇥
-                    </div>
-
-                    <div>
-
-                        <span>
-                            Login Activities
-                        </span>
-
-                        <strong>
-                            {loginActions}
-                        </strong>
-
-                        <small>
-                            Authentication events
-                        </small>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            {/* =================================================
-                LOG TABLE
-            ================================================= */}
-
-            <div className="audit-table-card">
-
-                {/* TABLE HEADER */}
-
-                <div className="audit-table-header">
-
-                    <div>
-
-                        <h2>
-                            Activity History
-                        </h2>
-
-                        <p>
-                            A chronological record of
-                            important system activities.
-                        </p>
-
-                    </div>
-
+                <nav
+                    className="audit-topnav"
+                    aria-label="Admin navigation"
+                >
+                    <button
+                        type="button"
+                        onClick={() =>
+                            navigateWithLoading("/admin-dashboard")
+                        }
+                    >
+                        Overview
+                    </button>
 
                     <button
                         type="button"
-                        className="audit-refresh-button"
                         onClick={() =>
-                            window.location.reload()
+                            navigateWithLoading("/admin/students")
                         }
                     >
-                        ↻ Refresh
+                        User
                     </button>
 
-                </div>
-
-
-                {/* =================================================
-                    FILTER BAR
-                ================================================= */}
-
-                <div className="audit-filter-bar">
-
-                    <div className="audit-search">
-
-                        <span>⌕</span>
-
-                        <input
-                            type="text"
-                            placeholder="Search user, action, module or log ID..."
-                            value={search}
-                            onChange={(e) =>
-                                setSearch(
-                                    e.target.value
-                                )
-                            }
-                        />
-
-                    </div>
-
-
-                    <select
-                        className="audit-filter"
-                        value={actionFilter}
-                        onChange={(e) =>
-                            setActionFilter(
-                                e.target.value
-                            )
+                    <button
+                        type="button"
+                        onClick={() =>
+                            navigateWithLoading("/admin/election")
                         }
                     >
+                        Elections
+                    </button>
 
-                        <option value="All">
-                            All Actions
-                        </option>
-
-                        <option value="Login">
-                            Login
-                        </option>
-
-                        <option value="Login Failed">
-                            Login Failed
-                        </option>
-
-                        <option value="Student Updated">
-                            Student Updated
-                        </option>
-
-                        <option value="Candidate Approved">
-                            Candidate Approved
-                        </option>
-
-                        <option value="Election Activated">
-                            Election Activated
-                        </option>
-
-                        <option value="Election Updated">
-                            Election Updated
-                        </option>
-
-                        <option value="Admin Account Created">
-                            Admin Account Created
-                        </option>
-
-                    </select>
-
-
-                    <select
-                        className="audit-filter"
-                        value={roleFilter}
-                        onChange={(e) =>
-                            setRoleFilter(
-                                e.target.value
-                            )
+                    <button
+                        type="button"
+                        onClick={() =>
+                            navigateWithLoading("/admin/candidates")
                         }
                     >
-
-                        <option value="All">
-                            All Roles
-                        </option>
-
-                        <option value="Admin">
-                            Admin
-                        </option>
-
-                        <option value="Electoral Board">
-                            Electoral Board
-                        </option>
-
-                        <option value="Unknown">
-                            Unknown
-                        </option>
-
-                    </select>
-
-
-                    {(search ||
-                        actionFilter !== "All" ||
-                        roleFilter !== "All") && (
-
-                        <button
-                            type="button"
-                            className="audit-clear-filter"
-                            onClick={clearFilters}
-                        >
-                            Clear
-                        </button>
-
-                    )}
-
-                </div>
-
-
-                {/* =================================================
-                    TABLE
-                ================================================= */}
-
-                <div className="audit-table-wrapper">
-
-                    <table className="audit-table">
-
-                        <thead>
-
-                            <tr>
-
-                                <th>
-                                    Activity
-                                </th>
-
-                                <th>
-                                    User
-                                </th>
-
-                                <th>
-                                    Module
-                                </th>
-
-                                <th>
-                                    Date & Time
-                                </th>
-
-                                <th>
-                                    Status
-                                </th>
-
-                                <th>
-                                    Action
-                                </th>
-
-                            </tr>
-
-                        </thead>
-
-
-                        <tbody>
-
-                            {filteredLogs.length >
-                            0 ? (
-
-                                filteredLogs.map(
-                                    (log) => (
-
-                                        <tr
-                                            key={
-                                                log.id
-                                            }
-                                        >
-
-                                            {/* ACTIVITY */}
-
-                                            <td>
-
-                                                <div className="audit-activity-cell">
-
-                                                    <div
-                                                        className={`audit-activity-icon ${
-                                                            log.status ===
-                                                            "Failed"
-                                                                ? "failed"
-                                                                : "success"
-                                                        }`}
-                                                    >
-                                                        {log.status ===
-                                                        "Failed"
-                                                            ? "!"
-                                                            : "✓"}
-                                                    </div>
-
-                                                    <div>
-
-                                                        <strong>
-                                                            {
-                                                                log.action
-                                                            }
-                                                        </strong>
-
-                                                        <span>
-                                                            {
-                                                                log.id
-                                                            }
-                                                        </span>
-
-                                                    </div>
-
-                                                </div>
-
-                                            </td>
-
-
-                                            {/* USER */}
-
-                                            <td>
-
-                                                <div className="audit-user-cell">
-
-                                                    <div className="audit-user-avatar">
-                                                        {log.user
-                                                            .charAt(
-                                                                0
-                                                            )
-                                                            .toUpperCase()}
-                                                    </div>
-
-                                                    <div>
-
-                                                        <strong>
-                                                            {
-                                                                log.user
-                                                            }
-                                                        </strong>
-
-                                                        <span>
-                                                            {
-                                                                log.email
-                                                            }
-                                                        </span>
-
-                                                    </div>
-
-                                                </div>
-
-                                            </td>
-
-
-                                            {/* MODULE */}
-
-                                            <td>
-
-                                                <span className="audit-module">
-                                                    {
-                                                        log.module
-                                                    }
-                                                </span>
-
-                                            </td>
-
-
-                                            {/* DATE */}
-
-                                            <td>
-
-                                                <div className="audit-date-cell">
-
-                                                    <strong>
-                                                        {
-                                                            log.date
-                                                        }
-                                                    </strong>
-
-                                                    <span>
-                                                        {
-                                                            log.time
-                                                        }
-                                                    </span>
-
-                                                </div>
-
-                                            </td>
-
-
-                                            {/* STATUS */}
-
-                                            <td>
-
-                                                <span
-                                                    className={`audit-status ${
-                                                        log.status.toLowerCase()
-                                                    }`}
-                                                >
-
-                                                    <span className="audit-status-dot"></span>
-
-                                                    {
-                                                        log.status
-                                                    }
-
-                                                </span>
-
-                                            </td>
-
-
-                                            {/* ACTION */}
-
-                                            <td>
-
-                                                <button
-                                                    type="button"
-                                                    className="audit-view-button"
-                                                    onClick={() =>
-                                                        setSelectedLog(
-                                                            log
-                                                        )
-                                                    }
-                                                >
-                                                    View
-                                                </button>
-
-                                            </td>
-
-                                        </tr>
-
-                                    )
-                                )
-
-                            ) : (
-
-                                <tr>
-
-                                    <td colSpan="6">
-
-                                        <div className="audit-empty">
-
-                                            <div className="audit-empty-icon">
-                                                ≡
-                                            </div>
-
-                                            <strong>
-                                                No audit logs found
-                                            </strong>
-
-                                            <span>
-                                                Try changing
-                                                your search
-                                                or filters.
-                                            </span>
-
-                                        </div>
-
-                                    </td>
-
-                                </tr>
-
-                            )}
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-
-                {/* =================================================
-                    FOOTER
-                ================================================= */}
-
-                <div className="audit-table-footer">
-
-                    <span>
-                        Showing{" "}
-                        <strong>
-                            {
-                                filteredLogs.length
-                            }
-                        </strong>
-                        {" "}of{" "}
-                        <strong>
-                            {auditLogs.length}
-                        </strong>
-                        {" "}activities
+                        Candidates
+                    </button>
+
+                    <button
+                        type="button"
+                        className="active"
+                    >
+                        Logs
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() =>
+                            navigateWithLoading("/admin/settings")
+                        }
+                    >
+                        Config &amp; Support
+                    </button>
+                </nav>
+
+                <div className="audit-topbar-right">
+                    <span className="audit-production">
+                        <i></i>
+                        Production
                     </span>
 
+                    <button
+                        type="button"
+                        className="audit-notification"
+                        aria-label="Notifications"
+                    >
+                        ♧
+                    </button>
 
-                    {auditLogs.length > 0 && (
+                    <div className="audit-profile">
+                        <span>
+                            {admin?.full_name
+                                ?.charAt(0)
+                                ?.toUpperCase() || "A"}
+                        </span>
+                    </div>
+                </div>
+            </header>
 
-                        <button
-                            type="button"
-                            className="audit-clear-all"
-                            onClick={
-                                clearAuditLogs
-                            }
-                        >
-                            Clear Logs
-                        </button>
+            {/* =================================================
+                PAGE CONTENT
+            ================================================= */}
 
-                    )}
+            <main className="audit-content">
+
+                <div className="audit-page-intro">
+                    <div>
+                        <span className="audit-page-label">
+                            ● &nbsp;System &amp; security
+                        </span>
+
+                        <h1>Activity &amp; logs</h1>
+
+                        <p>
+                            Monitor important system activity,
+                            authentication events, election actions,
+                            and security events in one place.
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        className="audit-export-button"
+                        onClick={exportLogs}
+                        disabled={
+                            visibleLogs.length === 0
+                        }
+                    >
+                        ↓
+                        Export Logs
+                    </button>
+                </div>
+
+                <div className="audit-layout">
+
+                    {/* =================================================
+                        CATEGORY SIDEBAR
+                    ================================================= */}
+
+                    <aside className="audit-category-card">
+
+                        <h2>Category</h2>
+
+                        <div className="audit-category-list">
+                            {categoryItems.map(
+                                (category) => (
+                                    <button
+                                        type="button"
+                                        key={category}
+                                        className={
+                                            categoryFilter ===
+                                            category
+                                                ? "active"
+                                                : ""
+                                        }
+                                        onClick={() =>
+                                            setCategoryFilter(
+                                                category
+                                            )
+                                        }
+                                    >
+                                        <span>
+                                            {category}
+                                        </span>
+
+                                        <strong>
+                                            {
+                                                categoryCounts[
+                                                    category
+                                                ]
+                                            }
+                                        </strong>
+                                    </button>
+                                )
+                            )}
+                        </div>
+
+                        <div className="audit-separator"></div>
+
+                        <h3>Severity</h3>
+
+                        {[
+                            "Info",
+                            "Success",
+                            "Warning",
+                            "Critical",
+                        ].map((severity) => (
+                            <label
+                                className="audit-check"
+                                key={severity}
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={severityFilters.includes(
+                                        severity
+                                    )}
+                                    onChange={() =>
+                                        toggleSeverity(
+                                            severity
+                                        )
+                                    }
+                                />
+
+                                <span className="audit-check-box"></span>
+
+                                <span>
+                                    {severity}
+                                </span>
+                            </label>
+                        ))}
+
+                        <div className="audit-retention">
+                            Logs are retained for 180 days and
+                            cannot be edited or deleted, per
+                            election integrity policy.
+                        </div>
+
+                    </aside>
+
+                    {/* =================================================
+                        ACTIVITY PANEL
+                    ================================================= */}
+
+                    <section className="audit-activity-panel">
+
+                        <div className="audit-activity-toolbar">
+
+                            <div className="audit-toolbar-left">
+
+                                <div className="audit-search">
+                                    <span>⌕</span>
+
+                                    <input
+                                        type="text"
+                                        placeholder="Search actions, details"
+                                        value={search}
+                                        onChange={(e) =>
+                                            setSearch(
+                                                e.target.value
+                                            )
+                                        }
+                                    />
+                                </div>
+
+                                <select
+                                    className="audit-filter"
+                                    value={actionFilter}
+                                    onChange={(e) =>
+                                        setActionFilter(
+                                            e.target.value
+                                        )
+                                    }
+                                >
+                                    <option value="All">
+                                        All time
+                                    </option>
+                                    <option value="Login">
+                                        Login
+                                    </option>
+                                    <option value="Login Failed">
+                                        Login Failed
+                                    </option>
+                                    <option value="Student Updated">
+                                        Student Updated
+                                    </option>
+                                    <option value="Candidate Approved">
+                                        Candidate Approved
+                                    </option>
+                                    <option value="Election Activated">
+                                        Election Activated
+                                    </option>
+                                    <option value="Election Updated">
+                                        Election Updated
+                                    </option>
+                                    <option value="Admin Account Created">
+                                        Admin Account Created
+                                    </option>
+                                </select>
+
+                            </div>
+
+                            <label className="audit-live">
+                                <span>Live</span>
+
+                                <input
+                                    type="checkbox"
+                                    checked={liveMode}
+                                    onChange={(e) =>
+                                        setLiveMode(
+                                            e.target.checked
+                                        )
+                                    }
+                                />
+
+                                <span className="audit-live-switch">
+                                    <i></i>
+                                </span>
+                            </label>
+
+                        </div>
+
+                        <div className="audit-summary">
+                            <span>
+                                <b>{visibleLogs.length}</b>
+                                event
+                                {visibleLogs.length === 1
+                                    ? ""
+                                    : "s"} shown
+                            </span>
+
+                            <span className="critical">
+                                <b>
+                                    {
+                                        severityCounts.Critical
+                                    }
+                                </b>
+                                critical
+                            </span>
+
+                            <span className="warning">
+                                <b>
+                                    {
+                                        severityCounts.Warning
+                                    }
+                                </b>
+                                warning
+                            </span>
+
+                            <span className="security">
+                                <b>
+                                    {securityCount}
+                                </b>
+                                security
+                            </span>
+                        </div>
+
+                        <div className="audit-log-list">
+
+                            {visibleLogs.length > 0 ? (
+                                visibleLogs.map(
+                                    (log) => (
+                                        <button
+                                            type="button"
+                                            className={`audit-log-row ${
+                                                log.status ===
+                                                "Failed"
+                                                    ? "failed"
+                                                    : "success"
+                                            }`}
+                                            key={log.id}
+                                            onClick={() =>
+                                                setSelectedLog(
+                                                    log
+                                                )
+                                            }
+                                        >
+                                            <span className="audit-row-accent"></span>
+
+                                            <span className="audit-row-icon">
+                                                {log.status ===
+                                                "Failed"
+                                                    ? "!"
+                                                    : "✓"}
+                                            </span>
+
+                                            <span className="audit-row-content">
+                                                <strong>
+                                                    {
+                                                        log.action
+                                                    }
+                                                </strong>
+
+                                                <small>
+                                                    {
+                                                        log.description
+                                                    }
+                                                </small>
+                                            </span>
+
+                                            <span className="audit-row-user">
+                                                {
+                                                    log.user
+                                                }
+                                            </span>
+
+                                            <span className="audit-row-time">
+                                                {
+                                                    log.time
+                                                }
+                                            </span>
+
+                                            <span className="audit-row-arrow">
+                                                ›
+                                            </span>
+                                        </button>
+                                    )
+                                )
+                            ) : (
+                                <div className="audit-empty">
+                                    <div className="audit-empty-icon">
+                                        ≡
+                                    </div>
+
+                                    <strong>
+                                        No audit logs found
+                                    </strong>
+
+                                    <span>
+                                        Try changing your
+                                        search or filters.
+                                    </span>
+                                </div>
+                            )}
+
+                        </div>
+
+                        <div className="audit-panel-footer">
+                            <span>
+                                Showing{" "}
+                                <strong>
+                                    {visibleLogs.length}
+                                </strong>{" "}
+                                of{" "}
+                                <strong>
+                                    {auditLogs.length}
+                                </strong>{" "}
+                                activities
+                            </span>
+
+                            <div>
+                                {(search ||
+                                    actionFilter !== "All" ||
+                                    roleFilter !== "All" ||
+                                    categoryFilter !==
+                                        "All events" ||
+                                    severityFilters.length >
+                                        0) && (
+                                    <button
+                                        type="button"
+                                        onClick={
+                                            clearFilters
+                                        }
+                                    >
+                                        Clear filters
+                                    </button>
+                                )}
+
+                                {auditLogs.length > 0 && (
+                                    <button
+                                        type="button"
+                                        className="danger"
+                                        onClick={
+                                            clearAuditLogs
+                                        }
+                                    >
+                                        Clear Logs
+                                    </button>
+                                )}
+
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        window.location.reload()
+                                    }
+                                >
+                                    ↻ Refresh
+                                </button>
+                            </div>
+                        </div>
+
+                    </section>
 
                 </div>
 
-            </div>
-
+            </main>
 
             {/* =================================================
                 LOG DETAILS MODAL
             ================================================= */}
 
             {selectedLog && (
-
                 <div
                     className="audit-modal-overlay"
                     onClick={() =>
                         setSelectedLog(null)
                     }
                 >
-
                     <div
                         className="audit-modal"
                         onClick={(e) =>
                             e.stopPropagation()
                         }
                     >
-
                         <div className="audit-modal-header">
-
                             <div>
-
                                 <span>
                                     AUDIT LOG DETAILS
                                 </span>
@@ -1030,9 +1015,7 @@ function AuditLogs() {
                                         selectedLog.action
                                     }
                                 </h2>
-
                             </div>
-
 
                             <button
                                 type="button"
@@ -1045,12 +1028,9 @@ function AuditLogs() {
                             >
                                 ×
                             </button>
-
                         </div>
 
-
                         <div className="audit-modal-status">
-
                             <div
                                 className={`audit-modal-status-icon ${
                                     selectedLog.status ===
@@ -1066,7 +1046,6 @@ function AuditLogs() {
                             </div>
 
                             <div>
-
                                 <span>
                                     ACTIVITY STATUS
                                 </span>
@@ -1076,138 +1055,68 @@ function AuditLogs() {
                                         selectedLog.status
                                     }
                                 </strong>
-
                             </div>
-
                         </div>
-
 
                         <div className="audit-details-grid">
-
                             <div>
-
-                                <label>
-                                    Log ID
-                                </label>
-
+                                <label>Log ID</label>
                                 <strong>
-                                    {
-                                        selectedLog.id
-                                    }
+                                    {selectedLog.id}
                                 </strong>
-
                             </div>
 
-
                             <div>
-
-                                <label>
-                                    Module
-                                </label>
-
+                                <label>Module</label>
                                 <strong>
-                                    {
-                                        selectedLog.module
-                                    }
+                                    {selectedLog.module}
                                 </strong>
-
                             </div>
 
-
                             <div>
-
-                                <label>
-                                    User
-                                </label>
-
+                                <label>User</label>
                                 <strong>
-                                    {
-                                        selectedLog.user
-                                    }
+                                    {selectedLog.user}
                                 </strong>
-
                             </div>
 
-
                             <div>
-
-                                <label>
-                                    Role
-                                </label>
-
+                                <label>Role</label>
                                 <strong>
-                                    {
-                                        selectedLog.role
-                                    }
+                                    {selectedLog.role}
                                 </strong>
-
                             </div>
 
-
                             <div>
-
-                                <label>
-                                    Email
-                                </label>
-
+                                <label>Email</label>
                                 <strong>
-                                    {
-                                        selectedLog.email
-                                    }
+                                    {selectedLog.email}
                                 </strong>
-
                             </div>
 
-
                             <div>
-
-                                <label>
-                                    IP Address
-                                </label>
-
+                                <label>IP Address</label>
                                 <strong>
-                                    {
-                                        selectedLog.ip
-                                    }
+                                    {selectedLog.ip}
                                 </strong>
-
                             </div>
 
-
                             <div>
-
-                                <label>
-                                    Date
-                                </label>
-
+                                <label>Date</label>
                                 <strong>
-                                    {
-                                        selectedLog.date
-                                    }
+                                    {selectedLog.date}
                                 </strong>
-
                             </div>
 
-
                             <div>
-
-                                <label>
-                                    Time
-                                </label>
-
+                                <label>Time</label>
                                 <strong>
-                                    {
-                                        selectedLog.time
-                                    }
+                                    {selectedLog.time}
                                 </strong>
-
                             </div>
-
                         </div>
 
-
                         <div className="audit-description">
-
                             <label>
                                 ACTIVITY DESCRIPTION
                             </label>
@@ -1217,12 +1126,9 @@ function AuditLogs() {
                                     selectedLog.description
                                 }
                             </p>
-
                         </div>
 
-
                         <div className="audit-modal-footer">
-
                             <button
                                 type="button"
                                 onClick={() =>
@@ -1233,13 +1139,9 @@ function AuditLogs() {
                             >
                                 Close
                             </button>
-
                         </div>
-
                     </div>
-
                 </div>
-
             )}
 
         </div>

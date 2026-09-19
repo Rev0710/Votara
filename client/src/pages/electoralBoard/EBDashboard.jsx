@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import "./EBDashboard.css";
 
 import Registrations from "./Registrations";
 import LateEnrolleeManagement from "./LateEnrolleeManagement";
@@ -149,33 +150,35 @@ const EBDashboard = () => {
     // =====================================================
 
     return (
-        <div style={styles.app}>
+        <div className="eb-dashboard" style={styles.app}>
 
             {/* =================================================
                 MOBILE OVERLAY
             ================================================= */}
 
             {sidebarOpen && (
-                <div
-                    style={styles.overlay}
-                    onClick={() =>
-                        setSidebarOpen(false)
-                    }
-                />
-            )}
+    <div
+        className="eb-mobile-overlay"
+        style={styles.overlay}
+        onClick={() =>
+            setSidebarOpen(false)
+        }
+    />
+)}
 
             {/* =================================================
                 SIDEBAR
             ================================================= */}
 
-            <aside
-                style={{
-                    ...styles.sidebar,
-                    ...(sidebarOpen
-                        ? styles.sidebarMobileOpen
-                        : {}),
-                }}
-            >
+<aside
+    className={`eb-sidebar ${sidebarOpen ? "eb-sidebar-open" : ""}`}
+    style={{
+        ...styles.sidebar,
+        ...(sidebarOpen
+            ? styles.sidebarMobileOpen
+            : {}),
+    }}
+>
 
                 {/* LOGO */}
 
@@ -269,15 +272,15 @@ const EBDashboard = () => {
                 MAIN CONTENT
             ================================================= */}
 
-            <main style={styles.main}>
+<main className="eb-main" style={styles.main}>
 
                 {/* =================================================
                     TOP BAR
                 ================================================= */}
 
-                <header style={styles.topbar}>
+                <header className="eb-topbar" style={styles.topbar}>
 
-                    <div style={styles.topbarLeft}>
+                    <div className="eb-topbarLeft" style={styles.topbarLeft}>
 
                         <button
                             style={styles.menuButton}
@@ -319,10 +322,9 @@ const EBDashboard = () => {
                     </div>
 
                     <div
-                        style={
-                            styles.profileArea
-                        }
-                    >
+    className="eb-profile"
+    style={styles.profileArea}
+>
 
                         <div
                             style={
@@ -356,7 +358,7 @@ const EBDashboard = () => {
                     CONTENT
                 ================================================= */}
 
-                <section style={styles.content}>
+                <section className="eb-content" style={styles.content}>
 
                     {/* =================================================
                         DASHBOARD OVERVIEW
@@ -366,11 +368,10 @@ const EBDashboard = () => {
                         "dashboard" && (
                         <>
 
-                            <div
-                                style={
-                                    styles.welcomeCard
-                                }
-                            >
+<div
+    className="eb-welcome-card"
+    style={styles.welcomeCard}
+>
 
                                 <div>
 
@@ -415,13 +416,12 @@ const EBDashboard = () => {
 
                                 </div>
 
-                                <div
-                                    style={
-                                        styles.welcomeIcon
-                                    }
-                                >
-                                    V
-                                </div>
+<div
+    className="eb-welcome-icon"
+    style={styles.welcomeIcon}
+>
+    V
+</div>
 
                             </div>
 
@@ -460,10 +460,9 @@ const EBDashboard = () => {
                             </div>
 
                             <div
-                                style={
-                                    styles.statsGrid
-                                }
-                            >
+                                className="eb-stats-grid"
+                                style={styles.statsGrid}
+                                >
 
                                 <StatCard
                                     title="Pending Registrations"
@@ -520,6 +519,7 @@ const EBDashboard = () => {
                             ================================================= */}
 
                             <div
+                                className="eb-section-header"       
                                 style={
                                     styles.sectionHeader
                                 }
@@ -551,9 +551,8 @@ const EBDashboard = () => {
                             </div>
 
                             <div
-                                style={
-                                    styles.operationsGrid
-                                }
+                            className="eb-operations-grid"
+                            style={styles.operationsGrid}
                             >
 
                                 <OperationCard
@@ -653,10 +652,9 @@ const EBDashboard = () => {
                             </div>
 
                             <div
-                                style={
-                                    styles.securityGrid
-                                }
-                            >
+                                className="eb-security-grid"
+                                style={styles.securityGrid}
+                        >
 
                                 <SecurityCard
                                     title="Identity Verification"
@@ -691,22 +689,23 @@ const EBDashboard = () => {
                         REGISTRATIONS
                     ================================================= */}
 
-                    {activeSection ===
-                        "registrations" && (
-                        <Registrations
-                            title="Registration Management"
-                            icon="▤"
-                            description="Review, verify, approve, reject, or request corrections for student registration applications."
-                            steps={[
-                                "View pending registration applications",
-                                "Check official Student ID and enrollment information",
-                                "Review submitted requirements",
-                                "Review identity verification and selfie",
-                                "Approve, reject, or request correction",
-                                "Generate temporary password after approval",
-                            ]}
-                        />
-                    )}
+                    {activeSection === "registrations" && (
+    <div className="eb-page-registrations">
+        <Registrations
+            title="Registration Management"
+            icon="▤"
+            description="Review, verify, approve, reject, or request corrections for student registration applications."
+            steps={[
+                "View pending registration applications",
+                "Check official Student ID and enrollment information",
+                "Review submitted requirements",
+                "Review identity verification and selfie",
+                "Approve, reject, or request correction",
+                "Generate temporary password after approval",
+            ]}
+        />
+    </div>
+)}
 
                     {/* =================================================
                         LATE ENROLLEES
@@ -722,7 +721,9 @@ const EBDashboard = () => {
                     ================================================= */}
 
                     {activeSection === "partyLists" && (
+                    <div className="eb-page-party-lists"> 
                         <PartyListManagement />
+                    </div>
                     )}
 
                     {/* =================================================
@@ -738,7 +739,9 @@ const EBDashboard = () => {
                         ================================================= */}
 
                         {activeSection === "election" && (
-                            <ElectionManagement />
+                        <div className="eb-page-election">
+                        <ElectionManagement />
+                        </div>
                         )}
 
                     {/* =================================================
@@ -928,7 +931,7 @@ const ModulePlaceholder = ({
     return (
         <div>
 
-            <div style={styles.moduleHeader}>
+            <div className="eb-module-header" style={styles.moduleHeader}>
 
                 <div style={styles.moduleIcon}>
                     {icon}
@@ -1722,54 +1725,5 @@ const styles = {
     },
 };
 
-// =====================================================
-// RESPONSIVE STYLE
-// =====================================================
-
-if (
-    typeof document !== "undefined"
-) {
-    const styleId =
-        "votara-eb-dashboard-responsive";
-
-    if (
-        !document.getElementById(
-            styleId
-        )
-    ) {
-        const style =
-            document.createElement(
-                "style"
-            );
-
-        style.id = styleId;
-
-        style.innerHTML = `
-            @media (max-width: 1200px) {
-                .votara-eb-dashboard-placeholder {
-                    display: block;
-                }
-            }
-
-            @media (max-width: 1000px) {
-                body {
-                    overflow-x: hidden;
-                }
-            }
-
-            @media (max-width: 900px) {
-                /* Dashboard adapts naturally */
-            }
-
-            @media (max-width: 768px) {
-                /* Mobile dashboard */
-            }
-        `;
-
-        document.head.appendChild(
-            style
-        );
-    }
-}
 
 export default EBDashboard;

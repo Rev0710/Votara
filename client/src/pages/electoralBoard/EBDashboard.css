@@ -1,0 +1,948 @@
+ .eb-dashboard {
+                width: 100%;
+                max-width: 100%;
+                overflow-x: hidden;
+            }
+
+            .eb-dashboard * {
+                box-sizing: border-box;
+            }
+
+
+
+            @media (max-width: 1200px) {
+
+                .eb-content {
+                    padding-left: 25px !important;
+                    padding-right: 25px !important;
+                }
+
+                .eb-stats-grid {
+                    grid-template-columns:
+                        repeat(2, minmax(0, 1fr)) !important;
+                }
+
+                .eb-operations-grid {
+                    grid-template-columns:
+                        repeat(2, minmax(0, 1fr)) !important;
+                }
+
+                .eb-security-grid {
+                    grid-template-columns:
+                        repeat(2, minmax(0, 1fr)) !important;
+                }
+
+                .eb-welcome-card {
+                    padding: 28px !important;
+                }
+
+                .eb-welcome-description {
+                    max-width: 650px;
+                }
+            }
+
+
+
+            @media (max-width: 1000px) {
+
+    .eb-sidebar {
+        position: fixed !important;
+
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+
+        width: 270px !important;
+        min-width: 270px !important;
+
+        transform: translateX(-110%) !important;
+
+        transition:
+            transform 0.3s ease !important;
+
+        z-index: 1000 !important;
+
+        visibility: hidden;
+
+        overflow-y: auto;
+    }
+
+    .eb-sidebar.eb-sidebar-open {
+        transform: translateX(0) !important;
+        visibility: visible;
+    }
+
+    .eb-main {
+        margin-left: 0 !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+    .eb-mobile-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+
+    background: rgba(0, 0, 0, 0.45) !important;
+
+    z-index: 999 !important;
+}
+
+                .eb-main {
+                    margin-left: 0 !important;
+                    width: 100% !important;
+                }
+
+                .eb-topbar {
+                    padding: 0 24px !important;
+                }
+
+                .eb-topbar button {
+                    display: flex !important;
+                }
+
+                .eb-content {
+                    padding:
+                        25px 24px 45px !important;
+                }
+
+                .eb-profile {
+                    gap: 8px !important;
+                }
+
+                .eb-profile > div:first-child {
+                    display: none !important;
+                }
+
+                .eb-stats-grid {
+                    grid-template-columns:
+                        repeat(2, minmax(0, 1fr)) !important;
+                }
+
+                .eb-operations-grid {
+                    grid-template-columns:
+                        repeat(2, minmax(0, 1fr)) !important;
+                }
+
+                .eb-security-grid {
+                    grid-template-columns:
+                        repeat(2, minmax(0, 1fr)) !important;
+                }
+
+                .eb-welcome-card {
+                    padding: 26px !important;
+                }
+
+                .eb-welcome-icon {
+                    width: 90px !important;
+                    height: 90px !important;
+                    min-width: 90px !important;
+                    font-size: 40px !important;
+                }
+            }
+
+
+
+            @media (max-width: 768px) {
+
+                /* -----------------------------
+                   SIDEBAR
+                ----------------------------- */
+
+                .eb-sidebar {
+                    width: 280px !important;
+                    min-width: 280px !important;
+
+                    box-shadow:
+                        10px 0 35px
+                        rgba(0, 0, 0, 0.18) !important;
+                }
+
+
+                .eb-topbar {
+                    height: auto !important;
+                    min-height: 76px !important;
+
+                    padding:
+                        14px 18px !important;
+
+                    gap: 12px !important;
+                }
+
+                .eb-topbarLeft {
+                    min-width: 0;
+                }
+
+                .eb-topbarLeft > div {
+                    min-width: 0;
+                }
+
+                .eb-topbar h1 {
+                    font-size: 18px !important;
+
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .eb-topbar p {
+                    font-size: 10px !important;
+
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .eb-topbar button {
+                    width: 38px !important;
+                    height: 38px !important;
+                    min-width: 38px !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                }
+
+
+
+                .eb-content {
+                    padding:
+                        20px 18px 40px !important;
+                }
+
+
+
+                .eb-welcome-card {
+                    padding: 23px !important;
+
+                    flex-direction: column !important;
+                    align-items: flex-start !important;
+
+                    gap: 20px !important;
+                }
+
+                .eb-welcome-card > div:first-child {
+                    width: 100%;
+                }
+
+                .eb-welcome-icon {
+                    width: 70px !important;
+                    height: 70px !important;
+                    min-width: 70px !important;
+
+                    border-radius: 20px !important;
+
+                    font-size: 32px !important;
+
+                    margin-left: 0 !important;
+                }
+
+                .eb-welcome-card h2 {
+                    font-size: 23px !important;
+                    line-height: 1.25 !important;
+                }
+
+                .eb-welcome-card p {
+                    font-size: 12px !important;
+                    line-height: 1.65 !important;
+                }
+
+
+                .eb-dashboard h2 {
+                    line-height: 1.3;
+                }
+
+
+                .eb-stats-grid {
+                    grid-template-columns:
+                        repeat(2, minmax(0, 1fr)) !important;
+
+                    gap: 12px !important;
+                }
+
+                .eb-stats-grid button {
+                    padding: 16px !important;
+                }
+
+                .eb-stats-grid button > div:nth-child(2) {
+                    font-size: 24px !important;
+                }
+
+                .eb-stats-grid button > div:nth-child(3) {
+                    font-size: 12px !important;
+                }
+
+                .eb-stats-grid button > div:nth-child(4) {
+                    font-size: 10px !important;
+                    line-height: 1.5 !important;
+                }
+
+
+
+                .eb-operations-grid {
+                    grid-template-columns:
+                        repeat(2, minmax(0, 1fr)) !important;
+
+                    gap: 12px !important;
+                }
+
+                .eb-operations-grid > div {
+                    padding: 17px !important;
+                }
+
+                .eb-operations-grid h3 {
+                    font-size: 14px !important;
+                    line-height: 1.35 !important;
+                }
+
+                .eb-operations-grid p {
+                    font-size: 10px !important;
+                    line-height: 1.55 !important;
+                    min-height: auto !important;
+                }
+
+
+
+                .eb-security-grid {
+                    grid-template-columns:
+                        repeat(2, minmax(0, 1fr)) !important;
+
+                    gap: 12px !important;
+                }
+
+                .eb-security-grid > div {
+                    padding: 16px !important;
+                }
+
+                .eb-security-grid h3 {
+                    font-size: 13px !important;
+                    line-height: 1.35 !important;
+                }
+
+                .eb-security-grid p {
+                    font-size: 10px !important;
+                    line-height: 1.55 !important;
+                }
+
+
+
+                .eb-module-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        padding: 20px !important;
+    }
+
+            }
+
+
+            @media (max-width: 600px) {
+
+                .eb-content {
+                    padding:
+                        16px 14px 35px !important;
+                }
+
+
+                .eb-topbar {
+                    padding:
+                        12px 14px !important;
+                }
+
+                .eb-topbar h1 {
+                    font-size: 16px !important;
+                }
+
+                .eb-topbar p {
+                    display: none !important;
+                }
+
+                .eb-profile > div:last-child {
+                    width: 36px !important;
+                    height: 36px !important;
+                    min-width: 36px !important;
+
+                    font-size: 11px !important;
+                }
+
+
+                .eb-welcome-card {
+                    border-radius: 15px !important;
+
+                    padding: 20px !important;
+
+                    margin-bottom: 25px !important;
+                }
+
+                .eb-welcome-card h2 {
+                    font-size: 21px !important;
+                }
+
+                .eb-welcome-card p {
+                    font-size: 11px !important;
+                }
+
+
+                .eb-dashboard h2 {
+                    font-size: 16px !important;
+                }
+
+                .eb-dashboard .sectionDescription {
+                    font-size: 10px !important;
+                }
+
+
+                .eb-stats-grid {
+                    grid-template-columns: 1fr !important;
+                    gap: 10px !important;
+                }
+
+                .eb-stats-grid button {
+                    min-height: 145px !important;
+                }
+
+
+
+                .eb-operations-grid {
+                    grid-template-columns: 1fr !important;
+                    gap: 10px !important;
+                }
+
+                .eb-operations-grid > div {
+                    padding: 18px !important;
+                }
+
+                .eb-operations-grid p {
+                    font-size: 11px !important;
+                }
+
+
+
+                .eb-security-grid {
+                    grid-template-columns: 1fr !important;
+                    gap: 10px !important;
+                }
+
+                .eb-security-grid > div {
+                    padding: 17px !important;
+                }
+
+
+                .eb-dashboard .moduleHeader {
+                    padding: 18px !important;
+
+                    flex-direction: column !important;
+                    align-items: flex-start !important;
+                }
+
+
+                .eb-dashboard .processCard {
+                    padding: 18px !important;
+                }
+
+                .eb-dashboard .processItem {
+                    padding: 11px !important;
+                    gap: 10px !important;
+                }
+
+                .eb-dashboard .processText {
+                    font-size: 11px !important;
+                    line-height: 1.5 !important;
+                }
+
+            }
+
+
+            @media (max-width: 420px) {
+
+                .eb-sidebar {
+                    width: 85vw !important;
+                    min-width: 85vw !important;
+                }
+
+                .eb-topbar h1 {
+                    font-size: 14px !important;
+                }
+
+                .eb-topbar {
+                    min-height: 68px !important;
+                }
+
+                .eb-content {
+                    padding:
+                        13px 11px 30px !important;
+                }
+
+                .eb-welcome-card {
+                    padding: 17px !important;
+                }
+
+                .eb-welcome-card h2 {
+                    font-size: 19px !important;
+                }
+
+                .eb-welcome-card p {
+                    font-size: 10px !important;
+                }
+
+                .eb-welcome-icon {
+                    width: 58px !important;
+                    height: 58px !important;
+                    min-width: 58px !important;
+                    font-size: 27px !important;
+                }
+
+                .eb-stats-grid button {
+                    min-height: 135px !important;
+                    padding: 14px !important;
+                }
+
+                .eb-stats-grid button > div:nth-child(2) {
+                    font-size: 22px !important;
+                }
+
+                .eb-operations-grid > div,
+                .eb-security-grid > div {
+                    padding: 15px !important;
+                }
+
+            }
+
+
+            .eb-dashboard h1,
+            .eb-dashboard h2,
+            .eb-dashboard h3,
+            .eb-dashboard p,
+            .eb-dashboard span,
+            .eb-dashboard button {
+                overflow-wrap: anywhere;
+            }
+
+
+
+
+            @media (max-width: 768px) {
+
+                .eb-dashboard button {
+                    -webkit-tap-highlight-color:
+                        transparent;
+                }
+
+                .eb-dashboard button:active {
+                    transform: scale(0.98);
+                }
+            }
+
+/* =====================================================
+   SAFE MOBILE CHILD-PAGE BOUNDARY
+   Only controls the outer dashboard boundary. It does
+   not change the internal layout of child pages.
+===================================================== */
+
+@media (max-width: 768px) {
+    .eb-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow-x: hidden !important;
+        box-sizing: border-box !important;
+    }
+
+    .eb-content > * {
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .eb-content img,
+    .eb-content svg {
+        max-width: 100%;
+    }
+}
+
+/* =====================================================
+   MOBILE OVERLAY
+   Requires className="eb-mobile-overlay" on the
+   sidebar overlay element.
+===================================================== */
+
+.eb-mobile-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.45) !important;
+    z-index: 999 !important;
+}
+
+/* =====================================================
+   SCOPED FIXES — ONLY:
+   1. Registration Management
+   2. Party List Management
+   3. Election Management
+
+   These rules intentionally do NOT target other EB pages.
+===================================================== */
+
+.eb-page-registrations,
+.eb-page-party-lists,
+.eb-page-election {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.eb-page-registrations *,
+.eb-page-party-lists *,
+.eb-page-election * {
+    box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+
+    /* ---------------------------------------------
+       COMMON OUTER PAGE
+    --------------------------------------------- */
+
+    .eb-page-registrations,
+    .eb-page-party-lists,
+    .eb-page-election {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow-x: hidden !important;
+    }
+
+    .eb-page-registrations > *,
+    .eb-page-party-lists > *,
+    .eb-page-election > * {
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    /* Only these three pages get flex shrinking rules. */
+    .eb-page-registrations [style*="display: flex"] > *,
+    .eb-page-registrations [style*="display:flex"] > *,
+    .eb-page-party-lists [style*="display: flex"] > *,
+    .eb-page-party-lists [style*="display:flex"] > *,
+    .eb-page-election [style*="display: flex"] > *,
+    .eb-page-election [style*="display:flex"] > * {
+        min-width: 0;
+    }
+
+    /* Text must wrap by words, not characters. */
+    .eb-page-registrations h1,
+    .eb-page-registrations h2,
+    .eb-page-registrations h3,
+    .eb-page-registrations h4,
+    .eb-page-registrations p,
+    .eb-page-registrations span,
+    .eb-page-party-lists h1,
+    .eb-page-party-lists h2,
+    .eb-page-party-lists h3,
+    .eb-page-party-lists h4,
+    .eb-page-party-lists p,
+    .eb-page-party-lists span,
+    .eb-page-election h1,
+    .eb-page-election h2,
+    .eb-page-election h3,
+    .eb-page-election h4,
+    .eb-page-election p,
+    .eb-page-election span {
+        word-break: normal !important;
+        overflow-wrap: break-word !important;
+        max-width: 100%;
+    }
+
+    /* Images/icons stay inside their feature cards. */
+    .eb-page-registrations img,
+    .eb-page-registrations svg,
+    .eb-page-party-lists img,
+    .eb-page-party-lists svg,
+    .eb-page-election img,
+    .eb-page-election svg {
+        max-width: 100%;
+        flex-shrink: 0;
+    }
+
+    /* Forms stay inside the page. */
+    .eb-page-registrations input,
+    .eb-page-registrations select,
+    .eb-page-registrations textarea,
+    .eb-page-party-lists input,
+    .eb-page-party-lists select,
+    .eb-page-party-lists textarea,
+    .eb-page-election input,
+    .eb-page-election select,
+    .eb-page-election textarea {
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Buttons remain usable without changing other pages. */
+    .eb-page-registrations button,
+    .eb-page-party-lists button,
+    .eb-page-election button {
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+
+    /* =================================================
+       REGISTRATION MANAGEMENT ONLY
+    ================================================= */
+
+    .eb-page-registrations [style*="display: grid"],
+    .eb-page-registrations [style*="display:grid"] {
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .eb-page-registrations [style*="repeat(4"],
+    .eb-page-registrations [style*="repeat(4,"] {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .eb-page-registrations [style*="repeat(3"],
+    .eb-page-registrations [style*="repeat(3,"] {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .eb-page-registrations [style*="width: 100%"],
+    .eb-page-registrations [style*="width:100%"] {
+        max-width: 100% !important;
+    }
+
+
+    /* =================================================
+       PARTY LIST MANAGEMENT ONLY
+    ================================================= */
+
+    .eb-page-party-lists [style*="display: grid"],
+    .eb-page-party-lists [style*="display:grid"] {
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .eb-page-party-lists [style*="repeat(4"],
+    .eb-page-party-lists [style*="repeat(4,"] {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+
+    /* =================================================
+       ELECTION MANAGEMENT ONLY
+    ================================================= */
+
+    .eb-page-election [style*="display: grid"],
+    .eb-page-election [style*="display:grid"] {
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .eb-page-election [style*="repeat(4"],
+    .eb-page-election [style*="repeat(4,"] {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .eb-page-election [style*="repeat(3"],
+    .eb-page-election [style*="repeat(3,"] {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+
+@media (max-width: 600px) {
+
+    /* =================================================
+       REGISTRATION MANAGEMENT — PHONE
+    ================================================= */
+
+    .eb-page-registrations [style*="repeat(4"],
+    .eb-page-registrations [style*="repeat(4,"],
+    .eb-page-registrations [style*="repeat(3"],
+    .eb-page-registrations [style*="repeat(3,"] {
+        grid-template-columns: 1fr !important;
+    }
+
+    .eb-page-registrations [style*="display: grid"],
+    .eb-page-registrations [style*="display:grid"] {
+        gap: 10px !important;
+    }
+
+
+    /* =================================================
+       PARTY LIST MANAGEMENT — PHONE
+    ================================================= */
+
+    .eb-page-party-lists [style*="repeat(4"],
+    .eb-page-party-lists [style*="repeat(4,"],
+    .eb-page-party-lists [style*="repeat(3"],
+    .eb-page-party-lists [style*="repeat(3,"] {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* =================================================
+       ELECTION MANAGEMENT — PHONE
+    ================================================= */
+
+    .eb-page-election [style*="repeat(4"],
+    .eb-page-election [style*="repeat(4,"],
+    .eb-page-election [style*="repeat(3"],
+    .eb-page-election [style*="repeat(3,"] {
+        grid-template-columns: 1fr !important;
+    }
+
+    .eb-page-election [style*="display: grid"],
+    .eb-page-election [style*="display:grid"] {
+        gap: 10px !important;
+    }
+
+    /* Election process rows stay inside their cards. */
+    .eb-page-election [style*="display: flex"],
+    .eb-page-election [style*="display:flex"] {
+        max-width: 100% !important;
+    }
+}
+
+
+@media (max-width: 420px) {
+
+    .eb-page-registrations,
+    .eb-page-party-lists,
+    .eb-page-election {
+        padding-left: 2px;
+        padding-right: 2px;
+    }
+
+    .eb-page-registrations button,
+    .eb-page-party-lists button,
+    .eb-page-election button {
+        max-width: 100%;
+    }
+
+    /* Keep text readable on very narrow screens. */
+    .eb-page-registrations p,
+    .eb-page-party-lists p,
+    .eb-page-election p {
+        word-break: normal !important;
+        overflow-wrap: break-word !important;
+    }
+}
+
+/* =====================================================
+   PARTY LIST — FINAL MOBILE FIX
+   Do not resize every flex container in the component.
+   The previous broad flex selector squeezed the entire
+   Party List page into a narrow column.
+===================================================== */
+
+@media (max-width: 600px) {
+    .eb-page-party-lists {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow-x: hidden !important;
+    }
+
+    .eb-page-party-lists > div {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    /* Keep the Party List Functions container full width. */
+    .eb-page-party-lists [style*="grid"] {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    /* Only the actual function-card row should shrink its
+       contents; do not alter the parent page layout. */
+    .eb-page-party-lists [style*="grid"] > * {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .eb-page-party-lists [style*="grid"] > * p,
+    .eb-page-party-lists [style*="grid"] > * h1,
+    .eb-page-party-lists [style*="grid"] > * h2,
+    .eb-page-party-lists [style*="grid"] > * h3,
+    .eb-page-party-lists [style*="grid"] > * span {
+        max-width: 100%;
+        overflow-wrap: break-word;
+        word-break: normal !important;
+    }
+}
+
+/* =====================================================
+   PARTY LIST MANAGEMENT — TEXT READABILITY FIX
+   ONLY affects Party List Management.
+   Prevents titles/descriptions from being squeezed into
+   single-character columns on narrow/mobile screens.
+===================================================== */
+@media (max-width: 600px) {
+    .eb-page-party-lists {
+        overflow-x: hidden !important;
+    }
+
+    /* Function cards: use one readable column on phones. */
+    .eb-page-party-lists [style*="repeat(4"],
+    .eb-page-party-lists [style*="repeat(3"],
+    .eb-page-party-lists [style*="repeat(2"] {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Make every function-card content use the available width. */
+    .eb-page-party-lists [style*="repeat(4"] > *,
+    .eb-page-party-lists [style*="repeat(3"] > *,
+    .eb-page-party-lists [style*="repeat(2"] > * {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    /* Never allow text to be broken into individual characters. */
+    .eb-page-party-lists h1,
+    .eb-page-party-lists h2,
+    .eb-page-party-lists h3,
+    .eb-page-party-lists h4,
+    .eb-page-party-lists h5,
+    .eb-page-party-lists p,
+    .eb-page-party-lists span,
+    .eb-page-party-lists label,
+    .eb-page-party-lists strong,
+    .eb-page-party-lists div {
+        word-break: normal !important;
+        overflow-wrap: break-word !important;
+    }
+
+    /* Registered-party cards: give the party information area
+       enough room instead of letting it collapse to a few pixels. */
+    .eb-page-party-lists [style*="display: flex"] {
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    .eb-page-party-lists [style*="display: flex"] > * {
+        min-width: 0 !important;
+    }
+
+    /* Search box and controls should remain readable. */
+    .eb-page-party-lists input,
+    .eb-page-party-lists button {
+        white-space: normal !important;
+        word-break: normal !important;
+    }
+}
+
+@media (max-width: 420px) {
+    .eb-page-party-lists {
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+    }
+
+    /* Keep the function cards wide enough for normal words. */
+    .eb-page-party-lists [style*="repeat(4"],
+    .eb-page-party-lists [style*="repeat(3"],
+    .eb-page-party-lists [style*="repeat(2"] {
+        grid-template-columns: 1fr !important;
+        width: 100% !important;
+    }
+}

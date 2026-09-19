@@ -137,6 +137,26 @@ const StaffLogin = () => {
 
 
             // =================================================
+            // ROLE CHECK
+            // =================================================
+            // IMPORTANT:
+            // The role must be checked BEFORE saving the
+            // session and BEFORE navigating to the dashboard.
+
+            if (
+                !data.user ||
+                data.user.role !== "electoral_board"
+            ) {
+
+                setError(
+                    "This account is not an Electoral Board account. Please use the Admin login page."
+                );
+
+                return;
+            }
+
+
+            // =================================================
             // SAVE UNIFIED STAFF SESSION
             //
             // Password is NEVER stored.
@@ -153,16 +173,10 @@ const StaffLogin = () => {
                     data.user
                 )
             );
-            navigate(
-    "/electoral-board/dashboard",
-    {
-        replace: true,
-    }
-            );
 
 
             // =================================================
-            // ROLE CHECK
+            // PASSWORD CHANGE
             // =================================================
 
             if (
@@ -180,17 +194,9 @@ const StaffLogin = () => {
             }
 
 
-if (
-    !data.user ||
-    data.user.role !== "electoral_board"
-) {
-    setError(
-        "This account is not an Electoral Board account. Please use the Admin login page."
-    );
-
-    return;
-}
-
+            // =================================================
+            // ELECTORAL BOARD DASHBOARD
+            // =================================================
 
             if (
                 data.user.role ===
@@ -252,7 +258,7 @@ if (
                         ========================================= */}
 
                         <Link
-                            to="/account-selection"
+                            to="/register"
                             className="staff-login-back"
                         >
                             ← back
@@ -270,7 +276,7 @@ if (
                             </h1>
 
                             <p>
-                                Login as Admin or Electoral Board
+                                Login as Electoral Board
                                 on Western Institute of Technology
                                 Votara platform.
                             </p>
@@ -437,25 +443,6 @@ if (
                         </form>
 
 
-                        {/* =========================================
-                            ADMIN REGISTRATION
-                        ========================================= */}
-
-                        <div className="staff-login-register">
-
-                            <span>
-                                Initial Admin?
-                            </span>
-
-                            <Link
-                                to="/admin/register"
-                            >
-                                Create Admin Account
-                            </Link>
-
-                        </div>
-
-
                     </div>
 
                 </section>
@@ -532,7 +519,7 @@ if (
                     <div className="staff-login-alternate">
 
                         <p>
-                            Not a staff member?
+                            Not a Electoral Board member?
                         </p>
 
                         <Link

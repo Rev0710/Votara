@@ -1,0 +1,301 @@
+/* VOTARA PAGE LOADER */
+
+.votara-page-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    width: 100vw;
+    height: 100vh;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    background:
+        radial-gradient(
+            circle at 50% 48%,
+            rgba(24, 76, 255, 0.18),
+            rgba(24, 76, 255, 0.05) 25%,
+            transparent 48%
+        ),
+        linear-gradient(135deg, #060b20 0%, #0a102b 48%, #05091b 100%);
+
+    animation: votara-loader-fade-in 0.30s ease-out forwards;
+}
+
+.votara-loader-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transform: translateY(-4px);
+}
+
+/* Loading circle */
+.votara-loader-circle {
+    position: relative;
+    width: 112px;
+    height: 112px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.votara-loader-circle::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+
+    background: radial-gradient(
+        circle,
+        rgba(24, 91, 255, 0.14) 0%,
+        rgba(24, 91, 255, 0.05) 45%,
+        transparent 72%
+    );
+
+    filter: blur(4px);
+    animation: votara-loader-pulse 1.8s ease-in-out infinite;
+}
+
+/* Animated ring */
+.votara-loader-ring {
+    position: absolute;
+    inset: 5px;
+    border-radius: 50%;
+
+    background: conic-gradient(
+        from 0deg,
+        #155eff 0deg,
+        #3182ff 65deg,
+        rgba(34, 104, 255, 0.20) 125deg,
+        rgba(34, 104, 255, 0.08) 235deg,
+        #155eff 310deg,
+        #2f7dff 360deg
+    );
+
+    -webkit-mask: radial-gradient(
+        farthest-side,
+        transparent calc(100% - 4px),
+        #000 calc(100% - 3px)
+    );
+
+    mask: radial-gradient(
+        farthest-side,
+        transparent calc(100% - 4px),
+        #000 calc(100% - 3px)
+    );
+
+    animation: votara-loader-rotate 1.55s linear infinite;
+
+    filter: drop-shadow(0 0 6px rgba(38, 111, 255, 0.75));
+}
+
+.votara-loader-ring::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+
+    background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        transparent 265deg,
+        rgba(255, 255, 255, 0.95) 310deg,
+        #3485ff 340deg,
+        transparent 360deg
+    );
+
+    -webkit-mask: radial-gradient(
+        farthest-side,
+        transparent calc(100% - 5px),
+        #000 calc(100% - 4px)
+    );
+
+    mask: radial-gradient(
+        farthest-side,
+        transparent calc(100% - 5px),
+        #000 calc(100% - 4px)
+    );
+}
+
+/* Logo centered INSIDE the loading circle */
+.votara-loader-logo {
+    position: relative;
+    z-index: 3;
+
+    width: 76px;
+    height: 76px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: radial-gradient(
+        circle,
+        rgba(7, 17, 47, 0.98),
+        rgba(6, 13, 36, 0.96)
+    );
+
+    box-shadow: inset 0 0 16px rgba(40, 111, 255, 0.10);
+}
+
+.votara-loader-logo img {
+    display: block;
+    width: 48px;
+    height: 48px;
+    max-width: 70%;
+    max-height: 70%;
+    object-fit: contain;
+    background: transparent;
+}
+
+/* Votara text BELOW the circle */
+.votara-loader-brand {
+    margin-top: 15px;
+
+    color: #ffffff;
+
+    font-family:
+        "Poppins",
+        "Inter",
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.4px;
+
+    text-shadow: 0 0 14px rgba(255, 255, 255, 0.10);
+}
+
+.votara-loader-label {
+    margin-top: 8px;
+
+    color: rgba(147, 180, 255, 0.78);
+
+    font-family: "Poppins", "Inter", system-ui, sans-serif;
+    font-size: 7px;
+    font-weight: 500;
+    letter-spacing: 3px;
+}
+
+.votara-loader-dots {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 9px;
+}
+
+.votara-loader-dots span {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+
+    background: #2673ff;
+
+    box-shadow: 0 0 7px rgba(38, 115, 255, 0.80);
+
+    animation: votara-loader-dot 1.15s ease-in-out infinite;
+}
+
+.votara-loader-dots span:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.votara-loader-dots span:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.votara-loader-dots span:nth-child(3) {
+    animation-delay: 0.30s;
+}
+
+@keyframes votara-loader-rotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes votara-loader-pulse {
+    0%,
+    100% {
+        transform: scale(0.94);
+        opacity: 0.65;
+    }
+
+    50% {
+        transform: scale(1.08);
+        opacity: 1;
+    }
+}
+
+@keyframes votara-loader-dot {
+    0%,
+    100% {
+        transform: translateY(0) scale(0.75);
+        opacity: 0.35;
+    }
+
+    50% {
+        transform: translateY(-2px) scale(1.2);
+        opacity: 1;
+    }
+}
+
+@keyframes votara-loader-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@media (max-width: 600px) {
+    .votara-loader-circle {
+        width: 100px;
+        height: 100px;
+    }
+
+    .votara-loader-logo {
+        width: 68px;
+        height: 68px;
+    }
+
+    .votara-loader-logo img {
+        width: 43px;
+        height: 43px;
+    }
+
+    .votara-loader-brand {
+        font-size: 19px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .votara-page-loader,
+    .votara-loader-ring,
+    .votara-loader-circle::before,
+    .votara-loader-dots span {
+        animation: none;
+    }
+
+    .votara-loader-dots span {
+        opacity: 0.8;
+    }
+}

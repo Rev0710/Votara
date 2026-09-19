@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import api from "../../services/api";
 import { getAllElections } from "../../services/electionService";
+import "./PartyListManagement.css";
+
 
 // =====================================================
 // PARTY LIST MANAGEMENT
@@ -874,54 +876,47 @@ const loadElections = async () => {
                 HEADER
             ================================================= */}
 
-            <div style={styles.header}>
+            <div
+    className="plm-header"
+    style={styles.header}
+>
 
-                <div style={styles.icon}>
-                    ▰
-                </div>
-
+<div
+    className="plm-header-icon"
+    style={styles.icon}
+>
+    ▰
+</div>
                 <div
-                    style={{
-                        flex: 1,
-                    }}
-                >
+    className="plm-header-content"
+    style={{ flex: 1 }}
+>
 
-                    <h2
-                        style={
-                            styles.title
-                        }
-                    >
-                        Party List
-                        Management
-                    </h2>
+                   <h2
+    className="plm-title"
+    style={styles.title}
+>
+    Party List Management
+</h2>
 
                     <p
-                        style={
-                            styles.description
-                        }
-                    >
-                        Manage party lists
-                        participating in
-                        the VOTARA
-                        election.
-                    </p>
+    className="plm-description"
+    style={styles.description}
+>
+    Manage party lists participating in the VOTARA election.
+</p>
 
                 </div>
 
                 <button
-                    type="button"
-                    style={
-                        styles.primaryButton
-                    }
-                    onClick={
-                        openAddModal
-                    }
-                    disabled={
-                        !selectedElection
-                    }
-                >
-                    + Add Party List
-                </button>
+    className="plm-add-button"
+    type="button"
+    style={styles.primaryButton}
+    onClick={openAddModal}
+    disabled={!selectedElection}
+>
+    + Add Party List
+</button>
 
             </div>
 
@@ -1152,11 +1147,10 @@ const loadElections = async () => {
 
                 </div>
 
-                <div
-                    style={
-                        styles.featureGrid
-                    }
-                >
+<div
+    className="plm-feature-grid"
+    style={styles.featureGrid}
+>
 
                     <Feature
                         number="1"
@@ -2455,54 +2449,44 @@ const Feature = ({
 }) => {
     return (
         <button
-            type="button"
-            style={
-                styles.feature
-            }
-            onClick={
-                onClick
-            }
-        >
+    type="button"
+    className="plm-feature-card"
+    style={styles.feature}
+    onClick={onClick}
+>
 
-            <div
-                style={
-                    styles.number
-                }
-            >
-                {number}
+<div
+    className="plm-feature-number"
+    style={styles.number}
+>
+    {number}
+</div>
+
+<div
+    className="plm-feature-content"
+    style={styles.featureContent}
+>
+
+<h4
+    className="plm-feature-title"
+    style={styles.featureTitle}
+>
+    {title}
+</h4>
+<p
+    className="plm-feature-description"
+    style={styles.featureDescription}
+>
+    {description}
+</p>
             </div>
 
-            <div
-                style={
-                    styles.featureContent
-                }
-            >
-
-                <h4
-                    style={
-                        styles.featureTitle
-                    }
-                >
-                    {title}
-                </h4>
-
-                <p
-                    style={
-                        styles.featureDescription
-                    }
-                >
-                    {description}
-                </p>
-
-            </div>
-
-            <div
-                style={
-                    styles.featureArrow
-                }
-            >
-                →
-            </div>
+<div
+    className="plm-feature-arrow"
+    style={styles.featureArrow}
+>
+    →
+</div>
 
         </button>
     );
@@ -2527,6 +2511,7 @@ const PartyRow = ({
 }) => {
     return (
         <div
+            className="party-row"
             style={
                 styles.partyRow
             }
@@ -2538,18 +2523,21 @@ const PartyRow = ({
             />
 
             <div
+                className="party-main"
                 style={
                     styles.partyMain
                 }
             >
 
                 <div
+                    className="party-name-row"
                     style={
                         styles.partyNameRow
                     }
                 >
 
                     <h4
+                        className="party-name"
                         style={
                             styles.partyName
                         }
@@ -2578,6 +2566,7 @@ const PartyRow = ({
                 </div>
 
                 <p
+                    className="party-description"
                     style={
                         styles.partyDescription
                     }
@@ -2589,6 +2578,7 @@ const PartyRow = ({
             </div>
 
             <div
+                className="party-actions"
                 style={
                     styles.partyActions
                 }

@@ -18,6 +18,7 @@ import {
 } from "../../services/electionService";
 
 import api from "../../services/api";
+import "./ElectionManagement.css";
 
 
 // =========================================================
@@ -1828,6 +1829,7 @@ function ElectionManagement() {
 
     return (
         <div
+            className="election-management-page"
             style={{
                 minHeight:
                     "100%",
@@ -1847,6 +1849,7 @@ function ElectionManagement() {
             ================================================= */}
 
             <div
+                className="election-management-header"
                 style={{
                     background:
                         "#ffffff",
@@ -1889,6 +1892,7 @@ function ElectionManagement() {
                     </div>
 
                     <h1
+                        className="election-management-title"
                         style={{
                             margin:
                                 0,
@@ -1920,6 +1924,7 @@ function ElectionManagement() {
 
 
                 <button
+                    className="election-create-button"
                     type="button"
                     onClick={
                         openCreateModal
@@ -2037,6 +2042,7 @@ function ElectionManagement() {
             ================================================= */}
 
             <div
+                className="election-management-stats"
                 style={{
                     display:
                         "grid",
@@ -2133,6 +2139,7 @@ function ElectionManagement() {
             ================================================= */}
 
             <div
+                className="election-management-list-card"
                 style={{
                     background:
                         "#ffffff",
@@ -2146,6 +2153,7 @@ function ElectionManagement() {
             >
 
                 <div
+                    className="election-management-list-header"
                     style={{
                         padding:
                             "20px",
@@ -2194,6 +2202,7 @@ function ElectionManagement() {
 
 
                     <button
+                        className="election-management-refresh"
                         type="button"
                         onClick={
                             loadElections
@@ -2227,6 +2236,7 @@ function ElectionManagement() {
                 ================================================= */}
 
                 <div
+                    className="election-management-filters"
                     style={{
                         padding:
                             "16px 20px",
@@ -2413,6 +2423,7 @@ function ElectionManagement() {
                 ) : (
 
                     <div
+                        className="election-management-table-wrapper"
                         style={{
                             overflowX:
                                 "auto",
@@ -2420,6 +2431,7 @@ function ElectionManagement() {
                     >
 
                         <table
+                            className="election-management-table"
                             style={{
                                 width:
                                     "100%",
@@ -2483,6 +2495,7 @@ function ElectionManagement() {
                                         election
                                     ) => (
                                         <tr
+                                            className="election-management-row"
                                             key={
                                                 election.id
                                             }

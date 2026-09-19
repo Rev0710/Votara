@@ -744,6 +744,29 @@ const AdminRegister = () => {
                 {/* =====================================
                     HEADER
                 ====================================== */}
+                {/* =====================================
+                    BACK
+                ====================================== */}
+
+                <div
+                    style={{
+                        marginTop: "12px",
+                    }}
+                >
+
+                    <Link
+                        to="/account-selection"
+                        style={{
+                            fontSize: "11px",
+                            color: "#4d5e75",
+                            textDecoration:
+                                "none",
+                        }}
+                    >
+                        ← Back to Account Selection
+                    </Link>
+
+                </div>
 
                 <div
                     style={{
@@ -788,6 +811,8 @@ const AdminRegister = () => {
                     >
                         Create the initial VOTARA administrator account.
                     </p>
+
+                    
 
                 </div>
 
@@ -1311,7 +1336,7 @@ const AdminRegister = () => {
 
                     <p
                         style={{
-                            marginTop: "-8px",
+                            marginTop: "3px",
                             marginBottom: "20px",
                             fontSize: "12px",
                             color: "#64748b",
@@ -1358,12 +1383,12 @@ const AdminRegister = () => {
                     }}
                 >
 
-                    Already have a staff account?
+                    Already have a Admin account?
 
                     {" "}
 
                     <Link
-                        to="/admin-login"
+                        to="/account-selection"
                         style={{
                             color: "#2563eb",
                             fontWeight: "700",
@@ -1371,36 +1396,11 @@ const AdminRegister = () => {
                                 "none",
                         }}
                     >
-                        Staff Login
+                        Admin Login
                     </Link>
 
                 </div>
 
-
-                {/* =====================================
-                    BACK
-                ====================================== */}
-
-                <div
-                    style={{
-                        marginTop: "12px",
-                        textAlign: "center",
-                    }}
-                >
-
-                    <Link
-                        to="/account-selection"
-                        style={{
-                            fontSize: "13px",
-                            color: "#64748b",
-                            textDecoration:
-                                "none",
-                        }}
-                    >
-                        ← Back to Account Selection
-                    </Link>
-
-                </div>
 
             </div>
 

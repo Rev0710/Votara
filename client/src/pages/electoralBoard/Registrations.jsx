@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import "./Registration.css"
 
 // =====================================================
 // REGISTRATION MANAGEMENT
