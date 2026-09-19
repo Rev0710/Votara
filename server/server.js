@@ -22,6 +22,7 @@ const ebRegistrationRoutes = require("./src/routes/ebRegistrationRoutes");
 const votingRoutes = require("./src/routes/votingRoutes");
 const partyListRoutes = require("./src/routes/partyListRoutes");
 const votingMonitoringRoutes = require("./src/routes/votingMonitoringRoutes");
+const kioskRoutes = require("./src/routes/kioskRoutes");
 
 // =====================================================
 // RESULTS & REPORTS ROUTE
@@ -31,7 +32,10 @@ const resultsReportsRoutes = require(
     "./src/routes/resultsReportsRoutes"
 );
 
+const studentRoutes =
+    require("./src/routes/studentRoutes");
 const app = express();
+
 
 // =====================================================
 // ENVIRONMENT
@@ -102,46 +106,13 @@ console.log("=================================");
 // CORS
 // =====================================================
 
-const allowedOrigins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "https://votara-election-system.vercel.app",
-];
-
 app.use(
     cors({
-        origin: function (origin, callback) {
-            // Allow requests without an Origin header
-            // such as direct server-to-server requests.
-            if (!origin) {
-                return callback(null, true);
-            }
-
-            if (allowedOrigins.includes(origin)) {
-                return callback(null, true);
-            }
-
-            return callback(
-                new Error("Not allowed by CORS")
-            );
-        },
-
+        origin: [
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+        ],
         credentials: true,
-
-        methods: [
-            "GET",
-            "HEAD",
-            "PUT",
-            "PATCH",
-            "POST",
-            "DELETE",
-            "OPTIONS",
-        ],
-
-        allowedHeaders: [
-            "Content-Type",
-            "Authorization",
-        ],
     })
 );
 
@@ -235,6 +206,15 @@ app.use(
 );
 
 // =====================================================
+// ELECTORAL BOARD KIOSK API
+// =====================================================
+
+app.use(
+    "/api/kiosk",
+    kioskRoutes
+);
+
+// =====================================================
 // LATE ENROLLEE API
 // =====================================================
 
@@ -259,6 +239,11 @@ app.use(
 app.use(
     "/api/electoral-board/audit-logs",
     auditLogsRoutes
+);
+
+app.use(
+    "/api/students",
+    studentRoutes
 );
 
 // =====================================================
@@ -560,7 +545,7 @@ const startServer = async () => {
 
         app.listen(
             PORT,
-            "0.0.0.0",
+            "127.0.0.1",
             () => {
 
                 console.log(
