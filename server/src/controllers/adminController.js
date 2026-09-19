@@ -4,32 +4,227 @@ const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 
 // =========================================================
-// ADMIN AUTHENTICATION HELPER
+// CONSTANTS
 // =========================================================
 
-const authenticateAdmin = (req) => {
-    const authHeader = req.headers.authorization;
+const ADMIN_ROLE = "admin";
+const EB_ROLE = "electoral_board";
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        throw new Error("Authentication token is required.");
+// =========================================================
+// ADMIN AUTHENTICATION HELPER
+//
+// Verifies:
+// 1. Bearer token exists
+// 2. JWT is valid
+// 3. JWT role is admin
+// 4. JWT contains userId
+// 5. Admin account still exists
+// 6. Admin account is active
+// =========================================================
+
+const authenticateAdmin = async (req) => {
+    const authHeader =
+        req.headers.authorization || "";
+
+    // -----------------------------------------------------
+    // CHECK AUTHORIZATION HEADER
+    // -----------------------------------------------------
+
+    if (
+        !authHeader.startsWith("Bearer ")
+    ) {
+        const error = new Error(
+            "Authentication token is required."
+        );
+
+        error.statusCode = 401;
+
+        throw error;
     }
 
-    const token = authHeader.split(" ")[1];
+    const token =
+        authHeader
+            .substring(7)
+            .trim();
 
     if (!token) {
-        throw new Error("Authentication token is missing.");
+        const error = new Error(
+            "Authentication token is missing."
+        );
+
+        error.statusCode = 401;
+
+        throw error;
     }
 
-    const decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET
-    );
+    // -----------------------------------------------------
+    // VERIFY JWT
+    // -----------------------------------------------------
 
-    if (!decoded || decoded.role !== "admin") {
-        throw new Error("Administrator access is required.");
+    let decoded;
+
+    try {
+        decoded = jwt.verify(
+            token,
+            process.env.JWT_SECRET
+        );
+    } catch (error) {
+        const authError = new Error(
+            "Invalid or expired administrator session."
+        );
+
+        authError.statusCode = 401;
+
+        throw authError;
     }
 
-    return decoded;
+    // -----------------------------------------------------
+    // VERIFY ROLE
+    // -----------------------------------------------------
+
+    if (
+        !decoded ||
+        decoded.role !== ADMIN_ROLE
+    ) {
+        const error = new Error(
+            "Administrator access is required."
+        );
+
+        error.statusCode = 403;
+
+        throw error;
+    }
+
+    // -----------------------------------------------------
+    // VERIFY USER ID
+    //
+    // staffAuthController creates:
+    //
+    // userId: user.id
+    //
+    // Therefore we must use decoded.userId.
+    // -----------------------------------------------------
+
+    if (!decoded.userId) {
+        const error = new Error(
+            "Invalid administrator session."
+        );
+
+        error.statusCode = 401;
+
+        throw error;
+    }
+
+    // -----------------------------------------------------
+    // VERIFY ADMIN ACCOUNT IN DATABASE
+    // -----------------------------------------------------
+
+    const {
+        data: adminUser,
+        error: adminError,
+    } = await supabase
+        .from("staff_users")
+        .select(`
+            id,
+            full_name,
+            email,
+            role,
+            is_active,
+            must_change_password,
+            profile_photo_url
+        `)
+        .eq(
+            "id",
+            decoded.userId
+        )
+        .eq(
+            "role",
+            ADMIN_ROLE
+        )
+        .maybeSingle();
+
+    if (adminError) {
+        console.error(
+            "❌ Admin authentication lookup error:",
+            adminError.message
+        );
+
+        const error = new Error(
+            "Unable to verify administrator account."
+        );
+
+        error.statusCode = 500;
+
+        throw error;
+    }
+
+    // -----------------------------------------------------
+    // ACCOUNT DOES NOT EXIST
+    // -----------------------------------------------------
+
+    if (!adminUser) {
+        const error = new Error(
+            "Administrator account was not found."
+        );
+
+        error.statusCode = 401;
+
+        throw error;
+    }
+
+    // -----------------------------------------------------
+    // ACCOUNT INACTIVE
+    // -----------------------------------------------------
+
+    if (
+        adminUser.is_active !== true
+    ) {
+        const error = new Error(
+            "Administrator account is inactive."
+        );
+
+        error.statusCode = 403;
+
+        throw error;
+    }
+
+    // -----------------------------------------------------
+    // RETURN COMPLETE ADMIN SESSION
+    // -----------------------------------------------------
+
+    return {
+        id:
+            adminUser.id,
+
+        userId:
+            adminUser.id,
+
+        fullName:
+            adminUser.full_name,
+
+        email:
+            adminUser.email,
+
+        role:
+            adminUser.role,
+
+        isActive:
+            adminUser.is_active,
+
+        mustChangePassword:
+            Boolean(
+                adminUser.must_change_password
+            ),
+
+        profilePhotoUrl:
+            adminUser.profile_photo_url || "",
+
+        tokenIssuedAt:
+            decoded.iat || null,
+
+        tokenExpiresAt:
+            decoded.exp || null,
+    };
 };
 
 // =========================================================
@@ -55,33 +250,55 @@ const generateTemporaryPassword = () => {
         numbers +
         special;
 
-    const randomCharacter = (characters) => {
+    const randomCharacter = (
+        characters
+    ) => {
         return characters[
-            crypto.randomInt(0, characters.length)
+            crypto.randomInt(
+                0,
+                characters.length
+            )
         ];
     };
 
-    // Guarantee the required character types.
+    // -----------------------------------------------------
+    // GUARANTEE PASSWORD REQUIREMENTS
+    // -----------------------------------------------------
+
     let password =
         randomCharacter(upper) +
         randomCharacter(lower) +
         randomCharacter(numbers) +
         randomCharacter(special);
 
-    // Add additional secure random characters.
-    while (password.length < 12) {
+    // -----------------------------------------------------
+    // ADD MORE SECURE CHARACTERS
+    // -----------------------------------------------------
+
+    while (
+        password.length < 12
+    ) {
         password += randomCharacter(all);
     }
 
-    // Secure Fisher-Yates shuffle.
-    const passwordArray = password.split("");
+    // -----------------------------------------------------
+    // SECURE FISHER-YATES SHUFFLE
+    // -----------------------------------------------------
+
+    const passwordArray =
+        password.split("");
 
     for (
-        let i = passwordArray.length - 1;
+        let i =
+            passwordArray.length - 1;
         i > 0;
         i--
     ) {
-        const j = crypto.randomInt(0, i + 1);
+        const j =
+            crypto.randomInt(
+                0,
+                i + 1
+            );
 
         [
             passwordArray[i],
@@ -96,16 +313,86 @@ const generateTemporaryPassword = () => {
 };
 
 // =========================================================
+// COMMON ADMIN ERROR HANDLER
+// =========================================================
+
+const handleAdminError = (
+    error,
+    res,
+    defaultMessage
+) => {
+    console.error(
+        "❌ Admin Controller Error:",
+        error
+    );
+
+    // -----------------------------------------------------
+    // AUTHENTICATION / AUTHORIZATION
+    // -----------------------------------------------------
+
+    if (
+        error.statusCode
+    ) {
+        return res.status(
+            error.statusCode
+        ).json({
+            success: false,
+            message:
+                error.message ||
+                defaultMessage,
+        });
+    }
+
+    // -----------------------------------------------------
+    // JWT ERRORS
+    // -----------------------------------------------------
+
+    if (
+        error.name ===
+            "JsonWebTokenError" ||
+        error.name ===
+            "TokenExpiredError"
+    ) {
+        return res.status(401).json({
+            success: false,
+            message:
+                "Invalid or expired administrator session.",
+        });
+    }
+
+    // -----------------------------------------------------
+    // SERVER ERROR
+    // -----------------------------------------------------
+
+    return res.status(500).json({
+        success: false,
+
+        message:
+            defaultMessage,
+
+        error:
+            process.env.NODE_ENV ===
+            "development"
+                ? error.message
+                : undefined,
+    });
+};
+
+// =========================================================
 // ADMIN DASHBOARD STATISTICS
 // =========================================================
 
-const getAdminDashboard = async (req, res) => {
+const getAdminDashboard = async (
+    req,
+    res
+) => {
     try {
         // -------------------------------------------------
         // VERIFY ADMIN
         // -------------------------------------------------
 
-        const admin = authenticateAdmin(req);
+        const admin =
+            await authenticateAdmin(req);
 
         // -------------------------------------------------
         // STUDENT COUNT
@@ -172,7 +459,7 @@ const getAdminDashboard = async (req, res) => {
         }
 
         // -------------------------------------------------
-        // ACTIVE STAFF ACCOUNTS
+        // ACTIVE STAFF
         // -------------------------------------------------
 
         const {
@@ -196,6 +483,66 @@ const getAdminDashboard = async (req, res) => {
         }
 
         // -------------------------------------------------
+        // ELECTION COUNT
+        // -------------------------------------------------
+
+        const {
+            count: totalElections,
+            error: electionsError,
+        } = await supabase
+            .from("elections")
+            .select("*", {
+                count: "exact",
+                head: true,
+            });
+
+        if (electionsError) {
+            throw new Error(
+                `Unable to count elections: ${electionsError.message}`
+            );
+        }
+
+        // -------------------------------------------------
+        // ACTIVE ELECTION
+        // -------------------------------------------------
+
+        const {
+            data: activeElection,
+            error: activeElectionError,
+        } = await supabase
+            .from("elections")
+            .select(`
+                id,
+                title,
+                election_date,
+                start_time,
+                end_time,
+                status,
+                is_published
+            `)
+            .in(
+                "status",
+                [
+                    "active",
+                    "scheduled",
+                ]
+            )
+            .order(
+                "created_at",
+                {
+                    ascending: false,
+                }
+            )
+            .limit(1)
+            .maybeSingle();
+
+        if (activeElectionError) {
+            throw new Error(
+                `Unable to load active election: ${activeElectionError.message}`
+            );
+        }
+
+        // -------------------------------------------------
         // RESPONSE
         // -------------------------------------------------
 
@@ -203,8 +550,29 @@ const getAdminDashboard = async (req, res) => {
             success: true,
 
             admin: {
-                id: admin.id || null,
-                role: admin.role,
+                id:
+                    admin.id,
+
+                userId:
+                    admin.userId,
+
+                fullName:
+                    admin.fullName,
+
+                email:
+                    admin.email,
+
+                role:
+                    admin.role,
+
+                isActive:
+                    admin.isActive,
+
+                mustChangePassword:
+                    admin.mustChangePassword,
+
+                profilePhotoUrl:
+                    admin.profilePhotoUrl,
             },
 
             statistics: {
@@ -219,46 +587,24 @@ const getAdminDashboard = async (req, res) => {
 
                 activeStaff:
                     activeStaff || 0,
+
+                totalElections:
+                    totalElections || 0,
             },
+
+            activeElection:
+                activeElection || null,
 
             generatedAt:
                 new Date().toISOString(),
         });
 
     } catch (error) {
-        console.error(
-            "❌ Admin dashboard error:",
-            error
+        return handleAdminError(
+            error,
+            res,
+            "Unable to load Admin Dashboard data."
         );
-
-        if (
-            error.name === "JsonWebTokenError" ||
-            error.name === "TokenExpiredError" ||
-            error.message.includes(
-                "Administrator access"
-            ) ||
-            error.message.includes(
-                "Authentication token"
-            )
-        ) {
-            return res.status(401).json({
-                success: false,
-                message:
-                    error.message ||
-                    "Administrator authentication failed.",
-            });
-        }
-
-        return res.status(500).json({
-            success: false,
-            message:
-                "Unable to load Admin Dashboard data.",
-            error:
-                process.env.NODE_ENV ===
-                "development"
-                    ? error.message
-                    : undefined,
-        });
     }
 };
 
@@ -275,7 +621,7 @@ const getAdminAccounts = async (
         // VERIFY ADMIN
         // -------------------------------------------------
 
-        authenticateAdmin(req);
+        await authenticateAdmin(req);
 
         // -------------------------------------------------
         // GET ADMIN ACCOUNTS
@@ -297,11 +643,12 @@ const getAdminAccounts = async (
                 last_login_at,
                 created_at,
                 updated_at,
-                must_change_password
+                must_change_password,
+                profile_photo_url
             `)
             .eq(
                 "role",
-                "admin"
+                ADMIN_ROLE
             )
             .order(
                 "created_at",
@@ -316,10 +663,6 @@ const getAdminAccounts = async (
             );
         }
 
-        // -------------------------------------------------
-        // RESPONSE
-        // -------------------------------------------------
-
         return res.status(200).json({
             success: true,
 
@@ -331,52 +674,11 @@ const getAdminAccounts = async (
         });
 
     } catch (error) {
-        console.error(
-            "❌ Admin accounts error:",
-            error
+        return handleAdminError(
+            error,
+            res,
+            "Unable to load Admin accounts."
         );
-
-        // -------------------------------------------------
-        // AUTHENTICATION / AUTHORIZATION ERROR
-        // -------------------------------------------------
-
-        if (
-            error.name ===
-                "JsonWebTokenError" ||
-            error.name ===
-                "TokenExpiredError" ||
-            error.message.includes(
-                "Administrator access"
-            ) ||
-            error.message.includes(
-                "Authentication token"
-            )
-        ) {
-            return res.status(401).json({
-                success: false,
-
-                message:
-                    error.message ||
-                    "Administrator authentication failed.",
-            });
-        }
-
-        // -------------------------------------------------
-        // SERVER ERROR
-        // -------------------------------------------------
-
-        return res.status(500).json({
-            success: false,
-
-            message:
-                "Unable to load Admin accounts.",
-
-            error:
-                process.env.NODE_ENV ===
-                "development"
-                    ? error.message
-                    : undefined,
-        });
     }
 };
 
@@ -393,10 +695,10 @@ const getElectoralBoardAccounts = async (
         // VERIFY ADMIN
         // -------------------------------------------------
 
-        authenticateAdmin(req);
+        await authenticateAdmin(req);
 
         // -------------------------------------------------
-        // GET ELECTORAL BOARD STAFF
+        // GET EB ACCOUNTS
         // -------------------------------------------------
 
         const {
@@ -414,11 +716,13 @@ const getElectoralBoardAccounts = async (
                 locked_until,
                 last_login_at,
                 created_at,
-                updated_at
+                updated_at,
+                must_change_password,
+                profile_photo_url
             `)
             .eq(
                 "role",
-                "electoral_board"
+                EB_ROLE
             )
             .order(
                 "created_at",
@@ -433,50 +737,22 @@ const getElectoralBoardAccounts = async (
             );
         }
 
-        // -------------------------------------------------
-        // RETURN DATA
-        // -------------------------------------------------
-
         return res.status(200).json({
             success: true,
-            staff: staff || [],
-            count: staff?.length || 0,
+
+            staff:
+                staff || [],
+
+            count:
+                staff?.length || 0,
         });
 
     } catch (error) {
-        console.error(
-            "❌ Electoral Board accounts error:",
-            error
+        return handleAdminError(
+            error,
+            res,
+            "Unable to load Electoral Board accounts."
         );
-
-        if (
-            error.name === "JsonWebTokenError" ||
-            error.name === "TokenExpiredError" ||
-            error.message.includes(
-                "Administrator access"
-            ) ||
-            error.message.includes(
-                "Authentication token"
-            )
-        ) {
-            return res.status(401).json({
-                success: false,
-                message:
-                    error.message ||
-                    "Administrator authentication failed.",
-            });
-        }
-
-        return res.status(500).json({
-            success: false,
-            message:
-                "Unable to load Electoral Board accounts.",
-            error:
-                process.env.NODE_ENV ===
-                "development"
-                    ? error.message
-                    : undefined,
-        });
     }
 };
 
@@ -494,10 +770,10 @@ const createElectoralBoardAccount = async (
         // -------------------------------------------------
 
         const admin =
-            authenticateAdmin(req);
+            await authenticateAdmin(req);
 
         // -------------------------------------------------
-        // GET REQUEST DATA
+        // REQUEST DATA
         // -------------------------------------------------
 
         const {
@@ -506,12 +782,12 @@ const createElectoralBoardAccount = async (
         } = req.body;
 
         // -------------------------------------------------
-        // VALIDATION
+        // VALIDATE NAME
         // -------------------------------------------------
 
         if (
             !fullName ||
-            !fullName.trim()
+            !String(fullName).trim()
         ) {
             return res.status(400).json({
                 success: false,
@@ -520,9 +796,13 @@ const createElectoralBoardAccount = async (
             });
         }
 
+        // -------------------------------------------------
+        // VALIDATE EMAIL
+        // -------------------------------------------------
+
         if (
             !email ||
-            !email.trim()
+            !String(email).trim()
         ) {
             return res.status(400).json({
                 success: false,
@@ -532,11 +812,9 @@ const createElectoralBoardAccount = async (
         }
 
         const normalizedEmail =
-            email.trim().toLowerCase();
-
-        // -------------------------------------------------
-        // EMAIL VALIDATION
-        // -------------------------------------------------
+            String(email)
+                .trim()
+                .toLowerCase();
 
         const emailRegex =
             /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -554,7 +832,7 @@ const createElectoralBoardAccount = async (
         }
 
         // -------------------------------------------------
-        // CHECK DUPLICATE EMAIL
+        // CHECK DUPLICATE
         // -------------------------------------------------
 
         const {
@@ -562,9 +840,11 @@ const createElectoralBoardAccount = async (
             error: existingUserError,
         } = await supabase
             .from("staff_users")
-            .select(
-                "id, email"
-            )
+            .select(`
+                id,
+                email,
+                role
+            `)
             .eq(
                 "email",
                 normalizedEmail
@@ -592,10 +872,6 @@ const createElectoralBoardAccount = async (
         const temporaryPassword =
             generateTemporaryPassword();
 
-        // -------------------------------------------------
-        // HASH PASSWORD
-        // -------------------------------------------------
-
         const passwordHash =
             await bcrypt.hash(
                 temporaryPassword,
@@ -603,7 +879,7 @@ const createElectoralBoardAccount = async (
             );
 
         // -------------------------------------------------
-        // CREATE ACCOUNT
+        // CREATE EB ACCOUNT
         // -------------------------------------------------
 
         const {
@@ -614,7 +890,7 @@ const createElectoralBoardAccount = async (
             .insert([
                 {
                     full_name:
-                        fullName.trim(),
+                        String(fullName).trim(),
 
                     email:
                         normalizedEmail,
@@ -623,7 +899,7 @@ const createElectoralBoardAccount = async (
                         passwordHash,
 
                     role:
-                        "electoral_board",
+                        EB_ROLE,
 
                     is_active:
                         true,
@@ -638,7 +914,7 @@ const createElectoralBoardAccount = async (
                         null,
 
                     created_by:
-                        admin.id,
+                        admin.userId,
 
                     must_change_password:
                         true,
@@ -661,10 +937,6 @@ const createElectoralBoardAccount = async (
             );
         }
 
-        // -------------------------------------------------
-        // RESPONSE
-        // -------------------------------------------------
-
         return res.status(201).json({
             success: true,
 
@@ -679,41 +951,11 @@ const createElectoralBoardAccount = async (
         });
 
     } catch (error) {
-        console.error(
-            "❌ Create EB account error:",
-            error
+        return handleAdminError(
+            error,
+            res,
+            "Unable to create Electoral Board account."
         );
-
-        if (
-            error.name ===
-                "JsonWebTokenError" ||
-            error.name ===
-                "TokenExpiredError" ||
-            error.message.includes(
-                "Administrator access"
-            ) ||
-            error.message.includes(
-                "Authentication token"
-            )
-        ) {
-            return res.status(401).json({
-                success: false,
-                message:
-                    error.message ||
-                    "Administrator authentication failed.",
-            });
-        }
-
-        return res.status(500).json({
-            success: false,
-            message:
-                "Unable to create Electoral Board account.",
-            error:
-                process.env.NODE_ENV ===
-                "development"
-                    ? error.message
-                    : undefined,
-        });
     }
 };
 
@@ -731,10 +973,10 @@ const createAdminAccount = async (
         // -------------------------------------------------
 
         const admin =
-            authenticateAdmin(req);
+            await authenticateAdmin(req);
 
         // -------------------------------------------------
-        // GET REQUEST DATA
+        // REQUEST DATA
         // -------------------------------------------------
 
         const {
@@ -743,12 +985,12 @@ const createAdminAccount = async (
         } = req.body;
 
         // -------------------------------------------------
-        // VALIDATION
+        // VALIDATE NAME
         // -------------------------------------------------
 
         if (
             !fullName ||
-            !fullName.trim()
+            !String(fullName).trim()
         ) {
             return res.status(400).json({
                 success: false,
@@ -757,9 +999,13 @@ const createAdminAccount = async (
             });
         }
 
+        // -------------------------------------------------
+        // VALIDATE EMAIL
+        // -------------------------------------------------
+
         if (
             !email ||
-            !email.trim()
+            !String(email).trim()
         ) {
             return res.status(400).json({
                 success: false,
@@ -769,11 +1015,9 @@ const createAdminAccount = async (
         }
 
         const normalizedEmail =
-            email.trim().toLowerCase();
-
-        // -------------------------------------------------
-        // EMAIL VALIDATION
-        // -------------------------------------------------
+            String(email)
+                .trim()
+                .toLowerCase();
 
         const emailRegex =
             /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -799,9 +1043,11 @@ const createAdminAccount = async (
             error: existingUserError,
         } = await supabase
             .from("staff_users")
-            .select(
-                "id, email, role"
-            )
+            .select(`
+                id,
+                email,
+                role
+            `)
             .eq(
                 "email",
                 normalizedEmail
@@ -823,15 +1069,11 @@ const createAdminAccount = async (
         }
 
         // -------------------------------------------------
-        // GENERATE SECURE TEMPORARY PASSWORD
+        // GENERATE PASSWORD
         // -------------------------------------------------
 
         const temporaryPassword =
             generateTemporaryPassword();
-
-        // -------------------------------------------------
-        // HASH PASSWORD
-        // -------------------------------------------------
 
         const passwordHash =
             await bcrypt.hash(
@@ -840,7 +1082,7 @@ const createAdminAccount = async (
             );
 
         // -------------------------------------------------
-        // CREATE ADMIN ACCOUNT
+        // CREATE ADMIN
         // -------------------------------------------------
 
         const {
@@ -851,7 +1093,7 @@ const createAdminAccount = async (
             .insert([
                 {
                     full_name:
-                        fullName.trim(),
+                        String(fullName).trim(),
 
                     email:
                         normalizedEmail,
@@ -860,7 +1102,7 @@ const createAdminAccount = async (
                         passwordHash,
 
                     role:
-                        "admin",
+                        ADMIN_ROLE,
 
                     is_active:
                         true,
@@ -875,7 +1117,7 @@ const createAdminAccount = async (
                         null,
 
                     created_by:
-                        admin.id,
+                        admin.userId,
 
                     must_change_password:
                         true,
@@ -898,10 +1140,6 @@ const createAdminAccount = async (
             );
         }
 
-        // -------------------------------------------------
-        // RESPONSE
-        // -------------------------------------------------
-
         return res.status(201).json({
             success: true,
 
@@ -916,50 +1154,11 @@ const createAdminAccount = async (
         });
 
     } catch (error) {
-        console.error(
-            "❌ Create Admin account error:",
-            error
+        return handleAdminError(
+            error,
+            res,
+            "Unable to create Admin account."
         );
-
-        // -------------------------------------------------
-        // AUTHENTICATION ERROR
-        // -------------------------------------------------
-
-        if (
-            error.name ===
-                "JsonWebTokenError" ||
-            error.name ===
-                "TokenExpiredError" ||
-            error.message.includes(
-                "Administrator access"
-            ) ||
-            error.message.includes(
-                "Authentication token"
-            )
-        ) {
-            return res.status(401).json({
-                success: false,
-                message:
-                    error.message ||
-                    "Administrator authentication failed.",
-            });
-        }
-
-        // -------------------------------------------------
-        // SERVER ERROR
-        // -------------------------------------------------
-
-        return res.status(500).json({
-            success: false,
-            message:
-                "Unable to create Admin account.",
-
-            error:
-                process.env.NODE_ENV ===
-                "development"
-                    ? error.message
-                    : undefined,
-        });
     }
 };
 
@@ -972,11 +1171,7 @@ const activateElectoralBoardAccount = async (
     res
 ) => {
     try {
-        // -------------------------------------------------
-        // VERIFY ADMIN
-        // -------------------------------------------------
-
-        authenticateAdmin(req);
+        await authenticateAdmin(req);
 
         const {
             id,
@@ -991,7 +1186,7 @@ const activateElectoralBoardAccount = async (
         }
 
         // -------------------------------------------------
-        // VERIFY ACCOUNT EXISTS AND IS EB
+        // FIND ACCOUNT
         // -------------------------------------------------
 
         const {
@@ -1006,8 +1201,14 @@ const activateElectoralBoardAccount = async (
                 role,
                 is_active
             `)
-            .eq("id", id)
-            .eq("role", "electoral_board")
+            .eq(
+                "id",
+                id
+            )
+            .eq(
+                "role",
+                EB_ROLE
+            )
             .maybeSingle();
 
         if (findError) {
@@ -1025,7 +1226,7 @@ const activateElectoralBoardAccount = async (
         }
 
         // -------------------------------------------------
-        // ACTIVATE ACCOUNT
+        // ACTIVATE
         // -------------------------------------------------
 
         const {
@@ -1034,12 +1235,20 @@ const activateElectoralBoardAccount = async (
         } = await supabase
             .from("staff_users")
             .update({
-                is_active: true,
+                is_active:
+                    true,
+
                 updated_at:
                     new Date().toISOString(),
             })
-            .eq("id", id)
-            .eq("role", "electoral_board")
+            .eq(
+                "id",
+                id
+            )
+            .eq(
+                "role",
+                EB_ROLE
+            )
             .select(`
                 id,
                 full_name,
@@ -1058,47 +1267,20 @@ const activateElectoralBoardAccount = async (
 
         return res.status(200).json({
             success: true,
+
             message:
                 "Electoral Board account activated successfully.",
-            user: updatedUser,
+
+            user:
+                updatedUser,
         });
 
     } catch (error) {
-        console.error(
-            "❌ Activate EB account error:",
-            error
+        return handleAdminError(
+            error,
+            res,
+            "Unable to activate Electoral Board account."
         );
-
-        if (
-            error.name ===
-                "JsonWebTokenError" ||
-            error.name ===
-                "TokenExpiredError" ||
-            error.message.includes(
-                "Administrator access"
-            ) ||
-            error.message.includes(
-                "Authentication token"
-            )
-        ) {
-            return res.status(401).json({
-                success: false,
-                message:
-                    error.message ||
-                    "Administrator authentication failed.",
-            });
-        }
-
-        return res.status(500).json({
-            success: false,
-            message:
-                "Unable to activate Electoral Board account.",
-            error:
-                process.env.NODE_ENV ===
-                "development"
-                    ? error.message
-                    : undefined,
-        });
     }
 };
 
@@ -1111,11 +1293,7 @@ const deactivateElectoralBoardAccount = async (
     res
 ) => {
     try {
-        // -------------------------------------------------
-        // VERIFY ADMIN
-        // -------------------------------------------------
-
-        authenticateAdmin(req);
+        await authenticateAdmin(req);
 
         const {
             id,
@@ -1134,12 +1312,12 @@ const deactivateElectoralBoardAccount = async (
         }
 
         // -------------------------------------------------
-        // REQUIRE DEACTIVATION REASON
+        // VALIDATE REASON
         // -------------------------------------------------
 
         if (
             !reason ||
-            !reason.trim()
+            !String(reason).trim()
         ) {
             return res.status(400).json({
                 success: false,
@@ -1149,7 +1327,7 @@ const deactivateElectoralBoardAccount = async (
         }
 
         if (
-            reason.trim().length < 5
+            String(reason).trim().length < 5
         ) {
             return res.status(400).json({
                 success: false,
@@ -1159,7 +1337,7 @@ const deactivateElectoralBoardAccount = async (
         }
 
         // -------------------------------------------------
-        // VERIFY ACCOUNT
+        // FIND ACCOUNT
         // -------------------------------------------------
 
         const {
@@ -1174,8 +1352,14 @@ const deactivateElectoralBoardAccount = async (
                 role,
                 is_active
             `)
-            .eq("id", id)
-            .eq("role", "electoral_board")
+            .eq(
+                "id",
+                id
+            )
+            .eq(
+                "role",
+                EB_ROLE
+            )
             .maybeSingle();
 
         if (findError) {
@@ -1193,7 +1377,7 @@ const deactivateElectoralBoardAccount = async (
         }
 
         // -------------------------------------------------
-        // DEACTIVATE ACCOUNT
+        // DEACTIVATE
         // -------------------------------------------------
 
         const {
@@ -1202,12 +1386,20 @@ const deactivateElectoralBoardAccount = async (
         } = await supabase
             .from("staff_users")
             .update({
-                is_active: false,
+                is_active:
+                    false,
+
                 updated_at:
                     new Date().toISOString(),
             })
-            .eq("id", id)
-            .eq("role", "electoral_board")
+            .eq(
+                "id",
+                id
+            )
+            .eq(
+                "role",
+                EB_ROLE
+            )
             .select(`
                 id,
                 full_name,
@@ -1234,48 +1426,18 @@ const deactivateElectoralBoardAccount = async (
                 updatedUser,
 
             deactivationReason:
-                reason.trim(),
+                String(reason).trim(),
 
             note:
-                "The deactivation reason has been validated but is not yet permanently stored because the current staff_users schema does not expose a confirmed reason field.",
+                "The deactivation reason was validated but is not permanently stored because the current staff_users schema does not contain a confirmed reason field.",
         });
 
     } catch (error) {
-        console.error(
-            "❌ Deactivate EB account error:",
-            error
+        return handleAdminError(
+            error,
+            res,
+            "Unable to deactivate Electoral Board account."
         );
-
-        if (
-            error.name ===
-                "JsonWebTokenError" ||
-            error.name ===
-                "TokenExpiredError" ||
-            error.message.includes(
-                "Administrator access"
-            ) ||
-            error.message.includes(
-                "Authentication token"
-            )
-        ) {
-            return res.status(401).json({
-                success: false,
-                message:
-                    error.message ||
-                    "Administrator authentication failed.",
-            });
-        }
-
-        return res.status(500).json({
-            success: false,
-            message:
-                "Unable to deactivate Electoral Board account.",
-            error:
-                process.env.NODE_ENV ===
-                "development"
-                    ? error.message
-                    : undefined,
-        });
     }
 };
 
@@ -1288,11 +1450,7 @@ const resetElectoralBoardPassword = async (
     res
 ) => {
     try {
-        // -------------------------------------------------
-        // VERIFY ADMIN
-        // -------------------------------------------------
-
-        authenticateAdmin(req);
+        await authenticateAdmin(req);
 
         const {
             id,
@@ -1307,7 +1465,7 @@ const resetElectoralBoardPassword = async (
         }
 
         // -------------------------------------------------
-        // VERIFY ACCOUNT
+        // FIND ACCOUNT
         // -------------------------------------------------
 
         const {
@@ -1322,8 +1480,14 @@ const resetElectoralBoardPassword = async (
                 role,
                 is_active
             `)
-            .eq("id", id)
-            .eq("role", "electoral_board")
+            .eq(
+                "id",
+                id
+            )
+            .eq(
+                "role",
+                EB_ROLE
+            )
             .maybeSingle();
 
         if (findError) {
@@ -1341,15 +1505,11 @@ const resetElectoralBoardPassword = async (
         }
 
         // -------------------------------------------------
-        // GENERATE NEW TEMPORARY PASSWORD
+        // GENERATE TEMPORARY PASSWORD
         // -------------------------------------------------
 
         const temporaryPassword =
             generateTemporaryPassword();
-
-        // -------------------------------------------------
-        // HASH NEW PASSWORD
-        // -------------------------------------------------
 
         const passwordHash =
             await bcrypt.hash(
@@ -1358,7 +1518,7 @@ const resetElectoralBoardPassword = async (
             );
 
         // -------------------------------------------------
-        // UPDATE ACCOUNT
+        // UPDATE PASSWORD
         // -------------------------------------------------
 
         const {
@@ -1382,8 +1542,14 @@ const resetElectoralBoardPassword = async (
                 updated_at:
                     new Date().toISOString(),
             })
-            .eq("id", id)
-            .eq("role", "electoral_board")
+            .eq(
+                "id",
+                id
+            )
+            .eq(
+                "role",
+                EB_ROLE
+            )
             .select(`
                 id,
                 full_name,
@@ -1400,10 +1566,6 @@ const resetElectoralBoardPassword = async (
                 `Unable to reset Electoral Board password: ${updateError.message}`
             );
         }
-
-        // -------------------------------------------------
-        // RESPONSE
-        // -------------------------------------------------
 
         return res.status(200).json({
             success: true,
@@ -1422,41 +1584,11 @@ const resetElectoralBoardPassword = async (
         });
 
     } catch (error) {
-        console.error(
-            "❌ Reset EB password error:",
-            error
+        return handleAdminError(
+            error,
+            res,
+            "Unable to reset Electoral Board password."
         );
-
-        if (
-            error.name ===
-                "JsonWebTokenError" ||
-            error.name ===
-                "TokenExpiredError" ||
-            error.message.includes(
-                "Administrator access"
-            ) ||
-            error.message.includes(
-                "Authentication token"
-            )
-        ) {
-            return res.status(401).json({
-                success: false,
-                message:
-                    error.message ||
-                    "Administrator authentication failed.",
-            });
-        }
-
-        return res.status(500).json({
-            success: false,
-            message:
-                "Unable to reset Electoral Board password.",
-            error:
-                process.env.NODE_ENV ===
-                "development"
-                    ? error.message
-                    : undefined,
-        });
     }
 };
 

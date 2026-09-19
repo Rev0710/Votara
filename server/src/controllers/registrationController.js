@@ -294,6 +294,102 @@ const findLatestRegistration = async (
 
 
 // =========================================================
+// CHECK EMAIL USAGE
+//
+// PURPOSE:
+// Prevent an email address from being used by a different
+// student account/registration.
+//
+// A student may continue their own draft or correction
+// registration using the same email.
+// =========================================================
+
+const findRegistrationByEmail = async (
+    email
+) => {
+
+    const {
+        data,
+        error,
+    } = await supabase
+        .from(
+            "registration_applications"
+        )
+        .select(`
+            id,
+            student_id,
+            email,
+            application_status,
+            created_at
+        `)
+        .eq(
+            "email",
+            email
+        )
+        .order(
+            "created_at",
+            {
+                ascending: false,
+            }
+        );
+
+    if (error) {
+
+        console.error(
+            "❌ Email registration lookup error:",
+            error.message
+        );
+
+        throw new Error(
+            "Unable to check whether this email address is already registered."
+        );
+    }
+
+    return data || [];
+};
+
+
+const findStudentAccountByEmail = async (
+    email
+) => {
+
+    const {
+        data,
+        error,
+    } = await supabase
+        .from(
+            "student_accounts"
+        )
+        .select(`
+            id,
+            student_id,
+            email,
+            account_status
+        `)
+        .eq(
+            "email",
+            email
+        )
+        .limit(1)
+        .maybeSingle();
+
+    if (error) {
+
+        console.error(
+            "❌ Student account email lookup error:",
+            error.message
+        );
+
+        throw new Error(
+            "Unable to check whether this email address is already linked to a student account."
+        );
+    }
+
+    return data;
+};
+
+
+// =========================================================
 // CHECK STUDENT
 //
 // PURPOSE:
@@ -404,6 +500,18 @@ const checkStudent = async (
         // =================================================
         // LATE ENROLLEE
         // =================================================
+        //
+        // IMPORTANT:
+        // Missing from the roster is NOT a server error.
+        //
+        // The frontend uses:
+        //
+        // studentFound: false
+        // isLateEnrollee: true
+        // registrationType: "late"
+        //
+        // to show the confirmation popup.
+        // =================================================
 
         if (!officialStudent) {
 
@@ -413,7 +521,12 @@ const checkStudent = async (
 
                 exists: false,
 
+                studentFound: false,
+
                 isLateEnrollee: true,
+
+                registrationType:
+                    "late",
 
                 student: {
 
@@ -494,6 +607,8 @@ const checkStudent = async (
 
                 exists: true,
 
+                studentFound: true,
+
                 alreadyRegistered: true,
 
                 registrationStatus:
@@ -534,6 +649,8 @@ const checkStudent = async (
                 success: true,
 
                 exists: true,
+
+                studentFound: true,
 
                 alreadyRegistered: true,
 
@@ -576,12 +693,17 @@ const checkStudent = async (
 
                 exists: true,
 
+                studentFound: true,
+
                 alreadyRegistered: false,
 
                 otpVerified: true,
 
                 registrationStatus:
                     "otp_verified",
+
+                registrationType:
+                    "normal",
 
                 student: {
 
@@ -613,7 +735,12 @@ const checkStudent = async (
 
             exists: true,
 
+            studentFound: true,
+
             isLateEnrollee: false,
+
+            registrationType:
+                "normal",
 
             student: {
 
@@ -741,15 +868,34 @@ const createOrUpdateRegistration =
 
             if (error) {
 
-                console.error(
-                    "❌ Registration update error:",
-                    error.message
-                );
+    console.error(
+        "❌ REGISTRATION CREATION FAILED"
+    );
 
-                throw new Error(
-                    "Unable to update registration application."
-                );
-            }
+    console.error(
+        "Code:",
+        error.code
+    );
+
+    console.error(
+        "Message:",
+        error.message
+    );
+
+    console.error(
+        "Details:",
+        error.details
+    );
+
+    console.error(
+        "Hint:",
+        error.hint
+    );
+
+    throw new Error(
+        "Unable to create registration application."
+    );
+}
 
             return data;
         }
@@ -809,6 +955,21 @@ const createOrUpdateRegistration =
 // SEND REGISTRATION OTP
 // =========================================================
 
+// =========================================================
+// SEND REGISTRATION OTP
+//
+// NORMAL STUDENT:
+// - Must exist in the official roster.
+// - Receives OTP.
+//
+// LATE ENROLLEE:
+// - Student ID is not found in current roster.
+// - Missing roster record is NOT an error.
+// - Creates/reuses registration_type = "late".
+// - Does NOT send OTP.
+// - Frontend receives isLateEnrollee=true.
+// =========================================================
+
 const sendRegistrationOTP = async (
     req,
     res
@@ -845,7 +1006,7 @@ const sendRegistrationOTP = async (
 
 
         // =================================================
-        // CLEAN INPUT
+        // NORMALIZE INPUT
         // =================================================
 
         const normalizedStudentId =
@@ -858,7 +1019,7 @@ const sendRegistrationOTP = async (
 
 
         // =================================================
-        // VALIDATION
+        // VALIDATE STUDENT ID
         // =================================================
 
         if (
@@ -876,6 +1037,11 @@ const sendRegistrationOTP = async (
 
             });
         }
+
+
+        // =================================================
+        // VALIDATE EMAIL
+        // =================================================
 
         if (
             !isValidEmail(
@@ -895,6 +1061,76 @@ const sendRegistrationOTP = async (
 
 
         // =================================================
+        // CHECK EMAIL IN REGISTRATION APPLICATIONS
+        // =================================================
+
+        const registrationsUsingEmail =
+            await findRegistrationByEmail(
+                normalizedEmail
+            );
+
+
+        const emailUsedByAnotherStudent =
+            registrationsUsingEmail.find(
+                (registration) =>
+                    String(
+                        registration.student_id
+                    ).trim() !==
+                    normalizedStudentId
+            );
+
+
+        if (
+            emailUsedByAnotherStudent
+        ) {
+
+            return res.status(409).json({
+
+                success: false,
+
+                code:
+                    "EMAIL_ALREADY_USED",
+
+                message:
+                    "This email address has already been used by another student. Please use a different email address.",
+
+            });
+        }
+
+
+        // =================================================
+        // CHECK EMAIL IN STUDENT ACCOUNTS
+        // =================================================
+
+        const existingAccountByEmail =
+            await findStudentAccountByEmail(
+                normalizedEmail
+            );
+
+
+        if (
+            existingAccountByEmail &&
+            String(
+                existingAccountByEmail.student_id
+            ).trim() !==
+                normalizedStudentId
+        ) {
+
+            return res.status(409).json({
+
+                success: false,
+
+                code:
+                    "EMAIL_ALREADY_USED",
+
+                message:
+                    "This email address is already linked to another student account.",
+
+            });
+        }
+
+
+        // =================================================
         // CHECK OFFICIAL ROSTER
         // =================================================
 
@@ -905,149 +1141,267 @@ const sendRegistrationOTP = async (
 
 
         // =================================================
-        // VARIABLES
-        // =================================================
-
-        let registrationType =
-            "normal";
-
-        let finalFullName =
-            null;
-
-        let finalYearLevel =
-            null;
-
-
-        // =================================================
-        // NORMAL STUDENT
-        // =================================================
-
-        if (officialStudent) {
-
-            // ---------------------------------------------
-            // CHECK ACTIVE STATUS
-            // ---------------------------------------------
-
-            if (
-                officialStudent.enrollment_status &&
-                String(
-                    officialStudent.enrollment_status
-                ).toUpperCase() !==
-                    "ACTIVE"
-            ) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message:
-                        "This student record is not currently active.",
-
-                });
-            }
-
-
-            finalFullName =
-                officialStudent.full_name;
-
-            finalYearLevel =
-                yearLevelToDisplayValue(
-                    officialStudent.year_level
-                );
-
-            registrationType =
-                "normal";
-
-        }
-
         // =================================================
         // LATE ENROLLEE
         // =================================================
+        // =================================================
+        //
+        // Missing roster record is an expected branch.
+        //
+        // DO NOT:
+        // - return 400
+        // - require fullName/yearLevel
+        // - send OTP
+        //
+        // The student will provide their full name and
+        // year level in Registration Requirements.
+        // =================================================
 
-        else {
+        if (!officialStudent) {
 
-            registrationType =
-                "late_enrollee";
-
-
-            if (
-                !fullName ||
-                !yearLevel
-            ) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    isLateEnrollee: true,
-
-                    message:
-                        "This Student ID is not in the official roster. Full name and year level are required for late enrollee registration.",
-
-                });
-            }
-
-
-            // ---------------------------------------------
-            // VALIDATE NAME
-            // ---------------------------------------------
-
-            const nameValidation =
-                validateFullName(
-                    fullName
+            const existingRegistration =
+                await findLatestRegistration(
+                    normalizedStudentId
                 );
 
+
+            // =================================================
+            // ALREADY APPROVED
+            // =================================================
+
             if (
-                !nameValidation.valid
+                existingRegistration &&
+                existingRegistration.application_status ===
+                    "approved"
             ) {
 
-                return res.status(400).json({
+                return res.status(409).json({
 
                     success: false,
 
+                    code:
+                        "ALREADY_APPROVED",
+
                     message:
-                        nameValidation.message,
+                        "This student already has an approved registration.",
 
                 });
             }
 
 
-            // ---------------------------------------------
-            // VALIDATE YEAR LEVEL
-            // ---------------------------------------------
-
-            const normalizedYearLevel =
-                yearLevelToDisplayValue(
-                    yearLevel
-                );
+            // =================================================
+            // ALREADY PENDING
+            // =================================================
 
             if (
-                !VALID_YEAR_LEVELS.includes(
-                    normalizedYearLevel
-                )
+                existingRegistration &&
+                existingRegistration.application_status ===
+                    "pending_review"
             ) {
 
-                return res.status(400).json({
+                return res.status(409).json({
 
                     success: false,
 
+                    code:
+                        "ALREADY_PENDING",
+
                     message:
-                        "Invalid year level.",
+                        "This late enrollee registration is already pending Electoral Board review.",
 
                 });
             }
 
 
-            finalFullName =
-                String(fullName).trim();
+            // =================================================
+            // REUSE EXISTING LATE APPLICATION
+            // =================================================
 
-            finalYearLevel =
-                normalizedYearLevel;
+            let lateRegistration =
+                existingRegistration &&
+                existingRegistration.registration_type ===
+                    "late"
+                    ? existingRegistration
+                    : null;
+
+
+            // =================================================
+            // CREATE LATE APPLICATION
+            // =================================================
+
+            if (!lateRegistration) {
+
+                lateRegistration =
+                    await createOrUpdateRegistration({
+
+                        studentId:
+                            normalizedStudentId,
+
+                        email:
+                            normalizedEmail,
+
+                        fullName:
+                            fullName
+                                ? String(
+                                    fullName
+                                ).trim()
+                                : null,
+
+                        yearLevel:
+                            yearLevel
+                                ? yearLevelToDisplayValue(
+                                    yearLevel
+                                )
+                                : null,
+
+                        registrationType:
+                            "late",
+
+                    });
+
+            } else {
+
+                // =================================================
+                // UPDATE EMAIL
+                // =================================================
+
+                const {
+                    data:
+                        updatedLateRegistration,
+
+                    error:
+                        lateUpdateError,
+
+                } = await supabase
+                    .from(
+                        "registration_applications"
+                    )
+                    .update({
+
+                        email:
+                            normalizedEmail,
+
+                        updated_at:
+                            new Date().toISOString(),
+
+                    })
+                    .eq(
+                        "id",
+                        lateRegistration.id
+                    )
+                    .select()
+                    .single();
+
+
+                if (
+                    lateUpdateError
+                ) {
+
+                    console.error(
+                        "❌ Late registration update error:",
+                        lateUpdateError.message
+                    );
+
+                    throw new Error(
+                        "Unable to prepare the late enrollee registration."
+                    );
+                }
+
+
+                lateRegistration =
+                    updatedLateRegistration;
+            }
+
+
+            // =================================================
+            // RETURN LATE ENROLLEE RESPONSE
+            //
+            // HTTP 200 IS INTENTIONAL.
+            // =================================================
+
+            return res.status(200).json({
+
+                success: true,
+
+                exists: false,
+
+                studentFound: false,
+
+                isLateEnrollee: true,
+
+                registrationType:
+                    "late",
+
+                registrationId:
+                    lateRegistration?.id ||
+                    null,
+
+                student: {
+
+                    studentId:
+                        normalizedStudentId,
+
+                    email:
+                        normalizedEmail,
+
+                    fullName:
+                        lateRegistration?.full_name ||
+                        "",
+
+                    yearLevel:
+                        lateRegistration?.year_level ||
+                        "",
+
+                },
+
+                message:
+                    "This Student ID was not found in the current official roster. You may continue as a late enrollee.",
+
+            });
         }
 
 
         // =================================================
-        // CHECK EXISTING APPLICATION
+        // =================================================
+        // NORMAL STUDENT
+        // =================================================
+        // =================================================
+
+        if (
+            officialStudent.enrollment_status &&
+            String(
+                officialStudent.enrollment_status
+            ).toUpperCase() !==
+                "ACTIVE"
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "This student record is not currently active.",
+
+            });
+        }
+
+
+        // =================================================
+        // OFFICIAL INFORMATION
+        // =================================================
+
+        const finalFullName =
+            officialStudent.full_name;
+
+
+        const finalYearLevel =
+            yearLevelToDisplayValue(
+                officialStudent.year_level
+            );
+
+
+        // =================================================
+        // CHECK EXISTING REGISTRATION
         // =================================================
 
         const existingRegistration =
@@ -1070,6 +1424,9 @@ const sendRegistrationOTP = async (
 
                 success: false,
 
+                code:
+                    "ALREADY_APPROVED",
+
                 message:
                     "This student has already been approved for registration.",
 
@@ -1078,7 +1435,7 @@ const sendRegistrationOTP = async (
 
 
         // =================================================
-        // ALREADY PENDING REVIEW
+        // ALREADY PENDING
         // =================================================
 
         if (
@@ -1090,6 +1447,9 @@ const sendRegistrationOTP = async (
             return res.status(400).json({
 
                 success: false,
+
+                code:
+                    "ALREADY_PENDING",
 
                 message:
                     "This registration is already pending review by the Electoral Board/Admin.",
@@ -1113,6 +1473,18 @@ const sendRegistrationOTP = async (
                 success: true,
 
                 alreadyVerified: true,
+
+                studentFound: true,
+
+                exists: true,
+
+                isLateEnrollee: false,
+
+                registrationType:
+                    "normal",
+
+                registrationId:
+                    existingRegistration.id,
 
                 student: {
 
@@ -1138,7 +1510,7 @@ const sendRegistrationOTP = async (
 
 
         // =================================================
-        // CREATE / UPDATE APPLICATION
+        // CREATE / UPDATE NORMAL APPLICATION
         // =================================================
 
         const registration =
@@ -1157,7 +1529,7 @@ const sendRegistrationOTP = async (
                     finalYearLevel,
 
                 registrationType:
-                    registrationType,
+                    "normal",
 
             });
 
@@ -1184,12 +1556,13 @@ const sendRegistrationOTP = async (
 
 
         // =================================================
-        // INVALIDATE PREVIOUS OTPs
+        // INVALIDATE PREVIOUS OTP
         // =================================================
 
         const {
             error:
                 invalidateError,
+
         } = await supabase
             .from("otp_codes")
             .update({
@@ -1207,7 +1580,10 @@ const sendRegistrationOTP = async (
                 "active"
             );
 
-        if (invalidateError) {
+
+        if (
+            invalidateError
+        ) {
 
             console.error(
                 "❌ Unable to invalidate previous OTP:",
@@ -1221,7 +1597,7 @@ const sendRegistrationOTP = async (
 
 
         // =================================================
-        // CREATE NEW OTP
+        // OTP EXPIRATION
         // =================================================
 
         const expiresAt =
@@ -1233,9 +1609,14 @@ const sendRegistrationOTP = async (
             );
 
 
+        // =================================================
+        // CREATE OTP
+        // =================================================
+
         const {
             error:
                 otpInsertError,
+
         } = await supabase
             .from("otp_codes")
             .insert({
@@ -1269,7 +1650,10 @@ const sendRegistrationOTP = async (
 
             });
 
-        if (otpInsertError) {
+
+        if (
+            otpInsertError
+        ) {
 
             console.error(
                 "❌ OTP database error:",
@@ -1294,7 +1678,9 @@ const sendRegistrationOTP = async (
                 otp
             );
 
-        } catch (emailError) {
+        } catch (
+            emailError
+        ) {
 
             console.error(
                 "❌ OTP email failed:",
@@ -1302,10 +1688,7 @@ const sendRegistrationOTP = async (
             );
 
 
-            // ---------------------------------------------
-            // INVALIDATE OTP IF EMAIL FAILS
-            // ---------------------------------------------
-
+            // Invalidate failed OTP
             await supabase
                 .from("otp_codes")
                 .update({
@@ -1331,16 +1714,24 @@ const sendRegistrationOTP = async (
 
 
         // =================================================
-        // RESPONSE
+        // NORMAL STUDENT SUCCESS
         // =================================================
 
         return res.status(200).json({
 
             success: true,
 
-            isLateEnrollee:
-                registrationType ===
-                "late_enrollee",
+            exists: true,
+
+            studentFound: true,
+
+            isLateEnrollee: false,
+
+            registrationType:
+                "normal",
+
+            registrationId:
+                registration.id,
 
             student: {
 
@@ -1370,7 +1761,9 @@ const sendRegistrationOTP = async (
             error
         );
 
-        return res.status(500).json({
+        return res.status(
+            error.statusCode || 500
+        ).json({
 
             success: false,
 
@@ -1381,7 +1774,6 @@ const sendRegistrationOTP = async (
         });
     }
 };
-
 
 // =========================================================
 // VERIFY REGISTRATION OTP
@@ -2287,6 +2679,20 @@ const resendRegistrationOTP = async (
 // information and eventually the uploaded documents/selfie.
 // =========================================================
 
+// =========================================================
+// SUBMIT REGISTRATION
+//
+// NORMAL STUDENT:
+// - OTP must be verified.
+//
+// LATE ENROLLEE:
+// - OTP is NOT required.
+// - Full name and year level are collected from the
+//   Registration Requirements page.
+// - Application remains registration_type = "late".
+// - EB reviews the application and documents.
+// =========================================================
+
 const submitRegistration = async (
     req,
     res
@@ -2297,6 +2703,8 @@ const submitRegistration = async (
         const {
             studentId,
             email,
+            fullName,
+            yearLevel,
             birthday,
             contactNumber,
             province,
@@ -2341,6 +2749,48 @@ const submitRegistration = async (
 
 
         // =================================================
+        // VALIDATE STUDENT ID
+        // =================================================
+
+        if (
+            !isValidStudentId(
+                normalizedStudentId
+            )
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Student ID must contain exactly 5 digits.",
+
+            });
+        }
+
+
+        // =================================================
+        // VALIDATE EMAIL
+        // =================================================
+
+        if (
+            !isValidEmail(
+                normalizedEmail
+            )
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Please provide a valid email address.",
+
+            });
+        }
+
+
+        // =================================================
         // FIND REGISTRATION
         // =================================================
 
@@ -2368,7 +2818,11 @@ const submitRegistration = async (
         // =================================================
 
         if (
-            registration.email !==
+            String(
+                registration.email || ""
+            )
+                .trim()
+                .toLowerCase() !==
             normalizedEmail
         ) {
 
@@ -2384,12 +2838,24 @@ const submitRegistration = async (
 
 
         // =================================================
-        // OTP MUST BE VERIFIED
+        // DETERMINE REGISTRATION TYPE
+        // =================================================
+
+        const isLateEnrollee =
+            registration.registration_type ===
+            "late";
+
+
+        // =================================================
+        // NORMAL STUDENT
+        //
+        // OTP IS REQUIRED
         // =================================================
 
         if (
+            !isLateEnrollee &&
             registration.application_status !==
-            "otp_verified"
+                "otp_verified"
         ) {
 
             return res.status(400).json({
@@ -2404,7 +2870,135 @@ const submitRegistration = async (
 
 
         // =================================================
-        // BASIC PHONE VALIDATION
+        // PREPARE NAME/YEAR LEVEL
+        // =================================================
+
+        let finalFullName =
+            registration.full_name || "";
+
+        let finalYearLevel =
+            registration.year_level || "";
+
+
+        // =================================================
+        // LATE ENROLLEE
+        //
+        // NO OTP REQUIRED
+        // =================================================
+
+        if (
+            isLateEnrollee
+        ) {
+
+            // -------------------------------------------------
+            // FULL NAME REQUIRED
+            // -------------------------------------------------
+
+            if (
+                !fullName
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    isLateEnrollee: true,
+
+                    registrationType:
+                        "late",
+
+                    message:
+                        "Full name is required for late enrollee registration.",
+
+                });
+            }
+
+
+            // -------------------------------------------------
+            // YEAR LEVEL REQUIRED
+            // -------------------------------------------------
+
+            if (
+                !yearLevel
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    isLateEnrollee: true,
+
+                    registrationType:
+                        "late",
+
+                    message:
+                        "Year level is required for late enrollee registration.",
+
+                });
+            }
+
+
+            // -------------------------------------------------
+            // VALIDATE NAME
+            // -------------------------------------------------
+
+            const nameValidation =
+                validateFullName(
+                    fullName
+                );
+
+
+            if (
+                !nameValidation.valid
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        nameValidation.message,
+
+                });
+            }
+
+
+            // -------------------------------------------------
+            // VALIDATE YEAR LEVEL
+            // -------------------------------------------------
+
+            finalYearLevel =
+                yearLevelToDisplayValue(
+                    yearLevel
+                );
+
+
+            if (
+                !VALID_YEAR_LEVELS.includes(
+                    finalYearLevel
+                )
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Invalid year level.",
+
+                });
+            }
+
+
+            finalFullName =
+                String(
+                    fullName
+                ).trim();
+        }
+
+
+        // =================================================
+        // CONTACT NUMBER
         // =================================================
 
         const cleanContactNumber =
@@ -2430,59 +3024,86 @@ const submitRegistration = async (
 
 
         // =================================================
+        // PREPARE UPDATE DATA
+        // =================================================
+
+        const updateData = {
+
+            birthday,
+
+            contact_number:
+                cleanContactNumber,
+
+            province:
+                province
+                    ? String(
+                        province
+                    ).trim()
+                    : null,
+
+            barangay:
+                barangay
+                    ? String(
+                        barangay
+                    ).trim()
+                    : null,
+
+            city:
+                city
+                    ? String(
+                        city
+                    ).trim()
+                    : null,
+
+            application_status:
+                "pending_review",
+
+            submitted_at:
+                new Date().toISOString(),
+
+            updated_at:
+                new Date().toISOString(),
+
+        };
+
+
+        // =================================================
+        // LATE ENROLLEE INFORMATION
+        // =================================================
+
+        if (
+            isLateEnrollee
+        ) {
+
+            updateData.full_name =
+                finalFullName;
+
+            updateData.year_level =
+                finalYearLevel;
+
+            updateData.registration_type =
+                "late";
+        }
+
+
+        // =================================================
         // UPDATE APPLICATION
-        //
-        // Documents and selfie storage will be connected
-        // in the next step.
         // =================================================
 
         const {
             data:
                 updatedRegistration,
+
             error:
                 updateError,
+
         } = await supabase
             .from(
                 "registration_applications"
             )
-            .update({
-
-                birthday,
-
-                contact_number:
-                    cleanContactNumber,
-
-                province:
-                    province
-                        ? String(
-                            province
-                        ).trim()
-                        : null,
-
-                barangay:
-                    barangay
-                        ? String(
-                            barangay
-                        ).trim()
-                        : null,
-
-                city:
-                    city
-                        ? String(
-                            city
-                        ).trim()
-                        : null,
-
-                application_status:
-                    "pending_review",
-
-                submitted_at:
-                    new Date().toISOString(),
-
-                updated_at:
-                    new Date().toISOString(),
-
-            })
+            .update(
+                updateData
+            )
             .eq(
                 "id",
                 registration.id
@@ -2491,7 +3112,9 @@ const submitRegistration = async (
             .single();
 
 
-        if (updateError) {
+        if (
+            updateError
+        ) {
 
             console.error(
                 "❌ Registration submission error:",
@@ -2520,11 +3143,21 @@ const submitRegistration = async (
             registrationSubmitted:
                 true,
 
+            isLateEnrollee:
+                isLateEnrollee,
+
+            registrationType:
+                isLateEnrollee
+                    ? "late"
+                    : "normal",
+
             registrationStatus:
                 "pending_review",
 
             message:
-                "Registration submitted successfully. Your application is now pending review by the Electoral Board/Admin.",
+                isLateEnrollee
+                    ? "Late enrollee registration submitted successfully. Your application is now pending review by the Electoral Board."
+                    : "Registration submitted successfully. Your application is now pending review by the Electoral Board/Admin.",
 
             registration: {
 
@@ -2542,6 +3175,9 @@ const submitRegistration = async (
 
                 yearLevel:
                     updatedRegistration.year_level,
+
+                registrationType:
+                    updatedRegistration.registration_type,
 
                 status:
                     updatedRegistration.application_status,
@@ -2570,6 +3206,286 @@ const submitRegistration = async (
         });
     }
 };
+
+// =========================================================
+// STUDENT REGISTRATION STATUS
+//
+// PURPOSE:
+// Return the student's current registration application
+// status and the message/reason associated with that status.
+//
+// IMPORTANT:
+// - Does NOT expose uploaded documents.
+// - Does NOT expose selfie data.
+// - Does NOT expose OTP data.
+// - Does NOT expose passwords.
+// - Student ID + email must match the same application.
+// =========================================================
+
+const getRegistrationStatus = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const {
+            studentId,
+            email,
+        } = req.query;
+
+
+        // =================================================
+        // REQUIRED FIELDS
+        // =================================================
+
+        if (
+            !studentId ||
+            !email
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Student ID and email are required.",
+
+            });
+        }
+
+
+        // =================================================
+        // CLEAN INPUT
+        // =================================================
+
+        const normalizedStudentId =
+            String(studentId).trim();
+
+        const normalizedEmail =
+            String(email)
+                .trim()
+                .toLowerCase();
+
+
+        // =================================================
+        // BASIC VALIDATION
+        // =================================================
+
+        if (
+            !isValidStudentId(
+                normalizedStudentId
+            )
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Student ID must contain exactly 5 digits.",
+
+            });
+        }
+
+
+        if (
+            !isValidEmail(
+                normalizedEmail
+            )
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Please provide a valid email address.",
+
+            });
+        }
+
+
+        // =================================================
+        // FIND LATEST APPLICATION
+        //
+        // Match BOTH Student ID and email so a status
+        // cannot be returned for a different registration.
+        // =================================================
+
+        const {
+            data:
+                registration,
+            error:
+                registrationError,
+        } = await supabase
+            .from(
+                "registration_applications"
+            )
+            .select(`
+                id,
+                student_id,
+                registration_type,
+                application_status,
+                email,
+                full_name,
+                year_level,
+                birthday,
+                contact_number,
+                province,
+                barangay,
+                city,
+                otp_verified_at,
+                submitted_at,
+                reviewed_at,
+                rejection_reason,
+                correction_message,
+                created_at,
+                updated_at
+            `)
+            .eq(
+                "student_id",
+                normalizedStudentId
+            )
+            .eq(
+                "email",
+                normalizedEmail
+            )
+            .order(
+                "created_at",
+                {
+                    ascending: false,
+                }
+            )
+            .limit(1)
+            .maybeSingle();
+
+
+        if (registrationError) {
+
+            console.error(
+                "❌ Student registration status lookup error:",
+                registrationError.message
+            );
+
+            return res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Unable to retrieve your registration status.",
+
+            });
+        }
+
+
+        // =================================================
+        // NOT FOUND
+        // =================================================
+
+        if (!registration) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message:
+                    "Registration application not found.",
+
+            });
+        }
+
+
+        // =================================================
+        // RETURN SAFE STATUS INFORMATION
+        // =================================================
+
+        return res.status(200).json({
+
+            success: true,
+
+            registration: {
+
+                id:
+                    registration.id,
+
+                studentId:
+                    registration.student_id,
+
+                email:
+                    registration.email,
+
+                fullName:
+                    registration.full_name,
+
+                yearLevel:
+                    registration.year_level,
+
+                registrationType:
+                    registration.registration_type,
+
+                status:
+                    registration.application_status,
+
+                birthday:
+                    registration.birthday,
+
+                contactNumber:
+                    registration.contact_number,
+
+                province:
+                    registration.province,
+
+                barangay:
+                    registration.barangay,
+
+                city:
+                    registration.city,
+
+                otpVerifiedAt:
+                    registration.otp_verified_at,
+
+                submittedAt:
+                    registration.submitted_at,
+
+                reviewedAt:
+                    registration.reviewed_at,
+
+                rejectionReason:
+                    registration.rejection_reason,
+
+                correctionMessage:
+                    registration.correction_message,
+
+                createdAt:
+                    registration.created_at,
+
+                updatedAt:
+                    registration.updated_at,
+
+            },
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "❌ getRegistrationStatus error:",
+            error
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                error.message ||
+                "Unable to retrieve registration status.",
+
+        });
+    }
+};
+
 
 // =========================================================
 // ELECTORAL BOARD AUTHENTICATION
@@ -3117,5 +4033,7 @@ module.exports = {
     getEBPendingRegistrations,
 
     getEBRegistrationDetails,
+
+    getRegistrationStatus,
 
 };

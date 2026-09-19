@@ -4,6 +4,7 @@ import { Routes, Route, useLocation } from "react-router-dom";
 // PUBLIC / AUTH PAGES
 // =====================================================
 
+import Vote from "./src/pages/student/Vote";
 import LandingPage from "./src/pages/public/LandingPage";
 import Register from "./src/pages/auth/Register";
 import LateEnrolleeForm from "./src/pages/public/LateEnrolleeForm";
@@ -18,13 +19,23 @@ import UploadProfilePicture from "./src/pages/auth/UploadProfilePicture";
 import AdminRegister from "./src/pages/auth/AdminRegister";
 import StaffLogin from "./src/pages/auth/StaffLogin";
 import StaffChangePassword from "./src/pages/auth/StaffChangePassword";
+
+// =====================================================
+// ADMIN
+// =====================================================
+
 import AdminDashboard from "./src/pages/admin/AdminDashboard";
 import ElectoralBoardManagement from "./src/pages/admin/ElectoralBoardManagement";
 import AdminAccountManagement from "./src/pages/admin/AdminAccountManagement";
 import RegistrationRequirements from "./src/pages/auth/RegistrationRequirements";
 import StudentManagement from "./src/pages/admin/StudentManagement";
 import CandidateManagement from "./src/pages/admin/CandidateManagement";
-import ElectionManagement from "./src/pages/admin/ElectionManagement";
+
+// IMPORTANT:
+// Current ElectionManagement component is located
+// inside the admin folder and uses Admin authentication.
+import ElectionManagement from "./src/pages/electoralBoard/ElectionManagement";
+
 import AuditLogs from "./src/pages/admin/AuditLogs";
 import Reports from "./src/pages/admin/Reports";
 import ElectionResults from "./src/pages/admin/ElectionResults";
@@ -43,12 +54,15 @@ import Settings from "./src/pages/student/Settings";
 
 import ElectoralBoardLogin from "./src/pages/auth/ElectoralBoardLogin";
 
-// Import EBDashboard as a module so it works whether
-// the file currently uses default or named export.
 import * as EBDashboardModule from "./src/pages/electoralBoard/EBDashboard";
 
 const EBDashboard =
-    EBDashboardModule.default || EBDashboardModule.EBDashboard;
+    EBDashboardModule.default ||
+    EBDashboardModule.EBDashboard;
+
+// =====================================================
+// GLOBAL APP CSS
+// =====================================================
 
 import "./App.css";
 
@@ -95,7 +109,6 @@ const App = () => {
                     element={<LandingPage />}
                 />
 
-
                 {/* =================================================
                     STUDENT REGISTRATION
                 ================================================= */}
@@ -105,16 +118,10 @@ const App = () => {
                     element={<Register />}
                 />
 
-
-                {/* =================================================
-                    LATE ENROLLEE REGISTRATION
-                ================================================= */}
-
                 <Route
                     path="/late-enrollee"
                     element={<LateEnrolleeForm />}
                 />
-
 
                 {/* =================================================
                     OTP VERIFICATION
@@ -125,17 +132,14 @@ const App = () => {
                     element={<OTPVerification />}
                 />
 
-
                 {/* =================================================
                     STUDENT REGISTRATION DETAILS
-                    After OTP verification
                 ================================================= */}
 
                 <Route
                     path="/student-registration"
                     element={<StudentRegistration />}
                 />
-
 
                 {/* =================================================
                     REGISTRATION CONFIRMATION
@@ -146,7 +150,6 @@ const App = () => {
                     element={<RegistrationConfirmation />}
                 />
 
-
                 {/* =================================================
                     REGISTRATION SUBMITTED
                 ================================================= */}
@@ -155,7 +158,6 @@ const App = () => {
                     path="/registration-submitted"
                     element={<RegistrationSubmitted />}
                 />
-
 
                 {/* =================================================
                     STUDENT LOGIN
@@ -166,16 +168,14 @@ const App = () => {
                     element={<StudentLogin />}
                 />
 
-
                 {/* =================================================
-                    CHANGE TEMPORARY PASSWORD
+                    STUDENT PASSWORD CHANGE
                 ================================================= */}
 
                 <Route
                     path="/change-password"
                     element={<ChangeTemporaryPassword />}
                 />
-
 
                 {/* =================================================
                     PROFILE PICTURE
@@ -186,7 +186,6 @@ const App = () => {
                     element={<UploadProfilePicture />}
                 />
 
-
                 {/* =================================================
                     STUDENT DASHBOARD
                 ================================================= */}
@@ -195,7 +194,6 @@ const App = () => {
                     path="/student-dashboard"
                     element={<StudentDashboard />}
                 />
-
 
                 {/* =================================================
                     EXISTING LOGIN ROUTE
@@ -206,7 +204,6 @@ const App = () => {
                     element={<LoginPage />}
                 />
 
-
                 {/* =================================================
                     ACCOUNT SELECTION
                 ================================================= */}
@@ -215,7 +212,6 @@ const App = () => {
                     path="/account-selection"
                     element={<AccountSelection />}
                 />
-
 
                 {/* =================================================
                     STUDENT SETTINGS
@@ -226,6 +222,14 @@ const App = () => {
                     element={<Settings />}
                 />
 
+                {/* =================================================
+                    STUDENT VOTING
+                ================================================= */}
+
+                <Route
+                    path="/vote"
+                    element={<Vote />}
+                />
 
                 {/* =================================================
                     ELECTORAL BOARD LOGIN
@@ -236,7 +240,6 @@ const App = () => {
                     element={<ElectoralBoardLogin />}
                 />
 
-
                 {/* =================================================
                     ELECTORAL BOARD DASHBOARD
                 ================================================= */}
@@ -246,80 +249,169 @@ const App = () => {
                     element={<EBDashboard />}
                 />
 
+                {/* =================================================
+                    ADMIN REGISTRATION
+                ================================================= */}
+
                 <Route
                     path="/admin/register"
                     element={<AdminRegister />}
                 />
+
+                {/* =================================================
+                    ADMIN / STAFF LOGIN
+                ================================================= */}
+
                 <Route
                     path="/admin-login"
                     element={<StaffLogin />}
                 />
+
+                {/* =================================================
+                    STAFF PASSWORD CHANGE
+                ================================================= */}
 
                 <Route
                     path="/staff-change-password"
                     element={<StaffChangePassword />}
                 />
 
+                {/* =================================================
+                    ADMIN DASHBOARD
+                ================================================= */}
+
                 <Route
                     path="/admin-dashboard"
                     element={<AdminDashboard />}
                 />
+
+                {/* =================================================
+                    ADMIN — ELECTORAL BOARD MANAGEMENT
+                ================================================= */}
+
                 <Route
                     path="/admin/electoral-board"
                     element={
                         <ElectoralBoardManagement />
                     }
                 />
+
+                {/* =================================================
+                    ADMIN — STUDENT MANAGEMENT
+                ================================================= */}
+
                 <Route
                     path="/admin/students"
                     element={
                         <StudentManagement />
                     }
                 />
+
+                {/* =================================================
+                    ADMIN — CANDIDATE MANAGEMENT
+                ================================================= */}
+
                 <Route
                     path="/admin/candidates"
                     element={
                         <CandidateManagement />
                     }
                 />
+
+                {/* =================================================
+                    ADMIN — ELECTION MANAGEMENT
+                    FIXED ROUTE
+                ================================================= */}
+
                 <Route
                     path="/admin/election"
                     element={
                         <ElectionManagement />
                     }
                 />
+
+                {/* =================================================
+                    LEGACY / COMPATIBILITY ELECTION ROUTE
+                =================================================
+
+                    Kept so existing EB navigation does not
+                    immediately break while we finish connecting
+                    the three VOTARA roles.
+                */}
+
+                <Route
+                    path="/electoral-board/election"
+                    element={
+                        <ElectionManagement />
+                    }
+                />
+
+                {/* =================================================
+                    ADMIN — AUDIT LOGS
+                ================================================= */}
+
                 <Route
                     path="/admin/audit-logs"
                     element={
                         <AuditLogs />
                     }
                 />
+
+                {/* =================================================
+                    ADMIN — REPORTS
+                ================================================= */}
+
                 <Route
                     path="/admin/reports"
                     element={
                         <Reports />
                     }
                 />
+
+                {/* =================================================
+                    ADMIN — ELECTION RESULTS
+                ================================================= */}
+
                 <Route
                     path="/admin/results"
                     element={
                         <ElectionResults />
                     }
                 />
+
+                {/* =================================================
+                    ADMIN — SYSTEM SETTINGS
+                ================================================= */}
+
                 <Route
                     path="/admin/settings"
                     element={
                         <SystemSettings />
                     }
                 />
+
+                {/* =================================================
+                    ADMIN — ADMIN ACCOUNTS
+                ================================================= */}
+
                 <Route
                     path="/admin/admin-accounts"
-                    element={<AdminAccountManagement />}
+                    element={
+                        <AdminAccountManagement />
+                    }
                 />
+
+                {/* =================================================
+                    REGISTRATION REQUIREMENTS
+                ================================================= */}
+
                 <Route
                     path="/registration-requirements"
-                    element={<RegistrationRequirements />}
+                    element={
+                        <RegistrationRequirements />
+                    }
                 />
+
             </Routes>
         </div>
     );

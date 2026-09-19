@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import "./StaffLogin.css";
 
 const API_BASE_URL =
     import.meta.env.VITE_API_URL ||
     "http://localhost:5000/api";
-
 
 // =====================================================
 // SHARED ADMIN / ELECTORAL BOARD LOGIN
@@ -12,33 +12,33 @@ const API_BASE_URL =
 
 const StaffLogin = () => {
 
-    const navigate =
-        useNavigate();
+    const navigate = useNavigate();
 
+    const goToAdmin = () => {
+        const changePage = () => navigate("/account-selection");
+
+        if (document.startViewTransition) {
+            document.startViewTransition(changePage);
+        } else {
+            changePage();
+        }
+    };
 
     const [formData, setFormData] =
         useState({
-
             email: "",
-
             password: "",
-
             securityCode: "",
-
         });
-
 
     const [showPassword, setShowPassword] =
         useState(false);
 
-
     const [showSecurityCode, setShowSecurityCode] =
         useState(false);
 
-
     const [loading, setLoading] =
         useState(false);
-
 
     const [error, setError] =
         useState("");
@@ -48,23 +48,17 @@ const StaffLogin = () => {
     // HANDLE INPUT
     // =================================================
 
-    const handleChange = (
-        event
-    ) => {
+    const handleChange = (event) => {
 
         const {
             name,
             value,
         } = event.target;
 
-
-        setFormData(
-            previous => ({
-                ...previous,
-                [name]: value,
-            })
-        );
-
+        setFormData(previous => ({
+            ...previous,
+            [name]: value,
+        }));
 
         setError("");
     };
@@ -74,15 +68,11 @@ const StaffLogin = () => {
     // SUBMIT LOGIN
     // =================================================
 
-    const handleSubmit = async (
-        event
-    ) => {
+    const handleSubmit = async (event) => {
 
         event.preventDefault();
 
-
         setError("");
-
 
         if (
             !formData.email.trim() ||
@@ -102,24 +92,19 @@ const StaffLogin = () => {
 
             setLoading(true);
 
-
             const response =
                 await fetch(
                     `${API_BASE_URL}/staff-auth/login`,
                     {
-
                         method: "POST",
 
                         headers: {
-
                             "Content-Type":
                                 "application/json",
-
                         },
 
                         body:
                             JSON.stringify({
-
                                 email:
                                     formData.email
                                         .trim()
@@ -131,9 +116,7 @@ const StaffLogin = () => {
                                 securityCode:
                                     formData.securityCode
                                         .trim(),
-
                             }),
-
                     }
                 );
 
@@ -142,9 +125,7 @@ const StaffLogin = () => {
                 await response.json();
 
 
-            if (
-                !response.ok
-            ) {
+            if (!response.ok) {
 
                 setError(
                     data.message ||
@@ -166,12 +147,17 @@ const StaffLogin = () => {
                 data.token
             );
 
-
             localStorage.setItem(
                 "votaraStaffUser",
                 JSON.stringify(
                     data.user
                 )
+            );
+            navigate(
+    "/electoral-board/dashboard",
+    {
+        replace: true,
+    }
             );
 
 
@@ -194,20 +180,16 @@ const StaffLogin = () => {
             }
 
 
-            if (
-                data.user.role ===
-                "admin"
-            ) {
+if (
+    !data.user ||
+    data.user.role !== "electoral_board"
+) {
+    setError(
+        "This account is not an Electoral Board account. Please use the Admin login page."
+    );
 
-                navigate(
-                    "/admin-dashboard",
-                    {
-                        replace: true,
-                    }
-                );
-
-                return;
-            }
+    return;
+}
 
 
             if (
@@ -251,454 +233,324 @@ const StaffLogin = () => {
 
     return (
 
-        <div
-            style={{
-                minHeight: "100vh",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "30px 20px",
-                background:
-                    "linear-gradient(135deg, #eff6ff, #f8fafc)",
-                fontFamily:
-                    "Poppins, Arial, sans-serif",
-            }}
-        >
+        <div className="staff-login-page">
 
-            <div
-                style={{
-                    width: "100%",
-                    maxWidth: "480px",
-                    background: "#ffffff",
-                    borderRadius: "22px",
-                    padding: "34px",
-                    boxShadow:
-                        "0 20px 50px rgba(15, 23, 42, 0.12)",
-                }}
-            >
-
-                {/* =====================================
-                    HEADER
-                ====================================== */}
-
-                <div
-                    style={{
-                        textAlign: "center",
-                        marginBottom: "28px",
-                    }}
-                >
-
-                    <div
-                        style={{
-                            width: "64px",
-                            height: "64px",
-                            margin: "0 auto 14px",
-                            borderRadius: "18px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            background:
-                                "#eff6ff",
-                            fontSize: "30px",
-                        }}
-                    >
-                        🔐
-                    </div>
+            <div className="staff-login-container">
 
 
-                    <h1
-                        style={{
-                            margin: 0,
-                            color: "#172554",
-                            fontSize: "28px",
-                        }}
-                    >
-                        Staff Login
-                    </h1>
+                {/* =================================================
+                    LEFT SIDE
+                ================================================= */}
+
+                <section className="staff-login-form-side">
+
+                    <div className="staff-login-form-wrapper">
 
 
-                    <p
-                        style={{
-                            margin:
-                                "8px 0 0",
-                            color: "#64748b",
-                            fontSize: "14px",
-                        }}
-                    >
-                        Admin / Electoral Board
-                    </p>
+                        {/* =========================================
+                            BACK
+                        ========================================= */}
 
-                </div>
-
-
-                {/* =====================================
-                    ERROR
-                ====================================== */}
-
-                {error && (
-
-                    <div
-                        style={{
-                            marginBottom: "18px",
-                            padding: "13px 15px",
-                            borderRadius: "12px",
-                            background:
-                                "#fef2f2",
-                            border:
-                                "1px solid #fecaca",
-                            color:
-                                "#b91c1c",
-                            fontSize: "14px",
-                        }}
-                    >
-                        {error}
-                    </div>
-
-                )}
-
-
-                <form
-                    onSubmit={
-                        handleSubmit
-                    }
-                >
-
-                    {/* =================================
-                        EMAIL
-                    ================================== */}
-
-                    <label
-                        style={labelStyle}
-                    >
-                        Email Address
-                    </label>
-
-                    <input
-                        type="email"
-                        name="email"
-                        value={
-                            formData.email
-                        }
-                        onChange={
-                            handleChange
-                        }
-                        placeholder="Enter your email"
-                        autoComplete="email"
-                        style={inputStyle}
-                        disabled={loading}
-                    />
-
-
-                    {/* =================================
-                        PASSWORD
-                    ================================== */}
-
-                    <label
-                        style={labelStyle}
-                    >
-                        Password
-                    </label>
-
-                    <div
-                        style={{
-                            position: "relative",
-                        }}
-                    >
-
-                        <input
-                            type={
-                                showPassword
-                                    ? "text"
-                                    : "password"
-                            }
-                            name="password"
-                            value={
-                                formData.password
-                            }
-                            onChange={
-                                handleChange
-                            }
-                            placeholder="Enter your password"
-                            autoComplete="current-password"
-                            style={{
-                                ...inputStyle,
-                                paddingRight: "75px",
-                            }}
-                            disabled={loading}
-                        />
-
-                        <button
-                            type="button"
-                            onClick={() =>
-                                setShowPassword(
-                                    previous =>
-                                        !previous
-                                )
-                            }
-                            style={toggleStyle}
+                        <Link
+                            to="/account-selection"
+                            className="staff-login-back"
                         >
-                            {
-                                showPassword
-                                    ? "Hide"
-                                    : "Show"
-                            }
-                        </button>
-
-                    </div>
+                            ← back
+                        </Link>
 
 
-                    {/* =================================
-                        SECURITY CODE
-                    ================================== */}
+                        {/* =========================================
+                            HEADING
+                        ========================================= */}
 
-                    <label
-                        style={labelStyle}
-                    >
-                        Security Code
-                    </label>
+                        <div className="staff-login-heading">
 
-                    <div
-                        style={{
-                            position: "relative",
-                        }}
-                    >
+                            <h1>
+                                Electoral Board Login!
+                            </h1>
 
-                        <input
-                            type={
-                                showSecurityCode
-                                    ? "text"
-                                    : "password"
-                            }
-                            name="securityCode"
-                            value={
-                                formData.securityCode
-                            }
-                            onChange={
-                                handleChange
-                            }
-                            placeholder="Enter your security code"
-                            autoComplete="off"
-                            style={{
-                                ...inputStyle,
-                                paddingRight: "75px",
-                            }}
-                            disabled={loading}
-                        />
+                            <p>
+                                Login as Admin or Electoral Board
+                                on Western Institute of Technology
+                                Votara platform.
+                            </p>
 
-                        <button
-                            type="button"
-                            onClick={() =>
-                                setShowSecurityCode(
-                                    previous =>
-                                        !previous
-                                )
-                            }
-                            style={toggleStyle}
+                        </div>
+
+
+                        {/* =========================================
+                            ERROR
+                        ========================================= */}
+
+                        {error && (
+
+                            <div className="staff-login-error">
+                                {error}
+                            </div>
+
+                        )}
+
+
+                        {/* =========================================
+                            LOGIN FORM
+                        ========================================= */}
+
+                        <form
+                            onSubmit={handleSubmit}
+                            className="staff-login-form"
+                            style={{ viewTransitionName: "staff-login-input-section" }}
                         >
-                            {
-                                showSecurityCode
-                                    ? "Hide"
-                                    : "Show"
-                            }
-                        </button>
+
+
+                            {/* =================================
+                                EMAIL
+                            ================================== */}
+
+                            <div className="staff-login-field">
+
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={
+                                        formData.email
+                                    }
+                                    onChange={
+                                        handleChange
+                                    }
+                                    placeholder="Email"
+                                    autoComplete="email"
+                                    disabled={loading}
+                                />
+
+                            </div>
+
+
+                            {/* =================================
+                                PASSWORD
+                            ================================== */}
+
+                            <div className="staff-login-field staff-login-password-field">
+
+                                <input
+                                    type={
+                                        showPassword
+                                            ? "text"
+                                            : "password"
+                                    }
+                                    name="password"
+                                    value={
+                                        formData.password
+                                    }
+                                    onChange={
+                                        handleChange
+                                    }
+                                    placeholder="Password"
+                                    autoComplete="current-password"
+                                    disabled={loading}
+                                />
+
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setShowPassword(
+                                            previous =>
+                                                !previous
+                                        )
+                                    }
+                                    className="staff-login-toggle"
+                                >
+                                    {showPassword
+                                        ? "ꗃ"
+                                        : "🔒︎"}
+                                </button>
+
+                            </div>
+
+
+                            {/* =================================
+                                SECURITY CODE
+                            ================================== */}
+
+                            <div className="staff-login-field staff-login-password-field">
+
+                                <input
+                                    type={
+                                        showSecurityCode
+                                            ? "text"
+                                            : "password"
+                                    }
+                                    name="securityCode"
+                                    value={
+                                        formData.securityCode
+                                    }
+                                    onChange={
+                                        handleChange
+                                    }
+                                    placeholder="Login Code"
+                                    autoComplete="off"
+                                    disabled={loading}
+                                />
+
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setShowSecurityCode(
+                                            previous =>
+                                                !previous
+                                        )
+                                    }
+                                    className="staff-login-toggle"
+                                >
+                                    {showSecurityCode
+                                        ? "ꗃ"
+                                        : "🔒︎"}
+                                </button>
+
+                            </div>
+
+
+                            {/* =================================
+                                INFORMATION
+                            ================================== */}
+
+                            <p className="staff-login-info">
+                                The system automatically identifies
+                                you are Electoral
+                                Board member.
+                            </p>
+
+
+                            {/* =================================
+                                LOGIN BUTTON
+                            ================================== */}
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="staff-login-button"
+                            >
+                                {loading
+                                    ? "Signing In..."
+                                    : "Login"}
+                            </button>
+
+                        </form>
+
+
+                        {/* =========================================
+                            ADMIN REGISTRATION
+                        ========================================= */}
+
+                        <div className="staff-login-register">
+
+                            <span>
+                                Initial Admin?
+                            </span>
+
+                            <Link
+                                to="/admin/register"
+                            >
+                                Create Admin Account
+                            </Link>
+
+                        </div>
+
 
                     </div>
 
-
-                    <div
-                        style={{
-                            marginTop: "8px",
-                            marginBottom: "20px",
-                            fontSize: "12px",
-                            color: "#64748b",
-                            lineHeight: 1.5,
-                        }}
-                    >
-                        The system automatically identifies whether you are an Admin or Electoral Board member.
-                    </div>
+                </section>
 
 
-                    {/* =================================
-                        LOGIN
-                    ================================== */}
+                {/* =================================================
+                    RIGHT VOTARA PANEL
+                ================================================= */}
 
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        style={{
-                            ...primaryButtonStyle,
-                            width: "100%",
-                            opacity:
-                                loading
-                                    ? 0.7
-                                    : 1,
-                        }}
-                    >
-                        {loading
-                            ? "Signing In..."
-                            : "Login"}
-                    </button>
-
-                </form>
+                <section className="staff-login-brand-side">
 
 
-                {/* =====================================
-                    ADMIN REGISTRATION
-                ====================================== */}
+                    {/* =========================================
+                        DOT PATTERN
+                    ========================================= */}
 
-                <div
-                    style={{
-                        marginTop: "22px",
-                        textAlign: "center",
-                        fontSize: "14px",
-                        color: "#64748b",
-                    }}
-                >
+                    <div className="staff-login-dots"></div>
 
-                    Initial Admin?
 
-                    {" "}
+                    {/* =========================================
+                        VOTARA LOGO
+                    ========================================= */}
 
                     <Link
-                        to="/admin/register"
-                        style={{
-                            color:
-                                "#2563eb",
-                            fontWeight:
-                                "700",
-                            textDecoration:
-                                "none",
-                        }}
+                        to="/"
+                        className="staff-login-logo"
                     >
-                        Create Admin Account
+
+                        <span className="staff-login-logo-mark">
+
+                            <span className="logo-shape logo-one"></span>
+
+                            <span className="logo-shape logo-two"></span>
+
+                            <span className="logo-shape logo-three"></span>
+
+                            <span className="logo-shape logo-four"></span>
+
+                        </span>
+
+                        <span>
+                            Votara
+                        </span>
+
                     </Link>
 
-                </div>
+
+                    {/* =========================================
+                        BRAND MESSAGE
+                    ========================================= */}
+
+                    <div className="staff-login-brand-message">
+
+                        <h2>
+                            Secure, transparent elections
+                        </h2>
+
+                        <p>
+                            for BSIT students at Western Institute
+                            of Technology.
+                        </p>
+
+                        <span>
+                            Every vote verified, every result trusted.
+                        </span>
+
+                    </div>
 
 
-                {/* =====================================
-                    BACK
-                ====================================== */}
+                    {/* =========================================
+                        ACCOUNT SELECTION
+                    ========================================= */}
 
-                <div
-                    style={{
-                        marginTop: "12px",
-                        textAlign: "center",
-                    }}
-                >
+                    <div className="staff-login-alternate">
 
-                    <Link
-                        to="/account-selection"
-                        style={{
-                            color:
-                                "#64748b",
-                            fontSize:
-                                "13px",
-                            textDecoration:
-                                "none",
-                        }}
-                    >
-                        ← Back to Account Selection
-                    </Link>
+                        <p>
+                            Not a staff member?
+                        </p>
 
-                </div>
+                        <Link
+                            to="/account-selection"
+                            onClick={goToAdmin}
+                        >
+                            LOGIN AS ADMIN
+                        </Link>
+
+                    </div>
+
+
+                </section>
 
             </div>
 
         </div>
     );
 };
-
-
-// =====================================================
-// STYLES
-// =====================================================
-
-const labelStyle = {
-
-    display: "block",
-
-    marginTop: "17px",
-
-    marginBottom: "7px",
-
-    color: "#334155",
-
-    fontSize: "14px",
-
-    fontWeight: "700",
-
-};
-
-
-const inputStyle = {
-
-    width: "100%",
-
-    boxSizing: "border-box",
-
-    padding: "13px 14px",
-
-    border:
-        "1px solid #cbd5e1",
-
-    borderRadius: "11px",
-
-    outline: "none",
-
-    fontSize: "14px",
-
-    color: "#0f172a",
-
-    background: "#ffffff",
-
-};
-
-
-const toggleStyle = {
-
-    position: "absolute",
-
-    right: "8px",
-
-    top: "7px",
-
-    border: "none",
-
-    borderRadius: "8px",
-
-    padding: "7px 10px",
-
-    background: "#f1f5f9",
-
-    color: "#334155",
-
-    fontWeight: "600",
-
-    cursor: "pointer",
-
-};
-
-
-const primaryButtonStyle = {
-
-    border: "none",
-
-    borderRadius: "11px",
-
-    padding: "14px 18px",
-
-    background: "#2563eb",
-
-    color: "#ffffff",
-
-    fontWeight: "700",
-
-    fontSize: "14px",
-
-    cursor: "pointer",
-
-};
-
 
 export default StaffLogin;

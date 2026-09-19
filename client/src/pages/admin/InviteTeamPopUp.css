@@ -1,0 +1,1410 @@
+/* =========================================================
+   VOTARA — INVITE TEAM POPUP
+   ========================================================= */
+
+/* =========================================================
+   INVITE POPUP OVERLAY
+   ========================================================= */
+
+.votara-invite-overlay {
+    position: fixed;
+    inset: 0;
+
+    z-index: 9999;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-sizing: border-box;
+
+    padding: 18px;
+
+    overflow: hidden;
+
+    background: rgba(6, 9, 24, 0.62);
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+
+/* =========================================================
+   LARGE GLASS BACKGROUND CARD
+   ========================================================= */
+
+.votara-invite-background-card {
+    position: relative;
+
+    width: min(680px, calc(100vw - 36px));
+max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+
+
+    box-sizing: border-box;
+
+    padding: 25px 34px 25px;
+
+    border: 1px solid rgba(255, 255, 255, 0.30);
+    border-radius: 17px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(154, 153, 162, 0.48),
+            rgba(92, 94, 108, 0.34)
+        );
+
+    box-shadow:
+        0 30px 80px rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.20);
+
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+
+    /* REMOVE THE SCROLLBAR */
+    overflow: hidden;
+
+    animation:
+        inviteBackgroundIn
+        0.35s
+        cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+
+
+/* =========================================================
+   OUTER CARD HEADER
+   ========================================================= */
+
+.votara-invite-background-header {
+    padding: 0 7px;
+
+    margin-bottom: 14px;
+}
+
+.votara-invite-background-badge {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 6px;
+
+    padding: 5px 10px;
+
+    border-radius: 20px;
+
+    background: rgba(31, 82, 255, 0.14);
+
+    color: #2863ff;
+
+    font-size: 9px;
+    font-weight: 500;
+}
+
+.votara-invite-badge-dot {
+    width: 4px;
+    height: 4px;
+
+    border-radius: 50%;
+
+    background: #2863ff;
+
+    box-shadow:
+        0 0 7px rgba(40, 99, 255, 0.85);
+}
+
+.votara-invite-background-header h2 {
+    margin: 8px 0 3px;
+
+    color: #ffffff;
+
+    font-size: 21px;
+    font-weight: 600;
+
+    line-height: 1.2;
+}
+
+.votara-invite-background-header p {
+    max-width: 570px;
+
+    margin: 0;
+
+    color: rgba(255, 255, 255, 0.58);
+
+    font-size: 9px;
+
+    line-height: 1.4;
+}
+
+
+/* =========================================================
+   INNER NEW INVITATION CARD
+   ========================================================= */
+
+.votara-invite-modal {
+    position: relative;
+
+    width: 100%;
+
+    box-sizing: border-box;
+
+    padding: 23px 29px 24px;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.15);
+
+    border-radius: 10px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(29, 31, 59, 0.98),
+            rgba(25, 27, 52, 0.97)
+        );
+
+    box-shadow:
+        0 18px 40px rgba(0, 0, 0, 0.30),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   INNER HEADER
+   ========================================================= */
+
+.votara-invite-modal-header {
+    position: relative;
+
+    display: block;
+
+    margin-bottom: 19px;
+
+    padding-right: 48px;
+}
+
+.votara-invite-modal-header h2 {
+    margin: 0;
+
+    color: #ffffff;
+
+    font-size: 18px;
+    font-weight: 600;
+
+    line-height: 1.25;
+}
+
+/* CLOSE */
+
+.votara-invite-close {
+    position: absolute;
+
+    top: -5px;
+    right: 0;
+
+    width: 32px;
+    height: 32px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.14);
+
+    border-radius: 7px;
+
+    background:
+        rgba(255, 255, 255, 0.045);
+
+    color:
+        rgba(255, 255, 255, 0.60);
+
+    font-family: inherit;
+
+    font-size: 20px;
+
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition: 0.2s ease;
+}
+
+.votara-invite-close:hover {
+    background:
+        rgba(255, 255, 255, 0.11);
+
+    color: #ffffff;
+
+    transform: rotate(90deg);
+}
+
+
+/* Subtle glass highlight */
+
+.votara-invite-modal::before {
+    content: "";
+
+    position: absolute;
+    inset: 0;
+
+    pointer-events: none;
+
+    border-radius: inherit;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.055),
+            transparent 35%
+        );
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.votara-invite-modal-header {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 24px;
+}
+
+.votara-invite-modal-header h2 {
+    margin: 0;
+
+    color: #ffffff;
+
+    font-size: 18px;
+    font-weight: 500;
+
+    letter-spacing: -0.2px;
+}
+
+
+/* =========================================================
+   CLOSE BUTTON
+   ========================================================= */
+
+.votara-invite-close {
+    width: 32px;
+    height: 32px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+
+    background: rgba(255, 255, 255, 0.04);
+
+    color: rgba(255, 255, 255, 0.65);
+
+    font-size: 22px;
+    font-weight: 300;
+
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.votara-invite-close:hover {
+    background: rgba(255, 255, 255, 0.09);
+
+    border-color: rgba(255, 255, 255, 0.16);
+
+    color: #ffffff;
+
+    transform: rotate(90deg);
+}
+
+
+/* =========================================================
+   ROLE CARDS
+   ========================================================= */
+
+.votara-invite-role-grid {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 14px;
+
+    margin-bottom: 19px;
+}
+
+.votara-invite-role-card {
+    position: relative;
+
+    min-height: 76px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 12px;
+
+    box-sizing: border-box;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.15);
+
+    border-radius: 6px;
+
+    background:
+        rgba(255, 255, 255, 0.025);
+
+    color: #ffffff;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.votara-invite-role-card:hover {
+    transform: translateY(-2px);
+
+    border-color:
+        rgba(40, 99, 255, 0.55);
+
+    background:
+        rgba(40, 99, 255, 0.07);
+}
+
+.votara-invite-role-card.selected {
+    border-color: #2863ff;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(31, 82, 255, 0.18),
+            rgba(31, 82, 255, 0.05)
+        );
+}
+
+.votara-invite-role-icon {
+    width: 36px;
+    height: 36px;
+
+    flex: 0 0 36px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 5px;
+
+    background:
+        rgba(255, 255, 255, 0.08);
+
+    color:
+        rgba(255, 255, 255, 0.70);
+}
+
+.votara-invite-role-card.selected
+.votara-invite-role-icon {
+    background: #1455ff;
+
+    color: #ffffff;
+}
+
+.votara-invite-role-copy {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 4px;
+}
+
+.votara-invite-role-copy strong {
+    color:
+        rgba(255, 255, 255, 0.88);
+
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.votara-invite-role-copy small {
+    max-width: 210px;
+
+    color:
+        rgba(255, 255, 255, 0.43);
+
+    font-size: 10px;
+
+    line-height: 1.35;
+}
+
+.votara-invite-role-radio {
+    position: absolute;
+
+    top: 9px;
+    right: 9px;
+
+    width: 5px;
+    height: 5px;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.30);
+
+    border-radius: 50%;
+}
+
+.votara-invite-role-card.selected
+.votara-invite-role-radio {
+    border-color: #2863ff;
+
+    background: #2863ff;
+
+    box-shadow:
+        0 0 8px rgba(40, 99, 255, 0.75);
+}
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.votara-invite-fields {
+    display: flex;
+    flex-direction: column;
+
+    gap: 13px;
+}
+
+.votara-invite-fields > label,
+.votara-invite-select-row label {
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+
+    color:
+        rgba(255, 255, 255, 0.82);
+
+    font-size: 10px;
+}
+
+.votara-invite-fields input,
+.votara-invite-fields select {
+    width: 100%;
+    height: 35px;
+
+    box-sizing: border-box;
+
+    padding: 0 10px;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.20);
+
+    border-radius: 4px;
+
+    outline: none;
+
+    background:
+        rgba(10, 12, 30, 0.35);
+
+    color: #ffffff;
+
+    font-family: inherit;
+
+    font-size: 9px;
+}
+
+.votara-invite-fields input::placeholder {
+    color:
+        rgba(255, 255, 255, 0.30);
+}
+
+.votara-invite-fields input:focus,
+.votara-invite-fields select:focus {
+    border-color: #2863ff;
+
+    box-shadow:
+        0 0 0 2px rgba(40, 99, 255, 0.10);
+}
+
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+.votara-invite-actions {
+    display: flex;
+
+    justify-content: flex-end;
+
+    align-items: center;
+
+    gap: 10px;
+
+    margin-top: 2px;
+}
+
+.votara-invite-clear,
+.votara-invite-generate {
+    height: 35px;
+
+    border-radius: 6px;
+
+    font-family: inherit;
+
+    font-size: 9px;
+
+    cursor: pointer;
+
+    transition: 0.2s ease;
+}
+
+.votara-invite-clear {
+    width: 74px;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.12);
+
+    background:
+        rgba(255, 255, 255, 0.025);
+
+    color:
+        rgba(255, 255, 255, 0.45);
+}
+
+.votara-invite-generate {
+    width: 220px;
+
+    border:
+        1px solid #2863ff;
+
+    background: #1455ff;
+
+    color: #ffffff;
+
+    box-shadow:
+        0 6px 18px rgba(20, 85, 255, 0.20);
+}
+
+.votara-invite-generate:hover {
+    background: #286cff;
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 9px 25px rgba(20, 85, 255, 0.30);
+}
+
+.votara-invite-generate:active {
+    transform: translateY(0);
+
+    box-shadow:
+        0 3px 10px rgba(20, 85, 255, 0.20);
+}
+
+
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
+
+.votara-invite-modal::-webkit-scrollbar {
+    width: 5px;
+}
+
+.votara-invite-modal::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.votara-invite-modal::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.votara-invite-modal::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+
+/* =========================================================
+   ANIMATIONS
+   ========================================================= */
+
+@keyframes votaraInviteOverlayIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes votaraInviteModalIn {
+    from {
+        opacity: 0;
+        transform: translateY(18px) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes votaraCodeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* =========================================================
+   RESPONSIVE — TABLET
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+    .votara-invite-overlay {
+        padding: 16px;
+    }
+
+    .votara-invite-modal {
+        padding: 24px;
+    }
+
+    .votara-invite-role-grid {
+        gap: 10px;
+    }
+
+    .votara-invite-role-card {
+        padding: 11px;
+    }
+
+    .votara-invite-role-copy small {
+        font-size: 7px;
+    }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE — MOBILE
+   ========================================================= */
+
+@media (max-width: 520px) {
+
+    .votara-invite-overlay {
+        padding: 10px;
+    }
+
+    .votara-invite-modal {
+        max-height: calc(100vh - 20px);
+
+        padding: 20px 18px;
+    }
+
+    .votara-invite-role-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .votara-invite-role-card {
+        min-height: 70px;
+    }
+
+.votara-invite-select-row {
+    display: grid !important;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(0, 1fr) !important;
+
+    gap: 18px !important;
+
+    width: 100%;
+}
+
+    .votara-invite-actions {
+        flex-direction: column-reverse;
+
+        align-items: stretch;
+    }
+
+    .votara-invite-clear,
+    .votara-invite-generate {
+        width: 100%;
+    }
+
+    .votara-invitation-code {
+        flex-direction: column;
+
+        align-items: flex-start;
+
+        gap: 7px;
+    }
+
+}
+
+
+/* =========================================================
+   LIGHT MODE
+   ========================================================= */
+
+[data-theme="light"] .votara-invite-overlay {
+    background: rgba(20, 24, 40, 0.38);
+}
+
+[data-theme="light"] .votara-invite-modal {
+    border-color: rgba(20, 25, 45, 0.12);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255, 255, 255, 0.96),
+            rgba(242, 244, 250, 0.96)
+        );
+
+    color: #171a2b;
+
+    box-shadow:
+        0 30px 80px rgba(20, 25, 45, 0.25);
+}
+
+[data-theme="light"] .votara-invite-modal-header h2 {
+    color: #171a2b;
+}
+
+[data-theme="light"] .votara-invite-close {
+    border-color: rgba(20, 25, 45, 0.10);
+
+    background: rgba(20, 25, 45, 0.04);
+
+    color: rgba(20, 25, 45, 0.55);
+}
+
+[data-theme="light"] .votara-invite-close:hover {
+    background: rgba(20, 25, 45, 0.08);
+
+    color: #171a2b;
+}
+
+[data-theme="light"] .votara-invite-role-card {
+    border-color: rgba(20, 25, 45, 0.12);
+
+    background: rgba(255, 255, 255, 0.55);
+
+    color: #171a2b;
+}
+
+[data-theme="light"] .votara-invite-role-card:hover {
+    background: rgba(40, 99, 255, 0.05);
+
+    border-color: rgba(40, 99, 255, 0.30);
+}
+
+[data-theme="light"] .votara-invite-role-card.selected {
+    background: rgba(40, 99, 255, 0.07);
+
+    border-color: rgba(40, 99, 255, 0.65);
+}
+
+[data-theme="light"] .votara-invite-role-copy strong {
+    color: rgba(20, 25, 45, 0.80);
+}
+
+[data-theme="light"] .votara-invite-role-copy small {
+    color: rgba(20, 25, 45, 0.48);
+}
+
+[data-theme="light"] .votara-invite-role-icon {
+    background: rgba(20, 25, 45, 0.06);
+
+    color: rgba(20, 25, 45, 0.65);
+}
+
+[data-theme="light"] .votara-invite-role-radio {
+    border-color: rgba(20, 25, 45, 0.22);
+}
+
+[data-theme="light"] .votara-invite-fields > label,
+[data-theme="light"] .votara-invite-select-row label {
+    color: rgba(20, 25, 45, 0.75);
+}
+
+[data-theme="light"] .votara-invite-fields input,
+[data-theme="light"] .votara-invite-fields select {
+    border-color: rgba(20, 25, 45, 0.18);
+
+    background: rgba(255, 255, 255, 0.60);
+
+    color: #171a2b;
+}
+
+[data-theme="light"] .votara-invite-fields input::placeholder {
+    color: rgba(20, 25, 45, 0.35);
+}
+
+[data-theme="light"] .votara-invite-clear {
+    border-color: rgba(20, 25, 45, 0.10);
+
+    background: rgba(20, 25, 45, 0.03);
+
+    color: rgba(20, 25, 45, 0.50);
+}
+
+[data-theme="light"] .votara-invitation-code {
+    background: rgba(40, 99, 255, 0.06);
+
+    border-color: rgba(40, 99, 255, 0.22);
+}
+
+[data-theme="light"] .votara-invitation-code span {
+    color: rgba(20, 25, 45, 0.50);
+}
+
+[data-theme="light"] .votara-invitation-code strong {
+    color: #171a2b;
+}
+/* =========================================================
+   INVITATION BACKGROUND CARD
+   ========================================================= */
+
+.votara-invite-overlay {
+    position: fixed;
+    inset: 0;
+
+    z-index: 9999;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 28px;
+
+    background:
+        rgba(8, 10, 24, 0.68);
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    animation: inviteOverlayIn 0.25s ease;
+}
+
+
+/* =========================================================
+   INVITATION MODAL GLASS CARD
+   ========================================================= */
+
+.votara-invite-modal {
+    position: relative;
+
+    width: min(650px, 100%);
+
+    max-height: calc(100vh - 56px);
+
+    overflow-y: auto;
+
+    padding: 28px 30px 30px;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.14);
+
+    border-radius: 12px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(35, 37, 67, 0.96),
+            rgba(24, 26, 49, 0.97)
+        );
+
+    box-shadow:
+        0 30px 80px rgba(0, 0, 0, 0.48),
+        inset 0 1px 0 rgba(255, 255, 255, 0.07);
+
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+
+    color: white;
+
+    animation:
+        inviteModalIn 0.3s
+        cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+
+/* =========================================================
+   ADMIN WARNING OVERLAY
+   ========================================================= */
+
+.votara-admin-warning-overlay {
+    position: fixed;
+    inset: 0;
+
+    z-index: 10001;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 24px;
+
+    background:
+        rgba(9, 11, 22, 0.46);
+
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+
+    animation: adminWarningOverlayIn 0.2s ease;
+}
+
+
+/* =========================================================
+   ADMIN WARNING CARD
+   ========================================================= */
+
+.votara-admin-warning-card {
+    position: relative;
+
+    width: min(700px, 100%);
+
+    display: flex;
+    align-items: flex-start;
+
+    gap: 18px;
+
+    box-sizing: border-box;
+
+    padding: 28px 32px;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.65);
+
+    border-radius: 17px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(185, 176, 172, 0.92),
+            rgba(165, 157, 154, 0.88)
+        );
+
+    box-shadow:
+        0 25px 70px rgba(0, 0, 0, 0.30),
+        inset 0 1px 0 rgba(255, 255, 255, 0.45);
+
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+
+    animation:
+        adminWarningCardIn 0.3s
+        cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+
+/* =========================================================
+   WARNING ICON
+   ========================================================= */
+
+.votara-admin-warning-icon {
+    width: 34px;
+    height: 34px;
+
+    flex: 0 0 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: white;
+
+    margin-top: 2px;
+}
+
+.votara-admin-warning-icon span {
+    width: 30px;
+    height: 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border:
+        2px solid rgba(255, 255, 255, 0.80);
+
+    clip-path: polygon(
+        50% 0%,
+        100% 88%,
+        94% 100%,
+        6% 100%,
+        0% 88%
+    );
+
+    font-size: 18px;
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   WARNING CONTENT
+   ========================================================= */
+
+.votara-admin-warning-content {
+    flex: 1;
+
+    min-width: 0;
+}
+
+.votara-admin-warning-content h3 {
+    margin: 4px 0 6px;
+
+    color: #ffffff;
+
+    font-size: 16px;
+    font-weight: 650;
+
+    line-height: 1.35;
+}
+
+.votara-admin-warning-content p {
+    max-width: 590px;
+
+    margin: 0;
+
+    color:
+        rgba(74, 84, 120, 0.68);
+
+    font-size: 13px;
+    font-weight: 400;
+
+    line-height: 1.35;
+}
+
+
+/* =========================================================
+   CONFIRMATION
+   ========================================================= */
+
+.votara-admin-warning-confirm {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    margin-top: 24px;
+
+    color: #ffffff;
+
+    font-size: 14px;
+
+    cursor: pointer;
+
+    user-select: none;
+}
+
+.votara-admin-warning-confirm input {
+    width: 17px;
+    height: 17px;
+
+    flex: 0 0 17px;
+
+    margin: 0;
+
+    appearance: none;
+    -webkit-appearance: none;
+
+    border:
+        1px solid rgba(30, 35, 65, 0.55);
+
+    border-radius: 3px;
+
+    background:
+        rgba(15, 18, 40, 0.90);
+
+    cursor: pointer;
+}
+
+.votara-admin-warning-confirm input:checked {
+    border-color: #1455ff;
+
+    background:
+        #1455ff;
+
+    box-shadow:
+        0 0 12px rgba(20, 85, 255, 0.35);
+}
+
+.votara-admin-warning-confirm input:checked::after {
+    content: "✓";
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    height: 100%;
+
+    color: white;
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   WARNING BUTTONS
+   ========================================================= */
+
+.votara-admin-warning-actions {
+    display: flex;
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    margin-top: 22px;
+}
+
+.votara-admin-warning-cancel,
+.votara-admin-warning-continue {
+    height: 34px;
+
+    padding: 0 18px;
+
+    border-radius: 6px;
+
+    font-family: inherit;
+
+    font-size: 11px;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.votara-admin-warning-cancel {
+    border:
+        1px solid rgba(255, 255, 255, 0.30);
+
+    background:
+        rgba(255, 255, 255, 0.08);
+
+    color: white;
+}
+
+.votara-admin-warning-cancel:hover {
+    background:
+        rgba(255, 255, 255, 0.16);
+
+    transform: translateY(-1px);
+}
+
+.votara-admin-warning-continue {
+    border:
+        1px solid #2863ff;
+
+    background:
+        #1455ff;
+
+    color: white;
+
+    box-shadow:
+        0 5px 18px rgba(20, 85, 255, 0.22);
+}
+
+.votara-admin-warning-continue:hover {
+    background:
+        #286cff;
+
+    box-shadow:
+        0 8px 25px rgba(20, 85, 255, 0.30);
+
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   ANIMATIONS
+   ========================================================= */
+
+@keyframes inviteOverlayIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes inviteModalIn {
+    from {
+        opacity: 0;
+
+        transform:
+            translateY(18px)
+            scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            translateY(0)
+            scale(1);
+    }
+}
+
+@keyframes adminWarningOverlayIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes adminWarningCardIn {
+    from {
+        opacity: 0;
+
+        transform:
+            translateY(15px)
+            scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            translateY(0)
+            scale(1);
+    }
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    .votara-invite-overlay {
+        padding: 12px;
+    }
+
+    .votara-invite-modal {
+        max-height: calc(100vh - 24px);
+
+        padding: 22px 18px;
+    }
+
+    .votara-admin-warning-overlay {
+        padding: 14px;
+    }
+
+    .votara-admin-warning-card {
+        padding: 22px 20px;
+
+        gap: 12px;
+
+        border-radius: 14px;
+    }
+
+    .votara-admin-warning-content h3 {
+        font-size: 14px;
+    }
+
+    .votara-admin-warning-content p {
+        font-size: 11px;
+    }
+
+    .votara-admin-warning-confirm {
+        align-items: flex-start;
+
+        font-size: 12px;
+    }
+
+    .votara-admin-warning-actions {
+        justify-content: stretch;
+    }
+
+    .votara-admin-warning-cancel,
+    .votara-admin-warning-continue {
+        flex: 1;
+    }
+}
+@media (max-width: 700px) {
+
+    .votara-invite-overlay {
+        padding: 15px;
+    }
+
+    .votara-invite-background-card {
+        width: calc(100vw - 30px);
+
+        padding: 28px 18px 20px;
+
+        border-radius: 14px;
+    }
+
+        .votara-invite-background-header h2 {
+        font-size: 19px;
+    }
+
+    .votara-invite-background-header p {
+        font-size: 9px;
+    }
+
+    .votara-invite-modal {
+        padding: 22px 18px;
+    }
+
+    .votara-invite-role-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .votara-invite-select-row {
+        grid-template-columns: 1fr;
+    }
+
+    .votara-invite-actions {
+        flex-direction: column;
+    }
+
+    .votara-invite-clear,
+    .votara-invite-generate {
+        width: 100%;
+    }
+}

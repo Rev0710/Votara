@@ -197,7 +197,7 @@ const Registrations = () => {
             applications.filter(
                 (application) =>
                     application.application_status ===
-                    "needs_revision"
+                    "needs_correction"
             ).length;
 
         return {
@@ -270,13 +270,75 @@ const Registrations = () => {
                 response.data
                     ?.application;
 
+            // -------------------------------------------------
+            // DEBUG / NORMALIZE COMPLETE APPLICATION
+            // -------------------------------------------------
+            //
+            // The backend returns the uploaded documents
+            // under registration_documents and the selfie
+            // under identity_verification.
+            //
+            // Keep compatibility with alternative property
+            // names so the EB UI does not incorrectly show
+            // "Not submitted" when the records exist.
+            // -------------------------------------------------
+
+            console.log(
+                "🔎 EB COMPLETE APPLICATION RESPONSE:",
+                response.data
+            );
+
+            console.log(
+                "📄 EB REGISTRATION DOCUMENTS:",
+                completeApplication?.registration_documents
+            );
+
+            console.log(
+                "📸 EB IDENTITY VERIFICATION:",
+                completeApplication?.identity_verification
+            );
+
             if (
                 completeApplication
             ) {
 
-                setSelectedApplication(
-                    completeApplication
-                );
+                const documents =
+                    Array.isArray(
+                        completeApplication.registration_documents
+                    )
+                        ? completeApplication.registration_documents
+                        : Array.isArray(
+                            completeApplication.registrationDocuments
+                        )
+                        ? completeApplication.registrationDocuments
+                        : Array.isArray(
+                            completeApplication.documents
+                        )
+                        ? completeApplication.documents
+                        : [];
+
+                const identity =
+                    completeApplication.identity_verification ||
+                    completeApplication.identityVerification ||
+                    (
+                        Array.isArray(
+                            completeApplication.identity_verifications
+                        )
+                            ? completeApplication.identity_verifications[0] || null
+                            : completeApplication.identity_verifications || null
+                    );
+
+                setSelectedApplication({
+
+                    ...completeApplication,
+
+                    registration_documents:
+                        documents,
+
+                    identity_verification:
+                        identity,
+
+                });
 
             }
 
@@ -327,7 +389,7 @@ const Registrations = () => {
 
         if (
             reviewAction ===
-                "rejected" &&
+                "reject" &&
             !reviewMessage.trim()
         ) {
 
@@ -344,7 +406,7 @@ const Registrations = () => {
 
         if (
             reviewAction ===
-                "needs_revision" &&
+                "request_correction" &&
             !reviewMessage.trim()
         ) {
 
@@ -378,10 +440,10 @@ const Registrations = () => {
                 await api.patch(
                     `/eb/registrations/${selectedApplication.id}/review`,
                     {
-                        status:
+                        decision:
                             reviewAction,
 
-                        message:
+                        reason:
                             reviewMessage.trim(),
                     },
                     {
@@ -400,7 +462,7 @@ const Registrations = () => {
 
             if (
                 reviewAction ===
-                "approved"
+                "approve"
             ) {
                 defaultMessage =
                     "Student registration approved successfully.";
@@ -408,7 +470,7 @@ const Registrations = () => {
 
             if (
                 reviewAction ===
-                "rejected"
+                "reject"
             ) {
                 defaultMessage =
                     "Student registration rejected successfully.";
@@ -416,7 +478,7 @@ const Registrations = () => {
 
             if (
                 reviewAction ===
-                "needs_revision"
+                "request_correction"
             ) {
                 defaultMessage =
                     "Correction request sent successfully.";
@@ -468,7 +530,7 @@ const Registrations = () => {
             rejected:
                 "Rejected",
 
-            needs_revision:
+            needs_correction:
                 "Needs Revision",
 
             otp_verified:
@@ -507,7 +569,7 @@ const Registrations = () => {
                     "#d64545",
             },
 
-            needs_revision: {
+            needs_correction: {
                 background:
                     "#eef4ff",
                 color:
@@ -532,6 +594,19 @@ const Registrations = () => {
     // DOCUMENT HELPERS
     // =====================================================
 
+    const normalizeDocumentType =
+        (type) => {
+
+            if (!type) {
+                return "";
+            }
+
+            return String(type)
+                .trim()
+                .toLowerCase()
+                .replace(/-/g, "_");
+        };
+
     const getDocuments =
         (application) => {
 
@@ -541,6 +616,14 @@ const Registrations = () => {
                 )
             ) {
                 return application.registration_documents;
+            }
+
+            if (
+                Array.isArray(
+                    application?.registrationDocuments
+                )
+            ) {
+                return application.registrationDocuments;
             }
 
             if (
@@ -565,13 +648,20 @@ const Registrations = () => {
                     application
                 );
 
+            const normalizedTarget =
+                normalizeDocumentType(
+                    type
+                );
+
             return (
                 documents.find(
                     (document) =>
-                        document.document_type ===
-                            type ||
-                        document.type ===
-                            type
+                        normalizeDocumentType(
+                            document?.document_type ||
+                            document?.documentType ||
+                            document?.type
+                        ) ===
+                        normalizedTarget
                 ) ||
                 null
             );
@@ -834,7 +924,7 @@ const Registrations = () => {
         selectedStatus ===
             "pending_review" ||
         selectedStatus ===
-            "needs_revision";
+            "needs_correction";
 
     // =====================================================
     // RENDER
@@ -1103,7 +1193,7 @@ const Registrations = () => {
                             Rejected
                         </option>
 
-                        <option value="needs_revision">
+                        <option value="needs_correction">
                             Needs Revision
                         </option>
 
@@ -1514,104 +1604,68 @@ const Registrations = () => {
                                 </h3>
 
                                 <div
-                                    style={
-                                        styles.detailGrid
+                                style={
+                                    styles.detailGrid
+                                }
+                            >
+
+                                <DetailItem
+                                    label="Student ID"
+                                    value={
+                                        selectedApplication.student_id
                                     }
-                                >
+                                />
 
-                                    <DetailItem
-                                        label="Student ID"
-                                        value={
-                                            selectedApplication.student_id
-                                        }
-                                    />
+                                <DetailItem
+                                    label="Full Name"
+                                    value={
+                                        selectedApplication.full_name
+                                    }
+                                />
 
-                                    <DetailItem
-                                        label="Full Name"
-                                        value={
-                                            selectedApplication.full_name
-                                        }
-                                    />
+                                <DetailItem
+                                    label="Year Level"
+                                    value={
+                                        selectedApplication.year_level
+                                    }
+                                />
 
-                                    <DetailItem
-                                        label="Year Level"
-                                        value={
-                                            selectedApplication.year_level
-                                        }
-                                    />
+                                <DetailItem
+                                    label="Email"
+                                    value={
+                                        selectedApplication.email
+                                    }
+                                />
 
-                                    <DetailItem
-                                        label="Email"
-                                        value={
-                                            selectedApplication.email
-                                        }
-                                    />
+                                <DetailItem
+                                    label="Registration Type"
+                                    value={
+                                        selectedApplication.registration_type ===
+                                        "in_person"
+                                            ? "In-Person"
+                                            : "Online"
+                                    }
+                                />
 
-                                    <DetailItem
-                                        label="Birthday"
-                                        value={
-                                            selectedApplication.birthday
-                                        }
-                                    />
+                                <DetailItem
+                                    label="Submitted"
+                                    value={
+                                        formatDate(
+                                            selectedApplication.submitted_at
+                                        )
+                                    }
+                                />
 
-                                    <DetailItem
-                                        label="Contact Number"
-                                        value={
-                                            selectedApplication.contact_number
-                                        }
-                                    />
+                                <DetailItem
+                                    label="Current Status"
+                                    value={
+                                        getStatusLabel(
+                                            selectedApplication.application_status
+                                        )
+                                    }
+                                />
 
-                                    <DetailItem
-                                        label="Province"
-                                        value={
-                                            selectedApplication.province
-                                        }
-                                    />
-
-                                    <DetailItem
-                                        label="City"
-                                        value={
-                                            selectedApplication.city
-                                        }
-                                    />
-
-                                    <DetailItem
-                                        label="Barangay"
-                                        value={
-                                            selectedApplication.barangay
-                                        }
-                                    />
-
-                                    <DetailItem
-                                        label="Registration Type"
-                                        value={
-                                            selectedApplication.registration_type ===
-                                            "in_person"
-                                                ? "In-Person"
-                                                : "Online"
-                                        }
-                                    />
-
-                                    <DetailItem
-                                        label="Submitted"
-                                        value={
-                                            formatDate(
-                                                selectedApplication.submitted_at
-                                            )
-                                        }
-                                    />
-
-                                    <DetailItem
-                                        label="Current Status"
-                                        value={
-                                            getStatusLabel(
-                                                selectedApplication.application_status
-                                            )
-                                        }
-                                    />
-
-                                </div>
-
+                            </div>
                             </div>
 
                             {/* =================================================
@@ -1830,14 +1884,14 @@ const Registrations = () => {
                                     >
 
                                         {reviewAction ===
-                                        "needs_revision"
+                                        "request_correction"
                                             ? "Correction Message"
                                             : "Review Message"}
 
                                         {(reviewAction ===
-                                            "rejected" ||
+                                            "reject" ||
                                             reviewAction ===
-                                                "needs_revision") && (
+                                                "request_correction") && (
                                             <span
                                                 style={{
                                                     color:
@@ -1861,10 +1915,10 @@ const Registrations = () => {
                                         }
                                         placeholder={
                                             reviewAction ===
-                                            "rejected"
+                                            "reject"
                                                 ? "Enter the reason for rejection..."
                                                 : reviewAction ===
-                                                  "needs_revision"
+                                                  "request_correction"
                                                 ? "Tell the student what needs to be corrected..."
                                                 : "Optional note for this review..."
                                         }
@@ -1908,7 +1962,7 @@ const Registrations = () => {
                                         <button
                                             onClick={() => {
                                                 setReviewAction(
-                                                    "needs_revision"
+                                                    "request_correction"
                                                 );
                                                 setReviewMessage(
                                                     ""
@@ -1928,7 +1982,7 @@ const Registrations = () => {
                                         <button
                                             onClick={() => {
                                                 setReviewAction(
-                                                    "rejected"
+                                                    "reject"
                                                 );
                                                 setReviewMessage(
                                                     ""
@@ -1948,7 +2002,7 @@ const Registrations = () => {
                                         <button
                                             onClick={() => {
                                                 setReviewAction(
-                                                    "approved"
+                                                    "approve"
                                                 );
                                                 setReviewMessage(
                                                     ""
@@ -1989,10 +2043,10 @@ const Registrations = () => {
 
                                             <strong>
                                                 {reviewAction ===
-                                                "approved"
+                                                "approve"
                                                     ? "Approve this registration?"
                                                     : reviewAction ===
-                                                      "rejected"
+                                                      "reject"
                                                     ? "Reject this registration?"
                                                     : "Request correction?"}
                                             </strong>
@@ -2004,10 +2058,10 @@ const Registrations = () => {
                                             >
 
                                                 {reviewAction ===
-                                                "approved"
+                                                "approve"
                                                     ? "The student will be allowed to continue to the account activation/login process."
                                                     : reviewAction ===
-                                                      "rejected"
+                                                      "reject"
                                                     ? "The student registration will be marked as rejected."
                                                     : "The student will be notified that corrections are required before the registration can be approved."}
 
@@ -2026,10 +2080,10 @@ const Registrations = () => {
                                                 ...styles.confirmButton,
                                                 background:
                                                     reviewAction ===
-                                                    "approved"
+                                                    "approve"
                                                         ? "#16804a"
                                                         : reviewAction ===
-                                                          "rejected"
+                                                          "reject"
                                                         ? "#d64545"
                                                         : "#266EFF",
                                             }}
@@ -2037,10 +2091,10 @@ const Registrations = () => {
                                             {actionLoading
                                                 ? "Processing..."
                                                 : reviewAction ===
-                                                  "approved"
+                                                  "approve"
                                                 ? "Confirm Approval"
                                                 : reviewAction ===
-                                                  "rejected"
+                                                  "reject"
                                                 ? "Confirm Rejection"
                                                 : "Send Correction"}
                                         </button>

@@ -6,118 +6,73 @@ const Register = () => {
     const navigate = useNavigate();
 
     const [studentId, setStudentId] = useState("");
-    const [fullName, setFullName] = useState("");
-    const [yearLevel, setYearLevel] = useState("");
     const [email, setEmail] = useState("");
-
-    const [registrationType, setRegistrationType] =
-        useState("normal");
-
-    const [showLateEnrolleeForm, setShowLateEnrolleeForm] =
-        useState(false);
 
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
     // =====================================================
-    // HANDLE FULL NAME
-    //
-    // FORMAT:
-    // LastName_FirstName_MiddleInitial
-    //
-    // EXAMPLE:
-    // DelaCruz_John_R
+    // LATE ENROLLEE MODAL
     // =====================================================
 
-    const handleFullNameChange = (e) => {
-        let value = e.target.value;
+    const [showLateEnrolleeModal, setShowLateEnrolleeModal] =
+        useState(false);
 
-        // Allow:
-        // Letters
-        // Spaces
-        // Underscores
-        // Hyphens
-        // Apostrophes
-        // Periods
+    // =====================================================
+    // LATE ENROLLEE INFORMATION
+    //
+    // Stored temporarily so the information can be used
+    // by RegistrationRequirements.jsx.
+    // =====================================================
 
-        value = value.replace(
-            /[^A-Za-zÀ-ÖØ-öø-ÿ'._ -]/g,
-            ""
-        );
+    const [lateEnrolleeData, setLateEnrolleeData] =
+        useState(null);
 
-        setFullName(value);
+    // =====================================================
+    // CLEAR ERROR WHEN USER CHANGES INPUT
+    // =====================================================
+
+    const clearError = () => {
+        if (error) {
+            setError("");
+        }
     };
 
     // =====================================================
-    // VALIDATE FULL NAME
+    // SAVE REGISTRATION SESSION
     // =====================================================
 
-    const validateFullName = (name) => {
-        const cleanName = name.trim();
+    const saveRegistrationSession = ({
+        studentId: cleanStudentId,
+        email: cleanEmail,
+        fullName = "",
+        yearLevel = "",
+        registrationType = "normal",
+    }) => {
+        sessionStorage.setItem(
+            "votara_student_id",
+            cleanStudentId
+        );
 
-        const nameParts = cleanName.split("_");
+        sessionStorage.setItem(
+            "votara_full_name",
+            fullName
+        );
 
-        // Must have exactly:
-        // LastName
-        // FirstName
-        // MiddleInitial
+        sessionStorage.setItem(
+            "votara_year_level",
+            yearLevel
+        );
 
-        if (nameParts.length !== 3) {
-            return {
-                valid: false,
-                message:
-                    "Please follow this format: LastName_FirstName_MiddleInitial",
-            };
-        }
+        sessionStorage.setItem(
+            "votara_email",
+            cleanEmail
+        );
 
-        const lastName = nameParts[0].trim();
-        const firstName = nameParts[1].trim();
-        const middleInitial = nameParts[2].trim();
-
-        if (!lastName) {
-            return {
-                valid: false,
-                message:
-                    "Please enter your last name.",
-            };
-        }
-
-        if (!firstName) {
-            return {
-                valid: false,
-                message:
-                    "Please enter your first name.",
-            };
-        }
-
-        if (!middleInitial) {
-            return {
-                valid: false,
-                message:
-                    "Please enter your middle initial.",
-            };
-        }
-
-        // Middle initial:
-        // R
-        // R.
-
-        if (
-            !/^[A-Za-zÀ-ÖØ-öø-ÿ]\.?$/.test(
-                middleInitial
-            )
-        ) {
-            return {
-                valid: false,
-                message:
-                    "Middle initial must contain only one letter, such as R or R.",
-            };
-        }
-
-        return {
-            valid: true,
-            message: "",
-        };
+        sessionStorage.setItem(
+            "votara_registration_type",
+            registrationType
+        );
     };
 
     // =====================================================
@@ -128,122 +83,82 @@ const Register = () => {
         e.preventDefault();
 
         setError("");
-        setLoading(true);
+
+        // =================================================
+        // CLOSE ANY OLD MODAL
+        // =================================================
+
+        setShowLateEnrolleeModal(false);
+
+        // =================================================
+        // CLEAN INPUT
+        // =================================================
+
+        const cleanStudentId =
+            studentId.trim();
+
+        const cleanEmail =
+            email.trim().toLowerCase();
+
+        // =================================================
+        // STUDENT ID VALIDATION
+        // =================================================
+
+        if (!cleanStudentId) {
+            setError(
+                "Please enter your Student ID."
+            );
+            return;
+        }
+
+        if (
+            !/^\d{5}$/.test(
+                cleanStudentId
+            )
+        ) {
+            setError(
+                "Student ID must contain exactly 5 digits."
+            );
+            return;
+        }
+
+        // =================================================
+        // EMAIL VALIDATION
+        // =================================================
+
+        if (!cleanEmail) {
+            setError(
+                "Please enter your Gmail address."
+            );
+            return;
+        }
+
+        if (
+            !/^[^\s@]+@gmail\.com$/i.test(
+                cleanEmail
+            )
+        ) {
+            setError(
+                "Please enter a valid Gmail address."
+            );
+            return;
+        }
 
         try {
-            // =================================================
-            // CLEAN INPUT
-            // =================================================
-
-            const cleanStudentId =
-                studentId.trim();
-
-            const cleanEmail =
-                email.trim().toLowerCase();
-
-            const cleanFullName =
-                fullName.trim();
-
-            const cleanYearLevel =
-                yearLevel.trim();
+            setLoading(true);
 
             // =================================================
-            // STUDENT ID VALIDATION
-            // =================================================
-
-            if (!cleanStudentId) {
-                throw new Error(
-                    "Please enter your Student ID."
-                );
-            }
-
-            if (
-                !/^\d{5}$/.test(
-                    cleanStudentId
-                )
-            ) {
-                throw new Error(
-                    "Student ID must contain exactly 5 digits."
-                );
-            }
-
-            // =================================================
-            // EMAIL VALIDATION
-            // =================================================
-
-            if (!cleanEmail) {
-                throw new Error(
-                    "Please enter your Gmail address."
-                );
-            }
-
-            if (
-                !/^[^\s@]+@gmail\.com$/i.test(
-                    cleanEmail
-                )
-            ) {
-                throw new Error(
-                    "Please enter a valid Gmail address."
-                );
-            }
-
-            // =================================================
-            // LATE ENROLLEE VALIDATION
-            // =================================================
-
-            if (showLateEnrolleeForm) {
-
-                if (!cleanFullName) {
-                    throw new Error(
-                        "Please enter your full name."
-                    );
-                }
-
-                const nameValidation =
-                    validateFullName(
-                        cleanFullName
-                    );
-
-                if (!nameValidation.valid) {
-                    throw new Error(
-                        nameValidation.message
-                    );
-                }
-
-                if (!cleanYearLevel) {
-                    throw new Error(
-                        "Please select your year level."
-                    );
-                }
-
-                if (
-                    ![
-                        "1st Year",
-                        "2nd Year",
-                        "3rd Year",
-                        "4th Year",
-                    ].includes(
-                        cleanYearLevel
-                    )
-                ) {
-                    throw new Error(
-                        "Please select a valid year level."
-                    );
-                }
-            }
-
-            // =================================================
-            // SEND REGISTRATION REQUEST
+            // CHECK STUDENT / SEND OTP
             //
-            // IMPORTANT:
-            // The server checks the Student ID against
-            // the enrollment database.
+            // The backend checks whether the Student ID
+            // exists in the current roster.
             //
-            // Normal student:
-            // studentFound = true
+            // FOUND:
+            //     Normal registration + OTP
             //
-            // Late enrollee:
-            // studentFound = false
+            // NOT FOUND:
+            //     Potential late enrollee
+            //     Show confirmation modal
             // =================================================
 
             let response;
@@ -265,22 +180,12 @@ const Register = () => {
 
                             email:
                                 cleanEmail,
-
-                            // These are only supplied
-                            // when the late enrollee
-                            // form is being used.
-
-                            ...(showLateEnrolleeForm && {
-                                fullName:
-                                    cleanFullName,
-
-                                yearLevel:
-                                    cleanYearLevel,
-                            }),
                         }),
                     }
                 );
+
             } catch (networkError) {
+
                 console.error(
                     "❌ Registration network error:",
                     networkError
@@ -292,15 +197,17 @@ const Register = () => {
             }
 
             // =================================================
-            // READ SERVER RESPONSE
+            // READ RESPONSE
             // =================================================
 
-            let data;
+            let data = {};
 
             try {
                 data =
                     await response.json();
+
             } catch (jsonError) {
+
                 console.error(
                     "❌ Invalid server response:",
                     jsonError
@@ -311,33 +218,68 @@ const Register = () => {
                 );
             }
 
+            console.log(
+                "📋 Registration server response:",
+                data
+            );
+
             // =================================================
-            // STUDENT NOT FOUND
+            // LATE ENROLLEE DETECTION
             //
-            // The backend should return:
+            // IMPORTANT:
             //
-            // {
-            //   success: false,
-            //   studentFound: false,
-            //   code: "STUDENT_NOT_FOUND"
-            // }
+            // A missing roster record does NOT immediately
+            // reject the student.
             //
-            // This does NOT immediately reject the student.
-            // It changes the form to the Late Enrollee Form.
+            // It opens the Late Enrollee confirmation modal.
             // =================================================
 
-            if (
-                data.studentFound === false &&
-                !showLateEnrolleeForm
-            ) {
-                setRegistrationType(
-                    "late_enrollee"
+            const studentNotFound =
+                data?.studentFound === false ||
+                data?.code === "STUDENT_NOT_FOUND" ||
+                data?.code === "STUDENT_NOT_IN_ROSTER";
+
+            if (studentNotFound) {
+
+                console.log(
+                    "⚠️ Student not found in current roster."
                 );
 
-                setShowLateEnrolleeForm(true);
+                // =================================================
+                // SAVE LATE ENROLLEE INFORMATION
+                // =================================================
 
-                setError(
-                    "Your Student ID was not found in the current enrollment database. Please complete the Late Enrollee Form for additional verification."
+                const lateData = {
+                    studentId:
+                        cleanStudentId,
+
+                    email:
+                        cleanEmail,
+
+                    fullName:
+                        data?.student?.fullName ||
+                        data?.fullName ||
+                        "",
+
+                    yearLevel:
+                        data?.student?.yearLevel ||
+                        data?.yearLevel ||
+                        "",
+
+                    registrationType:
+                        "late_enrollee",
+                };
+
+                setLateEnrolleeData(
+                    lateData
+                );
+
+                // =================================================
+                // SHOW CENTER MODAL
+                // =================================================
+
+                setShowLateEnrolleeModal(
+                    true
                 );
 
                 setLoading(false);
@@ -355,93 +297,202 @@ const Register = () => {
             ) {
                 throw new Error(
                     data.message ||
-                    "Unable to send OTP. Please try again."
+                    "Unable to continue registration. Please try again."
                 );
             }
 
             // =================================================
-            // GET STUDENT INFORMATION
-            //
-            // For NORMAL students, these values should come
-            // from the enrollment database.
-            //
-            // Example server response:
-            //
-            // {
-            //   success: true,
-            //   studentFound: true,
-            //   student: {
-            //      fullName: "...",
-            //      yearLevel: "2nd Year"
-            //   }
-            // }
+            // NORMAL STUDENT INFORMATION
             // =================================================
 
             const serverFullName =
-                data.student?.fullName ||
-                data.fullName ||
-                cleanFullName;
+                data?.student?.fullName ||
+                data?.fullName ||
+                "";
 
             const serverYearLevel =
-                data.student?.yearLevel ||
-                data.yearLevel ||
-                cleanYearLevel;
+                data?.student?.yearLevel ||
+                data?.yearLevel ||
+                "";
 
             // =================================================
-            // SAVE REGISTRATION INFORMATION
+            // SAVE NORMAL REGISTRATION SESSION
             // =================================================
 
-            sessionStorage.setItem(
-                "votara_student_id",
-                cleanStudentId
+            saveRegistrationSession({
+                studentId:
+                    cleanStudentId,
+
+                email:
+                    cleanEmail,
+
+                fullName:
+                    serverFullName,
+
+                yearLevel:
+                    serverYearLevel,
+
+                registrationType:
+                    "normal",
+            });
+
+            // =================================================
+            // NORMAL STUDENT
+            //
+            // OTP was successfully sent.
+            // =================================================
+
+            console.log(
+                "✅ Normal student registration."
             );
 
-            sessionStorage.setItem(
-                "votara_full_name",
-                serverFullName
-            );
-
-            sessionStorage.setItem(
-                "votara_year_level",
-                serverYearLevel
-            );
-
-            sessionStorage.setItem(
-                "votara_email",
-                cleanEmail
-            );
-
-            sessionStorage.setItem(
-                "votara_registration_type",
-                showLateEnrolleeForm
-                    ? "late_enrollee"
-                    : "normal"
+            console.log(
+                "📧 OTP sent successfully."
             );
 
             // =================================================
-            // GO TO OTP PAGE
+            // GO TO OTP VERIFICATION
             // =================================================
 
-            navigate("/verify-otp");
+            navigate(
+                "/verify-otp"
+            );
 
         } catch (error) {
+
             console.error(
                 "❌ Registration error:",
                 error
             );
 
             setError(
-                error.message ||
+                error?.message ||
                 "Unable to register. Please try again."
             );
 
         } finally {
+
             setLoading(false);
+
         }
+    };
+
+    // =====================================================
+    // HANDLE LATE ENROLLEE YES
+    // =====================================================
+
+    const handleLateEnrolleeYes = () => {
+
+        if (!lateEnrolleeData) {
+            setError(
+                "Late enrollee information is unavailable. Please try again."
+            );
+
+            setShowLateEnrolleeModal(false);
+
+            return;
+        }
+
+        // =================================================
+        // SAVE LATE REGISTRATION SESSION
+        // =================================================
+
+        saveRegistrationSession({
+            studentId:
+                lateEnrolleeData.studentId,
+
+            email:
+                lateEnrolleeData.email,
+
+            fullName:
+                lateEnrolleeData.fullName,
+
+            yearLevel:
+                lateEnrolleeData.yearLevel,
+
+            registrationType:
+                "late_enrollee",
+        });
+
+        // =================================================
+        // CLOSE MODAL
+        // =================================================
+
+        setShowLateEnrolleeModal(
+            false
+        );
+
+        // =================================================
+        // GO DIRECTLY TO REGISTRATION REQUIREMENTS
+        //
+        // NO OTP HERE.
+        //
+        // Late enrollee will be verified by EB through
+        // the required documents/selfie.
+        // =================================================
+
+        navigate(
+            "/registration-requirements"
+        );
+    };
+
+    // =====================================================
+    // HANDLE LATE ENROLLEE NO
+    // =====================================================
+
+    const handleLateEnrolleeNo = () => {
+
+        // =================================================
+        // CLOSE MODAL
+        // =================================================
+
+        setShowLateEnrolleeModal(
+            false
+        );
+
+        setLateEnrolleeData(
+            null
+        );
+
+        // =================================================
+        // CLEAR TEMP REGISTRATION DATA
+        // =================================================
+
+        sessionStorage.removeItem(
+            "votara_student_id"
+        );
+
+        sessionStorage.removeItem(
+            "votara_full_name"
+        );
+
+        sessionStorage.removeItem(
+            "votara_year_level"
+        );
+
+        sessionStorage.removeItem(
+            "votara_email"
+        );
+
+        sessionStorage.removeItem(
+            "votara_registration_type"
+        );
+
+        // =================================================
+        // RETURN TO LANDING PAGE
+        // =================================================
+
+        navigate(
+            "/"
+        );
     };
 
     return (
         <div className="register-page">
+
+            {/* =================================================
+                MAIN CARD
+            ================================================= */}
 
             <div className="register-card">
 
@@ -451,7 +502,9 @@ const Register = () => {
 
                 <section className="register-left">
 
-                    {/* VOTARA LOGO */}
+                    {/* =================================================
+                        VOTARA LOGO
+                    ================================================= */}
 
                     <Link
                         to="/"
@@ -527,26 +580,11 @@ const Register = () => {
                         ================================================= */}
 
                         {error && (
-                            <div className="register-error">
+                            <div
+                                className="register-error"
+                                role="alert"
+                            >
                                 {error}
-                            </div>
-                        )}
-
-
-                        {/* =================================================
-                            LATE ENROLLEE NOTICE
-                        ================================================= */}
-
-                        {showLateEnrolleeForm && (
-                            <div className="register-error">
-                                <strong>
-                                    Late Enrollee Registration
-                                </strong>
-                                <br />
-                                Your Student ID is not currently
-                                found in the enrollment database.
-                                Please provide the additional
-                                information below for verification.
                             </div>
                         )}
 
@@ -572,11 +610,15 @@ const Register = () => {
 
                                 <input
                                     id="studentId"
+                                    name="studentId"
                                     type="text"
                                     placeholder="Enter your Student ID"
                                     value={studentId}
                                     maxLength={5}
-                                    onChange={(e) =>
+                                    inputMode="numeric"
+                                    autoComplete="username"
+                                    onChange={(e) => {
+
                                         setStudentId(
                                             e.target.value
                                                 .replace(
@@ -587,93 +629,15 @@ const Register = () => {
                                                     0,
                                                     5
                                                 )
-                                        )
-                                    }
+                                        );
+
+                                        clearError();
+                                    }}
                                     required
                                     disabled={loading}
                                 />
 
                             </div>
-
-
-                            {/* =================================================
-                                LATE ENROLLEE FULL NAME
-                            ================================================= */}
-
-                            {showLateEnrolleeForm && (
-                                <div className="form-group">
-
-                                    <label htmlFor="fullName">
-                                        Full Name
-                                    </label>
-
-                                    <input
-                                        id="fullName"
-                                        type="text"
-                                        placeholder="LastName_FirstName_MiddleInitial"
-                                        value={fullName}
-                                        onChange={
-                                            handleFullNameChange
-                                        }
-                                        required
-                                        disabled={loading}
-                                    />
-
-                                </div>
-                            )}
-
-
-                            {/* =================================================
-                                LATE ENROLLEE YEAR LEVEL
-                            ================================================= */}
-
-                            {showLateEnrolleeForm && (
-                                <div className="form-group">
-
-                                    <label htmlFor="yearLevel">
-                                        Year Level
-                                    </label>
-
-                                    <div className="select-wrapper">
-
-                                        <select
-                                            id="yearLevel"
-                                            value={yearLevel}
-                                            onChange={(e) =>
-                                                setYearLevel(
-                                                    e.target.value
-                                                )
-                                            }
-                                            required
-                                            disabled={loading}
-                                        >
-
-                                            <option value="">
-                                                Select your year level
-                                            </option>
-
-                                            <option value="1st Year">
-                                                1st Year
-                                            </option>
-
-                                            <option value="2nd Year">
-                                                2nd Year
-                                            </option>
-
-                                            <option value="3rd Year">
-                                                3rd Year
-                                            </option>
-
-                                            <option value="4th Year">
-                                                4th Year
-                                            </option>
-
-                                        </select>
-
-                                    </div>
-
-                                </div>
-                            )}
 
 
                             {/* =================================================
@@ -688,14 +652,19 @@ const Register = () => {
 
                                 <input
                                     id="email"
+                                    name="email"
                                     type="email"
                                     placeholder="Enter your Gmail address"
                                     value={email}
-                                    onChange={(e) =>
+                                    autoComplete="email"
+                                    onChange={(e) => {
+
                                         setEmail(
                                             e.target.value
-                                        )
-                                    }
+                                        );
+
+                                        clearError();
+                                    }}
                                     required
                                     disabled={loading}
                                 />
@@ -704,7 +673,7 @@ const Register = () => {
 
 
                             {/* =================================================
-                                SUBMIT
+                                SUBMIT BUTTON
                             ================================================= */}
 
                             <button
@@ -715,9 +684,8 @@ const Register = () => {
 
                                 {loading
                                     ? "Checking..."
-                                    : showLateEnrolleeForm
-                                    ? "Continue Registration"
-                                    : "Sign up"}
+                                    : "Sign up"
+                                }
 
                             </button>
 
@@ -751,6 +719,129 @@ const Register = () => {
                 </section>
 
             </div>
+
+
+            {/* =========================================================
+                LATE ENROLLEE MODAL
+            ========================================================= */}
+
+            {showLateEnrolleeModal && (
+
+                <div
+                    className="late-enrollee-overlay"
+                    role="presentation"
+                >
+
+                    <div
+                        className="late-enrollee-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="late-enrollee-title"
+                    >
+
+                        {/* =================================================
+                            ICON
+                        ================================================= */}
+
+                        <div className="late-enrollee-icon">
+
+                            <span>
+                                !
+                            </span>
+
+                        </div>
+
+
+                        {/* =================================================
+                            TITLE
+                        ================================================= */}
+
+                        <h2 id="late-enrollee-title">
+                            Hello, Student!
+                        </h2>
+
+
+                        {/* =================================================
+                            MESSAGE
+                        ================================================= */}
+
+                        <p className="late-enrollee-main-message">
+                            Your Student ID was not found in the
+                            current student roster.
+                        </p>
+
+                        <p className="late-enrollee-sub-message">
+                            You may be a <strong>late enrollee</strong>.
+                            Would you like to proceed with
+                            late enrollee registration?
+                        </p>
+
+
+                        {/* =================================================
+                            STUDENT ID
+                        ================================================= */}
+
+                        {lateEnrolleeData?.studentId && (
+
+                            <div className="late-enrollee-student-info">
+
+                                <span>
+                                    Student ID
+                                </span>
+
+                                <strong>
+                                    {lateEnrolleeData.studentId}
+                                </strong>
+
+                            </div>
+
+                        )}
+
+
+                        {/* =================================================
+                            ACTION BUTTONS
+                        ================================================= */}
+
+                        <div className="late-enrollee-actions">
+
+                            <button
+                                type="button"
+                                className="late-enrollee-no-button"
+                                onClick={
+                                    handleLateEnrolleeNo
+                                }
+                            >
+                                No
+                            </button>
+
+                            <button
+                                type="button"
+                                className="late-enrollee-yes-button"
+                                onClick={
+                                    handleLateEnrolleeYes
+                                }
+                            >
+                                Yes, Continue
+                            </button>
+
+                        </div>
+
+
+                        {/* =================================================
+                            NOTICE
+                        ================================================= */}
+
+                        <p className="late-enrollee-note">
+                            Your registration will be reviewed by
+                            the Electoral Board before your account
+                            can be activated.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            )}
 
         </div>
     );
