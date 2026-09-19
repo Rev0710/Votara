@@ -1,4 +1,3 @@
-# About VOTARA
 
 VOTARA --- Online Voting System
 
@@ -730,6 +729,123 @@ Overall Development
 ████████████████░░░░ ~80%
 
 
+ELECTORAL BOARD (EB) KIOSK FLOW — INSTRUCTIONS
+
+1. Electoral Board (EB)
+The Electoral Board (EB) is responsible for managing and supervising the voting kiosk.
+
+2. EB Login
+The EB member logs into the system using their authorized account.
+
+3. EB Dashboard
+After logging in, the EB member is taken to the dashboard where they can manage the election and kiosk.
+
+4. Kiosk Management
+The EB member opens the Kiosk Management section to control the voting kiosk.
+
+5. Select Election
+The EB member selects the election that will be conducted.
+
+6. Start Kiosk Session
+The EB member starts a new voting session for the selected election.
+
+7. Generate Session ID
+The system automatically generates a unique Session ID to identify the current kiosk session.
+
+8. Kiosk Session Active
+The kiosk becomes active and is ready to serve students.
+
+9. Serve Eligible Student
+The next student approaches the kiosk and begins the voting process.
+
+10. Verify Student
+The system verifies the student's identity using the required verification method, such as a QR code or other approved identification.
+
+11. Check Voting Eligibility
+The system checks whether the student is allowed to vote and whether they have already participated in the election.
+
+12. Eligible?
+The system determines if the student is eligible to vote.
+
+If YES: The system allows the student to proceed to voting.
+If NO: The system denies voting access and informs the student that they cannot proceed.
+
+13. Student Votes
+An eligible student selects their preferred candidates or options on the ballot.
+
+14. Submit Ballot
+The student reviews and submits the completed ballot.
+
+15. Record Voting Participation
+The system records that the student has participated in the election to prevent duplicate voting.
+
+16. Update Students Served
+The system updates the kiosk's count of students who have been successfully served.
+
+17. Return to Kiosk
+After the student's voting process is completed, the kiosk returns to the main kiosk screen.
+
+18. Next Student
+The kiosk is ready to serve the next student.
+
+19. Close Kiosk Session
+When voting at the kiosk is finished, the EB member closes the kiosk session.
+
+20. Session Summary
+The system displays a summary of the session, such as the number of students served and participation records.
+
+21. END
+The kiosk session is officially completed.
+
+
+
+
+ELECTORAL BOARD
+        ↓
+EB Login
+        ↓
+EB Dashboard
+        ↓
+Kiosk Management
+        ↓
+Select Election
+        ↓
+Start Kiosk Session
+        ↓
+Generate Session ID
+        ↓
+Kiosk Session Active
+        ↓
+Serve Eligible Student
+        ↓
+Verify Student
+        ↓
+Check Voting Eligibility
+        ↓
+Eligible?
+   ┌────┴────┐
+  YES        NO
+   ↓          ↓
+Allow       Deny Access
+Voting      / Return
+   ↓
+Student Votes
+   ↓
+Submit Ballot
+   ↓
+Record Voting Participation
+   ↓
+Update Students Served
+   ↓
+Return to Kiosk
+   ↓
+Next Student
+   ↓
+Close Kiosk Session
+   ↓
+Session Summary
+   ↓
+END
 
 Future Development
 The immediate development priorities are:
@@ -775,6 +891,9 @@ VOTARA
 Modernizing Student Elections Through a Clean, Secure, and Structured Digital Voting Experience.
 
 Built with
-React • Vite • Node.js • Express • Supabase • PostgreSQL • JWT • bcryptjs
+React • Vite • Node.js • Express • Supabase • PostgreSQL • JWT • bcryptjs • Render • Vercel • Figma • GitHub
 Developed by
 Team VOTARA
+
+
+
