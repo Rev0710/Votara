@@ -1,14 +1,13 @@
 import api from "./api";
 
 // =========================================================
-// STUDENT PROFILE SERVICE
+// VOTARA STUDENT SERVICE
 // =========================================================
 //
-// All requests use the existing api.js instance so the
-// student's existing JWT authentication is preserved.
+// Handles student profile and account settings.
 //
-// Base API:
-// /api/students
+// Existing authentication is preserved through api.js.
+// We are NOT creating another Axios instance.
 //
 // =========================================================
 
@@ -18,22 +17,11 @@ import api from "./api";
 // =========================================================
 
 export const getStudentProfile = async () => {
-    try {
-        const response = await api.get(
-            "/students/profile"
-        );
+    const response = await api.get(
+        "/students/profile"
+    );
 
-        return response.data;
-
-    } catch (error) {
-
-        console.error(
-            "❌ Unable to load student profile:",
-            error
-        );
-
-        throw error;
-    }
+    return response.data;
 };
 
 
@@ -44,24 +32,13 @@ export const getStudentProfile = async () => {
 export const updateStudentProfile = async (
     profileData
 ) => {
-    try {
 
-        const response = await api.patch(
-            "/students/profile",
-            profileData
-        );
+    const response = await api.patch(
+        "/students/profile",
+        profileData
+    );
 
-        return response.data;
-
-    } catch (error) {
-
-        console.error(
-            "❌ Unable to update student profile:",
-            error
-        );
-
-        throw error;
-    }
+    return response.data;
 };
 
 
@@ -75,28 +52,16 @@ export const changeStudentPassword = async ({
     confirmPassword,
 }) => {
 
-    try {
+    const response = await api.patch(
+        "/students/password",
+        {
+            currentPassword,
+            newPassword,
+            confirmPassword,
+        }
+    );
 
-        const response = await api.patch(
-            "/students/password",
-            {
-                currentPassword,
-                newPassword,
-                confirmPassword,
-            }
-        );
-
-        return response.data;
-
-    } catch (error) {
-
-        console.error(
-            "❌ Unable to change student password:",
-            error
-        );
-
-        throw error;
-    }
+    return response.data;
 };
 
 
@@ -108,26 +73,14 @@ export const updateStudentProfilePicture = async (
     profilePicture
 ) => {
 
-    try {
+    const response = await api.patch(
+        "/students/profile-picture",
+        {
+            profilePicture,
+        }
+    );
 
-        const response = await api.patch(
-            "/students/profile-picture",
-            {
-                profilePicture,
-            }
-        );
-
-        return response.data;
-
-    } catch (error) {
-
-        console.error(
-            "❌ Unable to update profile picture:",
-            error
-        );
-
-        throw error;
-    }
+    return response.data;
 };
 
 
@@ -137,75 +90,39 @@ export const updateStudentProfilePicture = async (
 
 export const removeStudentProfilePicture = async () => {
 
-    try {
+    const response = await api.delete(
+        "/students/profile-picture"
+    );
 
-        const response = await api.delete(
-            "/students/profile-picture"
-        );
-
-        return response.data;
-
-    } catch (error) {
-
-        console.error(
-            "❌ Unable to remove profile picture:",
-            error
-        );
-
-        throw error;
-    }
+    return response.data;
 };
 
 
 // =========================================================
-// DEACTIVATE STUDENT ACCOUNT
+// DEACTIVATE ACCOUNT
 // =========================================================
 
 export const deactivateStudentAccount = async () => {
 
-    try {
+    const response = await api.post(
+        "/students/deactivate"
+    );
 
-        const response = await api.post(
-            "/students/deactivate"
-        );
-
-        return response.data;
-
-    } catch (error) {
-
-        console.error(
-            "❌ Unable to deactivate student account:",
-            error
-        );
-
-        throw error;
-    }
+    return response.data;
 };
 
 
 // =========================================================
-// DELETE / REQUEST STUDENT ACCOUNT DELETION
+// DELETE ACCOUNT
 // =========================================================
 
 export const deleteStudentAccount = async () => {
 
-    try {
+    const response = await api.delete(
+        "/students/account"
+    );
 
-        const response = await api.delete(
-            "/students/account"
-        );
-
-        return response.data;
-
-    } catch (error) {
-
-        console.error(
-            "❌ Unable to delete student account:",
-            error
-        );
-
-        throw error;
-    }
+    return response.data;
 };
 
 

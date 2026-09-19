@@ -4,36 +4,78 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 
-const settingsRoutes = require("./src/routes/settingsRoutes");
-const auditLogsRoutes = require( "./src/routes/auditLogsRoutes" );
-const lateEnrolleeRoutes = require("./src/routes/lateEnrolleeRoutes");
-const candidateRoutes = require("./src/routes/candidateRoutes");
-const supabase = require("./src/config/supabase");
-const electionRoutes = require("./src/routes/electionRoutes");
-const adminAuthRoutes = require("./src/routes/adminAuthRoutes");
-const authRoutes = require("./src/routes/authRoutes");
-const ebAuthRoutes = require("./src/routes/ebAuthRoutes");
-const profileRoutes = require("./src/routes/profileRoutes");
-const registrationRoutes = require("./src/routes/registrationRoutes");
-const registrationDocumentsRoutes = require("./src/routes/registrationDocumentsRoutes");
-const staffAuthRoutes = require("./src/routes/staffAuthRoutes");
-const adminRoutes = require("./src/routes/adminRoutes");
-const ebRegistrationRoutes = require("./src/routes/ebRegistrationRoutes");
-const votingRoutes = require("./src/routes/votingRoutes");
-const partyListRoutes = require("./src/routes/partyListRoutes");
-const votingMonitoringRoutes = require("./src/routes/votingMonitoringRoutes");
-const kioskRoutes = require("./src/routes/kioskRoutes");
-
 // =====================================================
-// RESULTS & REPORTS ROUTE
+// ROUTES
 // =====================================================
 
-const resultsReportsRoutes = require(
-    "./src/routes/resultsReportsRoutes"
-);
+const settingsRoutes =
+    require("./src/routes/settingsRoutes");
+
+const auditLogsRoutes =
+    require("./src/routes/auditLogsRoutes");
+
+const lateEnrolleeRoutes =
+    require("./src/routes/lateEnrolleeRoutes");
+
+const candidateRoutes =
+    require("./src/routes/candidateRoutes");
+
+const supabase =
+    require("./src/config/supabase");
+
+const electionRoutes =
+    require("./src/routes/electionRoutes");
+
+const adminAuthRoutes =
+    require("./src/routes/adminAuthRoutes");
+
+const authRoutes =
+    require("./src/routes/authRoutes");
+
+const ebAuthRoutes =
+    require("./src/routes/ebAuthRoutes");
+
+const profileRoutes =
+    require("./src/routes/profileRoutes");
+
+const registrationRoutes =
+    require("./src/routes/registrationRoutes");
+
+const registrationDocumentsRoutes =
+    require("./src/routes/registrationDocumentsRoutes");
+
+const staffAuthRoutes =
+    require("./src/routes/staffAuthRoutes");
+
+const adminRoutes =
+    require("./src/routes/adminRoutes");
+
+const ebRegistrationRoutes =
+    require("./src/routes/ebRegistrationRoutes");
+
+const votingRoutes =
+    require("./src/routes/votingRoutes");
+
+const partyListRoutes =
+    require("./src/routes/partyListRoutes");
+
+const votingMonitoringRoutes =
+    require("./src/routes/votingMonitoringRoutes");
+
+const kioskRoutes =
+    require("./src/routes/kioskRoutes");
+
+const resultsReportsRoutes =
+    require("./src/routes/resultsReportsRoutes");
 
 const studentRoutes =
     require("./src/routes/studentRoutes");
+
+
+// =====================================================
+// EXPRESS APP
+// =====================================================
+
 const app = express();
 
 
@@ -45,7 +87,9 @@ require("dotenv").config({
     path: path.join(__dirname, ".env"),
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT =
+    process.env.PORT || 5000;
+
 
 // =====================================================
 // ENVIRONMENT CHECK
@@ -102,6 +146,7 @@ console.log(
 
 console.log("=================================");
 
+
 // =====================================================
 // CORS
 // =====================================================
@@ -115,6 +160,7 @@ app.use(
         credentials: true,
     })
 );
+
 
 // =====================================================
 // BODY PARSER
@@ -133,6 +179,7 @@ app.use(
     })
 );
 
+
 // =====================================================
 // STAFF AUTH API
 // =====================================================
@@ -141,6 +188,7 @@ app.use(
     "/api/staff-auth",
     staffAuthRoutes
 );
+
 
 // =====================================================
 // ADMIN API
@@ -151,6 +199,7 @@ app.use(
     adminRoutes
 );
 
+
 // =====================================================
 // VOTING API
 // =====================================================
@@ -159,6 +208,7 @@ app.use(
     "/api/voting",
     votingRoutes
 );
+
 
 // =====================================================
 // ELECTORAL BOARD REGISTRATION API
@@ -169,6 +219,7 @@ app.use(
     ebRegistrationRoutes
 );
 
+
 // =====================================================
 // ELECTION API
 // =====================================================
@@ -177,6 +228,7 @@ app.use(
     "/api/elections",
     electionRoutes
 );
+
 
 // =====================================================
 // CANDIDATE API
@@ -187,6 +239,7 @@ app.use(
     candidateRoutes
 );
 
+
 // =====================================================
 // PARTY LIST API
 // =====================================================
@@ -195,6 +248,7 @@ app.use(
     "/api/party-lists",
     partyListRoutes
 );
+
 
 // =====================================================
 // VOTING MONITORING API
@@ -205,6 +259,7 @@ app.use(
     votingMonitoringRoutes
 );
 
+
 // =====================================================
 // ELECTORAL BOARD KIOSK API
 // =====================================================
@@ -213,6 +268,7 @@ app.use(
     "/api/kiosk",
     kioskRoutes
 );
+
 
 // =====================================================
 // LATE ENROLLEE API
@@ -223,6 +279,7 @@ app.use(
     lateEnrolleeRoutes
 );
 
+
 // =====================================================
 // RESULTS & REPORTS API
 // =====================================================
@@ -231,6 +288,7 @@ app.use(
     "/api/electoral-board/results-reports",
     resultsReportsRoutes
 );
+
 
 // =====================================================
 // AUDIT LOGS API
@@ -241,10 +299,16 @@ app.use(
     auditLogsRoutes
 );
 
+
+// =====================================================
+// STUDENT API
+// =====================================================
+
 app.use(
     "/api/students",
     studentRoutes
 );
+
 
 // =====================================================
 // ELECTORAL BOARD SETTINGS API
@@ -255,30 +319,44 @@ app.use(
     settingsRoutes
 );
 
+
 // =====================================================
 // SERVER TEST ROUTE
 // =====================================================
 
-app.get("/", (req, res) => {
-    return res.status(200).json({
-        success: true,
-        message: "VOTARA server is running.",
-        port: PORT,
-    });
-});
+app.get(
+    "/",
+    (req, res) => {
+
+        return res.status(200).json({
+            success: true,
+            message: "VOTARA server is running.",
+            port: PORT,
+        });
+
+    }
+);
+
 
 // =====================================================
 // API HEALTH CHECK
 // =====================================================
 
-app.get("/api/health", (req, res) => {
-    return res.status(200).json({
-        success: true,
-        message: "VOTARA API is running.",
-        database: "Supabase",
-        timestamp: new Date().toISOString(),
-    });
-});
+app.get(
+    "/api/health",
+    (req, res) => {
+
+        return res.status(200).json({
+            success: true,
+            message: "VOTARA API is running.",
+            database: "Supabase",
+            timestamp:
+                new Date().toISOString(),
+        });
+
+    }
+);
+
 
 // =====================================================
 // SUPABASE TEST ROUTE
@@ -287,7 +365,9 @@ app.get("/api/health", (req, res) => {
 app.get(
     "/api/test-supabase",
     async (req, res) => {
+
         try {
+
             const {
                 data,
                 error,
@@ -298,7 +378,9 @@ app.get(
                 )
                 .limit(5);
 
+
             if (error) {
+
                 console.error(
                     "❌ Supabase test error:",
                     error
@@ -311,7 +393,9 @@ app.get(
                     error:
                         error.message,
                 });
+
             }
+
 
             return res.status(200).json({
                 success: true,
@@ -319,7 +403,9 @@ app.get(
                     "Supabase connection successful.",
                 students: data,
             });
+
         } catch (error) {
+
             console.error(
                 "❌ Supabase connection error:",
                 error
@@ -330,9 +416,12 @@ app.get(
                 message:
                     "Unable to connect to Supabase.",
             });
+
         }
+
     }
 );
+
 
 // =====================================================
 // SUPABASE STUDENT TEST ROUTE
@@ -341,16 +430,20 @@ app.get(
 app.get(
     "/api/test-supabase-student/:studentId",
     async (req, res) => {
+
         try {
+
             const studentId =
                 String(
                     req.params.studentId
                 ).trim();
 
+
             console.log(
                 "🔎 Testing Supabase student ID:",
                 studentId
             );
+
 
             const {
                 data,
@@ -366,12 +459,15 @@ app.get(
                 )
                 .maybeSingle();
 
+
             console.log(
                 "📦 Supabase returned:",
                 data
             );
 
+
             if (error) {
+
                 console.error(
                     "❌ Supabase student test error:",
                     error
@@ -382,31 +478,46 @@ app.get(
                     error:
                         error.message,
                 });
+
             }
 
+
             return res.status(200).json({
+
                 success: true,
+
                 searchedStudentId:
                     studentId,
+
                 found:
                     Boolean(data),
+
                 student:
                     data,
+
             });
+
         } catch (error) {
+
             console.error(
                 "❌ Student lookup test failed:",
                 error
             );
 
             return res.status(500).json({
+
                 success: false,
+
                 message:
                     "Student lookup test failed.",
+
             });
+
         }
+
     }
 );
+
 
 // =====================================================
 // ADMIN AUTH API
@@ -417,6 +528,7 @@ app.use(
     adminAuthRoutes
 );
 
+
 // =====================================================
 // REGISTRATION API
 // =====================================================
@@ -425,6 +537,7 @@ app.use(
     "/api/registration",
     registrationRoutes
 );
+
 
 // =====================================================
 // REGISTRATION DOCUMENTS API
@@ -435,6 +548,7 @@ app.use(
     registrationDocumentsRoutes
 );
 
+
 // =====================================================
 // AUTH API
 // =====================================================
@@ -443,6 +557,7 @@ app.use(
     "/api/auth",
     authRoutes
 );
+
 
 // =====================================================
 // ELECTORAL BOARD AUTH API
@@ -453,6 +568,7 @@ app.use(
     ebAuthRoutes
 );
 
+
 // =====================================================
 // PROFILE API
 // =====================================================
@@ -462,19 +578,26 @@ app.use(
     profileRoutes
 );
 
+
 // =====================================================
 // UNKNOWN ROUTE
 // =====================================================
 
 app.use(
     (req, res) => {
+
         return res.status(404).json({
+
             success: false,
+
             message:
                 `Route not found: ${req.method} ${req.originalUrl}`,
+
         });
+
     }
 );
+
 
 // =====================================================
 // ERROR HANDLER
@@ -482,6 +605,7 @@ app.use(
 
 app.use(
     (error, req, res, next) => {
+
         console.error(
             "================================="
         );
@@ -502,19 +626,26 @@ app.use(
             "================================="
         );
 
+
         return res.status(500).json({
+
             success: false,
+
             message:
                 "An unexpected server error occurred.",
+
         });
+
     }
 );
+
 
 // =====================================================
 // START SERVER
 // =====================================================
 
 const startServer = async () => {
+
     try {
 
         // =================================================
@@ -522,22 +653,31 @@ const startServer = async () => {
         // =================================================
 
         if (!process.env.JWT_SECRET) {
+
             throw new Error(
                 "JWT_SECRET is missing from .env"
             );
+
         }
 
+
         if (!process.env.SUPABASE_URL) {
+
             throw new Error(
                 "SUPABASE_URL is missing from .env"
             );
+
         }
 
+
         if (!process.env.SUPABASE_SECRET_KEY) {
+
             throw new Error(
                 "SUPABASE_SECRET_KEY is missing from .env"
             );
+
         }
+
 
         // =================================================
         // START EXPRESS SERVER
@@ -545,7 +685,7 @@ const startServer = async () => {
 
         app.listen(
             PORT,
-            "127.0.0.1",
+            "0.0.0.0",
             () => {
 
                 console.log(
@@ -557,32 +697,45 @@ const startServer = async () => {
                 );
 
                 console.log(
-                    `🌐 http://localhost:${PORT}`
+                    `🌐 Server host: 0.0.0.0:${PORT}`
                 );
 
                 console.log(
-                    `❤️  http://localhost:${PORT}/api/health`
+                    `❤️  Health: /api/health`
                 );
 
                 console.log(
-                    `🟦 http://localhost:${PORT}/api/test-supabase`
+                    `🟦 Supabase: /api/test-supabase`
                 );
 
                 console.log(
-                    `📝 Registration API: http://localhost:${PORT}/api/registration`
+                    `📝 Registration API: /api/registration`
                 );
 
                 console.log(
-                    `📁 Registration Documents API: http://localhost:${PORT}/api/registration-documents`
+                    `📁 Registration Documents API: /api/registration-documents`
                 );
 
                 console.log(
-                    `📊 Results & Reports API: http://localhost:${PORT}/api/electoral-board/results-reports`
+                    `📊 Results & Reports API: /api/electoral-board/results-reports`
+                );
+
+                console.log(
+                    `🗳️ Voting API: /api/voting`
+                );
+
+                console.log(
+                    `🏫 Electoral Board API: /api/eb`
+                );
+
+                console.log(
+                    `🖥️ Kiosk API: /api/kiosk`
                 );
 
                 console.log(
                     "================================="
                 );
+
             }
         );
 
@@ -593,7 +746,7 @@ const startServer = async () => {
         );
 
         console.error(
-            "❌ VOTARA SERVER FAILED TO START"
+            "❌ VOTARA SERVER STARTUP FAILED"
         );
 
         console.error(
@@ -601,57 +754,22 @@ const startServer = async () => {
         );
 
         console.error(
-            error.message
+            error
         );
 
         console.error(
             "================================="
-        );
-
-        if (
-            error.message.includes(
-                "JWT_SECRET is missing"
-            )
-        ) {
-            console.error(
-                "➡️ Add JWT_SECRET to server/.env."
-            );
-        }
-
-        if (
-            error.message.includes(
-                "SUPABASE_URL is missing"
-            )
-        ) {
-            console.error(
-                "➡️ Add SUPABASE_URL to server/.env."
-            );
-        }
-
-        if (
-            error.message.includes(
-                "SUPABASE_SECRET_KEY is missing"
-            )
-        ) {
-            console.error(
-                "➡️ Add SUPABASE_SECRET_KEY to server/.env."
-            );
-        }
-
-        console.error(
-            "➡️ Make sure Supabase credentials are configured."
-        );
-
-        console.error(
-            "➡️ The API will NOT be available until the server starts successfully."
         );
 
         process.exit(1);
+
     }
+
 };
 
+
 // =====================================================
-// START
+// RUN SERVER
 // =====================================================
 
 startServer();
