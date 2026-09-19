@@ -813,59 +813,6 @@ The process is completed.
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ELECTORAL BOARD (EB) KIOSK FLOW — INSTRUCTIONS
 
 1. Electoral Board (EB)
