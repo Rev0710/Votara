@@ -129,6 +129,7 @@ const getStudentRegistrations = async (
                 id,
                 student_id,
                 registration_type,
+                registration_source,
                 application_status,
                 email,
                 full_name,
@@ -263,6 +264,7 @@ const getStudentRegistrationById = async (
                 id,
                 student_id,
                 registration_type,
+                registration_source,
                 application_status,
                 email,
                 full_name,
@@ -695,12 +697,6 @@ const reviewStudentRegistration = async (
 
     let ebAccount;
 
-    // -----------------------------------------------------
-    // IMPORTANT:
-    // Initialize this here so it is available throughout
-    // the approval flow.
-    // -----------------------------------------------------
-
     let approvalEmailSent = false;
 
     try {
@@ -866,6 +862,7 @@ const reviewStudentRegistration = async (
                 id,
                 student_id,
                 registration_type,
+                registration_source,
                 application_status,
                 email,
                 full_name,
@@ -921,10 +918,33 @@ const reviewStudentRegistration = async (
         }
 
         // =================================================
-        // VERIFY OTP
+        // DETERMINE REGISTRATION SOURCE
+        // =================================================
+        //
+        // ONLINE:
+        // Email OTP is required.
+        //
+        // KIOSK:
+        // Email/phone is not required.
+        // EB verifies the student using the kiosk
+        // registration process, documents, enrollment
+        // proof, and real-time selfie.
+        // =================================================
+
+        const isKioskRegistration =
+            String(
+                application.registration_source || ""
+            )
+                .trim()
+                .toLowerCase() ===
+            "kiosk";
+
+        // =================================================
+        // VERIFY EMAIL OTP
         // =================================================
 
         if (
+            !isKioskRegistration &&
             !application.otp_verified_at
         ) {
 
@@ -955,9 +975,15 @@ const reviewStudentRegistration = async (
             .select(`
                 id,
                 student_id,
+                registration_type,
+                registration_source,
+                application_status,
+                email,
                 full_name,
                 year_level,
-                enrollment_status
+                enrollment_status,
+                otp_verified_at,
+                submitted_at
             `)
             .eq(
                 "student_id",
@@ -1389,26 +1415,64 @@ const reviewStudentRegistration = async (
         // CHECK EXISTING STUDENT ACCOUNT
         // -------------------------------------------------
 
+        const emailValue =
+            application.email
+                ? String(
+                    application.email
+                ).trim()
+                : null;
+
+        let existingAccountQuery =
+            supabase
+                .from(
+                    "student_accounts"
+                )
+                .select(`
+                    id,
+                    student_id,
+                    email,
+                    account_status
+                `)
+                .eq(
+                    "student_id",
+                    application.student_id
+                );
+
+        if (emailValue) {
+
+            existingAccountQuery =
+                supabase
+                    .from(
+                        "student_accounts"
+                    )
+                    .select(`
+                        id,
+                        student_id,
+                        email,
+                        account_status
+                    `)
+                    .or(
+                        `student_id.eq.${application.student_id},email.eq.${emailValue}`
+                    )
+                    .limit(1)
+                    .maybeSingle();
+
+        } else {
+
+            existingAccountQuery =
+                existingAccountQuery
+                    .limit(1)
+                    .maybeSingle();
+
+        }
+
         const {
             data:
                 existingAccount,
             error:
                 existingAccountError,
-        } = await supabase
-            .from(
-                "student_accounts"
-            )
-            .select(`
-                id,
-                student_id,
-                email,
-                account_status
-            `)
-            .or(
-                `student_id.eq.${application.student_id},email.eq.${application.email}`
-            )
-            .limit(1)
-            .maybeSingle();
+        } =
+            await existingAccountQuery;
 
         if (existingAccountError) {
 
@@ -1470,7 +1534,7 @@ const reviewStudentRegistration = async (
                     application.id,
 
                 email:
-                    application.email,
+                    emailValue,
 
                 password_hash:
                     passwordHash,
@@ -1638,51 +1702,58 @@ const reviewStudentRegistration = async (
         // SEND APPROVAL EMAIL
         // =================================================
         //
-        // IMPORTANT:
-        // Email failure does NOT undo the approval.
-        //
-        // The account and application have already been
-        // successfully created/approved.
+        // Kiosk students may not have an email.
+        // Therefore email failure does NOT undo approval.
         // =================================================
 
-        try {
+        if (emailValue) {
 
-            await sendRegistrationApprovalEmail(
+            try {
 
-                application.email,
+                await sendRegistrationApprovalEmail(
 
-                application.student_id,
+                    emailValue,
 
-                officialStudent.full_name,
+                    application.student_id,
 
-                officialStudent.year_level,
+                    officialStudent.full_name,
 
-                temporaryPassword
+                    officialStudent.year_level,
 
-            );
+                    temporaryPassword
 
-            approvalEmailSent = true;
+                );
+
+                approvalEmailSent = true;
+
+                console.log(
+                    "✅ VOTARA approval email sent."
+                );
+
+            } catch (emailError) {
+
+                approvalEmailSent = false;
+
+                console.error(
+                    "⚠️ VOTARA approval email could not be sent."
+                );
+
+                console.error(
+                    "Email:",
+                    emailValue
+                );
+
+                console.error(
+                    "Error:",
+                    emailError.message
+                );
+
+            }
+
+        } else {
 
             console.log(
-                "✅ VOTARA approval email sent."
-            );
-
-        } catch (emailError) {
-
-            approvalEmailSent = false;
-
-            console.error(
-                "⚠️ VOTARA approval email could not be sent."
-            );
-
-            console.error(
-                "Email:",
-                application.email
-            );
-
-            console.error(
-                "Error:",
-                emailError.message
+                "ℹ️ Kiosk registration has no email. Approval email skipped."
             );
 
         }
@@ -1702,9 +1773,9 @@ const reviewStudentRegistration = async (
                 "approved",
 
             message:
-                approvalEmailSent
+                emailValue && approvalEmailSent
                     ? "Student registration approved, student account created, and approval email sent successfully."
-                    : "Student registration approved and student account created successfully, but the approval email could not be sent.",
+                    : "Student registration approved and student account created successfully.",
 
             student: {
 
@@ -1718,7 +1789,7 @@ const reviewStudentRegistration = async (
                     officialStudent.year_level,
 
                 email:
-                    application.email,
+                    emailValue,
 
             },
 

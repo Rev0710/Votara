@@ -2614,6 +2614,9 @@ const submitKioskRegistration =
                         registration_type:
                             registrationType,
 
+                        registration_source:
+                            "kiosk",
+                            
                         application_status:
                             "pending_review",
 
