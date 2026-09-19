@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-Votara is an online voting system designed to provide a simple, secure, and organized way for registered voters to participate in an election.
-=======
-# About VOTARA
 
 VOTARA --- Online Voting System
 
