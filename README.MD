@@ -729,6 +729,143 @@ Overall Development
 ████████████████░░░░ ~80%
 
 
+STUDENT FLOW — INSTRUCTIONS
+
+1. Student
+The student goes to the assigned voting kiosk.
+
+2. Go to Voting Kiosk
+The student approaches the available voting kiosk.
+
+3. Enter / Scan Session ID
+The student enters or scans the Session ID provided by the Electoral Board.
+
+4. Verify Student
+The system verifies the student's identity and information.
+
+5. Check Voting Eligibility
+The system checks if the student is eligible to vote.
+
+6. Eligible?
+The system determines whether the student is eligible.
+
+YES → 7. Allow Voting
+NO → 13. Deny Access / Return
+
+7. Allow Voting
+The student is allowed to access the ballot.
+
+8. View Ballot
+The student views the available positions and candidates.
+
+9. Select Candidates
+The student selects their choices.
+
+10. Review Ballot
+The student reviews their selections before submitting.
+
+11. Submit Ballot
+The student submits the completed ballot.
+
+12. Record Voting Participation
+The system records the student's voting participation.
+
+13. Voting Confirmation
+The system displays a confirmation that the ballot was successfully submitted.
+
+14. End Session
+The student's voting session ends.
+
+15. END
+The process is completed.
+
+                STUDENT
+                   ↓
+          Go to Voting Kiosk
+                   ↓
+          Enter / Scan Session ID
+                   ↓
+           Verify Student
+                   ↓
+       Check Voting Eligibility
+                   ↓
+                Eligible?
+              ┌────┴────┐
+             YES        NO
+              ↓          ↓
+       Allow Voting   Deny Access
+              ↓          ↓
+        View Ballot    RETURN
+              ↓
+      Select Candidates
+              ↓
+        Review Ballot
+              ↓
+         Submit Ballot
+              ↓
+    Record Voting Participation
+              ↓
+       Voting Confirmation
+              ↓
+          END SESSION
+              ↓
+              END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ELECTORAL BOARD (EB) KIOSK FLOW — INSTRUCTIONS
 
 1. Electoral Board (EB)
