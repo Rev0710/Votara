@@ -1,10 +1,14 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, {
+    useEffect,
+    useMemo,
+    useState,
+} from "react";
+
 import { useNavigate } from "react-router-dom";
 
 import {
     getActiveElection,
     getElectionConfiguration,
-    isElectionActive,
 } from "../../services/electionService";
 
 import {
@@ -57,7 +61,9 @@ const Vote = () => {
                 localStorage.getItem("votaraStudent");
 
             if (storedStudent) {
-                setStudent(JSON.parse(storedStudent));
+                setStudent(
+                    JSON.parse(storedStudent)
+                );
             }
         } catch (error) {
             console.error(
@@ -81,9 +87,10 @@ const Vote = () => {
         try {
             setLoading(true);
             setError("");
+            setSuccess("");
 
             // ------------------------------------------------
-            // 1. GET ACTIVE ELECTION
+            // 1. GET CURRENT ELECTION
             // ------------------------------------------------
 
             const activeResponse =
@@ -96,7 +103,7 @@ const Vote = () => {
             ) {
                 setError(
                     activeResponse?.message ||
-                    "There is currently no active election."
+                    "There is currently no election available."
                 );
 
                 return;
@@ -106,36 +113,92 @@ const Vote = () => {
                 activeResponse.election;
 
             // ------------------------------------------------
-            // 2. CHECK ACTIVE + PUBLISHED
+            // 2. ELECTION STATUS
+            //
+            // VOTARA uses:
+            // draft
+            // scheduled
+            // open
+            // closed
+            // cancelled
+            //
+            // Only "open" allows voting.
             // ------------------------------------------------
 
-            if (!isElectionActive(activeElection)) {
+            const electionStatus =
+                String(
+                    activeElection.status || ""
+                )
+                    .trim()
+                    .toLowerCase();
+
+            if (
+                electionStatus !== "open"
+            ) {
+                setElection(
+                    activeElection
+                );
+
                 setError(
-                    "The election is not currently open for voting."
+                    electionStatus ===
+                        "scheduled"
+                        ? "The election has been scheduled but has not been opened for voting yet."
+                        : electionStatus ===
+                          "closed"
+                        ? "Voting for this election has ended."
+                        : electionStatus ===
+                          "cancelled"
+                        ? "This election has been cancelled."
+                        : "The election is not currently open for voting."
                 );
 
                 return;
             }
 
-            setElection(activeElection);
+            // ------------------------------------------------
+            // 3. PUBLISHED CHECK
+            // ------------------------------------------------
+
+            if (
+                activeElection.is_published ===
+                false
+            ) {
+                setElection(
+                    activeElection
+                );
+
+                setError(
+                    "This election has not been published for student voting."
+                );
+
+                return;
+            }
+
+            setElection(
+                activeElection
+            );
 
             const electionId =
                 activeElection.id;
 
             // ------------------------------------------------
-            // 3. CHECK IF STUDENT ALREADY VOTED
+            // 4. CHECK IF STUDENT ALREADY VOTED
             // ------------------------------------------------
 
             const voteStatus =
-                await checkVoteStatus(electionId);
+                await checkVoteStatus(
+                    electionId
+                );
 
-            if (voteStatus?.hasVoted) {
+            if (
+                voteStatus?.hasVoted
+            ) {
                 setHasVoted(true);
                 return;
             }
 
             // ------------------------------------------------
-            // 4. GET ELECTION CONFIGURATION
+            // 5. GET ELECTION CONFIGURATION
             // ------------------------------------------------
 
             const configResponse =
@@ -153,44 +216,78 @@ const Vote = () => {
                 );
             }
 
-            setConfiguration(configResponse);
+            setConfiguration(
+                configResponse
+            );
 
             // ------------------------------------------------
-            // 5. NORMALIZE CONFIGURATION
+            // 6. NORMALIZE CONFIGURATION
             // ------------------------------------------------
+
+            const configurationData =
+                configResponse.configuration ||
+                {};
 
             const loadedPositions =
                 configResponse.positions ||
-                configResponse.configuration?.positions ||
+                configurationData.positions ||
                 [];
 
             const loadedYearLevels =
                 configResponse.yearLevels ||
                 configResponse.electionYearLevels ||
-                configResponse.configuration?.yearLevels ||
+                configurationData.yearLevels ||
                 [];
 
+            /*
+             * Candidates can be returned directly or
+             * inside configuration.
+             */
             const loadedCandidates =
                 configResponse.candidates ||
-                configResponse.configuration?.candidates ||
+                configurationData.candidates ||
                 [];
 
             setPositions(
-                Array.isArray(loadedPositions)
+                Array.isArray(
+                    loadedPositions
+                )
                     ? loadedPositions
                     : []
             );
 
             setYearLevels(
-                Array.isArray(loadedYearLevels)
+                Array.isArray(
+                    loadedYearLevels
+                )
                     ? loadedYearLevels
                     : []
             );
 
             setCandidates(
-                Array.isArray(loadedCandidates)
+                Array.isArray(
+                    loadedCandidates
+                )
                     ? loadedCandidates
                     : []
+            );
+
+            // ------------------------------------------------
+            // DEBUG INFORMATION
+            // ------------------------------------------------
+
+            console.log(
+                "VOTARA Voting Data Loaded:",
+                {
+                    election:
+                        activeElection,
+                    positions:
+                        loadedPositions,
+                    yearLevels:
+                        loadedYearLevels,
+                    candidates:
+                        loadedCandidates,
+                }
             );
 
         } catch (error) {
@@ -214,21 +311,26 @@ const Vote = () => {
     // GET STUDENT YEAR LEVEL
     // =====================================================
 
-    const studentYearLevel = useMemo(() => {
-        return (
-            student?.year_level ||
-            student?.yearLevel ||
-            ""
-        );
-    }, [student]);
+    const studentYearLevel =
+        useMemo(() => {
+            return (
+                student?.year_level ||
+                student?.yearLevel ||
+                ""
+            );
+        }, [student]);
 
 
     // =====================================================
     // NORMALIZE YEAR LEVEL
     // =====================================================
 
-    const normalizeYearLevel = (value) => {
-        if (!value) return "";
+    const normalizeYearLevel = (
+        value
+    ) => {
+        if (!value) {
+            return "";
+        }
 
         const text =
             String(value)
@@ -276,82 +378,136 @@ const Vote = () => {
 
 
     const currentYearLevel =
-        normalizeYearLevel(studentYearLevel);
+        normalizeYearLevel(
+            studentYearLevel
+        );
 
 
     // =====================================================
-    // CHECK YEAR-LEVEL ELIGIBILITY
+    // STUDENT YEAR-LEVEL ELIGIBILITY
     // =====================================================
 
-    const electionAllowsStudent = useMemo(() => {
-        if (!currentYearLevel) {
-            return true;
-        }
+    const electionAllowsStudent =
+        useMemo(() => {
 
-        if (!yearLevels.length) {
-            return true;
-        }
+            /*
+             * VOTARA RULE:
+             *
+             * 1st Year students cannot vote.
+             *
+             * Eligible:
+             * 2nd Year
+             * 3rd Year
+             * 4th Year
+             */
 
-        return yearLevels.some((item) => {
-            const configuredYear =
-                item.year_level ||
-                item.yearLevel;
+            if (
+                currentYearLevel ===
+                "1st Year"
+            ) {
+                return false;
+            }
 
-            return (
-                normalizeYearLevel(
-                    configuredYear
-                ) === currentYearLevel
+            if (
+                !currentYearLevel
+            ) {
+                return false;
+            }
+
+            if (
+                !yearLevels.length
+            ) {
+                return [
+                    "2nd Year",
+                    "3rd Year",
+                    "4th Year",
+                ].includes(
+                    currentYearLevel
+                );
+            }
+
+            return yearLevels.some(
+                (item) => {
+                    const configuredYear =
+                        item?.year_level ||
+                        item?.yearLevel;
+
+                    return (
+                        normalizeYearLevel(
+                            configuredYear
+                        ) ===
+                        currentYearLevel
+                    );
+                }
             );
-        });
-    }, [
-        yearLevels,
-        currentYearLevel,
-    ]);
+
+        }, [
+            yearLevels,
+            currentYearLevel,
+        ]);
 
 
     // =====================================================
     // POSITION ELIGIBILITY
     // =====================================================
 
-    const isPositionEligible = (position) => {
-        if (!currentYearLevel) {
-            return true;
+    const isPositionEligible = (
+        position
+    ) => {
+
+        if (
+            currentYearLevel ===
+            "1st Year"
+        ) {
+            return false;
+        }
+
+        if (
+            !currentYearLevel
+        ) {
+            return false;
         }
 
         /*
-         * Some configurations may contain:
+         * Position may contain:
          *
          * position.year_levels
          * position.yearLevels
-         *
-         * or the configuration may already return
-         * only the student's eligible positions.
          */
 
         const configuredYears =
-            position.year_levels ||
-            position.yearLevels;
+            position?.year_levels ||
+            position?.yearLevels;
 
         if (
             !configuredYears ||
-            !Array.isArray(configuredYears) ||
-            configuredYears.length === 0
+            !Array.isArray(
+                configuredYears
+            ) ||
+            configuredYears.length ===
+                0
         ) {
             return true;
         }
 
-        return configuredYears.some((item) => {
-            const value =
-                typeof item === "string"
-                    ? item
-                    : item.year_level ||
-                      item.yearLevel;
+        return configuredYears.some(
+            (item) => {
 
-            return (
-                normalizeYearLevel(value) ===
-                currentYearLevel
-            );
-        });
+                const value =
+                    typeof item ===
+                    "string"
+                        ? item
+                        : item?.year_level ||
+                          item?.yearLevel;
+
+                return (
+                    normalizeYearLevel(
+                        value
+                    ) ===
+                    currentYearLevel
+                );
+            }
+        );
     };
 
 
@@ -359,22 +515,90 @@ const Vote = () => {
     // ELIGIBLE POSITIONS
     // =====================================================
 
-    const eligiblePositions = useMemo(() => {
-        return positions
-            .filter(
-                (position) =>
-                    position.is_active !== false
-            )
-            .filter(isPositionEligible)
-            .sort(
-                (a, b) =>
-                    (a.display_order || 0) -
-                    (b.display_order || 0)
-            );
-    }, [
-        positions,
-        currentYearLevel,
-    ]);
+    const eligiblePositions =
+        useMemo(() => {
+
+            return positions
+                .filter(
+                    (position) =>
+                        position?.is_active !==
+                        false
+                )
+                .filter(
+                    isPositionEligible
+                )
+                .sort(
+                    (a, b) =>
+                        Number(
+                            a?.display_order ||
+                                0
+                        ) -
+                        Number(
+                            b?.display_order ||
+                                0
+                        )
+                );
+
+        }, [
+            positions,
+            currentYearLevel,
+        ]);
+
+
+    // =====================================================
+    // NORMALIZE ID
+    // =====================================================
+
+    const normalizeId = (
+        value
+    ) => {
+        if (
+            value === null ||
+            value === undefined
+        ) {
+            return "";
+        }
+
+        return String(
+            value
+        ).trim();
+    };
+
+
+    // =====================================================
+    // GET POSITION ID FROM CANDIDATE
+    // =====================================================
+
+    const getCandidatePositionId = (
+        candidate
+    ) => {
+        return (
+            candidate?.position_id ||
+            candidate?.positionId ||
+            candidate?.position?.id ||
+            ""
+        );
+    };
+
+
+    // =====================================================
+    // GET CANDIDATE IMAGE
+    // =====================================================
+
+    const getCandidateImage = (
+        candidate
+    ) => {
+
+        return (
+            candidate?.profile_picture ||
+            candidate?.profilePicture ||
+            candidate?.profile_picture_url ||
+            candidate?.profilePictureUrl ||
+            candidate?.student?.profile_picture ||
+            candidate?.student?.profilePicture ||
+            ""
+        );
+    };
 
 
     // =====================================================
@@ -384,17 +608,47 @@ const Vote = () => {
     const getCandidatesForPosition = (
         positionId
     ) => {
-        return candidates.filter((candidate) => {
-            const candidatePositionId =
-                candidate.position_id ||
-                candidate.positionId;
 
-            return (
-                candidatePositionId ===
-                positionId &&
-                candidate.is_active !== false
+        const normalizedPositionId =
+            normalizeId(
+                positionId
             );
-        });
+
+        return candidates.filter(
+            (candidate) => {
+
+                const candidatePositionId =
+                    normalizeId(
+                        getCandidatePositionId(
+                            candidate
+                        )
+                    );
+
+                /*
+                 * IMPORTANT:
+                 *
+                 * We DO NOT check:
+                 *
+                 * candidate.approval_status
+                 *
+                 * because candidate approval is
+                 * no longer required by the VOTARA
+                 * voting flow.
+                 *
+                 * A candidate must simply:
+                 *
+                 * 1. Belong to the position
+                 * 2. Be active
+                 */
+
+                return (
+                    candidatePositionId ===
+                        normalizedPositionId &&
+                    candidate?.is_active !==
+                        false
+                );
+            }
+        );
     };
 
 
@@ -406,10 +660,42 @@ const Vote = () => {
         positionId,
         candidateId
     ) => {
-        setSelections((previous) => ({
-            ...previous,
-            [positionId]: candidateId,
-        }));
+
+        const electionStatus =
+            String(
+                election?.status || ""
+            )
+                .trim()
+                .toLowerCase();
+
+        if (
+            electionStatus !==
+            "open"
+        ) {
+            setError(
+                "The election is not currently open for voting."
+            );
+
+            return;
+        }
+
+        if (
+            !electionAllowsStudent
+        ) {
+            setError(
+                "You are not eligible to vote in this election."
+            );
+
+            return;
+        }
+
+        setSelections(
+            (previous) => ({
+                ...previous,
+                [positionId]:
+                    candidateId,
+            })
+        );
 
         setError("");
         setSuccess("");
@@ -420,23 +706,29 @@ const Vote = () => {
     // REQUIRED POSITION CHECK
     // =====================================================
 
-    const missingRequiredPositions = useMemo(() => {
-        return eligiblePositions.filter(
-            (position) => {
-                if (
-                    position.is_required ===
-                    false
-                ) {
-                    return false;
-                }
+    const missingRequiredPositions =
+        useMemo(() => {
 
-                return !selections[position.id];
-            }
-        );
-    }, [
-        eligiblePositions,
-        selections,
-    ]);
+            return eligiblePositions.filter(
+                (position) => {
+
+                    if (
+                        position?.is_required ===
+                        false
+                    ) {
+                        return false;
+                    }
+
+                    return !selections[
+                        position.id
+                    ];
+                }
+            );
+
+        }, [
+            eligiblePositions,
+            selections,
+        ]);
 
 
     // =====================================================
@@ -444,20 +736,41 @@ const Vote = () => {
     // =====================================================
 
     const handleReviewVote = () => {
+
         setError("");
         setSuccess("");
 
         if (!election) {
             setError(
-                "No active election was found."
+                "No election was found."
             );
 
             return;
         }
 
-        if (!electionAllowsStudent) {
+        const electionStatus =
+            String(
+                election.status || ""
+            )
+                .trim()
+                .toLowerCase();
+
+        if (
+            electionStatus !==
+            "open"
+        ) {
             setError(
-                `You are not eligible to vote in this election because your year level (${currentYearLevel}) is not included.`
+                "The election is not currently open for voting."
+            );
+
+            return;
+        }
+
+        if (
+            !electionAllowsStudent
+        ) {
+            setError(
+                `You are not eligible to vote in this election because your year level (${currentYearLevel}) is not eligible.`
             );
 
             return;
@@ -467,6 +780,7 @@ const Vote = () => {
             missingRequiredPositions.length >
             0
         ) {
+
             const missingNames =
                 missingRequiredPositions
                     .map(
@@ -482,7 +796,9 @@ const Vote = () => {
             return;
         }
 
-        setShowReview(true);
+        setShowReview(
+            true
+        );
 
         window.scrollTo({
             top: 0,
@@ -495,138 +811,248 @@ const Vote = () => {
     // BACK TO BALLOT
     // =====================================================
 
-    const handleBackToBallot = () => {
-        setShowReview(false);
+    const handleBackToBallot =
+        () => {
 
-        window.scrollTo({
-            top: 0,
-            behavior: "smooth",
-        });
-    };
+            setShowReview(
+                false
+            );
+
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth",
+            });
+        };
 
 
     // =====================================================
     // SUBMIT VOTE
     // =====================================================
 
-    const handleSubmitVote = async () => {
-        try {
-            setSubmitting(true);
-            setError("");
-            setSuccess("");
+    const handleSubmitVote =
+        async () => {
 
-            if (!election?.id) {
-                throw new Error(
-                    "Election information is missing."
+            try {
+
+                setSubmitting(
+                    true
                 );
-            }
 
-            if (
-                missingRequiredPositions.length >
-                0
-            ) {
-                throw new Error(
-                    "Please complete all required positions before submitting."
-                );
-            }
+                setError("");
+                setSuccess("");
 
-            // ----------------------------------------------
-            // Convert selection object to backend format
-            // ----------------------------------------------
+                if (
+                    !election?.id
+                ) {
+                    throw new Error(
+                        "Election information is missing."
+                    );
+                }
 
-            const formattedSelections =
-                eligiblePositions
-                    .filter(
-                        (position) =>
-                            selections[
-                                position.id
-                            ]
+                const electionStatus =
+                    String(
+                        election.status ||
+                            ""
                     )
-                    .map((position) => ({
-                        positionId:
-                            position.id,
+                        .trim()
+                        .toLowerCase();
 
-                        candidateId:
-                            selections[
-                                position.id
-                            ],
-                    }));
+                if (
+                    electionStatus !==
+                    "open"
+                ) {
+                    throw new Error(
+                        "The election is no longer open for voting."
+                    );
+                }
 
-            // ----------------------------------------------
-            // SUBMIT
-            // ----------------------------------------------
+                if (
+                    !electionAllowsStudent
+                ) {
+                    throw new Error(
+                        "You are not eligible to vote in this election."
+                    );
+                }
 
-            const response =
-                await submitVote(
-                    election.id,
-                    formattedSelections
-                );
+                if (
+                    missingRequiredPositions.length >
+                    0
+                ) {
+                    throw new Error(
+                        "Please complete all required positions before submitting."
+                    );
+                }
 
-            if (!response?.success) {
-                throw new Error(
-                    response?.message ||
-                    "Vote submission failed."
-                );
-            }
+                // ------------------------------------------
+                // FORMAT SELECTIONS
+                // ------------------------------------------
 
-            setHasVoted(true);
+                const formattedSelections =
+                    eligiblePositions
+                        .filter(
+                            (position) =>
+                                selections[
+                                    position.id
+                                ]
+                        )
+                        .map(
+                            (position) => ({
+                                positionId:
+                                    position.id,
 
-            setSuccess(
-                response.message ||
-                "Your vote has been successfully submitted."
-            );
+                                candidateId:
+                                    selections[
+                                        position.id
+                                    ],
+                            })
+                        );
 
-            /*
-             * Store ballot information only if your
-             * application needs it for the success page.
-             *
-             * Do not store the actual vote selections
-             * in localStorage.
-             */
+                // ------------------------------------------
+                // MAKE SURE EVERY SELECTED CANDIDATE
+                // STILL EXISTS AND IS ACTIVE
+                // ------------------------------------------
 
-            if (response.ballotId) {
-                localStorage.setItem(
-                    "votaraLastBallotId",
-                    response.ballotId
-                );
-            }
+                for (
+                    const selection of
+                        formattedSelections
+                ) {
 
-            // ----------------------------------------------
-            // Navigate to success page
-            // ----------------------------------------------
+                    const position =
+                        eligiblePositions.find(
+                            (item) =>
+                                normalizeId(
+                                    item.id
+                                ) ===
+                                normalizeId(
+                                    selection.positionId
+                                )
+                        );
 
-            setTimeout(() => {
-                navigate(
-                    "/student-dashboard",
-                    {
-                        state: {
-                            voteSubmitted: true,
-                            message:
-                                response.message ||
-                                "Your vote has been successfully submitted.",
-                        },
+                    if (!position) {
+                        throw new Error(
+                            "One of your selected positions is no longer available."
+                        );
                     }
+
+                    const availableCandidates =
+                        getCandidatesForPosition(
+                            position.id
+                        );
+
+                    const selectedCandidate =
+                        availableCandidates.find(
+                            (candidate) =>
+                                normalizeId(
+                                    candidate.id
+                                ) ===
+                                normalizeId(
+                                    selection.candidateId
+                                )
+                        );
+
+                    if (
+                        !selectedCandidate
+                    ) {
+                        throw new Error(
+                            `The selected candidate for ${position.name} is no longer available. Please review your ballot.`
+                        );
+                    }
+                }
+
+                // ------------------------------------------
+                // SUBMIT TO BACKEND
+                // ------------------------------------------
+
+                const response =
+                    await submitVote(
+                        election.id,
+                        formattedSelections
+                    );
+
+                if (
+                    !response?.success
+                ) {
+                    throw new Error(
+                        response?.message ||
+                        "Vote submission failed."
+                    );
+                }
+
+                setHasVoted(
+                    true
                 );
-            }, 1200);
 
-        } catch (error) {
-            console.error(
-                "❌ Vote submission error:",
-                error
-            );
+                setSuccess(
+                    response.message ||
+                    "Your vote has been successfully submitted."
+                );
 
-            setError(
-                error.response?.data?.message ||
-                error.message ||
-                "Failed to submit your vote."
-            );
+                /*
+                 * Store ballot ID only.
+                 *
+                 * DO NOT store candidate selections
+                 * in localStorage.
+                 */
 
-            setShowReview(false);
+                if (
+                    response.ballotId
+                ) {
+                    localStorage.setItem(
+                        "votaraLastBallotId",
+                        response.ballotId
+                    );
+                }
 
-        } finally {
-            setSubmitting(false);
-        }
-    };
+                // ------------------------------------------
+                // RETURN TO DASHBOARD
+                // ------------------------------------------
+
+                setTimeout(
+                    () => {
+
+                        navigate(
+                            "/student-dashboard",
+                            {
+                                state: {
+                                    voteSubmitted:
+                                        true,
+
+                                    message:
+                                        response.message ||
+                                        "Your vote has been successfully submitted.",
+                                },
+                            }
+                        );
+
+                    },
+                    1200
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "❌ Vote submission error:",
+                    error
+                );
+
+                setError(
+                    error.response?.data
+                        ?.message ||
+                    error.message ||
+                    "Failed to submit your vote."
+                );
+
+                setShowReview(
+                    false
+                );
+
+            } finally {
+
+                setSubmitting(
+                    false
+                );
+            }
+        };
 
 
     // =====================================================
@@ -645,10 +1071,14 @@ const Vote = () => {
     // =====================================================
 
     if (loading) {
+
         return (
             <div className="vote-page">
+
                 <main className="vote-main">
+
                     <div className="vote-heading">
+
                         <h1>
                             Loading Election
                         </h1>
@@ -657,30 +1087,41 @@ const Vote = () => {
                             Please wait while we
                             prepare your ballot...
                         </p>
+
                     </div>
 
                     <div className="vote-position-section">
+
                         <p>
                             Loading election
                             configuration...
                         </p>
+
                     </div>
+
                 </main>
+
             </div>
         );
     }
 
 
     // =====================================================
-    // ERROR
+    // ERROR WITH NO ELECTION
     // =====================================================
 
-    if (error && !election) {
+    if (
+        error &&
+        !election
+    ) {
+
         return (
             <div className="vote-page">
+
                 <main className="vote-main">
 
                     <div className="vote-heading">
+
                         <h1>
                             Voting Unavailable
                         </h1>
@@ -688,9 +1129,11 @@ const Vote = () => {
                         <p>
                             {error}
                         </p>
+
                     </div>
 
                     <div className="vote-submit-section">
+
                         <button
                             type="button"
                             className="submit-vote-button"
@@ -700,9 +1143,117 @@ const Vote = () => {
                         >
                             Back to Dashboard
                         </button>
+
                     </div>
 
                 </main>
+
+            </div>
+        );
+    }
+
+
+    // =====================================================
+    // ELECTION NOT OPEN
+    // =====================================================
+
+    if (
+        election &&
+        String(
+            election.status || ""
+        )
+            .trim()
+            .toLowerCase() !==
+            "open"
+    ) {
+
+        const status =
+            String(
+                election.status || ""
+            )
+                .trim()
+                .toLowerCase();
+
+        const statusTitle =
+            status ===
+            "scheduled"
+                ? "Voting Has Not Opened Yet"
+                : status ===
+                  "closed"
+                ? "Voting Has Ended"
+                : status ===
+                  "cancelled"
+                ? "Election Cancelled"
+                : "Voting Unavailable";
+
+        const statusMessage =
+            status ===
+            "scheduled"
+                ? "The Electoral Board has scheduled this election but has not opened voting yet."
+                : status ===
+                  "closed"
+                ? "The Electoral Board has closed voting for this election."
+                : status ===
+                  "cancelled"
+                ? "This election has been cancelled."
+                : "This election is not currently available for voting.";
+
+        return (
+            <div className="vote-page">
+
+                <main className="vote-main">
+
+                    <div className="vote-heading">
+
+                        <h1>
+                            {statusTitle}
+                        </h1>
+
+                        <p>
+                            {election.title}
+                        </p>
+
+                    </div>
+
+                    <div className="vote-position-section">
+
+                        <h2 className="vote-position-heading">
+                            {statusTitle}
+                        </h2>
+
+                        <p>
+                            {statusMessage}
+                        </p>
+
+                        {election.election_date && (
+                            <p>
+                                Election Date:{" "}
+                                <strong>
+                                    {
+                                        election.election_date
+                                    }
+                                </strong>
+                            </p>
+                        )}
+
+                    </div>
+
+                    <div className="vote-submit-section">
+
+                        <button
+                            type="button"
+                            className="submit-vote-button"
+                            onClick={
+                                handleBack
+                            }
+                        >
+                            Back to Dashboard
+                        </button>
+
+                    </div>
+
+                </main>
+
             </div>
         );
     }
@@ -713,11 +1264,14 @@ const Vote = () => {
     // =====================================================
 
     if (hasVoted) {
+
         return (
             <div className="vote-page">
+
                 <main className="vote-main">
 
                     <div className="vote-heading">
+
                         <h1>
                             Vote Already Submitted
                         </h1>
@@ -727,9 +1281,11 @@ const Vote = () => {
                             submitted your vote
                             for this election.
                         </p>
+
                     </div>
 
                     <div className="vote-submit-section">
+
                         <button
                             type="button"
                             className="submit-vote-button"
@@ -739,9 +1295,11 @@ const Vote = () => {
                         >
                             Return to Dashboard
                         </button>
+
                     </div>
 
                 </main>
+
             </div>
         );
     }
@@ -755,11 +1313,14 @@ const Vote = () => {
         election &&
         !electionAllowsStudent
     ) {
+
         return (
             <div className="vote-page">
+
                 <main className="vote-main">
 
                     <div className="vote-heading">
+
                         <h1>
                             You Are Not Eligible
                         </h1>
@@ -771,12 +1332,14 @@ const Vote = () => {
                                 {currentYearLevel ||
                                     "Unknown"}
                             </strong>{" "}
-                            is not included in
-                            this election.
+                            is not eligible to
+                            vote in this election.
                         </p>
+
                     </div>
 
                     <div className="vote-submit-section">
+
                         <button
                             type="button"
                             className="submit-vote-button"
@@ -786,9 +1349,11 @@ const Vote = () => {
                         >
                             Back to Dashboard
                         </button>
+
                     </div>
 
                 </main>
+
             </div>
         );
     }
@@ -802,11 +1367,14 @@ const Vote = () => {
         eligiblePositions.length ===
         0
     ) {
+
         return (
             <div className="vote-page">
+
                 <main className="vote-main">
 
                     <div className="vote-heading">
+
                         <h1>
                             No Voting Positions
                         </h1>
@@ -817,9 +1385,11 @@ const Vote = () => {
                             configured for your
                             year level.
                         </p>
+
                     </div>
 
                     <div className="vote-submit-section">
+
                         <button
                             type="button"
                             className="submit-vote-button"
@@ -829,9 +1399,11 @@ const Vote = () => {
                         >
                             Back to Dashboard
                         </button>
+
                     </div>
 
                 </main>
+
             </div>
         );
     }
@@ -842,6 +1414,7 @@ const Vote = () => {
     // =====================================================
 
     if (showReview) {
+
         return (
             <div className="vote-page">
 
@@ -909,8 +1482,12 @@ const Vote = () => {
                                     position.id
                                 ).find(
                                     (candidate) =>
-                                        candidate.id ===
-                                        selectedId
+                                        normalizeId(
+                                            candidate.id
+                                        ) ===
+                                        normalizeId(
+                                            selectedId
+                                        )
                                 );
 
                             return (
@@ -931,19 +1508,34 @@ const Vote = () => {
 
                                         <div className="candidate-card-top">
 
-                                            {selectedCandidate?.profile_picture && (
+                                            {getCandidateImage(
+                                                selectedCandidate
+                                            ) ? (
                                                 <img
                                                     src={
-                                                        selectedCandidate.profile_picture
+                                                        getCandidateImage(
+                                                            selectedCandidate
+                                                        )
                                                     }
                                                     alt={
-                                                        selectedCandidate.full_name
+                                                        selectedCandidate?.full_name ||
+                                                        "Selected Candidate"
                                                     }
                                                     className="candidate-image"
                                                 />
+                                            ) : (
+                                                <div className="candidate-image candidate-placeholder">
+                                                    {selectedCandidate?.full_name
+                                                        ?.charAt(
+                                                            0
+                                                        )
+                                                        ?.toUpperCase() ||
+                                                        "?"}
+                                                </div>
                                             )}
 
                                             <div>
+
                                                 <h3>
                                                     {
                                                         selectedCandidate?.full_name ||
@@ -958,6 +1550,7 @@ const Vote = () => {
                                                         }
                                                     </p>
                                                 )}
+
                                             </div>
 
                                         </div>
@@ -1005,6 +1598,7 @@ const Vote = () => {
                     </div>
 
                 </main>
+
             </div>
         );
     }
@@ -1026,14 +1620,12 @@ const Vote = () => {
                 <div className="vote-heading">
 
                     <h1>
-                        {election?.title ||
-                            "Student Election"}
+                        You May Now Cast Your Votes!
                     </h1>
 
                     <p>
-                        Select one candidate
-                        for each required
-                        position.
+                        {election?.title ||
+                            "Student Election"}
                     </p>
 
                     {currentYearLevel && (
@@ -1144,7 +1736,7 @@ const Vote = () => {
                                 {/* NO CANDIDATES */}
 
                                 {positionCandidates.length ===
-                                    0 ? (
+                                0 ? (
                                     <div className="candidate-grid">
 
                                         <p>
@@ -1168,10 +1760,19 @@ const Vote = () => {
                                             ) => {
 
                                                 const selected =
-                                                    selections[
-                                                        position.id
-                                                    ] ===
-                                                    candidate.id;
+                                                    normalizeId(
+                                                        selections[
+                                                            position.id
+                                                        ]
+                                                    ) ===
+                                                    normalizeId(
+                                                        candidate.id
+                                                    );
+
+                                                const candidateImage =
+                                                    getCandidateImage(
+                                                        candidate
+                                                    );
 
                                                 return (
                                                     <div
@@ -1189,33 +1790,42 @@ const Vote = () => {
 
                                                         <div className="candidate-card-top">
 
-                                                            {candidate.profile_picture ? (
+                                                            {candidateImage ? (
                                                                 <img
                                                                     src={
-                                                                        candidate.profile_picture
+                                                                        candidateImage
                                                                     }
                                                                     alt={
-                                                                        candidate.full_name
+                                                                        candidate.full_name ||
+                                                                        "Candidate"
                                                                     }
                                                                     className="candidate-image"
+                                                                    onError={(
+                                                                        event
+                                                                    ) => {
+                                                                        event.currentTarget.style.display =
+                                                                            "none";
+                                                                    }}
                                                                 />
                                                             ) : (
                                                                 <div className="candidate-image candidate-placeholder">
+
                                                                     {candidate.full_name
                                                                         ?.charAt(
                                                                             0
                                                                         )
                                                                         ?.toUpperCase() ||
                                                                         "?"}
+
                                                                 </div>
                                                             )}
-
 
                                                             <div>
 
                                                                 <h3>
                                                                     {
-                                                                        candidate.full_name
+                                                                        candidate.full_name ||
+                                                                        "Candidate"
                                                                     }
                                                                 </h3>
 
@@ -1301,6 +1911,7 @@ const Vote = () => {
                 </div>
 
             </main>
+
         </div>
     );
 };

@@ -1,5 +1,4 @@
-const API_URL =
-    "http://localhost:5000/api/auth";
+import api from "./api";
 
 
 // =====================================================
@@ -11,34 +10,35 @@ export const studentLogin = async (
     password
 ) => {
 
-    const response = await fetch(
-        `${API_URL}/student-login`,
-        {
-            method: "POST",
+    try {
 
-            headers: {
-                "Content-Type":
-                    "application/json",
-            },
+        const response =
+            await api.post(
+                "/auth/student-login",
+                {
+                    studentId,
+                    password,
+                }
+            );
 
-            body: JSON.stringify({
-                studentId,
-                password,
-            }),
-        }
-    );
 
-    const data =
-        await response.json();
+        return response.data;
 
-    if (!response.ok) {
+    } catch (error) {
+
+        console.error(
+            "Student login error:",
+            error
+        );
+
+
         throw new Error(
-            data.message ||
+            error.response?.data?.message ||
             "Unable to login."
         );
+
     }
 
-    return data;
 };
 
 
@@ -52,37 +52,41 @@ export const changeTemporaryPassword = async (
     confirmPassword
 ) => {
 
-    const response = await fetch(
-        `${API_URL}/change-password`,
-        {
-            method: "POST",
+    try {
 
-            headers: {
-                "Content-Type":
-                    "application/json",
+        const response =
+            await api.post(
+                "/auth/change-password",
+                {
+                    newPassword,
+                    confirmPassword,
+                },
+                {
+                    headers: {
+                        Authorization:
+                            `Bearer ${token}`,
+                    },
+                }
+            );
 
-                Authorization:
-                    `Bearer ${token}`,
-            },
 
-            body: JSON.stringify({
-                newPassword,
-                confirmPassword,
-            }),
-        }
-    );
+        return response.data;
 
-    const data =
-        await response.json();
+    } catch (error) {
 
-    if (!response.ok) {
+        console.error(
+            "Change temporary password error:",
+            error
+        );
+
+
         throw new Error(
-            data.message ||
+            error.response?.data?.message ||
             "Unable to change password."
         );
+
     }
 
-    return data;
 };
 
 
@@ -95,36 +99,40 @@ export const uploadProfilePicture = async (
     profilePicture
 ) => {
 
-    const response = await fetch(
-        `${API_URL}/profile-picture`,
-        {
-            method: "POST",
+    try {
 
-            headers: {
-                "Content-Type":
-                    "application/json",
+        const response =
+            await api.post(
+                "/auth/profile-picture",
+                {
+                    profilePicture,
+                },
+                {
+                    headers: {
+                        Authorization:
+                            `Bearer ${token}`,
+                    },
+                }
+            );
 
-                Authorization:
-                    `Bearer ${token}`,
-            },
 
-            body: JSON.stringify({
-                profilePicture,
-            }),
-        }
-    );
+        return response.data;
 
-    const data =
-        await response.json();
+    } catch (error) {
 
-    if (!response.ok) {
+        console.error(
+            "Upload profile picture error:",
+            error
+        );
+
+
         throw new Error(
-            data.message ||
+            error.response?.data?.message ||
             "Unable to upload profile picture."
         );
+
     }
 
-    return data;
 };
 
 
@@ -136,29 +144,37 @@ export const getCurrentStudent = async (
     token
 ) => {
 
-    const response = await fetch(
-        `${API_URL}/me`,
-        {
-            method: "GET",
+    try {
 
-            headers: {
-                Authorization:
-                    `Bearer ${token}`,
-            },
-        }
-    );
+        const response =
+            await api.get(
+                "/auth/me",
+                {
+                    headers: {
+                        Authorization:
+                            `Bearer ${token}`,
+                    },
+                }
+            );
 
-    const data =
-        await response.json();
 
-    if (!response.ok) {
+        return response.data;
+
+    } catch (error) {
+
+        console.error(
+            "Get current student error:",
+            error
+        );
+
+
         throw new Error(
-            data.message ||
+            error.response?.data?.message ||
             "Unable to get student information."
         );
+
     }
 
-    return data;
 };
 
 
@@ -175,6 +191,7 @@ export const logoutStudent = () => {
     localStorage.removeItem(
         "votaraStudent"
     );
+
 };
 
 
@@ -186,29 +203,37 @@ export const getStudentProfile = async (
     token
 ) => {
 
-    const response = await fetch(
-        "http://localhost:5000/api/profile",
-        {
-            method: "GET",
+    try {
 
-            headers: {
-                Authorization:
-                    `Bearer ${token}`,
-            },
-        }
-    );
+        const response =
+            await api.get(
+                "/profile",
+                {
+                    headers: {
+                        Authorization:
+                            `Bearer ${token}`,
+                    },
+                }
+            );
 
-    const data =
-        await response.json();
 
-    if (!response.ok) {
+        return response.data;
+
+    } catch (error) {
+
+        console.error(
+            "Get student profile error:",
+            error
+        );
+
+
         throw new Error(
-            data.message ||
+            error.response?.data?.message ||
             "Unable to load profile."
         );
+
     }
 
-    return data;
 };
 
 
@@ -221,35 +246,36 @@ export const updateStudentProfile = async (
     profileData
 ) => {
 
-    const response = await fetch(
-        "http://localhost:5000/api/profile",
-        {
-            method: "PUT",
+    try {
 
-            headers: {
-                "Content-Type":
-                    "application/json",
+        const response =
+            await api.put(
+                "/profile",
+                profileData,
+                {
+                    headers: {
+                        Authorization:
+                            `Bearer ${token}`,
+                    },
+                }
+            );
 
-                Authorization:
-                    `Bearer ${token}`,
-            },
 
-            body: JSON.stringify(
-                profileData
-            ),
-        }
-    );
+        return response.data;
 
-    const data =
-        await response.json();
+    } catch (error) {
 
-    if (!response.ok) {
+        console.error(
+            "Update student profile error:",
+            error
+        );
+
+
         throw new Error(
-            data.message ||
+            error.response?.data?.message ||
             "Unable to update profile."
         );
+
     }
 
-    return data;
 };
-

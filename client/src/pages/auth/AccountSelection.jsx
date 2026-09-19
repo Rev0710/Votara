@@ -2,46 +2,74 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./AccountSelection.css";
 
-const API_BASE_URL =
-    import.meta.env.VITE_API_URL ||
-    "http://localhost:5000/api";
+import api from "../../services/api";
+
+
+// =====================================================
+// ADMIN LOGIN
+// =====================================================
 
 const AccountSelection = () => {
 
     const navigate = useNavigate();
 
+
+    // =================================================
+    // NAVIGATION
+    // =================================================
+
     const goToElectoralBoard = () => {
-        const changePage = () => navigate("/admin-login");
+
+        const changePage = () =>
+            navigate("/admin-login");
+
 
         if (document.startViewTransition) {
-            document.startViewTransition(changePage);
+
+            document.startViewTransition(
+                changePage
+            );
+
         } else {
+
             changePage();
+
         }
+
     };
 
-    const [formData, setFormData] = useState({
-        email: "",
-        password: "",
-        securityCode: "",
-    });
+
+    // =================================================
+    // FORM STATE
+    // =================================================
+
+    const [formData, setFormData] =
+        useState({
+            email: "",
+            password: "",
+            securityCode: "",
+        });
+
 
     const [showPassword, setShowPassword] =
         useState(false);
 
+
     const [showSecurityCode, setShowSecurityCode] =
         useState(false);
 
+
     const [loading, setLoading] =
         useState(false);
+
 
     const [error, setError] =
         useState("");
 
 
-    // =========================================================
+    // =================================================
     // INPUT CHANGE
-    // =========================================================
+    // =================================================
 
     const handleChange = (event) => {
 
@@ -50,18 +78,21 @@ const AccountSelection = () => {
             value,
         } = event.target;
 
+
         setFormData((previous) => ({
             ...previous,
             [name]: value,
         }));
 
+
         setError("");
+
     };
 
 
-    // =========================================================
+    // =================================================
     // ADMIN LOGIN
-    // =========================================================
+    // =================================================
 
     const handleAdminLogin = async (event) => {
 
@@ -70,9 +101,9 @@ const AccountSelection = () => {
         setError("");
 
 
-        // =====================================================
+        // =================================================
         // REQUIRED FIELDS
-        // =====================================================
+        // =================================================
 
         if (
             !formData.email.trim() ||
@@ -85,6 +116,7 @@ const AccountSelection = () => {
             );
 
             return;
+
         }
 
 
@@ -93,17 +125,23 @@ const AccountSelection = () => {
             setLoading(true);
 
 
-            const response = await fetch(
-                `${API_BASE_URL}/staff-auth/login`,
-                {
-                    method: "POST",
+            // =================================================
+            // STAFF AUTHENTICATION
+            // =================================================
+            //
+            // Uses centralized api.js.
+            //
+            // Production:
+            // https://votara-api-olij.onrender.com/api
+            //
+            // Endpoint:
+            // /staff-auth/login
+            // =================================================
 
-                    headers: {
-                        "Content-Type":
-                            "application/json",
-                    },
-
-                    body: JSON.stringify({
+            const response =
+                await api.post(
+                    "/staff-auth/login",
+                    {
                         email:
                             formData.email
                                 .trim()
@@ -115,23 +153,30 @@ const AccountSelection = () => {
                         securityCode:
                             formData.securityCode
                                 .trim(),
-                    }),
-                }
-            );
+                    }
+                );
 
 
             const data =
-                await response.json();
+                response.data;
 
 
-            if (!response.ok) {
+            // =================================================
+            // RESPONSE VALIDATION
+            // =================================================
+
+            if (
+                !data ||
+                !data.user ||
+                !data.token
+            ) {
 
                 setError(
-                    data.message ||
-                    "Unable to login."
+                    "Invalid login response from the VOTARA server."
                 );
 
                 return;
+
             }
 
 
@@ -140,8 +185,8 @@ const AccountSelection = () => {
             // =================================================
 
             if (
-                !data.user ||
-                data.user.role !== "admin"
+                data.user.role !==
+                "admin"
             ) {
 
                 setError(
@@ -149,11 +194,14 @@ const AccountSelection = () => {
                 );
 
                 return;
+
             }
 
 
             // =================================================
             // SAVE ADMIN SESSION
+            //
+            // Password is NEVER stored.
             // =================================================
 
             localStorage.setItem(
@@ -161,9 +209,12 @@ const AccountSelection = () => {
                 data.token
             );
 
+
             localStorage.setItem(
                 "votaraStaffUser",
-                JSON.stringify(data.user)
+                JSON.stringify(
+                    data.user
+                )
             );
 
 
@@ -183,6 +234,7 @@ const AccountSelection = () => {
                 );
 
                 return;
+
             }
 
 
@@ -205,16 +257,40 @@ const AccountSelection = () => {
                 error
             );
 
-            setError(
-                "Unable to connect to the VOTARA server. Please make sure the backend is running."
-            );
+
+            // =================================================
+            // SERVER ERROR
+            // =================================================
+
+            if (
+                error.response
+            ) {
+
+                setError(
+                    error.response.data?.message ||
+                    "Unable to login."
+                );
+
+            } else {
+
+                setError(
+                    "Unable to connect to the VOTARA server. Please check your internet connection or try again."
+                );
+
+            }
 
         } finally {
 
             setLoading(false);
+
         }
+
     };
 
+
+    // =====================================================
+    // UI
+    // =====================================================
 
     return (
 
@@ -242,8 +318,11 @@ const AccountSelection = () => {
                         <span className="account-selection-logo-mark">
 
                             <span className="logo-shape logo-one"></span>
+
                             <span className="logo-shape logo-two"></span>
+
                             <span className="logo-shape logo-three"></span>
+
                             <span className="logo-shape logo-four"></span>
 
                         </span>
@@ -266,7 +345,8 @@ const AccountSelection = () => {
                         </h2>
 
                         <p>
-                            for BSIT students at Western Institute of Technology.
+                            for BSIT students at Western Institute
+                            of Technology.
                         </p>
 
                         <p>
@@ -288,7 +368,9 @@ const AccountSelection = () => {
 
                         <button
                             type="button"
-                            onClick={goToElectoralBoard}
+                            onClick={
+                                goToElectoralBoard
+                            }
                         >
                             LOGIN AS ELECTORAL BOARD
                         </button>
@@ -323,7 +405,6 @@ const AccountSelection = () => {
 
                     <div className="account-selection-form-container">
 
-
                         <h1>
                             Admin Login!
                         </h1>
@@ -353,9 +434,14 @@ const AccountSelection = () => {
                         ================================================= */}
 
                         <form
-                            onSubmit={handleAdminLogin}
+                            onSubmit={
+                                handleAdminLogin
+                            }
                             className="account-selection-form"
-                            style={{ viewTransitionName: "admin-login-input-section" }}
+                            style={{
+                                viewTransitionName:
+                                    "admin-login-input-section",
+                            }}
                         >
 
 
@@ -402,6 +488,7 @@ const AccountSelection = () => {
                                     disabled={loading}
                                 />
 
+
                                 <button
                                     type="button"
                                     className="account-selection-show"
@@ -420,7 +507,6 @@ const AccountSelection = () => {
                             </div>
 
 
-                                
                             {/* LOGIN CODE */}
 
                             <div className="account-selection-field">
@@ -443,6 +529,7 @@ const AccountSelection = () => {
                                     disabled={loading}
                                 />
 
+
                                 <button
                                     type="button"
                                     className="account-selection-show"
@@ -460,11 +547,17 @@ const AccountSelection = () => {
 
                             </div>
 
+
+                            {/* =================================================
+                                INFORMATION
+                            ================================================= */}
+
                             <p className="admin-login-info">
                                 The system automatically identifies
                                 you are Admin
                                 member.
                             </p>
+
 
                             {/* =================================================
                                 LOGIN BUTTON
@@ -483,7 +576,6 @@ const AccountSelection = () => {
                         </form>
 
 
-
                         {/* =================================================
                             REGISTER
                         ================================================= */}
@@ -494,11 +586,14 @@ const AccountSelection = () => {
                                 Need to create an Admin account?
                             </span>
 
-                            <Link to="/admin/register">
+                            <Link
+                                to="/admin/register"
+                            >
                                 Register as Admin
                             </Link>
 
                         </div>
+
 
                     </div>
 
@@ -507,7 +602,10 @@ const AccountSelection = () => {
             </div>
 
         </div>
+
     );
+
 };
+
 
 export default AccountSelection;

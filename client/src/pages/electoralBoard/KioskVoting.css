@@ -1,0 +1,420 @@
+.kiosk-voting-page {
+    min-height: 100vh;
+    background: #f5f8fc;
+    color: #0f1f3d;
+    font-family: Poppins, Inter, sans-serif;
+}
+
+.kiosk-voting-header {
+    background: #ffffff;
+    border-bottom: 1px solid #e3eaf4;
+    padding: 22px 34px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.kiosk-voting-brand {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: .16em;
+    color: #1e3a8a;
+}
+
+.kiosk-voting-header h1 {
+    margin: 4px 0 2px;
+    font-size: 24px;
+}
+
+.kiosk-voting-header p {
+    margin: 0;
+    color: #71809a;
+    font-size: 13px;
+}
+
+.kiosk-session-pill {
+    padding: 9px 14px;
+    border-radius: 999px;
+    background: #e9f9ef;
+    color: #168044;
+    font-size: 12px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.kiosk-session-pill span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #16a34a;
+}
+
+.kiosk-voting-main {
+    width: min(1100px, calc(100% - 32px));
+    margin: 34px auto 60px;
+}
+
+.kiosk-voting-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.kiosk-voting-card,
+.kiosk-ballot-card {
+    background: #fff;
+    border: 1px solid #e2e9f3;
+    border-radius: 20px;
+    box-shadow: 0 14px 40px rgba(26, 55, 100, .08);
+    padding: 30px;
+}
+
+.kiosk-id-card,
+.kiosk-password-card,
+.kiosk-complete-card {
+    max-width: 650px;
+    margin: 70px auto;
+    text-align: center;
+}
+
+.kiosk-voting-icon,
+.kiosk-success-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 20px;
+    display: grid;
+    place-items: center;
+    margin: 0 auto 18px;
+    background: #eaf1ff;
+    font-size: 30px;
+}
+
+.kiosk-success-icon {
+    background: #e9f9ef;
+    color: #16a34a;
+    font-size: 38px;
+    font-weight: 800;
+}
+
+.kiosk-voting-card h2,
+.kiosk-ballot-card h2 {
+    margin: 0 0 8px;
+    font-size: 25px;
+}
+
+.kiosk-voting-card p,
+.kiosk-ballot-card p {
+    color: #71809a;
+    margin: 0 0 24px;
+}
+
+.kiosk-id-card form,
+.kiosk-password-card form {
+    display: grid;
+    gap: 13px;
+    margin-top: 25px;
+}
+
+.kiosk-voting-card input,
+.kiosk-voting-card select {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #d8e1ee;
+    border-radius: 12px;
+    padding: 13px 14px;
+    background: #fff;
+    color: #17233c;
+    outline: none;
+    font: inherit;
+}
+
+.kiosk-voting-card input:focus,
+.kiosk-voting-card select:focus {
+    border-color: #266eff;
+    box-shadow: 0 0 0 3px rgba(38, 110, 255, .1);
+}
+
+.kiosk-main-button,
+.kiosk-secondary-button {
+    border: 0;
+    border-radius: 11px;
+    padding: 13px 20px;
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.kiosk-main-button {
+    background: #1e3a8a;
+    color: #fff;
+}
+
+.kiosk-main-button:hover { background: #183170; }
+.kiosk-main-button:disabled { opacity: .55; cursor: not-allowed; }
+
+.kiosk-secondary-button {
+    background: #eef2f7;
+    color: #42516a;
+}
+
+.kiosk-action-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.kiosk-voting-alert {
+    border-radius: 12px;
+    padding: 13px 16px;
+    margin-bottom: 18px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    font-size: 13px;
+}
+
+.kiosk-voting-alert.error { background: #fff1f1; color: #a61b1b; border: 1px solid #ffcaca; }
+.kiosk-voting-alert.success { background: #effbf3; color: #187541; border: 1px solid #bcebc9; }
+.kiosk-voting-alert button { margin-left: auto; border: 0; background: none; font-size: 20px; cursor: pointer; }
+
+.kiosk-eyebrow {
+    color: #266eff;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .12em;
+}
+
+.kiosk-card-heading,
+.kiosk-ballot-heading {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.kiosk-check {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: #e9f9ef;
+    color: #16a34a;
+    display: grid;
+    place-items: center;
+    font-weight: 900;
+    font-size: 22px;
+}
+
+.kiosk-verification-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 25px;
+}
+
+.kiosk-verification-grid > div {
+    background: #f7f9fc;
+    border-radius: 13px;
+    padding: 15px;
+}
+
+.kiosk-verification-grid span,
+.kiosk-verification-grid strong {
+    display: block;
+}
+
+.kiosk-verification-grid span {
+    color: #7b899f;
+    font-size: 11px;
+    margin-bottom: 5px;
+}
+
+.kiosk-verification-grid strong { font-size: 13px; }
+
+.kiosk-registration-form { margin-top: 25px; }
+.kiosk-form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+.kiosk-form-grid label { display: grid; gap: 7px; font-size: 12px; font-weight: 700; color: #4d5b73; }
+
+.kiosk-doc-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    margin-top: 18px;
+}
+
+.kiosk-file-box {
+    border: 1px dashed #b9c7da;
+    border-radius: 14px;
+    padding: 16px;
+    display: grid;
+    gap: 9px;
+    background: #fafcff;
+}
+
+.kiosk-file-box > span { font-weight: 800; font-size: 13px; }
+.kiosk-file-box small { color: #75849c; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.kiosk-review-student {
+    background: #f6f8fc;
+    padding: 16px;
+    border-radius: 13px;
+    display: grid;
+    gap: 5px;
+}
+
+.kiosk-review-student span { color: #748199; font-size: 13px; }
+
+.kiosk-review-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.kiosk-review-document {
+    text-decoration: none;
+    color: #17233c;
+    border: 1px solid #e0e7f0;
+    border-radius: 13px;
+    padding: 15px;
+    display: grid;
+    gap: 5px;
+}
+
+.kiosk-review-document small { color: #266eff; }
+
+.kiosk-warning-box {
+    margin-top: 18px;
+    padding: 14px;
+    border-radius: 12px;
+    background: #fff8e8;
+    border: 1px solid #f4ddb0;
+    color: #795600;
+    font-size: 13px;
+}
+
+.kiosk-password-checks {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    text-align: left;
+    gap: 7px;
+    margin: 2px 0 8px;
+}
+
+.kiosk-password-checks div { color: #8390a3; font-size: 12px; }
+.kiosk-password-checks div.valid { color: #168044; font-weight: 700; }
+.kiosk-password-checks span { margin-right: 7px; }
+
+.kiosk-ballot-election {
+    color: #71809a;
+    font-size: 12px;
+    text-align: right;
+}
+
+.kiosk-position-list { display: grid; gap: 18px; margin-top: 26px; }
+.kiosk-position-card { border: 1px solid #e1e8f1; border-radius: 16px; padding: 20px; }
+.kiosk-position-heading { display: flex; justify-content: space-between; gap: 20px; }
+.kiosk-position-heading h3 { margin: 0; font-size: 17px; }
+.kiosk-position-heading p { margin: 5px 0 0; font-size: 12px; }
+.kiosk-position-heading > span { color: #b24c00; background: #fff4e7; border-radius: 999px; padding: 6px 10px; height: fit-content; font-size: 10px; font-weight: 800; }
+
+.kiosk-candidate-grid { display: grid; gap: 9px; margin-top: 15px; }
+.kiosk-candidate { display: flex; align-items: center; gap: 12px; border: 1px solid #e0e7f0; border-radius: 12px; padding: 13px; cursor: pointer; }
+.kiosk-candidate.selected { border-color: #266eff; background: #f2f6ff; }
+.kiosk-candidate input { display: none; }
+.kiosk-radio { width: 18px; height: 18px; border: 2px solid #b8c4d4; border-radius: 50%; flex: 0 0 auto; }
+.kiosk-candidate.selected .kiosk-radio { border-color: #266eff; box-shadow: inset 0 0 0 4px #fff; background: #266eff; }
+.kiosk-candidate strong, .kiosk-candidate small { display: block; }
+.kiosk-candidate small { color: #7b899f; margin-top: 3px; }
+.kiosk-empty-candidates { color: #a06100; background: #fff8e8; padding: 12px; border-radius: 10px; font-size: 12px; }
+
+.kiosk-ballot-footer { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-top: 22px; padding-top: 20px; border-top: 1px solid #e7edf4; color: #71809a; font-size: 12px; }
+.kiosk-ballot-footer .kiosk-main-button { color: #fff; }
+
+.kiosk-ballot-reference { background: #f4f7fb; border-radius: 10px; padding: 11px 14px; margin: 20px 0; color: #5c6b82; font-size: 12px; }
+.kiosk-voting-spinner { width: 30px; height: 30px; border: 3px solid #dfe8f5; border-top-color: #266eff; border-radius: 50%; margin: 20px auto 0; animation: kiosk-spin .8s linear infinite; }
+
+@keyframes kiosk-spin { to { transform: rotate(360deg); } }
+
+
+/* =========================================================
+   BACK TO KIOSK MANAGEMENT
+   ========================================================= */
+
+.kiosk-back-button {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid #d8e2ef;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #1e3a8a;
+    padding: 10px 14px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    transition:
+        background-color .2s ease,
+        border-color .2s ease,
+        transform .2s ease,
+        box-shadow .2s ease;
+}
+
+.kiosk-back-button:hover {
+    background: #f3f7ff;
+    border-color: #b9c9e3;
+    transform: translateX(-2px);
+    box-shadow: 0 4px 12px rgba(30, 58, 138, .08);
+}
+
+.kiosk-back-button:focus-visible {
+    outline: 3px solid rgba(38, 110, 255, .18);
+    outline-offset: 2px;
+}
+
+.kiosk-back-arrow {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.kiosk-voting-header-info {
+    flex: 1;
+    min-width: 0;
+}
+
+@media (max-width: 760px) {
+    .kiosk-voting-header {
+        padding: 16px 18px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .kiosk-back-button {
+        order: 1;
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .kiosk-voting-header-info {
+        order: 2;
+    }
+
+    .kiosk-session-pill {
+        display: none;
+    }
+    .kiosk-voting-main { width: min(100% - 20px, 700px); margin-top: 20px; }
+    .kiosk-voting-card, .kiosk-ballot-card { padding: 20px; border-radius: 16px; }
+    .kiosk-form-grid, .kiosk-doc-grid, .kiosk-review-grid, .kiosk-verification-grid { grid-template-columns: 1fr; }
+    .kiosk-card-heading, .kiosk-ballot-heading { flex-direction: column; }
+    .kiosk-action-row, .kiosk-ballot-footer { flex-direction: column; align-items: stretch; }
+    .kiosk-action-row button, .kiosk-ballot-footer button { width: 100%; }
+}

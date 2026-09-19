@@ -7,6 +7,7 @@ import LateEnrolleeManagement from "./LateEnrolleeManagement";
 import PartyListManagement from "./PartyListManagement";
 import ElectionManagement from "./ElectionManagement";
 import CandidateManagement from "./CandidateManagement";
+import KioskManagement from "./KioskManagement";
 import VotingMonitoring from "./VotingMonitoring";
 import ResultsReports from "./ResultsReports";
 import AuditLogs from "./AuditLogs";
@@ -17,26 +18,37 @@ import Settings from "./Settings";
 // =====================================================
 
 const EBDashboard = () => {
+
     const navigate = useNavigate();
 
     const [ebUser, setEbUser] = useState(null);
+
     const [activeSection, setActiveSection] =
         useState("dashboard");
+
     const [sidebarOpen, setSidebarOpen] =
         useState(false);
+
 
     // =====================================================
     // LOAD EB USER
     // =====================================================
 
     useEffect(() => {
+
         const savedUser =
             localStorage.getItem("votaraEBUser");
 
         if (savedUser) {
+
             try {
-                setEbUser(JSON.parse(savedUser));
+
+                setEbUser(
+                    JSON.parse(savedUser)
+                );
+
             } catch (error) {
+
                 console.error(
                     "Invalid EB user data."
                 );
@@ -46,12 +58,16 @@ const EBDashboard = () => {
                 );
             }
         }
+
     }, []);
+
+
     // =====================================================
     // LOGOUT
     // =====================================================
 
     const handleLogout = () => {
+
         localStorage.removeItem(
             "votaraStaffToken"
         );
@@ -68,17 +84,28 @@ const EBDashboard = () => {
             "votaraEBUser"
         );
 
-        navigate("/account-selection");
+        navigate(
+            "/account-selection"
+        );
     };
+
 
     // =====================================================
     // SIDEBAR NAVIGATION
     // =====================================================
 
     const handleNavigation = (section) => {
+
         setActiveSection(section);
+
         setSidebarOpen(false);
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+        });
     };
+
 
     // =====================================================
     // DISPLAY NAME
@@ -89,201 +116,307 @@ const EBDashboard = () => {
         ebUser?.full_name ||
         "Electoral Board Member";
 
+
     const displayEmail =
         ebUser?.email ||
         "Electoral Board Account";
+
 
     // =====================================================
     // EB MENU
     // =====================================================
 
     const menuItems = [
+
         {
             id: "dashboard",
             label: "Dashboard",
             icon: "▦",
         },
+
         {
             id: "registrations",
             label: "Registration Management",
             icon: "▤",
         },
+
         {
             id: "lateEnrollees",
             label: "Late Enrollee Management",
             icon: "◈",
         },
+
         {
             id: "partyLists",
             label: "Party List Management",
             icon: "▰",
         },
+
         {
             id: "candidates",
             label: "Candidate Management",
             icon: "♙",
         },
+
         {
             id: "election",
             label: "Election Management",
             icon: "◉",
         },
+
+        // =================================================
+        // KIOSK MANAGEMENT
+        // =================================================
+
+        {
+            id: "kiosk",
+            label: "Kiosk Management",
+            icon: "▣",
+        },
+
         {
             id: "monitoring",
             label: "Voting Monitoring",
             icon: "◫",
         },
+
         {
             id: "results",
             label: "Results & Reports",
             icon: "▥",
         },
+
         {
             id: "logs",
             label: "Audit Logs",
             icon: "◌",
         },
+
     ];
+
 
     // =====================================================
     // RENDER
     // =====================================================
 
     return (
-        <div className="eb-dashboard" style={styles.app}>
+        <div style={styles.app}>
 
             {/* =================================================
                 MOBILE OVERLAY
             ================================================= */}
 
             {sidebarOpen && (
-    <div
-        className="eb-mobile-overlay"
-        style={styles.overlay}
-        onClick={() =>
-            setSidebarOpen(false)
-        }
-    />
-)}
+                <div
+                    style={styles.overlay}
+                    onClick={() =>
+                        setSidebarOpen(false)
+                    }
+                />
+            )}
 
             {/* =================================================
                 SIDEBAR
             ================================================= */}
 
-<aside
-    className={`eb-sidebar ${sidebarOpen ? "eb-sidebar-open" : ""}`}
-    style={{
-        ...styles.sidebar,
-        ...(sidebarOpen
-            ? styles.sidebarMobileOpen
-            : {}),
-    }}
->
+            <aside
+                style={{
+                    ...styles.sidebar,
+                    ...(sidebarOpen
+                        ? styles.sidebarMobileOpen
+                        : {}),
+                }}
+            >
 
-                {/* LOGO */}
 
-                <div style={styles.logoContainer}>
+                {/* =================================================
+                    LOGO
+                ================================================= */}
 
-                    <div style={styles.logoIcon}>
+                <div
+                    style={
+                        styles.logoContainer
+                    }
+                >
+
+                    <div
+                        style={
+                            styles.logoIcon
+                        }
+                    >
                         V
                     </div>
 
+
                     <div>
-                        <div style={styles.logoText}>
+
+                        <div
+                            style={
+                                styles.logoText
+                            }
+                        >
                             VOTARA
                         </div>
 
-                        <div style={styles.logoSubtext}>
+
+                        <div
+                            style={
+                                styles.logoSubtext
+                            }
+                        >
                             Electoral Board
                         </div>
+
                     </div>
 
                 </div>
 
-                {/* NAVIGATION */}
 
-                <div style={styles.navContainer}>
+                {/* =================================================
+                    NAVIGATION
+                ================================================= */}
 
-                    <div style={styles.navTitle}>
+                <div
+                    style={
+                        styles.navContainer
+                    }
+                >
+
+                    <div
+                        style={
+                            styles.navTitle
+                        }
+                    >
                         MAIN MENU
                     </div>
 
-                    {menuItems.map((item) => (
-                        <button
-                            key={item.id}
-                            onClick={() =>
-                                handleNavigation(
+
+                    {menuItems.map(
+                        (item) => (
+
+                            <button
+                                key={item.id}
+                                type="button"
+                                onClick={() =>
+                                    handleNavigation(
+                                        item.id
+                                    )
+                                }
+                                style={{
+                                    ...styles.navItem,
+
+                                    ...(activeSection ===
                                     item.id
-                                )
-                            }
-                            style={{
-                                ...styles.navItem,
-                                ...(activeSection ===
-                                item.id
-                                    ? styles.navItemActive
-                                    : {}),
-                            }}
-                        >
-
-                            <span
-                                style={styles.navIcon}
+                                        ? styles.navItemActive
+                                        : {}),
+                                }}
                             >
-                                {item.icon}
-                            </span>
 
-                            <span>
-                                {item.label}
-                            </span>
+                                <span
+                                    style={
+                                        styles.navIcon
+                                    }
+                                >
+                                    {item.icon}
+                                </span>
 
-                        </button>
-                    ))}
+
+                                <span>
+                                    {item.label}
+                                </span>
+
+                            </button>
+
+                        )
+                    )}
 
                 </div>
 
-                {/* SIDEBAR FOOTER */}
 
-                <div style={styles.sidebarFooter}>
+                {/* =================================================
+                    SIDEBAR FOOTER
+                ================================================= */}
+
+                <div
+                    style={
+                        styles.sidebarFooter
+                    }
+                >
 
                     <button
+                        type="button"
                         onClick={() =>
                             handleNavigation(
                                 "settings"
                             )
                         }
-                        style={styles.footerButton}
+                        style={{
+                            ...styles.navItem,
+
+                            ...(activeSection ===
+                            "settings"
+                                ? styles.navItemActive
+                                : {}),
+                        }}
                     >
-                        <span>⚙</span>
-                        Settings
+
+                        <span
+                            style={
+                                styles.navIcon
+                            }
+                        >
+                            ⚙
+                        </span>
+
+                        <span>
+                            Settings
+                        </span>
+
                     </button>
 
+
                     <button
-                        onClick={handleLogout}
-                        style={styles.logoutButton}
+                        type="button"
+                        onClick={
+                            handleLogout
+                        }
+                        style={
+                            styles.logoutButton
+                        }
                     >
-                        <span>↪</span>
+
+                        <span>
+                            ↪
+                        </span>
+
                         Logout
+
                     </button>
 
                 </div>
 
             </aside>
 
+
             {/* =================================================
                 MAIN CONTENT
             ================================================= */}
 
-<main className="eb-main" style={styles.main}>
+            <main style={styles.main}>
 
                 {/* =================================================
                     TOP BAR
                 ================================================= */}
 
-                <header className="eb-topbar" style={styles.topbar}>
+                <header style={styles.topbar}>
 
-                    <div className="eb-topbarLeft" style={styles.topbarLeft}>
+                    <div style={styles.topbarLeft}>
 
                         <button
-                            style={styles.menuButton}
+                            type="button"
+                            style={
+                                styles.menuButton
+                            }
                             onClick={() =>
                                 setSidebarOpen(
                                     !sidebarOpen
@@ -293,6 +426,7 @@ const EBDashboard = () => {
                             ☰
                         </button>
 
+
                         <div>
 
                             <h1
@@ -300,13 +434,18 @@ const EBDashboard = () => {
                                     styles.pageTitle
                                 }
                             >
-                                {activeSection ===
-                                "dashboard"
-                                    ? "Electoral Board Dashboard"
-                                    : getSectionTitle(
-                                          activeSection
-                                      )}
+
+                                {
+                                    activeSection ===
+                                    "dashboard"
+                                        ? "Electoral Board Dashboard"
+                                        : getSectionTitle(
+                                              activeSection
+                                          )
+                                }
+
                             </h1>
+
 
                             <p
                                 style={
@@ -320,6 +459,11 @@ const EBDashboard = () => {
                         </div>
 
                     </div>
+
+
+                    {/* =================================================
+                        PROFILE
+                    ================================================= */}
 
                     <div
     className="eb-profile"
@@ -342,23 +486,29 @@ const EBDashboard = () => {
 
                         </div>
 
+
                         <div
-                            style={styles.avatar}
+                            style={
+                                styles.avatar
+                            }
                         >
+
                             {getInitials(
                                 displayName
                             )}
+
                         </div>
 
                     </div>
 
                 </header>
 
+
                 {/* =================================================
                     CONTENT
                 ================================================= */}
 
-                <section className="eb-content" style={styles.content}>
+                <section style={styles.content}>
 
                     {/* =================================================
                         DASHBOARD OVERVIEW
@@ -366,7 +516,12 @@ const EBDashboard = () => {
 
                     {activeSection ===
                         "dashboard" && (
+
                         <>
+
+                            {/* =================================================
+                                WELCOME CARD
+                            ================================================= */}
 
 <div
     className="eb-welcome-card"
@@ -383,17 +538,23 @@ const EBDashboard = () => {
                                         ELECTORAL BOARD
                                     </div>
 
+
                                     <h2
                                         style={
                                             styles.welcomeTitle
                                         }
                                     >
+
                                         Welcome,{" "}
+
                                         {getFirstName(
                                             displayName
                                         )}
+
                                         !
+
                                     </h2>
+
 
                                     <p
                                         style={
@@ -404,17 +565,19 @@ const EBDashboard = () => {
                                         your control center
                                         for student
                                         registration,
-                                        verification,
                                         late enrollee
-                                        management, party
-                                        lists, candidates,
+                                        management,
+                                        party lists,
+                                        candidates,
                                         election management,
+                                        kiosk operations,
                                         voting monitoring,
                                         results, and audit
                                         logs.
                                     </p>
 
                                 </div>
+
 
 <div
     className="eb-welcome-icon"
@@ -425,8 +588,9 @@ const EBDashboard = () => {
 
                             </div>
 
+
                             {/* =================================================
-                                ELECTION STATUS
+                                ELECTION OVERVIEW
                             ================================================= */}
 
                             <div
@@ -445,19 +609,20 @@ const EBDashboard = () => {
                                         Election Overview
                                     </h2>
 
+
                                     <p
                                         style={
                                             styles.sectionDescription
                                         }
                                     >
                                         Current status of
-                                        the election
-                                        process.
+                                        the election process.
                                     </p>
 
                                 </div>
 
                             </div>
+
 
                             <div
                                 className="eb-stats-grid"
@@ -476,6 +641,7 @@ const EBDashboard = () => {
                                     }
                                 />
 
+
                                 <StatCard
                                     title="Approved Students"
                                     value="0"
@@ -488,10 +654,11 @@ const EBDashboard = () => {
                                     }
                                 />
 
+
                                 <StatCard
-                                    title="Active Candidates"
+                                    title="Approved Candidates"
                                     value="0"
-                                    description="Candidates prepared for election"
+                                    description="Eligible candidates"
                                     icon="♙"
                                     onClick={() =>
                                         handleNavigation(
@@ -499,6 +666,7 @@ const EBDashboard = () => {
                                         )
                                     }
                                 />
+
 
                                 <StatCard
                                     title="Votes Cast"
@@ -513,6 +681,7 @@ const EBDashboard = () => {
                                 />
 
                             </div>
+
 
                             {/* =================================================
                                 IMPORTANT EB FUNCTIONS
@@ -532,23 +701,24 @@ const EBDashboard = () => {
                                             styles.sectionTitle
                                         }
                                     >
-                                        Electoral Board
-                                        Operations
+                                        Electoral Board Operations
                                     </h2>
+
 
                                     <p
                                         style={
                                             styles.sectionDescription
                                         }
                                     >
-                                        Important operations
-                                        for the election
-                                        process.
+                                        Important actions
+                                        for managing the
+                                        election process.
                                     </p>
 
                                 </div>
 
                             </div>
+
 
                             <div
                             className="eb-operations-grid"
@@ -558,7 +728,7 @@ const EBDashboard = () => {
                                 <OperationCard
                                     icon="▤"
                                     title="Registration Management"
-                                    description="Review student applications, verify requirements, and manage registration decisions."
+                                    description="Review student applications, verify requirements, and approve or reject registrations."
                                     buttonText="Manage Registrations"
                                     onClick={() =>
                                         handleNavigation(
@@ -567,10 +737,11 @@ const EBDashboard = () => {
                                     }
                                 />
 
+
                                 <OperationCard
                                     icon="◈"
                                     title="Late Enrollee Management"
-                                    description="Verify late enrollee applications, submitted requirements, enrollment information, and student eligibility."
+                                    description="Review late enrollee applications, submitted requirements, enrollment information, and eligibility."
                                     buttonText="Manage Late Enrollees"
                                     onClick={() =>
                                         handleNavigation(
@@ -578,6 +749,7 @@ const EBDashboard = () => {
                                         )
                                     }
                                 />
+
 
                                 <OperationCard
                                     icon="▰"
@@ -591,6 +763,7 @@ const EBDashboard = () => {
                                     }
                                 />
 
+
                                 <OperationCard
                                     icon="♙"
                                     title="Candidate Management"
@@ -602,6 +775,7 @@ const EBDashboard = () => {
                                         )
                                     }
                                 />
+
 
                                 <OperationCard
                                     icon="◉"
@@ -615,7 +789,25 @@ const EBDashboard = () => {
                                     }
                                 />
 
+
+                                {/* =================================================
+                                    KIOSK OPERATION
+                                ================================================= */}
+
+                                <OperationCard
+                                    icon="▣"
+                                    title="Kiosk Management"
+                                    description="Start and manage temporary Electoral Board kiosk sessions used to assist students during the election."
+                                    buttonText="Manage Kiosk"
+                                    onClick={() =>
+                                        handleNavigation(
+                                            "kiosk"
+                                        )
+                                    }
+                                />
+
                             </div>
+
 
                             {/* =================================================
                                 SECURITY / INTEGRITY
@@ -637,6 +829,7 @@ const EBDashboard = () => {
                                         Election Security
                                     </h2>
 
+
                                     <p
                                         style={
                                             styles.sectionDescription
@@ -651,6 +844,7 @@ const EBDashboard = () => {
 
                             </div>
 
+
                             <div
                                 className="eb-security-grid"
                                 style={styles.securityGrid}
@@ -662,17 +856,20 @@ const EBDashboard = () => {
                                     status="Active"
                                 />
 
+
                                 <SecurityCard
                                     title="Vote Integrity"
                                     description="Ballots are protected using server-authoritative validation and database integrity controls."
                                     status="Active"
                                 />
 
+
                                 <SecurityCard
                                     title="Audit Trail"
-                                    description="Important registration, verification, election, and administrative actions can be recorded for accountability."
+                                    description="Important registration, election, kiosk, and administrative actions can be recorded for accountability."
                                     status="Active"
                                 />
+
 
                                 <SecurityCard
                                     title="Role-Based Access"
@@ -685,27 +882,27 @@ const EBDashboard = () => {
                         </>
                     )}
 
+
                     {/* =================================================
                         REGISTRATIONS
                     ================================================= */}
 
-                    {activeSection === "registrations" && (
-    <div className="eb-page-registrations">
-        <Registrations
-            title="Registration Management"
-            icon="▤"
-            description="Review, verify, approve, reject, or request corrections for student registration applications."
-            steps={[
-                "View pending registration applications",
-                "Check official Student ID and enrollment information",
-                "Review submitted requirements",
-                "Review identity verification and selfie",
-                "Approve, reject, or request correction",
-                "Generate temporary password after approval",
-            ]}
-        />
-    </div>
-)}
+                    {activeSection ===
+                        "registrations" && (
+                        <Registrations
+                            title="Registration Management"
+                            icon="▤"
+                            description="Review, verify, approve, reject, or request corrections for student registration applications."
+                            steps={[
+                                "View pending registration applications",
+                                "Check official Student ID and enrollment information",
+                                "Review submitted requirements",
+                                "Review identity verification and selfie",
+                                "Approve, reject, or request correction",
+                                "Generate temporary password after approval",
+                            ]}
+                        />
+                    )}
 
                     {/* =================================================
                         LATE ENROLLEES
@@ -713,76 +910,109 @@ const EBDashboard = () => {
 
                     {activeSection ===
                         "lateEnrollees" && (
+
                         <LateEnrolleeManagement />
+
                     )}
+
 
                     {/* =================================================
                         PARTY LIST MANAGEMENT
                     ================================================= */}
 
                     {activeSection === "partyLists" && (
-                    <div className="eb-page-party-lists"> 
                         <PartyListManagement />
-                    </div>
                     )}
 
-                    {/* =================================================
-                            CANDIDATES
-                        ================================================= */}
-
-                        {activeSection === "candidates" && (
-                            <CandidateManagement />
-                        )}
 
                     {/* =================================================
-                            ELECTION MANAGEMENT
-                        ================================================= */}
-
-                        {activeSection === "election" && (
-                        <div className="eb-page-election">
-                        <ElectionManagement />
-                        </div>
-                        )}
-
-                    {/* =================================================
-                       Voting MONITORING
+                        CANDIDATE MANAGEMENT
                     ================================================= */}
 
-                    {activeSection === "monitoring" && (
-                        <VotingMonitoring />
+                    {activeSection ===
+                        "candidates" && (
+
+                        <CandidateManagement />
+
                     )}
 
-                    {/* =================================================
-                            RESULTS & REPORTS
-                        ================================================= */}
-
-                        {activeSection === "results" && (
-                            <ResultsReports />
-                        )}
-
-                        {/* =================================================
-                            AUDIT LOGS
-                        ================================================= */}
-
-                        {activeSection === "logs" && (
-                            <AuditLogs />
-                        )}
 
                     {/* =================================================
-                            SETTINGS
-                        ================================================= */}
+                        ELECTION MANAGEMENT
+                    ================================================= */}
 
-                        {activeSection === "settings" && (
-                            <Settings />
+                        {activeSection === "election" && (
+                            <ElectionManagement />
                         )}
 
-                            </section>
 
-                        </main>
+                    {/* =================================================
+                        KIOSK MANAGEMENT
+                    ================================================= */}
 
-                    </div>
-                );
-            };
+                    {activeSection ===
+                        "kiosk" && (
+
+                        <KioskManagement />
+
+                    )}
+
+
+                    {/* =================================================
+                        VOTING MONITORING
+                    ================================================= */}
+
+                    {activeSection ===
+                        "monitoring" && (
+
+                        <VotingMonitoring />
+
+                    )}
+
+
+                    {/* =================================================
+                        RESULTS & REPORTS
+                    ================================================= */}
+
+                    {activeSection ===
+                        "results" && (
+
+                        <ResultsReports />
+
+                    )}
+
+
+                    {/* =================================================
+                        AUDIT LOGS
+                    ================================================= */}
+
+                    {activeSection ===
+                        "logs" && (
+
+                        <AuditLogs />
+
+                    )}
+
+
+                    {/* =================================================
+                        SETTINGS
+                    ================================================= */}
+
+                    {activeSection ===
+                        "settings" && (
+
+                        <Settings />
+
+                    )}
+
+                </section>
+
+            </main>
+
+        </div>
+    );
+};
+
 
 // =====================================================
 // STAT CARD
@@ -795,39 +1025,72 @@ const StatCard = ({
     icon,
     onClick,
 }) => {
+
     return (
+
         <button
+            type="button"
             onClick={onClick}
             style={styles.statCard}
         >
 
-            <div style={styles.statTop}>
+            <div
+                style={
+                    styles.statTop
+                }
+            >
 
-                <div style={styles.statIcon}>
+                <div
+                    style={
+                        styles.statIcon
+                    }
+                >
                     {icon}
                 </div>
 
-                <span style={styles.statArrow}>
+
+                <span
+                    style={
+                        styles.statArrow
+                    }
+                >
                     →
                 </span>
 
             </div>
 
-            <div style={styles.statValue}>
+
+            <div
+                style={
+                    styles.statValue
+                }
+            >
                 {value}
             </div>
 
-            <div style={styles.statTitle}>
+
+            <div
+                style={
+                    styles.statTitle
+                }
+            >
                 {title}
             </div>
 
-            <div style={styles.statDescription}>
+
+            <div
+                style={
+                    styles.statDescription
+                }
+            >
                 {description}
             </div>
 
         </button>
+
     );
 };
+
 
 // =====================================================
 // OPERATION CARD
@@ -840,16 +1103,32 @@ const OperationCard = ({
     buttonText,
     onClick,
 }) => {
-    return (
-        <div style={styles.operationCard}>
 
-            <div style={styles.operationIcon}>
+    return (
+
+        <div
+            style={
+                styles.operationCard
+            }
+        >
+
+            <div
+                style={
+                    styles.operationIcon
+                }
+            >
                 {icon}
             </div>
 
-            <h3 style={styles.operationTitle}>
+
+            <h3
+                style={
+                    styles.operationTitle
+                }
+            >
                 {title}
             </h3>
+
 
             <p
                 style={
@@ -859,18 +1138,28 @@ const OperationCard = ({
                 {description}
             </p>
 
+
             <button
+                type="button"
                 onClick={onClick}
-                style={styles.operationButton}
+                style={
+                    styles.operationButton
+                }
             >
+
                 {buttonText}
 
-                <span>→</span>
+                <span>
+                    →
+                </span>
+
             </button>
 
         </div>
+
     );
 };
+
 
 // =====================================================
 // SECURITY CARD
@@ -881,14 +1170,29 @@ const SecurityCard = ({
     description,
     status,
 }) => {
+
     return (
-        <div style={styles.securityCard}>
 
-            <div style={styles.securityTop}>
+        <div
+            style={
+                styles.securityCard
+            }
+        >
 
-                <div style={styles.securityIcon}>
+            <div
+                style={
+                    styles.securityTop
+                }
+            >
+
+                <div
+                    style={
+                        styles.securityIcon
+                    }
+                >
                     ✓
                 </div>
+
 
                 <span
                     style={
@@ -900,11 +1204,15 @@ const SecurityCard = ({
 
             </div>
 
+
             <h3
-                style={styles.securityTitle}
+                style={
+                    styles.securityTitle
+                }
             >
                 {title}
             </h3>
+
 
             <p
                 style={
@@ -915,8 +1223,10 @@ const SecurityCard = ({
             </p>
 
         </div>
+
     );
 };
+
 
 // =====================================================
 // MODULE PLACEHOLDER
@@ -928,14 +1238,21 @@ const ModulePlaceholder = ({
     description,
     steps,
 }) => {
+
     return (
+
         <div>
 
-            <div className="eb-module-header" style={styles.moduleHeader}>
+            <div style={styles.moduleHeader}>
 
-                <div style={styles.moduleIcon}>
+                <div
+                    style={
+                        styles.moduleIcon
+                    }
+                >
                     {icon}
                 </div>
+
 
                 <div>
 
@@ -946,6 +1263,7 @@ const ModulePlaceholder = ({
                     >
                         {title}
                     </h2>
+
 
                     <p
                         style={
@@ -959,18 +1277,28 @@ const ModulePlaceholder = ({
 
             </div>
 
-            <div style={styles.moduleNotice}>
 
-                <div style={styles.noticeIcon}>
+            <div
+                style={
+                    styles.moduleNotice
+                }
+            >
+
+                <div
+                    style={
+                        styles.noticeIcon
+                    }
+                >
                     !
                 </div>
+
 
                 <div>
 
                     <strong>
-                        Module ready for
-                        integration
+                        Module ready for integration
                     </strong>
+
 
                     <p>
                         The dashboard section is
@@ -984,7 +1312,12 @@ const ModulePlaceholder = ({
 
             </div>
 
-            <div style={styles.processCard}>
+
+            <div
+                style={
+                    styles.processCard
+                }
+            >
 
                 <h3
                     style={
@@ -994,6 +1327,7 @@ const ModulePlaceholder = ({
                     Important Process
                 </h3>
 
+
                 <div
                     style={
                         styles.processList
@@ -1002,8 +1336,9 @@ const ModulePlaceholder = ({
 
                     {steps.map(
                         (step, index) => (
+
                             <div
-                                key={index}
+                                key={`${title}-step-${index}`}
                                 style={
                                     styles.processItem
                                 }
@@ -1017,6 +1352,7 @@ const ModulePlaceholder = ({
                                     {index + 1}
                                 </div>
 
+
                                 <div
                                     style={
                                         styles.processText
@@ -1026,6 +1362,7 @@ const ModulePlaceholder = ({
                                 </div>
 
                             </div>
+
                         )
                     )}
 
@@ -1034,43 +1371,64 @@ const ModulePlaceholder = ({
             </div>
 
         </div>
+
     );
 };
+
 
 // =====================================================
 // HELPERS
 // =====================================================
 
 const getInitials = (name) => {
-    if (!name) return "EB";
 
-    const parts = name
-        .trim()
-        .split(/\s+/)
-        .filter(Boolean);
+    if (!name) {
+        return "EB";
+    }
+
+
+    const parts =
+        name
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean);
+
 
     if (parts.length === 1) {
+
         return parts[0]
             .substring(0, 2)
             .toUpperCase();
+
     }
+
 
     return (
         parts[0][0] +
         parts[parts.length - 1][0]
     ).toUpperCase();
+
 };
 
+
 const getFirstName = (name) => {
-    if (!name) return "Member";
+
+    if (!name) {
+        return "Member";
+    }
+
 
     return name
         .trim()
         .split(/\s+/)[0];
+
 };
 
+
 const getSectionTitle = (section) => {
+
     const titles = {
+
         registrations:
             "Registration Management",
 
@@ -1086,6 +1444,9 @@ const getSectionTitle = (section) => {
         election:
             "Election Management",
 
+        kiosk:
+            "Kiosk Management",
+
         monitoring:
             "Voting Monitoring",
 
@@ -1097,19 +1458,24 @@ const getSectionTitle = (section) => {
 
         settings:
             "Settings",
+
     };
+
 
     return (
         titles[section] ||
         "Electoral Board Dashboard"
     );
+
 };
+
 
 // =====================================================
 // STYLES
 // =====================================================
 
 const styles = {
+
     app: {
         minHeight: "100vh",
         background: "#f4f7fb",
@@ -1119,6 +1485,7 @@ const styles = {
         color: "#172033",
     },
 
+
     overlay: {
         position: "fixed",
         inset: 0,
@@ -1126,6 +1493,7 @@ const styles = {
             "rgba(0, 0, 0, 0.45)",
         zIndex: 90,
     },
+
 
     sidebar: {
         width: "270px",
@@ -1142,12 +1510,16 @@ const styles = {
         zIndex: 100,
         boxShadow:
             "8px 0 30px rgba(0, 0, 0, 0.08)",
+        transition:
+            "transform 0.25s ease",
     },
+
 
     sidebarMobileOpen: {
         transform:
             "translateX(0)",
     },
+
 
     logoContainer: {
         height: "90px",
@@ -1157,7 +1529,9 @@ const styles = {
         padding: "0 24px",
         borderBottom:
             "1px solid rgba(255,255,255,0.08)",
+        flexShrink: 0,
     },
+
 
     logoIcon: {
         width: "44px",
@@ -1173,11 +1547,13 @@ const styles = {
             "0 8px 20px rgba(38,110,255,0.30)",
     },
 
+
     logoText: {
         fontSize: "20px",
         fontWeight: "800",
         letterSpacing: "1px",
     },
+
 
     logoSubtext: {
         fontSize: "11px",
@@ -1185,156 +1561,172 @@ const styles = {
         marginTop: "2px",
     },
 
+
     navContainer: {
         flex: 1,
         padding: "24px 14px",
         overflowY: "auto",
     },
 
+
     navTitle: {
         fontSize: "10px",
-        fontWeight: "700",
+        fontWeight: "800",
         color: "#71809a",
         letterSpacing: "1.4px",
-        padding: "0 12px",
         marginBottom: "12px",
+        padding: "0 12px",
     },
+
 
     navItem: {
         width: "100%",
+        display: "flex",
+        alignItems: "center",
+        gap: "13px",
         border: "none",
         background: "transparent",
         color: "#aeb9cb",
-        padding: "13px 12px",
-        marginBottom: "5px",
+        padding: "12px 13px",
         borderRadius: "10px",
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
+        marginBottom: "5px",
         cursor: "pointer",
         textAlign: "left",
-        fontSize: "13px",
-        fontWeight: "500",
+        fontFamily: "inherit",
+        fontSize: "12px",
+        fontWeight: "600",
         transition:
             "all 0.2s ease",
     },
 
+
     navItemActive: {
         background: "#266EFF",
         color: "#ffffff",
-        fontWeight: "700",
         boxShadow:
-            "0 7px 18px rgba(38,110,255,0.22)",
+            "0 8px 18px rgba(38,110,255,0.20)",
     },
+
 
     navIcon: {
-        width: "22px",
-        textAlign: "center",
-        fontSize: "18px",
+        width: "18px",
+        minWidth: "18px",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: "14px",
     },
 
+
     sidebarFooter: {
-        padding: "15px",
+        padding: "14px",
         borderTop:
             "1px solid rgba(255,255,255,0.08)",
     },
 
-    footerButton: {
-        width: "100%",
-        border: "none",
-        background: "transparent",
-        color: "#9eabbd",
-        padding: "12px",
-        display: "flex",
-        gap: "12px",
-        alignItems: "center",
-        cursor: "pointer",
-        borderRadius: "9px",
-        textAlign: "left",
-        fontSize: "13px",
-    },
 
     logoutButton: {
         width: "100%",
+        display: "flex",
+        alignItems: "center",
+        gap: "12px",
         border: "none",
         background:
-            "rgba(255,255,255,0.05)",
-        color: "#ffb0b0",
-        padding: "12px",
-        display: "flex",
-        gap: "12px",
-        alignItems: "center",
+            "rgba(220,38,38,0.10)",
+        color: "#ff8b8b",
+        padding: "12px 13px",
+        borderRadius: "10px",
         cursor: "pointer",
-        borderRadius: "9px",
+        fontFamily: "inherit",
+        fontSize: "12px",
+        fontWeight: "700",
+        marginTop: "5px",
         textAlign: "left",
-        fontSize: "13px",
-        marginTop: "4px",
     },
+
 
     main: {
         marginLeft: "270px",
-        width:
-            "calc(100% - 270px)",
+        width: "calc(100% - 270px)",
         minHeight: "100vh",
+        background: "#f4f7fb",
     },
 
+
     topbar: {
-        height: "90px",
+        height: "84px",
         background: "#ffffff",
         borderBottom:
             "1px solid #e7ebf2",
         display: "flex",
         alignItems: "center",
-        justifyContent:
-            "space-between",
-        padding: "0 34px",
+        justifyContent: "space-between",
+        padding: "0 32px",
         position: "sticky",
         top: 0,
         zIndex: 50,
     },
 
+
     topbarLeft: {
         display: "flex",
         alignItems: "center",
-        gap: "15px",
+        gap: "16px",
     },
+
 
     menuButton: {
         display: "none",
         border: "none",
-        background: "#f0f3f8",
-        width: "40px",
-        height: "40px",
-        borderRadius: "9px",
+        background: "#f4f7fb",
+        borderRadius: "8px",
+        width: "38px",
+        height: "38px",
         cursor: "pointer",
-        fontSize: "20px",
+        fontSize: "18px",
     },
+
 
     pageTitle: {
         margin: 0,
-        fontSize: "22px",
+        fontSize: "21px",
         fontWeight: "800",
-        color: "#111827",
+        color: "#172033",
     },
+
 
     pageSubtitle: {
         margin: "4px 0 0",
-        color: "#7a8699",
         fontSize: "12px",
+        color: "#7c8798",
     },
+
 
     profileArea: {
         display: "flex",
         alignItems: "center",
-        gap: "12px",
+        gap: "13px",
     },
+
 
     profileText: {
         display: "flex",
         flexDirection: "column",
-        textAlign: "right",
+        alignItems: "flex-end",
         gap: "2px",
     },
+
+
+    profileTextStrong: {
+        fontSize: "12px",
+    },
+
+
+    profileTextSpan: {
+        fontSize: "11px",
+        color: "#7c8798",
+    },
+
 
     avatar: {
         width: "42px",
@@ -1345,286 +1737,304 @@ const styles = {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        fontSize: "13px",
+        fontSize: "12px",
         fontWeight: "800",
+        boxShadow:
+            "0 7px 18px rgba(38,110,255,0.20)",
     },
 
+
     content: {
-        padding: "30px 34px 50px",
+        padding: "30px 32px 40px",
         maxWidth: "1500px",
         margin: "0 auto",
     },
 
+
     welcomeCard: {
         background:
-            "linear-gradient(135deg, #071426 0%, #102a51 100%)",
-        borderRadius: "18px",
-        padding: "32px",
+            "linear-gradient(135deg, #1e3a8a, #266EFF)",
         color: "#ffffff",
+        borderRadius: "18px",
+        padding: "28px",
         display: "flex",
         alignItems: "center",
-        justifyContent:
-            "space-between",
+        justifyContent: "space-between",
+        gap: "20px",
+        marginBottom: "30px",
         overflow: "hidden",
-        position: "relative",
-        marginBottom: "32px",
     },
 
+
     welcomeLabel: {
-        color: "#8db4ff",
-        fontSize: "11px",
+        fontSize: "10px",
         fontWeight: "800",
         letterSpacing: "1.5px",
-        marginBottom: "8px",
+        opacity: 0.8,
+        marginBottom: "6px",
     },
+
 
     welcomeTitle: {
         margin: 0,
-        fontSize: "28px",
+        fontSize: "26px",
         fontWeight: "800",
     },
 
+
     welcomeDescription: {
-        maxWidth: "720px",
-        color: "#c5d0e1",
-        fontSize: "13px",
-        lineHeight: 1.7,
         margin: "10px 0 0",
+        maxWidth: "700px",
+        fontSize: "12px",
+        lineHeight: 1.7,
+        opacity: 0.88,
     },
 
+
     welcomeIcon: {
-        width: "110px",
-        height: "110px",
-        borderRadius: "28px",
+        width: "80px",
+        height: "80px",
+        minWidth: "80px",
+        borderRadius: "22px",
         background:
-            "rgba(255,255,255,0.08)",
-        border:
-            "1px solid rgba(255,255,255,0.12)",
+            "rgba(255,255,255,0.13)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        fontSize: "48px",
-        fontWeight: "900",
-        marginLeft: "25px",
+        fontSize: "38px",
+        fontWeight: "800",
     },
+
 
     sectionHeader: {
         display: "flex",
-        justifyContent:
-            "space-between",
-        alignItems: "center",
-        marginBottom: "17px",
+        justifyContent: "space-between",
+        alignItems: "flex-end",
+        marginBottom: "16px",
     },
+
 
     sectionTitle: {
         margin: 0,
-        fontSize: "18px",
+        fontSize: "17px",
         fontWeight: "800",
         color: "#172033",
     },
 
+
     sectionDescription: {
-        margin: "5px 0 0",
+        margin: "4px 0 0",
         fontSize: "12px",
-        color: "#8490a3",
+        color: "#7c8798",
     },
+
 
     statsGrid: {
         display: "grid",
         gridTemplateColumns:
             "repeat(4, minmax(0, 1fr))",
-        gap: "16px",
-        marginBottom: "34px",
+        gap: "15px",
+        marginBottom: "32px",
     },
 
+
     statCard: {
-        border:
-            "1px solid #e7ebf2",
+        border: "1px solid #e7ebf2",
         background: "#ffffff",
         borderRadius: "15px",
-        padding: "20px",
+        padding: "19px",
         textAlign: "left",
         cursor: "pointer",
+        fontFamily: "inherit",
         transition:
-            "transform 0.2s ease",
-        boxShadow:
-            "0 5px 18px rgba(24, 39, 75, 0.04)",
+            "transform 0.2s ease, box-shadow 0.2s ease",
     },
+
 
     statTop: {
         display: "flex",
         alignItems: "center",
-        justifyContent:
-            "space-between",
+        justifyContent: "space-between",
+        marginBottom: "12px",
     },
 
+
     statIcon: {
-        width: "42px",
-        height: "42px",
-        borderRadius: "11px",
+        width: "38px",
+        height: "38px",
+        borderRadius: "10px",
         background: "#edf3ff",
         color: "#266EFF",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        fontSize: "20px",
-        fontWeight: "700",
+        fontSize: "17px",
+        fontWeight: "800",
     },
+
 
     statArrow: {
-        color: "#a2adbd",
-        fontSize: "18px",
+        color: "#a0a9b8",
+        fontSize: "17px",
     },
 
+
     statValue: {
-        marginTop: "18px",
-        fontSize: "27px",
+        fontSize: "25px",
         fontWeight: "800",
         color: "#172033",
     },
 
+
     statTitle: {
-        marginTop: "2px",
-        fontSize: "13px",
+        marginTop: "3px",
+        fontSize: "12px",
         fontWeight: "700",
-        color: "#333d4f",
+        color: "#3e4859",
     },
 
+
     statDescription: {
-        marginTop: "5px",
-        fontSize: "11px",
-        color: "#8a95a6",
+        marginTop: "4px",
+        fontSize: "10px",
+        color: "#8b95a5",
     },
+
 
     operationsGrid: {
         display: "grid",
         gridTemplateColumns:
             "repeat(3, minmax(0, 1fr))",
         gap: "16px",
-        marginBottom: "34px",
+        marginBottom: "32px",
     },
+
 
     operationCard: {
         background: "#ffffff",
-        border:
-            "1px solid #e7ebf2",
-        borderRadius: "15px",
+        border: "1px solid #e7ebf2",
+        borderRadius: "16px",
         padding: "21px",
-        boxShadow:
-            "0 5px 18px rgba(24,39,75,0.04)",
     },
 
+
     operationIcon: {
-        width: "45px",
-        height: "45px",
-        borderRadius: "12px",
-        background: "#f0f4ff",
+        width: "43px",
+        height: "43px",
+        borderRadius: "11px",
+        background: "#edf3ff",
         color: "#266EFF",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        fontSize: "20px",
-        fontWeight: "700",
+        fontSize: "19px",
+        fontWeight: "800",
+        marginBottom: "14px",
     },
+
 
     operationTitle: {
-        margin: "16px 0 6px",
-        fontSize: "15px",
+        margin: 0,
+        fontSize: "14px",
         fontWeight: "800",
+        color: "#172033",
     },
+
 
     operationDescription: {
-        margin: 0,
-        color: "#7c8798",
+        minHeight: "48px",
+        margin: "8px 0 17px",
         fontSize: "11px",
-        lineHeight: 1.65,
-        minHeight: "58px",
+        lineHeight: 1.6,
+        color: "#7c8798",
     },
 
+
     operationButton: {
-        marginTop: "17px",
-        width: "100%",
         border: "none",
-        borderRadius: "9px",
-        background: "#266EFF",
-        color: "#ffffff",
-        padding: "11px 13px",
+        background: "#edf3ff",
+        color: "#266EFF",
+        borderRadius: "8px",
+        padding: "9px 12px",
         cursor: "pointer",
+        fontFamily: "inherit",
         fontSize: "11px",
         fontWeight: "700",
         display: "flex",
         alignItems: "center",
-        justifyContent:
-            "space-between",
+        gap: "8px",
     },
+
 
     securityGrid: {
         display: "grid",
         gridTemplateColumns:
             "repeat(4, minmax(0, 1fr))",
-        gap: "16px",
+        gap: "15px",
     },
+
 
     securityCard: {
         background: "#ffffff",
-        border:
-            "1px solid #e7ebf2",
+        border: "1px solid #e7ebf2",
         borderRadius: "15px",
         padding: "19px",
     },
 
+
     securityTop: {
         display: "flex",
-        justifyContent:
-            "space-between",
         alignItems: "center",
+        justifyContent: "space-between",
+        marginBottom: "14px",
     },
 
+
     securityIcon: {
-        width: "38px",
-        height: "38px",
-        borderRadius: "50%",
-        background: "#eaf9f1",
-        color: "#159957",
+        width: "34px",
+        height: "34px",
+        borderRadius: "9px",
+        background: "#eaf9f0",
+        color: "#16a34a",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         fontWeight: "800",
     },
 
-    activeBadge: {
-        fontSize: "10px",
-        color: "#159957",
-        background: "#eaf9f1",
-        padding: "5px 9px",
-        borderRadius: "20px",
-        fontWeight: "700",
-    },
 
-    securityTitle: {
-        fontSize: "14px",
-        margin: "15px 0 6px",
+    activeBadge: {
+        padding: "5px 8px",
+        borderRadius: "999px",
+        background: "#eaf9f0",
+        color: "#16a34a",
+        fontSize: "9px",
         fontWeight: "800",
     },
 
-    securityDescription: {
+
+    securityTitle: {
         margin: 0,
-        fontSize: "11px",
-        color: "#7c8798",
-        lineHeight: 1.6,
+        fontSize: "13px",
+        fontWeight: "800",
     },
 
+
+    securityDescription: {
+        margin: "7px 0 0",
+        fontSize: "10px",
+        lineHeight: 1.6,
+        color: "#7c8798",
+    },
+
+
     moduleHeader: {
-        background: "#ffffff",
-        border:
-            "1px solid #e7ebf2",
-        borderRadius: "17px",
-        padding: "25px",
         display: "flex",
         alignItems: "center",
-        gap: "17px",
+        gap: "15px",
         marginBottom: "20px",
     },
+
 
     moduleIcon: {
         width: "55px",
@@ -1639,11 +2049,13 @@ const styles = {
         fontWeight: "800",
     },
 
+
     moduleTitle: {
         margin: 0,
         fontSize: "21px",
         fontWeight: "800",
     },
+
 
     moduleDescription: {
         margin: "5px 0 0",
@@ -1651,17 +2063,18 @@ const styles = {
         color: "#7c8798",
     },
 
+
     moduleNotice: {
         display: "flex",
         gap: "14px",
         alignItems: "flex-start",
         background: "#fff8e7",
-        border:
-            "1px solid #f4e0a8",
+        border: "1px solid #f4e0a8",
         borderRadius: "14px",
         padding: "18px",
         marginBottom: "20px",
     },
+
 
     noticeIcon: {
         width: "32px",
@@ -1676,13 +2089,14 @@ const styles = {
         fontWeight: "800",
     },
 
+
     processCard: {
         background: "#ffffff",
-        border:
-            "1px solid #e7ebf2",
+        border: "1px solid #e7ebf2",
         borderRadius: "17px",
         padding: "25px",
     },
+
 
     processTitle: {
         margin: "0 0 20px",
@@ -1690,11 +2104,13 @@ const styles = {
         fontWeight: "800",
     },
 
+
     processList: {
         display: "flex",
         flexDirection: "column",
         gap: "13px",
     },
+
 
     processItem: {
         display: "flex",
@@ -1704,6 +2120,7 @@ const styles = {
         background: "#f8faff",
         borderRadius: "10px",
     },
+
 
     processNumber: {
         width: "30px",
@@ -1719,11 +2136,63 @@ const styles = {
         fontWeight: "800",
     },
 
+
     processText: {
         fontSize: "12px",
         color: "#3e4859",
     },
+
 };
 
+
+// =====================================================
+// RESPONSIVE STYLE
+// =====================================================
+
+if (
+    typeof document !== "undefined"
+) {
+    const styleId =
+        "votara-eb-dashboard-responsive";
+
+    if (
+        !document.getElementById(
+            styleId
+        )
+    ) {
+        const style =
+            document.createElement(
+                "style"
+            );
+
+        style.id = styleId;
+
+        style.innerHTML = `
+            @media (max-width: 1200px) {
+                .votara-eb-dashboard-placeholder {
+                    display: block;
+                }
+            }
+
+            @media (max-width: 1000px) {
+                body {
+                    overflow-x: hidden;
+                }
+            }
+
+            @media (max-width: 900px) {
+                /* Dashboard adapts naturally */
+            }
+
+            @media (max-width: 768px) {
+                /* Mobile dashboard */
+            }
+        `;
+
+        document.head.appendChild(
+            style
+        );
+    }
+}
 
 export default EBDashboard;
