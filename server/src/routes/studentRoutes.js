@@ -10,15 +10,35 @@ const {
     requestStudentAccountDeletion,
 } = require("../controllers/studentController");
 
-const protectStudent =
-    require("../middleware/protectStudent");
+
+// =========================================================
+// EXISTING STUDENT AUTHENTICATION MIDDLEWARE
+// =========================================================
+//
+// VOTARA already uses authMiddleware.js for student
+// authentication.
+//
+// DO NOT create another student authentication middleware.
+// DO NOT modify authMiddleware.js.
+// =========================================================
+
+const {
+    protectStudent,
+} = require("../middleware/authMiddleware");
+
 
 const router =
     express.Router();
 
 
 // =========================================================
-// ALL STUDENT ACCOUNT ROUTES REQUIRE STUDENT LOGIN
+// STUDENT AUTHENTICATION
+// =========================================================
+//
+// Every route below requires a valid student JWT.
+//
+// protectStudent places the decoded JWT inside:
+// req.student
 // =========================================================
 
 router.use(
@@ -27,14 +47,17 @@ router.use(
 
 
 // =========================================================
-// PROFILE
+// STUDENT PROFILE
 // =========================================================
 
+// Get current student's profile
 router.get(
     "/profile",
     getStudentProfile
 );
 
+
+// Update current student's profile
 router.patch(
     "/profile",
     updateStudentProfile
@@ -45,11 +68,14 @@ router.patch(
 // PROFILE PICTURE
 // =========================================================
 
+// Update profile picture
 router.patch(
     "/profile-picture",
     updateStudentProfilePicture
 );
 
+
+// Remove profile picture
 router.delete(
     "/profile-picture",
     removeStudentProfilePicture
@@ -60,6 +86,7 @@ router.delete(
 // PASSWORD
 // =========================================================
 
+// Change student password
 router.patch(
     "/password",
     changeStudentPassword
@@ -67,19 +94,26 @@ router.patch(
 
 
 // =========================================================
-// ACCOUNT
+// ACCOUNT MANAGEMENT
 // =========================================================
 
+// Deactivate account
 router.post(
     "/deactivate",
     deactivateStudentAccount
 );
 
+
+// Request account deletion
 router.delete(
     "/account",
     requestStudentAccountDeletion
 );
 
+
+// =========================================================
+// EXPORT
+// =========================================================
 
 module.exports =
     router;
