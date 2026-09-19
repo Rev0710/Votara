@@ -891,7 +891,7 @@ VOTARA
 Modernizing Student Elections Through a Clean, Secure, and Structured Digital Voting Experience.
 
 Built with
-React • Vite • Node.js • Express • Supabase • PostgreSQL • JWT • bcryptjs
+React • Vite • Node.js • Express • Supabase • PostgreSQL • JWT • bcryptjs • Render • Vercel • Figma • GitHub
 Developed by
 Team VOTARA
 
