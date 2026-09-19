@@ -733,55 +733,6 @@ Overall Development
 ████████████████░░░░ ~80%
 
 
-
-Future Development
-The immediate development priorities are:
-
-1. Kiosk Management
-        |
-        v
-2. Kiosk Session Database Integration
-        |
-        v
-3. Full Student-to-Election End-to-End Testing
-        |
-        v
-4. Security and Permission Testing
-        |
-        v
-5. Automatic Audit Logging Completion
-        |
-        v
-6. Final UI/UX Polish
-        |
-        v
-7. Production Deployment Testing
-        |
-        v
-8. Final Documentation
-        |
-        v
-9. VOTARA Release
-
-Team Members
-Add the official team members below:
-Team VOTARA
-
-1. John Rev Dela Rosa
-2. Ryan Tacaisan
-3. Matthew Chin
-4. Jeremie Balondon
-5. Mark Lester Bachoco
-6. Shenea Jane Alamon
-
-VOTARA
-Modernizing Student Elections Through a Clean, Secure, and Structured Digital Voting Experience.
-
-Built with
-React • Vite • Node.js • Express • Supabase • PostgreSQL • JWT • bcryptjs
-Developed by
-Team VOTARA
-
 ELECTORAL BOARD
         ↓
 EB Login
@@ -882,4 +833,57 @@ Session Summary
 The system displays a summary of the session, such as the number of students served and participation records.
 END
 The kiosk session is officially completed.
+
+
+
+
+Future Development
+The immediate development priorities are:
+
+1. Kiosk Management
+        |
+        v
+2. Kiosk Session Database Integration
+        |
+        v
+3. Full Student-to-Election End-to-End Testing
+        |
+        v
+4. Security and Permission Testing
+        |
+        v
+5. Automatic Audit Logging Completion
+        |
+        v
+6. Final UI/UX Polish
+        |
+        v
+7. Production Deployment Testing
+        |
+        v
+8. Final Documentation
+        |
+        v
+9. VOTARA Release
+
+Team Members
+Add the official team members below:
+Team VOTARA
+
+1. John Rev Dela Rosa
+2. Ryan Tacaisan
+3. Matthew Chin
+4. Jeremie Balondon
+5. Mark Lester Bachoco
+6. Shenea Jane Alamon
+
+VOTARA
+Modernizing Student Elections Through a Clean, Secure, and Structured Digital Voting Experience.
+
+Built with
+React • Vite • Node.js • Express • Supabase • PostgreSQL • JWT • bcryptjs
+Developed by
+Team VOTARA
+
+
 
