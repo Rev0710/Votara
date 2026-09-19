@@ -2,9 +2,8 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./StaffLogin.css";
 
-const API_BASE_URL =
-    import.meta.env.VITE_API_URL ||
-    "http://localhost:5000/api";
+import api from "../../services/api";
+
 
 // =====================================================
 // SHARED ADMIN / ELECTORAL BOARD LOGIN
@@ -14,15 +13,35 @@ const StaffLogin = () => {
 
     const navigate = useNavigate();
 
+
+    // =================================================
+    // NAVIGATION
+    // =================================================
+
     const goToAdmin = () => {
-        const changePage = () => navigate("/account-selection");
+
+        const changePage = () =>
+            navigate("/account-selection");
+
 
         if (document.startViewTransition) {
-            document.startViewTransition(changePage);
+
+            document.startViewTransition(
+                changePage
+            );
+
         } else {
+
             changePage();
+
         }
+
     };
+
+
+    // =================================================
+    // FORM STATE
+    // =================================================
 
     const [formData, setFormData] =
         useState({
@@ -31,14 +50,18 @@ const StaffLogin = () => {
             securityCode: "",
         });
 
+
     const [showPassword, setShowPassword] =
         useState(false);
+
 
     const [showSecurityCode, setShowSecurityCode] =
         useState(false);
 
+
     const [loading, setLoading] =
         useState(false);
+
 
     const [error, setError] =
         useState("");
@@ -55,12 +78,15 @@ const StaffLogin = () => {
             value,
         } = event.target;
 
-        setFormData(previous => ({
+
+        setFormData((previous) => ({
             ...previous,
             [name]: value,
         }));
 
+
         setError("");
+
     };
 
 
@@ -74,6 +100,11 @@ const StaffLogin = () => {
 
         setError("");
 
+
+        // =================================================
+        // VALIDATE REQUIRED FIELDS
+        // =================================================
+
         if (
             !formData.email.trim() ||
             !formData.password ||
@@ -85,6 +116,7 @@ const StaffLogin = () => {
             );
 
             return;
+
         }
 
 
@@ -92,47 +124,86 @@ const StaffLogin = () => {
 
             setLoading(true);
 
+
+            // =================================================
+            // STAFF LOGIN
+            // =================================================
+            //
+            // IMPORTANT:
+            // Use the centralized api.js.
+            //
+            // Production:
+            // https://votara-api-olij.onrender.com/api
+            //
+            // Local:
+            // http://localhost:5000/api
+            //
+            // Final endpoint:
+            // /staff-auth/login
+            // =================================================
+
             const response =
-                await fetch(
-                    `${API_BASE_URL}/staff-auth/login`,
+                await api.post(
+                    "/staff-auth/login",
                     {
-                        method: "POST",
+                        email:
+                            formData.email
+                                .trim()
+                                .toLowerCase(),
 
-                        headers: {
-                            "Content-Type":
-                                "application/json",
-                        },
+                        password:
+                            formData.password,
 
-                        body:
-                            JSON.stringify({
-                                email:
-                                    formData.email
-                                        .trim()
-                                        .toLowerCase(),
-
-                                password:
-                                    formData.password,
-
-                                securityCode:
-                                    formData.securityCode
-                                        .trim(),
-                            }),
+                        securityCode:
+                            formData.securityCode
+                                .trim(),
                     }
                 );
 
 
             const data =
-                await response.json();
+                response.data;
 
 
-            if (!response.ok) {
+            // =================================================
+            // RESPONSE VALIDATION
+            // =================================================
+
+            if (
+                !data ||
+                !data.user ||
+                !data.token
+            ) {
 
                 setError(
-                    data.message ||
-                    "Unable to login."
+                    "Invalid login response from the VOTARA server."
                 );
 
                 return;
+
+            }
+
+
+            // =================================================
+            // ROLE CHECK
+            // =================================================
+            //
+            // This page is specifically for Electoral Board.
+            //
+            // Do this BEFORE saving the session or navigating.
+            // =================================================
+
+            if (
+                data.user.role !==
+                "electoral_board"
+            ) {
+
+                setError(
+                    "This account is not an Electoral Board account. Please use the Admin login page."
+                );
+
+                return;
+
             }
 
 
@@ -147,22 +218,17 @@ const StaffLogin = () => {
                 data.token
             );
 
+
             localStorage.setItem(
                 "votaraStaffUser",
                 JSON.stringify(
                     data.user
                 )
             );
-            navigate(
-    "/electoral-board/dashboard",
-    {
-        replace: true,
-    }
-            );
 
 
             // =================================================
-            // ROLE CHECK
+            // PASSWORD CHANGE
             // =================================================
 
             if (
@@ -177,39 +243,19 @@ const StaffLogin = () => {
                 );
 
                 return;
+
             }
 
 
-if (
-    !data.user ||
-    data.user.role !== "electoral_board"
-) {
-    setError(
-        "This account is not an Electoral Board account. Please use the Admin login page."
-    );
+            // =================================================
+            // ELECTORAL BOARD DASHBOARD
+            // =================================================
 
-    return;
-}
-
-
-            if (
-                data.user.role ===
-                "electoral_board"
-            ) {
-
-                navigate(
-                    "/electoral-board/dashboard",
-                    {
-                        replace: true,
-                    }
-                );
-
-                return;
-            }
-
-
-            setError(
-                "Your account role is not recognized."
+            navigate(
+                "/electoral-board/dashboard",
+                {
+                    replace: true,
+                }
             );
 
 
@@ -220,16 +266,40 @@ if (
                 error
             );
 
-            setError(
-                "Unable to connect to the VOTARA server. Please make sure the backend is running."
-            );
+
+            // =================================================
+            // SERVER ERROR
+            // =================================================
+
+            if (
+                error.response
+            ) {
+
+                setError(
+                    error.response.data?.message ||
+                    "Unable to login."
+                );
+
+            } else {
+
+                setError(
+                    "Unable to connect to the VOTARA server. Please check your internet connection or try again."
+                );
+
+            }
 
         } finally {
 
             setLoading(false);
+
         }
+
     };
 
+
+    // =====================================================
+    // UI
+    // =====================================================
 
     return (
 
@@ -298,7 +368,10 @@ if (
                         <form
                             onSubmit={handleSubmit}
                             className="staff-login-form"
-                            style={{ viewTransitionName: "staff-login-input-section" }}
+                            style={{
+                                viewTransitionName:
+                                    "staff-login-input-section",
+                            }}
                         >
 
 
@@ -349,11 +422,12 @@ if (
                                     disabled={loading}
                                 />
 
+
                                 <button
                                     type="button"
                                     onClick={() =>
                                         setShowPassword(
-                                            previous =>
+                                            (previous) =>
                                                 !previous
                                         )
                                     }
@@ -391,11 +465,12 @@ if (
                                     disabled={loading}
                                 />
 
+
                                 <button
                                     type="button"
                                     onClick={() =>
                                         setShowSecurityCode(
-                                            previous =>
+                                            (previous) =>
                                                 !previous
                                         )
                                     }
@@ -550,7 +625,10 @@ if (
             </div>
 
         </div>
+
     );
+
 };
+
 
 export default StaffLogin;

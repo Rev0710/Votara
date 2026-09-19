@@ -105,6 +105,89 @@ const formatTime = (value) => {
     }`;
 };
 
+
+const API_BASE_URL =
+    import.meta.env.VITE_API_URL ||
+    "http://localhost:5000";
+
+const resolveImageUrl = (value) => {
+    if (!value) return "";
+
+    if (typeof value === "object") {
+        value =
+            value.url ||
+            value.publicUrl ||
+            value.public_url ||
+            value.path ||
+            value.filePath ||
+            "";
+    }
+
+    if (!value) return "";
+
+    const raw = String(value).trim();
+
+    if (!raw) return "";
+
+    if (
+        raw.startsWith("data:image/") ||
+        raw.startsWith("blob:") ||
+        raw.startsWith("http://") ||
+        raw.startsWith("https://")
+    ) {
+        return raw;
+    }
+
+    if (raw.startsWith("//")) {
+        return `https:${raw}`;
+    }
+
+    if (raw.startsWith("/src/")) {
+        return raw;
+    }
+
+    if (raw.startsWith("/")) {
+        return `${API_BASE_URL}${raw}`;
+    }
+
+    return `${API_BASE_URL}/${raw.replace(/^\/+/, "")}`;
+};
+
+const getProfilePictureValue = (studentData) => {
+    if (!studentData) return "";
+
+    return (
+        studentData.profilePicture ||
+        studentData.profile_picture ||
+        studentData.profile_picture_url ||
+        studentData.profilePictureUrl ||
+        studentData.avatar ||
+        studentData.avatar_url ||
+        studentData.photo ||
+        studentData.photo_url ||
+        ""
+    );
+};
+
+const getElectionStatus = (value) =>
+    String(value || "").trim().toLowerCase();
+
+const ELECTION_STATUS_LABELS = {
+    draft: "Draft",
+    scheduled: "Scheduled",
+    open: "Voting Open",
+    closed: "Voting Closed",
+    cancelled: "Cancelled",
+};
+
+const ELECTION_STATUS_CLASSES = {
+    draft: "status-draft",
+    scheduled: "status-scheduled",
+    open: "status-open",
+    closed: "status-closed",
+    cancelled: "status-cancelled",
+};
+
 // =====================================================
 // COMPONENT
 // =====================================================
@@ -125,6 +208,7 @@ function StudentDashboard() {
     const [selectedFaq, setSelectedFaq] = useState(null);
 
     const [settingsModal, setSettingsModal] = useState(null);
+    const [profileImageError, setProfileImageError] = useState(false);
 
     // =================================================
     // ELECTION / VOTING STATE
@@ -169,8 +253,38 @@ function StudentDashboard() {
 
                 const data = await response.json();
 
+                let storedStudent = null;
+
+                try {
+                    const stored =
+                        localStorage.getItem("votaraStudent");
+
+                    if (stored) {
+                        storedStudent = JSON.parse(stored);
+                    }
+                } catch (storageError) {
+                    console.warn(
+                        "Unable to read stored student profile:",
+                        storageError
+                    );
+                }
+
                 if (data.success && data.student) {
-                    setStudent(data.student);
+                    const mergedStudent = {
+                        ...(storedStudent || {}),
+                        ...data.student,
+                    };
+
+                    setStudent(mergedStudent);
+
+                    // Keep the newest profile data available to the
+                    // rest of the student application.
+                    localStorage.setItem(
+                        "votaraStudent",
+                        JSON.stringify(mergedStudent)
+                    );
+                } else if (storedStudent) {
+                    setStudent(storedStudent);
                 }
             } catch (error) {
                 console.error(
@@ -313,13 +427,55 @@ function StudentDashboard() {
         .slice(0, 2)
         .toUpperCase();
 
+    const profilePictureValue =
+        getProfilePictureValue(student);
+
     const profilePicture =
-        student?.profilePicture;
+        resolveImageUrl(profilePictureValue);
+
+    useEffect(() => {
+        setProfileImageError(false);
+    }, [profilePicture]);
 
     const studentYearLevel =
         normalizeYearLevel(
             student?.yearLevel
         );
+
+    const studentEligible =
+        ["2nd Year", "3rd Year", "4th Year"].includes(
+            studentYearLevel
+        );
+
+    const electionStatus =
+        getElectionStatus(election?.status);
+
+    const electionStatusLabel =
+        ELECTION_STATUS_LABELS[electionStatus] ||
+        "No Election";
+
+    const electionStatusClass =
+        ELECTION_STATUS_CLASSES[electionStatus] ||
+        "status-none";
+
+    const electionIsOpen =
+        electionStatus === "open" &&
+        election?.is_published !== false;
+
+    const electionIsScheduled =
+        electionStatus === "scheduled";
+
+    const electionIsClosed =
+        electionStatus === "closed";
+
+    const electionIsCancelled =
+        electionStatus === "cancelled";
+
+    const studentCanVote =
+        Boolean(electionIsOpen) &&
+        studentEligible &&
+        !hasVoted &&
+        !voteLoading;
 
     // =================================================
     // SIDEBAR ITEMS
@@ -407,33 +563,49 @@ function StudentDashboard() {
         studentYearLevel,
     ]);
 
-    // =================================================
-    // GROUP APPROVED CANDIDATES BY POSITION
-    // =================================================
+// =================================================
+// GROUP ACTIVE CANDIDATES BY POSITION
+// =================================================
 
-    const candidatesByPosition = useMemo(() => {
-        const grouped = {};
+const candidatesByPosition = useMemo(() => {
+    const grouped = {};
 
-        eligiblePositions.forEach(
-            (position) => {
-                grouped[position.id] =
-                    candidates.filter(
-                        (candidate) =>
-                            candidate.position_id ===
-                                position.id &&
-                            candidate.approval_status ===
-                                "approved" &&
+    eligiblePositions.forEach(
+        (position) => {
+
+            const positionId =
+                String(
+                    position.id || ""
+                ).trim();
+
+            grouped[position.id] =
+                candidates.filter(
+                    (candidate) => {
+
+                        const candidatePositionId =
+                            String(
+                                candidate.position_id ||
+                                candidate.positionId ||
+                                candidate.position?.id ||
+                                ""
+                            ).trim();
+
+                        return (
+                            candidatePositionId ===
+                                positionId &&
                             candidate.is_active !==
                                 false
-                    );
-            }
-        );
+                        );
+                    }
+                );
+        }
+    );
 
-        return grouped;
-    }, [
-        candidates,
-        eligiblePositions,
-    ]);
+    return grouped;
+}, [
+    candidates,
+    eligiblePositions,
+]);
 
     // =================================================
     // MENU CHANGE
@@ -494,7 +666,12 @@ function StudentDashboard() {
         positionId,
         candidateId
     ) => {
-        if (hasVoted || voteLoading) {
+        if (
+            hasVoted ||
+            voteLoading ||
+            !electionIsOpen ||
+            !studentEligible
+        ) {
             return;
         }
 
@@ -525,7 +702,27 @@ function StudentDashboard() {
     const handleSubmitVotes = async () => {
         if (!election?.id) {
             alert(
-                "There is no active election available."
+                "There is no election currently available for voting."
+            );
+            return;
+        }
+
+        if (!electionIsOpen) {
+            alert(
+                electionIsScheduled
+                    ? "The election has not been opened for voting by the Electoral Board yet."
+                    : electionIsClosed
+                    ? "Voting for this election has ended."
+                    : electionIsCancelled
+                    ? "This election has been cancelled."
+                    : "The election is not currently open for voting."
+            );
+            return;
+        }
+
+        if (!studentEligible) {
+            alert(
+                "1st Year students are not eligible to vote in this election."
             );
             return;
         }
@@ -707,17 +904,17 @@ function StudentDashboard() {
             ] || [];
 
         if (
-            candidateList.length ===
-            0
-        ) {
-            return (
-                <div className="candidate-empty">
-                    No approved candidates are
-                    currently available for this
-                    position.
-                </div>
-            );
-        }
+                candidateList.length ===
+                0
+            ) {
+                return (
+                    <div className="candidate-empty">
+                        No active candidates are
+                        currently available for this
+                        position.
+                    </div>
+                );
+            }
 
         return candidateList.map(
             (candidate) => {
@@ -728,9 +925,12 @@ function StudentDashboard() {
                     "Candidate";
 
                 const candidateImage =
-                    candidate.profile_picture ||
-                    candidate.profilePicture ||
-                    "/src/images/candidate.png";
+                    resolveImageUrl(
+                        candidate.profile_picture ||
+                        candidate.profilePicture ||
+                        candidate.profile_picture_url ||
+                        candidate.profilePictureUrl
+                    ) || "/src/images/candidate.png";
 
                 const isSelected =
                     selectedVotes[
@@ -770,7 +970,9 @@ function StudentDashboard() {
                                 className="candidate-vote-button"
                                 disabled={
                                     hasVoted ||
-                                    voteLoading
+                                    voteLoading ||
+                                    !electionIsOpen ||
+                                    !studentEligible
                                 }
                                 onClick={() =>
                                     handleVoteSelect(
@@ -846,52 +1048,114 @@ function StudentDashboard() {
                         {/* LEFT COLUMN */}
 
                         <div className="left-column">
-                            <section className="election-card main-hover-card">
-                                <h2>
-                                    Ongoing Elections
-                                </h2>
+                            <section
+                                className={`election-card main-hover-card ${
+                                    electionStatusClass
+                                }`}
+                            >
+                                <div className="election-card-header">
+                                    <div>
+                                        <h2>
+                                            {electionIsOpen
+                                                ? "Ongoing Elections"
+                                                : electionIsScheduled
+                                                ? "Upcoming Election"
+                                                : "Election Status"}
+                                        </h2>
 
-                                <h3>
-                                    {election?.title ||
-                                        "No active election"}
-                                </h3>
+                                        <h3>
+                                            {election?.title ||
+                                                "No election currently available"}
+                                        </h3>
+                                    </div>
 
-                                {election && (
-                                    <p>
-                                        {formatDate(
-                                            election.election_date
-                                        )}
+                                    <span
+                                        className={`election-status-badge ${electionStatusClass}`}
+                                    >
+                                        {electionStatusLabel}
+                                    </span>
+                                </div>
 
-                                        <br />
+                                {election ? (
+                                    <div className="election-card-meta">
+                                        <span>
+                                            {formatDate(
+                                                election.election_date
+                                            )}
+                                        </span>
 
-                                        {formatTime(
-                                            election.start_time
-                                        )}
+                                        <span>
+                                            {formatTime(
+                                                election.start_time
+                                            )}
 
-                                        {election.end_time
-                                            ? ` - ${formatTime(
-                                                  election.end_time
-                                              )}`
-                                            : ""}
+                                            {election.end_time
+                                                ? ` - ${formatTime(
+                                                      election.end_time
+                                                  )}`
+                                                : ""}
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <p className="election-card-message">
+                                        {electionLoading
+                                            ? "Checking the current election..."
+                                            : electionError ||
+                                              "No published election is currently open."}
                                     </p>
                                 )}
+
+                                {election && !electionIsOpen && (
+                                    <div
+                                        className={`election-notice ${electionStatusClass}`}
+                                    >
+                                        {electionIsScheduled &&
+                                            "The Electoral Board has scheduled this election but has not opened voting yet."}
+
+                                        {electionIsClosed &&
+                                            "Voting for this election has ended."}
+
+                                        {electionIsCancelled &&
+                                            "This election has been cancelled."}
+
+                                        {electionStatus === "draft" &&
+                                            "This election is still being configured."}
+                                    </div>
+                                )}
+
+                                {electionIsOpen &&
+                                    !studentEligible && (
+                                        <div className="election-notice status-warning">
+                                            1st Year students are not eligible
+                                            to vote in this election.
+                                        </div>
+                                    )}
 
                                 <button
                                     type="button"
                                     className="vote-button"
-                                    disabled={
-                                        !election ||
-                                        hasVoted
-                                    }
+                                    disabled={!studentCanVote}
                                     onClick={() =>
-                                        handleMenuClick(
-                                            "vote"
-                                        )
+                                        handleMenuClick("vote")
+                                    }
+                                    title={
+                                        hasVoted
+                                            ? "You already voted in this election."
+                                            : !electionIsOpen
+                                            ? "Voting is not currently open."
+                                            : !studentEligible
+                                            ? "Your year level is not eligible to vote."
+                                            : "Open the ballot"
                                     }
                                 >
                                     {hasVoted
                                         ? "VOTE SUBMITTED"
-                                        : "Vote"}
+                                        : electionIsOpen &&
+                                          studentEligible
+                                        ? "Vote Now"
+                                        : electionIsScheduled
+                                        ? "NOT OPEN YET"
+                                        : "VOTING CLOSED"}
                                 </button>
                             </section>
 
@@ -927,9 +1191,12 @@ function StudentDashboard() {
                                             />
                                         </div>
 
-                                        <span className="vote-count">
-                                            {election?.status ||
-                                                "Inactive"}
+                                        <span
+                                            className={`vote-count status-text ${electionStatusClass}`}
+                                        >
+                                            {election
+                                                ? electionStatusLabel
+                                                : "Inactive"}
                                         </span>
                                     </div>
 
@@ -1129,7 +1396,7 @@ function StudentDashboard() {
                                             <span>
                                                 <strong>
                                                     {election
-                                                        ? "OPEN"
+                                                        ? electionStatusLabel
                                                         : "--"}
                                                 </strong>
                                                 STATUS
@@ -1247,6 +1514,8 @@ function StudentDashboard() {
                         <h1>
                             {hasVoted
                                 ? "Your Vote Has Been Submitted"
+                                : election && !electionIsOpen
+                                ? electionStatusLabel
                                 : "You May Now Cast Your Votes!"}
                         </h1>
 
@@ -1297,6 +1566,72 @@ function StudentDashboard() {
                             </section>
                         )}
 
+                    {election &&
+                        !electionIsOpen && (
+                            <section className="vote-status-panel">
+                                <div
+                                    className={`vote-status-icon ${electionStatusClass}`}
+                                >
+                                    {electionStatus === "scheduled"
+                                        ? "!"
+                                        : electionStatus === "closed"
+                                        ? "✓"
+                                        : "!"}
+                                </div>
+
+                                <div>
+                                    <span
+                                        className={`election-status-badge ${electionStatusClass}`}
+                                    >
+                                        {electionStatusLabel}
+                                    </span>
+
+                                    <h2>
+                                        {electionStatus === "scheduled"
+                                            ? "Voting has not opened yet"
+                                            : electionStatus === "closed"
+                                            ? "Voting has ended"
+                                            : electionStatus === "cancelled"
+                                            ? "Election cancelled"
+                                            : "Voting is unavailable"}
+                                    </h2>
+
+                                    <p>
+                                        {electionStatus === "scheduled"
+                                            ? "Please wait for the Electoral Board to open the election."
+                                            : electionStatus === "closed"
+                                            ? "The Electoral Board has closed voting for this election."
+                                            : "This election is not currently available for voting."}
+                                    </p>
+                                </div>
+                            </section>
+                        )}
+
+                    {election &&
+                        electionIsOpen &&
+                        !studentEligible && (
+                            <section className="vote-status-panel status-warning">
+                                <div className="vote-status-icon status-warning">
+                                    !
+                                </div>
+
+                                <div>
+                                    <span className="election-status-badge status-warning">
+                                        Not Eligible
+                                    </span>
+
+                                    <h2>
+                                        You are not eligible to vote
+                                    </h2>
+
+                                    <p>
+                                        1st Year students are not eligible
+                                        to vote in this election.
+                                    </p>
+                                </div>
+                            </section>
+                        )}
+
                     {!electionLoading &&
                         !electionError &&
                         !election && (
@@ -1307,9 +1642,7 @@ function StudentDashboard() {
                                     </h2>
 
                                     <p>
-                                        There is currently
-                                        no published active
-                                        election available.
+                                        There is currently no published election available for voting.
                                     </p>
                                 </div>
                             </section>
@@ -1335,6 +1668,8 @@ function StudentDashboard() {
                         )}
 
                     {election &&
+                        electionIsOpen &&
+                        studentEligible &&
                         eligiblePositions.map(
                             (position) => (
                                 <section
@@ -1376,6 +1711,8 @@ function StudentDashboard() {
                         )}
 
                     {election &&
+                        electionIsOpen &&
+                        studentEligible &&
                         eligiblePositions.length >
                             0 && (
                             <section className="vote-submit-section">
@@ -1690,21 +2027,19 @@ function StudentDashboard() {
                     </button>
 
                     <div className="nav-profile">
-                        {profilePicture ? (
+                        {profilePicture &&
+                        !profileImageError ? (
                             <img
-                                src={
-                                    profilePicture
-                                }
-                                alt={
-                                    fullName
-                                }
+                                src={profilePicture}
+                                alt={fullName}
                                 className="nav-profile-image"
+                                onError={() =>
+                                    setProfileImageError(true)
+                                }
                             />
                         ) : (
                             <div className="nav-profile-placeholder">
-                                {
-                                    initials
-                                }
+                                {initials}
                             </div>
                         )}
 
@@ -1728,21 +2063,19 @@ function StudentDashboard() {
                     }`}
                 >
                     <div className="sidebar-profile">
-                        {profilePicture ? (
+                        {profilePicture &&
+                        !profileImageError ? (
                             <img
-                                src={
-                                    profilePicture
-                                }
-                                alt={
-                                    fullName
-                                }
+                                src={profilePicture}
+                                alt={fullName}
                                 className="profile-picture"
+                                onError={() =>
+                                    setProfileImageError(true)
+                                }
                             />
                         ) : (
                             <div className="profile-placeholder">
-                                {
-                                    initials
-                                }
+                                {initials}
                             </div>
                         )}
 

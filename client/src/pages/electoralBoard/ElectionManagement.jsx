@@ -2684,6 +2684,35 @@ function ElectionManagement() {
                                                     </button>
                                                 )}
 
+                                                {election.rawStatus ===
+                                                    "scheduled" && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            requestStatusChange(
+                                                                election,
+                                                                "open"
+                                                            )
+                                                        }
+                                                        disabled={saving}
+                                                        style={{
+                                                            border: "none",
+                                                            background: "#16A34A",
+                                                            color: "#ffffff",
+                                                            padding: "8px 13px",
+                                                            borderRadius: "8px",
+                                                            cursor: saving
+                                                                ? "not-allowed"
+                                                                : "pointer",
+                                                            fontWeight: 800,
+                                                            marginLeft: "7px",
+                                                            opacity: saving ? 0.6 : 1,
+                                                        }}
+                                                    >
+                                                        Open Election
+                                                    </button>
+                                                )}
+
                                                 <button
                                                     type="button"
                                                     onClick={() =>

@@ -1,90 +1,382 @@
 import axios from "axios";
 
+
+// =====================================================
+// API BASE URL
+// =====================================================
+//
+// Production:
+// https://votara-api-olij.onrender.com/api
+//
+// Local development:
+// http://localhost:5000/api
+//
+// Vercel uses VITE_API_BASE_URL when configured.
+// The production fallback prevents localhost from being
+// accidentally used when the Vercel environment variable
+// is missing.
+// =====================================================
+
+const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL ||
+    (
+        import.meta.env.PROD
+            ? "https://votara-api-olij.onrender.com/api"
+            : "http://localhost:5000/api"
+    );
+
+
+// =====================================================
+// DEBUG
+// =====================================================
+
+console.log(
+    "🌐 VOTARA API BASE URL:",
+    API_BASE_URL
+);
+
+
+// =====================================================
+// AXIOS INSTANCE
+// =====================================================
+
 const api = axios.create({
-    baseURL:
-        import.meta.env.VITE_API_URL ||
-        "https://votara-api-olij.onrender.com",
+    baseURL: API_BASE_URL,
 
     headers: {
         "Content-Type": "application/json",
     },
 });
 
+
+// =====================================================
+// TOKEN HELPERS
+// =====================================================
+
+const getStudentToken = () => {
+    return (
+        localStorage.getItem("votaraToken") ||
+        localStorage.getItem("votaraStudentToken") ||
+        localStorage.getItem("studentToken") ||
+        ""
+    );
+};
+
+
+const getStaffToken = () => {
+    return (
+        localStorage.getItem("votaraStaffToken") ||
+        ""
+    );
+};
+
+
+const getEBToken = () => {
+    return (
+        localStorage.getItem("votaraEBToken") ||
+        ""
+    );
+};
+
+
+const getKioskToken = () => {
+    return (
+        localStorage.getItem("votaraKioskToken") ||
+        ""
+    );
+};
+
+
+// =====================================================
+// REQUEST TYPE HELPERS
+// =====================================================
+
+const isVotingRequest = (url = "") => {
+
+    const normalizedUrl =
+        String(url).toLowerCase();
+
+    return (
+        normalizedUrl.includes("/voting/") ||
+        normalizedUrl.includes("/voting") ||
+        normalizedUrl.includes("/vote/")
+    );
+};
+
+
+const isKioskRequest = (url = "") => {
+
+    const normalizedUrl =
+        String(url).toLowerCase();
+
+    return (
+        normalizedUrl.includes("/kiosk/") ||
+        normalizedUrl.includes("/kiosk")
+    );
+};
+
+
 // =====================================================
 // AUTHENTICATION INTERCEPTOR
 // =====================================================
 
 api.interceptors.request.use(
+
     (config) => {
-        // =================================================
-        // GET AUTHENTICATION TOKENS
-        // =================================================
 
-        const staffToken =
-            localStorage.getItem("votaraStaffToken");
+        const requestUrl =
+            config.url || "";
 
-        const ebToken =
-            localStorage.getItem("votaraEBToken");
+
+        const kioskMode =
+            localStorage.getItem(
+                "votaraKioskMode"
+            ) === "true";
+
 
         const studentToken =
-            localStorage.getItem("votaraToken");
+            getStudentToken();
 
-        // =================================================
-        // SELECT TOKEN
-        // =================================================
-        // Priority:
-        // 1. Electoral Board token
-        // 2. Staff/Admin token
-        // 3. Student token
+
+        const ebToken =
+            getEBToken();
+
+
+        const staffToken =
+            getStaffToken();
+
+
+        const kioskToken =
+            getKioskToken();
+
+
+        let token = "";
+
+
+        // -------------------------------------------------
+        // KIOSK VOTING
+        // -------------------------------------------------
         //
-        // This allows EB requests such as:
-        // /api/eb/registrations
-        // to correctly send the EB JWT.
-        // =================================================
+        // Kiosk students use the temporary kiosk JWT.
+        // This must take priority over EB/staff tokens.
+        //
+        if (
+            kioskMode &&
+            isVotingRequest(requestUrl) &&
+            kioskToken
+        ) {
 
-        const token =
-            ebToken ||
-            staffToken ||
-            studentToken;
+            token = kioskToken;
 
-        if (token) {
-            config.headers.Authorization =
-                `Bearer ${token}`;
         }
 
+
+        // -------------------------------------------------
+        // NORMAL STUDENT VOTING
+        // -------------------------------------------------
+        //
+        // /voting/* must ALWAYS use the student JWT.
+        //
+        else if (
+            isVotingRequest(requestUrl) &&
+            studentToken
+        ) {
+
+            token = studentToken;
+
+        }
+
+
+        // -------------------------------------------------
+        // KIOSK NON-VOTING REQUEST
+        // -------------------------------------------------
+        //
+        // Keep the kiosk token available for kiosk-specific
+        // student requests when kiosk mode is active.
+        //
+        else if (
+            kioskMode &&
+            isKioskRequest(requestUrl) &&
+            kioskToken
+        ) {
+
+            token = kioskToken;
+
+        }
+
+
+        // -------------------------------------------------
+        // ELECTORAL BOARD
+        // -------------------------------------------------
+        //
+        // EB-specific API calls use the EB token.
+        //
+        else if (ebToken) {
+
+            token = ebToken;
+
+        }
+
+
+        // -------------------------------------------------
+        // STAFF / ADMIN
+        // -------------------------------------------------
+
+        else if (staffToken) {
+
+            token = staffToken;
+
+        }
+
+
+        // -------------------------------------------------
+        // STUDENT FALLBACK
+        // -------------------------------------------------
+
+        else if (studentToken) {
+
+            token = studentToken;
+
+        }
+
+
+        // -------------------------------------------------
+        // ATTACH TOKEN
+        // -------------------------------------------------
+
+        if (token) {
+
+            config.headers =
+                config.headers || {};
+
+            config.headers.Authorization =
+                `Bearer ${token}`;
+
+        }
+
+
         return config;
+
     },
 
     (error) => {
+
         return Promise.reject(error);
+
     }
+
 );
+
 
 // =====================================================
 // RESPONSE INTERCEPTOR
 // =====================================================
 
 api.interceptors.response.use(
+
     (response) => {
+
         return response;
+
     },
 
     (error) => {
+
         if (error.response) {
+
             console.error(
                 "API Error:",
                 error.response.status,
                 error.response.data
             );
-        } else {
+
+
+            const requestUrl =
+                error.config?.url || "";
+
+
+            const kioskMode =
+                localStorage.getItem(
+                    "votaraKioskMode"
+                ) === "true";
+
+
+            const isKioskVotingRequest =
+                kioskMode &&
+                isVotingRequest(
+                    requestUrl
+                );
+
+
+            // ------------------------------------------------
+            // KIOSK SESSION EXPIRED
+            // ------------------------------------------------
+
+            if (
+                (
+                    error.response.status === 401 ||
+                    error.response.status === 403
+                ) &&
+                isKioskVotingRequest
+            ) {
+
+                console.warn(
+                    "Kiosk student session expired."
+                );
+
+
+                localStorage.removeItem(
+                    "votaraKioskToken"
+                );
+
+
+                localStorage.removeItem(
+                    "votaraKioskStudent"
+                );
+
+
+                localStorage.removeItem(
+                    "votaraKioskElectionId"
+                );
+
+
+                localStorage.removeItem(
+                    "votaraKioskSessionId"
+                );
+
+
+                localStorage.removeItem(
+                    "votaraKioskOperationId"
+                );
+
+
+                localStorage.removeItem(
+                    "votaraKioskMode"
+                );
+
+            }
+
+        }
+
+        else {
+
             console.error(
                 "API Network Error:",
                 error.message
             );
+
         }
 
+
         return Promise.reject(error);
+
     }
+
 );
+
+
+// =====================================================
+// EXPORT
+// =====================================================
 
 export default api;
