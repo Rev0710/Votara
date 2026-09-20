@@ -779,6 +779,8 @@ The student's voting session ends.
 15. END
 The process is completed.
 
+
+
                 STUDENT
                    ↓
           Go to Voting Kiosk
@@ -810,6 +812,10 @@ The process is completed.
           END SESSION
               ↓
               END
+
+
+
+
 
 
 
@@ -930,6 +936,120 @@ Close Kiosk Session
 Session Summary
    ↓
 END
+
+
+# 🗳️ VOTARA
+
+VOTARA is our school's online election website. Students register, verify their identity, and vote securely, either remotely or at a campus kiosk. The Electoral Board (EB) manages the election, and the Admin keeps the whole system running safely.
+
+## Admin Flow
+
+The Admin is the system administrator of the school election website. Admins manage accounts, data, security, and settings, and they monitor the system and give technical support during the election.
+
+### Flow Diagram
+
+
+flowchart TD
+    A["Admin Login<br/>Enter Email + Password"] --> B["Rate Limit Check"]
+    B --> C{"Valid?"}
+    C -- No --> D["Temporary Lockout"]
+    C -- Yes --> E["Admin Dashboard"]
+
+    E --> F["System Dashboard"]
+    E --> G["User and Access Management"]
+    E --> H["Data Management"]
+    E --> I["System Configuration"]
+    E --> J["Monitoring and Logs"]
+    E --> K["Support and Troubleshooting"]
+    E --> L["Reports and Analytics"]
+    E --> M["Secure System / Audit Trail"]
+
+    L -. "Reports / system data" .-> N["EB: Results and Reports"]
+```
+
+### How It Works
+
+1. **Admin Login**: The admin signs in with their email and password.
+2. **Rate Limit Check**: The system checks the login attempt.
+   - ❌ Invalid: the account is temporarily locked out.
+   - ✅ Valid: the admin goes to the Admin Dashboard.
+3. **Admin Dashboard**: The admin picks one of the modules below.
+
+### Admin Modules
+
+| Module | What it covers |
+|---|---|
+| **System Dashboard** | System health, total users, election status, server usage, activity logs |
+| **User & Access Management** | Admin accounts, EB accounts, poll workers, roles/permissions, account resets |
+| **Data Management** | Student data, enrolment status, collections, backup/restore, data cleanup |
+| **System Configuration** | Parameters, Email/SMS OTP, rate limiting, security settings, maintenance mode |
+| **Monitoring & Logs** | System logs, failed login attempts, OTP/PIN attempts, suspicious activities, export logs |
+| **Support & Troubleshooting** | User issues, poll worker assistance, fixing system errors, managing server resources, technical support |
+| **Reports & Analytics** | System usage, user activity, election summary, security incident report, export data |
+| **Secure System / Audit Trail** | Regular monitoring, backups, audit logging, security patches, election support |
+
+### Connection to the EB Flow
+
+The Admin's **Reports & Analytics** module connects to the Electoral Board's **Results & Reports**, so system data and reports are shared between the two roles.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Future Development
 The immediate development priorities are:
