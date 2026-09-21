@@ -78,263 +78,397 @@
     font: inherit;
 }
 
-/* ============================================================
-   TOP NAVIGATION
-   ============================================================ */
+/* =========================================================
+   TOP NAVIGATION — ALIGNED WITH STUDENT / ELECTION / CANDIDATE
+   ========================================================= */
 
-.audit-topbar {
-    width: 100%;
-    min-height: 86px;
+/* =========================================================
+   TOP NAVIGATION — FINAL REFERENCE DESIGN
+   Matched to the verified Student Management navigation.
+   Page-specific class names are preserved.
+   ========================================================= */
 
-    display: flex;
-    align-items: center;
-
-    gap: 28px;
-
-    padding: 0 38px;
-
-    border-bottom: 1px solid rgba(196, 197, 219, 0.27);
-
-    background:
-        linear-gradient(
-            180deg,
-            rgba(24, 25, 47, 0.98),
-            rgba(20, 21, 42, 0.96)
-        );
-
+.audit-nav-topbar {
     position: sticky;
     top: 0;
-    z-index: 50;
-
+    z-index: 1000;
+    width: 100%;
+    max-width: 100%;
+    height: 78px;
+    min-height: 78px;
+    display: flex;
+    align-items: center;
+    gap: 34px;
+    margin: 0;
+    padding: 0 34px;
+    box-sizing: border-box;
+    overflow: hidden;
+    background: rgba(17, 16, 42, 0.94);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
 }
 
-/* Brand */
-
-.audit-brand {
-    flex: 0 0 auto;
-
-    display: inline-flex;
+.audit-nav-brand {
+    width: 190px;
+    min-width: 190px;
+    height: 100%;
+    display: flex;
     align-items: center;
-
-    gap: 12px;
-
-    border: 0;
+    justify-content: flex-start;
+    gap: 5px;
+    margin: 0;
     padding: 0;
-
+    border: 0;
     background: transparent;
-    color: #2866ff;
-
-    font-size: 31px;
-    font-weight: 600;
-    letter-spacing: -1.1px;
-
+    color: #286bff;
+    font-family: "Poppins", sans-serif;
+    line-height: 1;
     cursor: pointer;
+    user-select: none;
 }
 
-.votara-audit-brand-name{font-size:29px!important;font-weight:700!important;letter-spacing:-1px!important;color:#286bff!important}
-
-.audit-brand-mark {width:34px!important;height:34px!important;display:grid!important;grid-template-columns:1fr 1fr!important;grid-template-rows:1fr 1fr!important;gap:2px!important;transform:rotate(45deg)!important}
-
-.audit-brand-mark span {
-    position: absolute;
-    display: block;
-
-    width: 17px;
-    height: 17px;
-
-    background: #1657ff;
-
-    transform: skew(-29deg);
-}
-
-.audit-brand-mark span:nth-child(1) {
-    left: 2px;
-    top: 1px;
-
-    border-radius: 2px 7px 2px 7px;
-}
-
-.audit-brand-mark span:nth-child(2) {
-    left: 20px;
-    top: 1px;
-
-    border-radius: 7px 2px 7px 2px;
-}
-
-.audit-brand-mark span:nth-child(3) {
-    left: 12px;
-    top: 18px;
-
-    border-radius: 2px 7px 7px 2px;
-}
-
-/* Main nav */
-
-.audit-topnav {
-    min-width: 0;
-
-    flex: 1 1 auto;
-
+.audit-nav-brand-mark {
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-
-    gap: 3px;
-
-    overflow-x: auto;
-    scrollbar-width: none;
+    flex-shrink: 0;
+    position: relative;
 }
 
-.audit-topnav::-webkit-scrollbar {
-    display: none;
+.audit-nav-brand-logo {
+    width: 42px;
+    height: 42px;
+    display: block;
+    object-fit: contain;
+    flex-shrink: 0;
 }
 
-.audit-topnav button {
-    min-height: 46px;
-
-    flex: 0 0 auto;
-
-    padding: 0 20px;
-
-    border: 0;
-    border-radius: 17px;
-
-    background: transparent;
-    color: #eeeef5;
-
-    font-size: 11px;
+.audit-nav-brand-name {
+    color: #286bff;
+    font-family: "Poppins", sans-serif;
+    font-size: 29px;
     font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+}
+
+.audit-nav-menu {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.audit-logs-page .audit-nav-link {
+    min-height: 0;
+    padding: 12px 15px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: #c8c5d7;
+
+    font-family: "Poppins", sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: 0;
 
     white-space: nowrap;
-
     cursor: pointer;
 
     transition:
-        background 0.25s ease,
-        color 0.25s ease,
-        transform 0.25s ease;
+        color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
-.audit-topnav button:hover {
+.audit-logs-page .audit-nav-link:hover {
     color: #ffffff;
-    background: rgba(255, 255, 255, 0.055);
+    background: rgba(255, 255, 255, 0.05);
 }
 
-.audit-topnav button.active {
+.audit-logs-page .audit-nav-link.active {
     color: #ffffff;
-
-    background:
-        linear-gradient(
-            135deg,
-            rgba(30, 66, 161, 0.72),
-            rgba(20, 49, 122, 0.76)
-        );
-
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.035);
+    background: rgba(34, 72, 205, 0.48);
+    box-shadow: 0 0 25px rgba(38, 110, 255, 0.15);
 }
 
-/* Right side */
-
-.audit-topbar-right {
-    flex: 0 0 auto;
-
+.audit-nav-actions {
+    width: 300px;
+    min-width: 190px;
+    max-width: 300px;
     display: flex;
     align-items: center;
-
-    gap: 24px;
+    justify-content: flex-end;
+    gap: 14px;
+    flex-shrink: 0;
 }
 
-.audit-production {
-    min-width: 150px;
-    height: 38px;
-
+.audit-nav-environment {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-
-    gap: 10px;
-
-    padding: 0 18px;
-
-    border-radius: 20px;
-
-    color: #0d5dff;
-
-    background:
-        rgba(28, 73, 187, 0.28);
-
-    font-size: 12px;
-    font-weight: 500;
+    gap: 6px;
+    padding: 7px 12px;
+    min-width: auto;
+    height: auto;
+    border: 1px solid rgba(38, 110, 255, 0.25);
+    border-radius: 18px;
+    background: rgba(38, 110, 255, 0.13);
+    color: #286bff;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 1;
+    white-space: nowrap;
 }
 
-.audit-production i {
-    width: 5px;
-    height: 5px;
-
-    display: block;
-
+.audit-nav-env-dot {
+    width: 6px;
+    height: 6px;
+    display: inline-block;
+    flex-shrink: 0;
     border-radius: 50%;
-
-    background: #0d5dff;
-
-    box-shadow: 0 0 8px rgba(13, 93, 255, 0.7);
+    background: #1ed760;
+    box-shadow: 0 0 8px rgba(30, 215, 96, 0.5);
 }
 
-.audit-notification {
+.audit-nav-notification {
+    position: relative;
     width: 34px;
     height: 34px;
-
     display: grid;
     place-items: center;
-
+    padding: 0;
     border: 0;
     background: transparent;
-
-    color: #e9e8ef;
-
-    font-size: 20px;
-
+    color: #d8d5e4;
     cursor: pointer;
+    flex-shrink: 0;
+    transition: color 0.2s ease, background 0.2s ease;
 }
 
-.audit-profile {
-    width: 47px;
-    height: 47px;
+.audit-nav-notification:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
 
-    display: grid;
-    place-items: center;
-
-    overflow: hidden;
-
+.audit-nav-notification-dot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 5px;
+    height: 5px;
     border-radius: 50%;
-
-    background:
-        linear-gradient(
-            145deg,
-            #f2a86d,
-            #7145b7
-        );
-
-    border: 2px solid rgba(255, 255, 255, 0.14);
-
-    box-shadow:
-        0 5px 18px rgba(0, 0, 0, 0.24);
+    background: #286bff;
+    box-shadow: 0 0 7px rgba(38, 110, 255, 0.6);
 }
 
-.audit-profile span {
-    width: 100%;
-    height: 100%;
+.audit-nav-user {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: #eeeeee;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
 
+.audit-nav-avatar {
+    width: 34px;
+    height: 34px;
     display: grid;
     place-items: center;
-
-    color: white;
-
-    font-size: 18px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f5c36a, #5f83d9);
+    color: #111111;
+    font-size: 13px;
     font-weight: 700;
+    flex-shrink: 0;
+}
+
+.audit-nav-user-name {
+    color: #eeeeee;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.audit-nav-logout {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    color: #d9d7e5;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.audit-nav-logout:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.09);
+}
+
+/* =========================================================
+   NAVIGATION RESPONSIVE — SAME BREAKPOINTS AS STUDENT
+   ========================================================= */
+
+@media (max-width: 1100px) {
+    .audit-nav-topbar {
+        gap: 10px;
+        padding: 0 20px;
+    }
+
+    .audit-nav-brand {
+        width: 170px;
+        min-width: 170px;
+    }
+
+    .audit-nav-menu {
+        gap: 5px;
+    }
+
+    .audit-logs-page .audit-nav-link {
+        padding: 11px 9px;
+        font-size: 9px;
+        font-weight: 500;
+    }
+
+    .audit-nav-actions {
+        width: 180px;
+        gap: 13px;
+    }
+
+    .audit-nav-environment {
+        padding: 7px 10px;
+    }
+
+    .audit-nav-brand-name {
+        font-size: 26px;
+    }
+
+    .audit-nav-brand-logo {
+        width: 38px;
+        height: 38px;
+    }
+}
+
+@media (max-width: 850px) {
+    .audit-nav-topbar {
+        min-height: 70px;
+        padding: 0 18px;
+    }
+
+    .audit-nav-brand {
+        width: auto;
+        min-width: auto;
+        margin-right: auto;
+    }
+
+    .audit-nav-brand-name {
+        font-size: 24px;
+    }
+
+    .audit-nav-brand-logo {
+        width: 36px;
+        height: 36px;
+    }
+
+    .audit-nav-menu {
+        display: none;
+    }
+
+    .audit-nav-actions {
+        width: auto;
+    }
+}
+
+@media (max-width: 600px) {
+    .audit-nav-topbar {
+        min-height: 64px;
+        padding: 0 13px;
+    }
+
+    .audit-nav-brand {
+        gap: 8px;
+    }
+
+    .audit-nav-brand-name {
+        font-size: 21px;
+    }
+
+    .audit-nav-brand-mark {
+        width: 30px;
+        height: 30px;
+    }
+
+    .audit-nav-brand-logo {
+        width: 34px;
+        height: 34px;
+    }
+
+    .audit-nav-actions {
+        gap: 8px;
+    }
+
+    .audit-nav-environment {
+        display: none;
+    }
+}
+
+@media (max-width: 390px) {
+    .audit-nav-avatar {
+        width: 32px;
+        height: 32px;
+    }
+}
+
+/* =========================================================
+   NAVIGATION LIGHT MODE
+   ========================================================= */
+
+[data-theme="light"] .audit-nav-topbar {
+    background: rgba(255, 255, 255, 0.94);
+    border-bottom-color: rgba(20, 25, 45, 0.08);
+}
+
+[data-theme="light"] .audit-nav-brand-name {
+    color: #245eea;
+}
+
+[data-theme="light"] .audit-logs-page .audit-nav-link {
+    color: #626478;
+}
+
+[data-theme="light"] .audit-logs-page .audit-nav-link:hover {
+    color: #202231;
+    background: rgba(30, 40, 70, 0.05);
+}
+
+[data-theme="light"] .audit-logs-page .audit-nav-link.active {
+    color: #173a9e;
+    background: rgba(38, 110, 255, 0.12);
+}
+
+[data-theme="light"] .audit-nav-user,
+[data-theme="light"] .audit-nav-user-name {
+    color: #333333;
+}
+
+[data-theme="light"] .audit-nav-notification,
+[data-theme="light"] .audit-nav-logout {
+    color: #5e6174;
 }
 
 /* ============================================================
@@ -1441,27 +1575,6 @@
    ============================================================ */
 
 @media (max-width: 1120px) {
-    .audit-topbar {
-        gap: 16px;
-        padding: 0 24px;
-    }
-
-    .audit-brand {
-        font-size: 27px;
-    }
-
-    .audit-topnav button {
-        padding: 0 13px;
-    }
-
-    .audit-topbar-right {
-        gap: 12px;
-    }
-
-    .audit-production {
-        min-width: 125px;
-    }
-
     .audit-content {
         width: min(1100px, calc(100% - 42px));
         padding-top: 40px;
@@ -1501,42 +1614,6 @@
    ============================================================ */
 
 @media (max-width: 900px) {
-    .audit-topbar {
-        min-height: 76px;
-
-        flex-wrap: wrap;
-
-        padding: 11px 20px;
-    }
-
-    .audit-brand {
-        order: 1;
-    }
-
-    .audit-topbar-right {
-        order: 2;
-        margin-left: auto;
-    }
-
-    .audit-topnav {
-        order: 3;
-
-        flex-basis: 100%;
-        justify-content: flex-start;
-
-        padding-bottom: 4px;
-    }
-
-    .audit-topnav button {
-        min-height: 38px;
-        padding: 0 14px;
-    }
-
-    .audit-production,
-    .audit-notification {
-        display: none;
-    }
-
     .audit-content {
         width: min(760px, calc(100% - 32px));
 
@@ -1586,41 +1663,6 @@
    ============================================================ */
 
 @media (max-width: 650px) {
-    .audit-topbar {
-        padding: 10px 14px;
-    }
-
-    .audit-brand {
-        font-size: 24px;
-        gap: 8px;
-    }
-
-    .audit-brand-mark {
-        width: 34px;
-        height: 30px;
-        transform: scale(0.82);
-        transform-origin: left center;
-    }
-
-    .audit-profile {
-        width: 40px;
-        height: 40px;
-    }
-
-    .audit-topnav {
-        gap: 1px;
-    }
-
-    .audit-topnav button {
-        min-height: 35px;
-
-        padding: 0 11px;
-
-        border-radius: 13px;
-
-        font-size: 10px;
-    }
-
     .audit-content {
         width: calc(100% - 24px);
 
@@ -1772,11 +1814,6 @@
    ============================================================ */
 
 @media (max-width: 420px) {
-    .audit-topnav button {
-        padding: 0 9px;
-        font-size: 9px;
-    }
-
     .audit-content {
         width: calc(100% - 18px);
     }
@@ -1964,7 +2001,7 @@
     .audit-loader-mark,
     .audit-loader-spinner,
     .audit-loader-dots span {
-        animation: none !important;
+        animation: none;
     }
 }
 
@@ -1976,8 +2013,28 @@
     .audit-logs-page *,
     .audit-logs-page *::before,
     .audit-logs-page *::after {
-        scroll-behavior: auto !important;
-        transition: none !important;
-        animation: none !important;
+        scroll-behavior: auto;
+        transition: none;
+        animation: none;
+    }
+}
+
+
+/* ============================================================
+   FINAL NAV LINK FONT FIX
+   The page-wide button rule uses `font: inherit`, so these
+   selectors intentionally have equal/higher specificity.
+   ============================================================ */
+.audit-logs-page .audit-nav-menu .audit-nav-link {
+    font-family: "Poppins", sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: 0;
+}
+
+@media (max-width: 1100px) {
+    .audit-logs-page .audit-nav-menu .audit-nav-link {
+        font-size: 9px;
     }
 }

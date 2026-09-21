@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FiBell, FiLogOut } from "react-icons/fi";
 import "./AuditLogs.css";
 import PageLoader from "/src/components/transitionloader/PageLoader";
 
@@ -202,6 +203,15 @@ function AuditLogs() {
             });
         }
     }, [navigate]);
+
+    const navAdminName = admin?.full_name || "Administrator";
+    const navAdminInitial = navAdminName.charAt(0)?.toUpperCase() || "A";
+
+    const handleNavLogout = () => {
+        localStorage.removeItem("votaraStaffToken");
+        localStorage.removeItem("votaraStaffUser");
+        navigate("/admin-login", { replace: true });
+    };
 
     // =====================================================
     // FILTER LOGS
@@ -507,106 +517,99 @@ function AuditLogs() {
                 TOP NAVIGATION
             ================================================= */}
 
-            <header className="audit-topbar">
+            <header className="audit-nav-topbar">
                 <button
                     type="button"
-                    className="audit-brand"
-                    onClick={() =>
-                        navigateWithLoading("/admin-dashboard")
-                    }
+                    className="audit-nav-brand"
+                    onClick={() => navigateWithLoading("/admin-dashboard")}
                     aria-label="Go to VOTARA dashboard"
                 >
-                    <span
-                        className="audit-brand-mark"
-                        aria-hidden="true"
-                    >
+                    <span className="audit-nav-brand-mark">
                         <img
-            src="/src/images/Votara.png"
-            alt="Votara Logo"
-            className="votara-admin-brand-logo"
-        />
+                            src="/src/images/Votara.png"
+                            alt="Votara Logo"
+                            className="audit-nav-brand-logo"
+                        />
                     </span>
-                    <span className="votara-audit-brand-name">Votara</span>
+                    <span className="audit-nav-brand-name">Votara</span>
                 </button>
 
-                <nav
-                    className="audit-topnav"
-                    aria-label="Admin navigation"
-                >
+                <nav className="audit-nav-menu" aria-label="Admin navigation">
                     <button
                         type="button"
-                        onClick={() =>
-                            navigateWithLoading("/admin-dashboard")
-                        }
+                        className="audit-nav-link"
+                        onClick={() => navigateWithLoading("/admin-dashboard")}
                     >
                         Overview
                     </button>
-
                     <button
                         type="button"
-                        onClick={() =>
-                            navigateWithLoading("/admin/students")
-                        }
+                        className="audit-nav-link"
+                        onClick={() => navigateWithLoading("/admin/students")}
                     >
                         User
                     </button>
-
                     <button
                         type="button"
-                        onClick={() =>
-                            navigateWithLoading("/admin/election")
-                        }
+                        className="audit-nav-link"
+                        onClick={() => navigateWithLoading("/admin/election")}
                     >
                         Elections
                     </button>
-
                     <button
                         type="button"
-                        onClick={() =>
-                            navigateWithLoading("/admin/candidates")
-                        }
+                        className="audit-nav-link"
+                        onClick={() => navigateWithLoading("/admin/candidates")}
                     >
                         Candidates
                     </button>
-
                     <button
                         type="button"
-                        className="active"
+                        className="audit-nav-link active"
+                        aria-current="page"
                     >
                         Logs
                     </button>
-
                     <button
                         type="button"
-                        onClick={() =>
-                            navigateWithLoading("/admin/settings")
-                        }
+                        className="audit-nav-link"
+                        onClick={() => navigateWithLoading("/admin/settings")}
                     >
                         Config &amp; Support
                     </button>
                 </nav>
 
-                <div className="audit-topbar-right">
-                    <span className="audit-production">
-                        <i></i>
+                <div className="audit-nav-actions">
+                    <span className="audit-nav-environment">
+                        <span className="audit-nav-env-dot" />
                         Production
                     </span>
 
                     <button
+                        className="audit-nav-notification"
                         type="button"
-                        className="audit-notification"
+                        onClick={() => navigateWithLoading("/admin/audit-logs")}
                         aria-label="Notifications"
+                        title="Notifications"
                     >
-                        ♧
+                        <span className="audit-nav-notification-dot" />
+                        <FiBell size={16} />
                     </button>
 
-                    <div className="audit-profile">
-                        <span>
-                            {admin?.full_name
-                                ?.charAt(0)
-                                ?.toUpperCase() || "A"}
-                        </span>
+                    <div className="audit-nav-user">
+                        <span className="audit-nav-avatar">{navAdminInitial}</span>
+                        <span className="audit-nav-user-name">{navAdminName}</span>
                     </div>
+
+                    <button
+                        className="audit-nav-logout"
+                        type="button"
+                        onClick={handleNavLogout}
+                        aria-label="Logout"
+                        title="Logout"
+                    >
+                        <FiLogOut size={17} />
+                    </button>
                 </div>
             </header>
 

@@ -29,7 +29,7 @@ import AdminAccountManagement from "./src/pages/admin/AdminAccountManagement";
 import RegistrationRequirements from "./src/pages/auth/RegistrationRequirements";
 import StudentManagement from "./src/pages/admin/StudentManagement";
 import CandidateManagement from "./src/pages/admin/CandidateManagement";
-import ElectionManagement from "./src/pages/electoralBoard/ElectionManagement";
+import Election from "./src/pages/admin/Election";
 import KioskVoting from "./src/pages/electoralBoard/KioskVoting";
 import AuditLogs from "./src/pages/admin/AuditLogs";
 import Reports from "./src/pages/admin/Reports";
@@ -194,7 +194,15 @@ const App = () => {
                     path="/account-selection"
                     element={<AccountSelection />}
                 />
-
+                <Route
+                    path="/admin/register"
+                    element={<AdminRegister />}
+                />
+                
+                <Route
+                    path="/admin-login"
+                    element={<StaffLogin />}
+                />
 
                 {/* =================================================
                     STUDENT SETTINGS
@@ -224,14 +232,9 @@ const App = () => {
                     path="/electoral-board/dashboard"
                     element={<EBDashboard />}
                 />
-
                 <Route
-                    path="/admin/register"
-                    element={<AdminRegister />}
-                />
-                <Route
-                    path="/admin-login"
-                    element={<StaffLogin />}
+                    path="/kiosk-voting"
+                    element={<KioskVoting />}
                 />
 
                 <Route
@@ -239,10 +242,7 @@ const App = () => {
                     element={<StaffChangePassword />}
                 />
 
-                <Route
-                    path="/admin-dashboard"
-                    element={<AdminDashboard />}
-                />
+
 
                 {/* =================================================
                     ADMIN — ELECTORAL BOARD MANAGEMENT
@@ -255,6 +255,10 @@ const App = () => {
                     }
                 />
                 <Route
+                    path="/admin-dashboard"
+                    element={<AdminDashboard />}
+                />
+                <Route
                     path="/admin/students"
                     element={
                         <StudentManagement />
@@ -263,23 +267,17 @@ const App = () => {
                 <Route
                     path="/admin/election"
                     element={
-                        <ElectionManagement />
+                        <Election />
                     }
                 />
+
                 <Route
                     path="/admin/candidates"
                     element={
                         <CandidateManagement />
                     }
                 />
-                <Route
-                    path="/electoral-board/election"
-                    element={<ElectionManagement />}
-                />
-                <Route
-                    path="/kiosk-voting"
-                    element={<KioskVoting />}
-                />
+
                 <Route
                     path="/admin/audit-logs"
                     element={

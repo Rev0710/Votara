@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./StudentManagement.css";
 import PageLoader from "/src/components/transitionloader/PageLoader";
+import { FiBell, FiLogOut } from "react-icons/fi";
 
 function StudentManagement() {
     const navigate = useNavigate();
@@ -33,7 +34,7 @@ function StudentManagement() {
             name: "Sarah Fukiko",
             email: "sarah@gmail.com",
             role: "Electoral Board",
-            status: "Pending",
+            status: "Offline",
             date: "Yesterday",
         },
         {
@@ -41,7 +42,7 @@ function StudentManagement() {
             name: "Sarah Fukiko",
             email: "sarah@gmail.com",
             role: "Electoral Board",
-            status: "Pending",
+            status: "Offline",
             date: "Sep 18, 2026",
         },
         {
@@ -49,12 +50,16 @@ function StudentManagement() {
             name: "Sarah Fukiko",
             email: "sarah@gmail.com",
             role: "Electoral Board",
-            status: "Expired",
+            status: "Offline",
             date: "Sep 17, 2026",
         },
     ]);
 
     const [showInvitationCode, setShowInvitationCode] = useState(false);
+    const [adminConfirmation, setAdminConfirmation] = useState(false);
+    const [showAdminConfirmationError, setShowAdminConfirmationError] = useState(false);
+    const [showPasswordSuccess, setShowPasswordSuccess] = useState(false);
+    const [generatedForName, setGeneratedForName] = useState("");
 
     // =====================================================
     // CHECK ADMIN SESSION
@@ -103,12 +108,31 @@ function StudentManagement() {
     };
 
     // =====================================================
+    // NAVBAR LOGOUT
+    // =====================================================
+
+    const handleNavbarLogout = () => {
+        localStorage.removeItem("votaraStaffToken");
+        localStorage.removeItem("votaraStaffUser");
+
+        navigate("/admin-login", { replace: true });
+    };
+
+    // =====================================================
     // ROLE SELECTION
     // =====================================================
 
     const handleRoleCard = (nextRole) => {
         setSelectedRole(nextRole);
         setRole(nextRole === "admin" ? "Administrator" : "Electoral Board");
+
+        // The administrator confirmation only applies to the Administrator role.
+        if (nextRole === "electoral") {
+            setAdminConfirmation(false);
+            setShowAdminConfirmationError(false);
+        } else {
+            setShowAdminConfirmationError(false);
+        }
     };
 
     // =====================================================
@@ -136,6 +160,10 @@ function StudentManagement() {
         setProfileFile(null);
         setGeneratedCode("");
         setShowInvitationCode(false);
+        setAdminConfirmation(false);
+        setShowAdminConfirmationError(false);
+        setShowPasswordSuccess(false);
+        setGeneratedForName("");
 
         if (profileInputRef.current) {
             profileInputRef.current.value = "";
@@ -163,10 +191,21 @@ function StudentManagement() {
             return;
         }
 
+        // Administrator accounts require an explicit confirmation.
+        // Electoral Board accounts do not show or require this confirmation.
+        if (selectedRole === "admin" && !adminConfirmation) {
+            setShowAdminConfirmationError(true);
+            return;
+        }
+
+        setShowAdminConfirmationError(false);
+
         const code = invitationCode;
 
         setGeneratedCode(code);
+        setGeneratedForName(fullName.trim());
         setShowInvitationCode(true);
+        setShowPasswordSuccess(true);
 
         setRecentInvitations((current) => [
             {
@@ -174,7 +213,7 @@ function StudentManagement() {
                 name: fullName.trim(),
                 email: email.trim(),
                 role: role === "Administrator" ? "Admin" : "Electoral Board",
-                status: "Pending",
+                status: "Offline",
                 date: "Just now",
                 code,
             },
@@ -184,6 +223,7 @@ function StudentManagement() {
         setFullName("");
         setEmail("");
         setProfileFile(null);
+        setAdminConfirmation(false);
 
         if (profileInputRef.current) {
             profileInputRef.current.value = "";
@@ -233,7 +273,7 @@ function StudentManagement() {
                         <img
             src="/src/images/Votara.png"
             alt="Votara Logo"
-            className="votara-admin-brand-logo"
+            className="student-management-brand-logo"
         />
                     </span>
 
@@ -296,15 +336,33 @@ function StudentManagement() {
 
                     <button
                         type="button"
-                        className="notification-button"
+                        className="student-management-notification-button"
+                        onClick={() => goTo("/admin/audit-logs")}
+                        title="Notifications"
                         aria-label="Notifications"
                     >
-                        ♧
+                        <span className="student-management-notification-dot"></span>
+                        <FiBell size={16} />
                     </button>
 
-                    <div className="admin-avatar">
-                        {admin.full_name?.charAt(0)?.toUpperCase() || "A"}
+                    <div className="student-management-user">
+                        <span className="student-management-user-avatar">
+                            {admin.full_name?.charAt(0)?.toUpperCase() || "A"}
+                        </span>
+                        <span className="student-management-user-name">
+                            {admin.full_name || "Administrator"}
+                        </span>
                     </div>
+
+                    <button
+                        type="button"
+                        className="student-management-logout"
+                        onClick={handleNavbarLogout}
+                        title="Logout"
+                        aria-label="Logout"
+                    >
+                        <FiLogOut size={17} />
+                    </button>
                 </div>
             </header>
 
@@ -410,12 +468,29 @@ function StudentManagement() {
                                         it to staff who need platform-wide control.
                                     </p>
 
-                                    <label className="confirmation-check">
-                                        <input type="checkbox" />
+                                    <label className={`confirmation-check ${
+                                        showAdminConfirmationError ? "has-error" : ""
+                                    }`}>
+                                        <input
+                                            type="checkbox"
+                                            checked={adminConfirmation}
+                                            onChange={(event) => {
+                                                setAdminConfirmation(event.target.checked);
+                                                if (event.target.checked) {
+                                                    setShowAdminConfirmationError(false);
+                                                }
+                                            }}
+                                        />
                                         <span>
                                             I confirm this person requires administrator access.
                                         </span>
                                     </label>
+
+                                    {showAdminConfirmationError && (
+                                        <span className="confirmation-error">
+                                            Please confirm administrator access before generating the password.
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -446,43 +521,20 @@ function StudentManagement() {
                                 />
                             </label>
 
-                            <div className="form-two-column">
-
-                                <label>
-                                    <span>Assign Role</span>
-                                    <select
-                                        value={role}
-                                        onChange={(event) => {
-                                            const value = event.target.value;
-                                            setRole(value);
-                                            setSelectedRole(
-                                                value === "Administrator"
-                                                    ? "admin"
-                                                    : "electoral"
-                                            );
-                                        }}
-                                    >
-                                        <option>Administrator</option>
-                                        <option>Electoral Board</option>
-                                    </select>
-                                </label>
-
-                                <label>
-                                    <span>Code Expires</span>
-                                    <select
-                                        value={expires}
-                                        onChange={(event) =>
-                                            setExpires(event.target.value)
-                                        }
-                                    >
-                                        <option>7 days</option>
-                                        <option>3 days</option>
-                                        <option>24 hours</option>
-                                        <option>12 hours</option>
-                                    </select>
-                                </label>
-
-                            </div>
+                            <label className="code-expires-field">
+                                <span>Code Expires</span>
+                                <select
+                                    value={expires}
+                                    onChange={(event) =>
+                                        setExpires(event.target.value)
+                                    }
+                                >
+                                    <option>7 days</option>
+                                    <option>3 days</option>
+                                    <option>24 hours</option>
+                                    <option>12 hours</option>
+                                </select>
+                            </label>
 
                             <div className="profile-upload-section">
                                 <span className="upload-title">
@@ -531,7 +583,7 @@ function StudentManagement() {
                                     className="generate-button"
                                     onClick={handleGenerateInvitation}
                                 >
-                                    Generate Invitation Code
+                                    Generate Password
                                     <span className="generate-arrow">↗</span>
                                 </button>
 
@@ -551,7 +603,7 @@ function StudentManagement() {
                         <div className="invitation-code-card">
 
                             <div className="right-card-header">
-                                <h2>Invitation code</h2>
+                                <h2>Password</h2>
                             </div>
 
                             <div className="invitation-code-empty">
@@ -574,17 +626,16 @@ function StudentManagement() {
                                             className="copy-code-button"
                                             onClick={handleCopyCode}
                                         >
-                                            Copy Code
+                                            Copy Password
                                         </button>
                                     </>
                                 ) : (
                                     <>
-                                        <strong>No code yet</strong>
+                                        <strong>No password yet</strong>
 
                                         <p>
                                             Fill in the name and email, then generate.
-                                            The code appears here and is emailed at
-                                            the same time.
+                                            The password will appear here after it is generated.
                                         </p>
                                     </>
                                 )}
@@ -638,25 +689,10 @@ function StudentManagement() {
                                                     .replace(/\s+/g, "-")
                                             }`}
                                         >
-                                            {invitation.status}
+                                            {invitation.status === "Active"
+                                                ? "Active"
+                                                : "Offline"}
                                         </span>
-
-                                        <div className="recent-actions">
-                                            <button type="button">
-                                                {invitation.status === "Active"
-                                                    ? "Active"
-                                                    : invitation.status === "Expired"
-                                                    ? "Reissue"
-                                                    : "Resend"}
-                                            </button>
-
-                                            <button
-                                                type="button"
-                                                className="danger"
-                                            >
-                                                Revoke
-                                            </button>
-                                        </div>
                                     </div>
                                 ))}
 
@@ -667,6 +703,51 @@ function StudentManagement() {
                 </section>
 
             </main>
+
+            {showPasswordSuccess && (
+                <div
+                    className="password-success-overlay"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="password-success-title"
+                >
+                    <div className="password-success-modal">
+                        <button
+                            type="button"
+                            className="password-success-close"
+                            onClick={() => setShowPasswordSuccess(false)}
+                            aria-label="Close password success message"
+                        >
+                            ×
+                        </button>
+
+                        <div className="password-success-icon">
+                            ✓
+                        </div>
+
+                        <h2 id="password-success-title">
+                            Password Successfully Generated
+                        </h2>
+
+                        <p>
+                            The password for <strong>{generatedForName || "this account"}</strong> has been
+                            generated successfully.
+                        </p>
+
+                        <div className="password-success-value">
+                            {generatedCode}
+                        </div>
+
+                        <button
+                            type="button"
+                            className="password-success-button"
+                            onClick={() => setShowPasswordSuccess(false)}
+                        >
+                            Continue
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

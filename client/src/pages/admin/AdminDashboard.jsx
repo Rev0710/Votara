@@ -1355,7 +1355,6 @@ const styles = {
     },
 
     main: {
-        marginLeft: "260px",
         minHeight: "100vh",
         padding: "34px 42px",
     },

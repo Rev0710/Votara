@@ -83,88 +83,113 @@
 .student-management-topbar {
     position: sticky;
     top: 0;
-
-    z-index: 100;
+    z-index: 1000;
 
     width: 100%;
-    min-height: 86px;
+    max-width: 100%;
+    height: 78px;
+    min-height: 78px;
 
     display: flex;
     align-items: center;
+    gap: 34px;
 
-    padding: 0 39px;
+    margin: 0;
+    padding: 0 34px;
 
-    border-bottom:
-        1px solid rgba(255, 255, 255, 0.18);
+    box-sizing: border-box;
+    overflow: hidden;
 
-    background:
-        rgba(20, 21, 40, 0.90);
+    background: rgba(17, 16, 42, 0.94);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
 }
 
 .student-management-brand {
+    width: 190px;
+    min-width: 190px;
+    height: 100%;
+
     display: flex;
     align-items: center;
+    justify-content: flex-start;
+    gap: 5px;
 
-    gap: 13px;
-
-    width: 210px;
-
+    margin: 0;
     padding: 0;
 
-    border: none;
-
+    border: 0;
     background: transparent;
 
-    color: #0e56ff;
-
-    font: inherit;
-    font-size: 31px;
-    font-weight: 600;
+    color: #286bff;
+    font-family: "Poppins", sans-serif;
+    line-height: 1;
 
     cursor: pointer;
+    user-select: none;
 }
 
-.student-management-logo {width:34px!important;height:34px!important;display:grid!important;grid-template-columns:1fr 1fr!important;grid-template-rows:1fr 1fr!important;gap:2px!important;transform:rotate(45deg)!important}
-.votara-student-brand-name {font-size:29px!important;font-weight:700!important;letter-spacing:-1px!important;color:#286bff!important}
+.student-management-logo {
+    width: 32px;
+    height: 32px;
 
-.logo-piece {
-    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+    position: relative;
+}
+
+.student-management-brand-logo {
+    width: 42px;
+    height: 42px;
 
     display: block;
+    object-fit: contain;
+    flex-shrink: 0;
+}
 
+.votara-student-brand-name {
+    color: #286bff;
+    font-family: "Poppins", sans-serif;
+    font-size: 29px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+}
+
+/* Kept for any existing logo-piece markup elsewhere in this page. */
+.logo-piece {
+    position: absolute;
+    display: block;
     background: #0e56ff;
 }
 
 .logo-piece-one {
     left: 0;
     top: 0;
-
     width: 19px;
     height: 12px;
-
     clip-path: polygon(0 0, 100% 0, 50% 100%);
 }
 
 .logo-piece-two {
     right: 0;
     top: 0;
-
     width: 18px;
     height: 18px;
-
     border-radius: 50%;
 }
 
 .logo-piece-three {
     left: 8px;
     bottom: 0;
-
     width: 22px;
     height: 16px;
-
     clip-path: polygon(50% 0, 100% 100%, 0 100%);
 }
 
@@ -174,49 +199,50 @@
    ========================================================= */
 
 .student-management-nav {
-    flex: 1;
+    flex: 1 1 auto;
+    min-width: 0;
 
     display: flex;
     align-items: center;
     justify-content: center;
-
-    gap: 7px;
+    gap: 8px;
 }
 
 .student-management-nav button {
-    min-height: 45px;
+    min-height: 0;
 
-    padding: 0 20px;
+    padding: 13px 19px;
 
-    border: none;
-    border-radius: 16px;
+    border: 0;
+    border-radius: 12px;
 
     background: transparent;
-
-    color: #ffffff;
+    color: #c8c5d7;
 
     font-family: inherit;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 500;
+    line-height: 1;
 
+    white-space: nowrap;
     cursor: pointer;
 
     transition:
-        background 0.2s ease,
         color 0.2s ease,
-        transform 0.2s ease;
+        background 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .student-management-nav button:hover {
-    background: rgba(255, 255, 255, 0.06);
-
-    transform: translateY(-1px);
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.05);
+    transform: none;
 }
 
 .student-management-nav button.active {
-    background: rgba(20, 67, 190, 0.38);
-
     color: #ffffff;
+    background: rgba(34, 72, 205, 0.48);
+    box-shadow: 0 0 25px rgba(38, 110, 255, 0.15);
 }
 
 
@@ -225,90 +251,140 @@
    ========================================================= */
 
 .student-management-nav-right {
-    width: 250px;
+    width: 300px;
+    min-width: 190px;
+    max-width: 300px;
 
     display: flex;
     align-items: center;
     justify-content: flex-end;
+    gap: 14px;
 
-    gap: 27px;
+    flex-shrink: 0;
 }
 
 .production-pill {
-    min-width: 150px;
-    height: 34px;
-
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    gap: 6px;
 
-    gap: 10px;
+    padding: 7px 12px;
 
+    min-width: auto;
+    height: auto;
+
+    border: 1px solid rgba(38, 110, 255, 0.25);
     border-radius: 18px;
 
-    background:
-        rgba(18, 69, 218, 0.35);
+    background: rgba(38, 110, 255, 0.13);
+    color: #286bff;
 
-    color: #2865ff;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 1;
 
-    font-size: 12px;
+    white-space: nowrap;
 }
 
 .production-pill span {
+    width: 6px;
+    height: 6px;
+
+    display: inline-block;
+
+    border-radius: 50%;
+    background: #1ed760;
+    box-shadow: 0 0 8px rgba(30, 215, 96, 0.5);
+}
+
+.student-management-notification-button {
+    position: relative;
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #d8d5e4;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: color 0.2s ease, background 0.2s ease;
+}
+
+.student-management-notification-button:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+.student-management-notification-dot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+
     width: 5px;
     height: 5px;
 
     border-radius: 50%;
-
-    background: #2865ff;
-
-    box-shadow:
-        0 0 8px rgba(40, 101, 255, 0.9);
+    background: #286bff;
+    box-shadow: 0 0 7px rgba(38, 110, 255, 0.6);
 }
 
-.notification-button {
-    width: 25px;
-    height: 30px;
-
-    padding: 0;
-
-    border: none;
-
-    background: transparent;
-
-    color: #ffffff;
-
-    font-size: 21px;
-
-    cursor: pointer;
-
-    opacity: 0.9;
-}
-
-.admin-avatar {
-    width: 45px;
-    height: 45px;
-
+.student-management-user {
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 9px;
+
+    color: #eeeeee;
+    font-family: "Poppins", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+
+    white-space: nowrap;
+}
+
+.student-management-user-avatar {
+    width: 34px;
+    height: 34px;
+
+    display: grid;
+    place-items: center;
 
     border-radius: 50%;
+    background: linear-gradient(135deg, #f5c36a, #5f83d9);
+    color: #111111;
 
-    border:
-        2px solid rgba(77, 127, 255, 0.35);
-
-    background:
-        linear-gradient(
-            135deg,
-            #d0d7ff,
-            #6e8dff
-        );
-
-    color: #1c2450;
-
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 700;
+
+    flex-shrink: 0;
+}
+
+.student-management-user-name {
+    line-height: 1;
+}
+
+.student-management-logout {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    color: #d9d7e5;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.2s ease, color 0.2s ease;
+
+}
+
+.student-management-logout:hover {
+    background: rgba(255, 255, 255, 0.09);
+    color: #ffffff;
 }
 
 
@@ -772,13 +848,11 @@
     color: #ffffff;
 }
 
-.form-two-column {
-    display: grid;
-
-    grid-template-columns: 1fr 1fr;
-
-    gap: 47px;
+.code-expires-field {
+    width: 50%;
+    margin-left: auto;
 }
+
 
 
 /* =========================================================
@@ -1108,7 +1182,6 @@
         48px
         minmax(105px, 1fr)
         minmax(115px, 1fr)
-        auto
         auto;
 
     align-items: center;
@@ -1218,59 +1291,12 @@
     color: #37d47d;
 }
 
-.recent-status.pending {
-    background: rgba(131, 125, 142, 0.35);
-    color: #dedde8;
-}
 
-.recent-status.expired {
-    background: rgba(105, 102, 117, 0.34);
+
+.recent-status.offline {
+    background: rgba(105, 102, 117, 0.28);
     color: #b7b5c3;
 }
-
-.recent-actions {
-    display: flex;
-
-    align-items: center;
-
-    gap: 5px;
-}
-
-.recent-actions button {
-    height: 21px;
-
-    padding: 0 9px;
-
-    border:
-        1px solid rgba(192, 194, 214, 0.25);
-
-    border-radius: 4px;
-
-    background:
-        rgba(255, 255, 255, 0.02);
-
-    color:
-        rgba(231, 231, 240, 0.76);
-
-    font-family: inherit;
-
-    font-size: 6px;
-
-    cursor: pointer;
-}
-
-.recent-actions button:hover {
-    border-color: #386cff;
-
-    color: #ffffff;
-}
-
-.recent-actions button.danger:hover {
-    border-color: #e06060;
-
-    color: #ff8b8b;
-}
-
 
 /* =========================================================
    RESPONSIVE - TABLET
@@ -1284,22 +1310,34 @@
 
     .student-management-brand {
         width: 170px;
+        min-width: 170px;
+    }
 
-        font-size: 26px;
+    .student-management-nav {
+        gap: 5px;
     }
 
     .student-management-nav button {
-        padding: 0 11px;
+        padding: 12px 11px;
+        font-size: 11px;
     }
 
     .student-management-nav-right {
-        width: 180px;
-
+        width: 280px;
         gap: 13px;
     }
 
     .production-pill {
-        min-width: 120px;
+        padding: 7px 10px;
+    }
+
+    .votara-student-brand-name {
+        font-size: 26px;
+    }
+
+    .student-management-brand-logo {
+        width: 38px;
+        height: 38px;
     }
 
     .student-management-content {
@@ -1341,10 +1379,18 @@
 
     .student-management-brand {
         width: auto;
+        min-width: auto;
 
         margin-right: auto;
+    }
 
+    .votara-student-brand-name {
         font-size: 24px;
+    }
+
+    .student-management-brand-logo {
+        width: 36px;
+        height: 36px;
     }
 
     .student-management-nav {
@@ -1353,9 +1399,10 @@
 
     .student-management-nav-right {
         width: auto;
+        gap: 10px;
     }
 
-    .notification-button {
+    .student-management-notification-button {
         display: none;
     }
 
@@ -1411,6 +1458,11 @@
    ========================================================= */
 
 @media (max-width: 600px) {
+    .code-expires-field {
+        width: 100%;
+        margin-left: 0;
+    }
+
 
     .student-management-topbar {
         min-height: 64px;
@@ -1420,13 +1472,20 @@
 
     .student-management-brand {
         gap: 8px;
+    }
 
+    .votara-student-brand-name {
         font-size: 21px;
     }
 
     .student-management-logo {
         width: 30px;
-        height: 28px;
+        height: 30px;
+    }
+
+    .student-management-brand-logo {
+        width: 34px;
+        height: 34px;
     }
 
     .student-management-nav-right {
@@ -1437,7 +1496,7 @@
         display: none;
     }
 
-    .admin-avatar {
+    .student-management-user-avatar {
         width: 35px;
         height: 35px;
 
@@ -1515,7 +1574,8 @@
 
     .form-two-column {
         grid-template-columns: 1fr;
-
+        width: 100%;
+        margin-left: 0;
         gap: 18px;
     }
 
@@ -1558,16 +1618,6 @@
         grid-row: 1;
     }
 
-    .recent-actions {
-        grid-column: 2 / 4;
-        grid-row: 2;
-    }
-
-    .recent-actions button {
-        height: 24px;
-
-        font-size: 7px;
-    }
 }
 
 
@@ -1582,7 +1632,7 @@
         padding-right: 10px;
     }
 
-    .admin-avatar {
+    .student-management-user-avatar {
         width: 32px;
         height: 32px;
     }
@@ -1717,5 +1767,191 @@
     .votara-page-transition-dots span {
         animation: none;
         opacity: 0.8;
+    }
+}
+
+
+/* =========================================================
+   ADMIN CONFIRMATION VALIDATION
+   ========================================================= */
+
+.confirmation-check.has-error {
+    color: #ffb4b4;
+}
+
+.confirmation-check.has-error input {
+    outline: 2px solid rgba(255, 91, 91, 0.45);
+    outline-offset: 1px;
+}
+
+.confirmation-error {
+    display: block;
+    margin-top: 8px;
+    color: #ff8f8f;
+    font-size: 8px;
+    line-height: 1.4;
+}
+
+/* =========================================================
+   PASSWORD SUCCESS POPUP
+   ========================================================= */
+
+.password-success-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(7, 8, 20, 0.72);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    animation: passwordSuccessOverlayIn 0.2s ease-out;
+}
+
+.password-success-modal {
+    position: relative;
+    width: min(430px, 100%);
+    padding: 34px 32px 30px;
+    border: 1px solid rgba(89, 127, 255, 0.55);
+    border-radius: 16px;
+    background:
+        linear-gradient(
+            145deg,
+            rgba(36, 39, 72, 0.98),
+            rgba(27, 29, 55, 0.98)
+        );
+    box-shadow:
+        0 30px 90px rgba(0, 0, 0, 0.48),
+        0 0 45px rgba(28, 87, 255, 0.12);
+    text-align: center;
+    animation: passwordSuccessModalIn 0.25s ease-out;
+}
+
+.password-success-close {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: rgba(230, 232, 245, 0.65);
+    font-family: inherit;
+    font-size: 23px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.password-success-close:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.password-success-icon {
+    width: 58px;
+    height: 58px;
+    margin: 0 auto 16px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(55, 224, 148, 0.45);
+    border-radius: 50%;
+    background: rgba(30, 190, 119, 0.14);
+    color: #42e49b;
+    font-size: 29px;
+    font-weight: 700;
+    box-shadow: 0 0 28px rgba(30, 190, 119, 0.13);
+}
+
+.password-success-modal h2 {
+    margin: 0 0 9px;
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.password-success-modal p {
+    margin: 0 auto 18px;
+    max-width: 330px;
+    color: rgba(224, 226, 239, 0.68);
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.password-success-modal p strong {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.password-success-value {
+    margin: 0 auto 20px;
+    padding: 13px 16px;
+    border: 1px solid rgba(73, 117, 255, 0.45);
+    border-radius: 9px;
+    background: rgba(9, 12, 31, 0.58);
+    color: #8eb1ff;
+    font-family: "Poppins", "Inter", sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 1.4px;
+    word-break: break-all;
+}
+
+.password-success-button {
+    width: 100%;
+    height: 42px;
+    border: 0;
+    border-radius: 9px;
+    background: linear-gradient(135deg, #1555ff, #2c6aff);
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 9px 24px rgba(20, 82, 255, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.password-success-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 13px 30px rgba(20, 82, 255, 0.3);
+}
+
+@keyframes passwordSuccessOverlayIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes passwordSuccessModalIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 600px) {
+    .password-success-modal {
+        padding: 30px 22px 24px;
+    }
+
+    .password-success-modal h2 {
+        font-size: 18px;
+    }
+
+    .password-success-value {
+        font-size: 14px;
     }
 }
