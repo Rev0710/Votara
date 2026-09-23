@@ -31,6 +31,68 @@ const YEAR_LEVELS = [
     "4th Year",
 ];
 
+
+// Standard VOTARA positions configured for the election ballot.
+// 1st Year has no general year-level representative position.
+const STANDARD_POSITION_PRESETS = [
+    {
+        name: "President",
+        description: "President of the student organization.",
+        yearLevelAccess: ["2nd Year", "3rd Year", "4th Year"],
+    },
+    {
+        name: "Vice President",
+        description: "Vice President of the student organization.",
+        yearLevelAccess: ["4th Year"],
+    },
+    {
+        name: "Secretary",
+        description: "Manages official records and documentation.",
+        yearLevelAccess: ["2nd Year", "3rd Year", "4th Year"],
+    },
+    {
+        name: "Treasurer",
+        description: "Manages organization financial responsibilities.",
+        yearLevelAccess: ["2nd Year", "3rd Year", "4th Year"],
+    },
+    {
+        name: "Auditor",
+        description: "Oversees and reviews organization financial records.",
+        yearLevelAccess: ["2nd Year", "3rd Year", "4th Year"],
+    },
+    {
+        name: "Business Manager",
+        description: "Manages organization business and operational activities.",
+        yearLevelAccess: ["2nd Year", "3rd Year", "4th Year"],
+    },
+    {
+        name: "Public Information Officer",
+        description: "Handles official information and communication.",
+        yearLevelAccess: ["2nd Year", "3rd Year", "4th Year"],
+    },
+    {
+        name: "Sergeant at Arms",
+        description: "Assists with order, security, and official activities.",
+        yearLevelAccess: ["2nd Year", "3rd Year", "4th Year"],
+    },
+    {
+        name: "2nd Year Representative",
+        description: "Representative for 2nd Year students.",
+        yearLevelAccess: ["2nd Year"],
+    },
+    {
+        name: "3rd Year Representative",
+        description: "Representative for 3rd Year students.",
+        yearLevelAccess: ["3rd Year"],
+    },
+    {
+        name: "4th Year Representative",
+        description: "Representative for 4th Year students.",
+        yearLevelAccess: ["4th Year"],
+    },
+];
+
+
 const STATUS_LABELS = {
     draft: "Draft",
     scheduled: "Scheduled",
@@ -102,6 +164,77 @@ const formatStatus = (status) => {
         "Draft"
     );
 };
+
+
+// Normalize any date value returned by the API/database
+// into the exact YYYY-MM-DD format required by <input type="date">.
+const normalizeDateForInput = (value) => {
+    if (!value) {
+        return "";
+    }
+
+    const stringValue = String(value).trim();
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(stringValue)) {
+        return stringValue;
+    }
+
+    // Handle ISO/date-time values such as:
+    // 2026-09-22T00:00:00.000Z
+    const isoMatch = stringValue.match(/^(\d{4}-\d{2}-\d{2})/);
+
+    if (isoMatch) {
+        return isoMatch[1];
+    }
+
+    const parsed = new Date(stringValue);
+
+    if (Number.isNaN(parsed.getTime())) {
+        return "";
+    }
+
+    const year = parsed.getUTCFullYear();
+    const month = String(
+        parsed.getUTCMonth() + 1
+    ).padStart(2, "0");
+    const day = String(
+        parsed.getUTCDate()
+    ).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+};
+
+
+// Normalize any time value returned by the API/database
+// into HH:MM for <input type="time">.
+const normalizeTimeForInput = (value, fallback = "") => {
+    if (!value) {
+        return fallback;
+    }
+
+    const stringValue = String(value).trim();
+
+    const match = stringValue.match(
+        /^(\d{2}:\d{2})/
+    );
+
+    return match
+        ? match[1]
+        : fallback;
+};
+
+
+const canEditElection = (election) => {
+    const status = String(
+        election?.rawStatus || election?.status || ""
+    ).toLowerCase();
+
+    return (
+        status === "draft" ||
+        status === "scheduled"
+    );
+};
+
 
 
 const normalizeElection = (
@@ -264,6 +397,14 @@ function ElectionManagement() {
         setShowEditModal,
     ] = useState(false);
 
+    // The election currently being edited.
+    // This is kept separate from selectedElection because
+    // selectedElection is also used by the Details modal.
+    const [
+        editingElection,
+        setEditingElection,
+    ] = useState(null);
+
 
     const [
         showConfirmModal,
@@ -275,6 +416,65 @@ function ElectionManagement() {
         showPositionModal,
         setShowPositionModal,
     ] = useState(false);
+
+
+    // =====================================================
+    // ACTION MENU
+    // =====================================================
+
+    // Keeps the election row actions compressed into a
+    // three-dot menu. Only one menu is open at a time.
+    const [
+        openActionMenuId,
+        setOpenActionMenuId,
+    ] = useState(null);
+
+
+    // Fixed position for the three-dot action menu.
+    // This keeps the menu above the table/card overflow so
+    // the EB can see the complete action list without
+    // needing to scroll the elections table.
+    const [
+        actionMenuPosition,
+        setActionMenuPosition,
+    ] = useState(null);
+
+
+    // Close the action menu when the EB clicks anywhere
+    // outside the menu.
+    useEffect(() => {
+
+        const handleDocumentMouseDown =
+            (event) => {
+
+                if (
+                    !event.target.closest(
+                        "[data-election-action-menu]"
+                    )
+                ) {
+                    setOpenActionMenuId(
+                        null
+                    );
+
+                    setActionMenuPosition(
+                        null
+                    );
+                }
+            };
+
+        document.addEventListener(
+            "mousedown",
+            handleDocumentMouseDown
+        );
+
+        return () => {
+            document.removeEventListener(
+                "mousedown",
+                handleDocumentMouseDown
+            );
+        };
+
+    }, []);
 
 
     // =====================================================
@@ -820,27 +1020,46 @@ function ElectionManagement() {
     const openEditModal =
         (election) => {
 
-            if (
-                election.rawStatus ===
-                    "open" ||
-                election.rawStatus ===
-                    "closed" ||
-                election.rawStatus ===
-                    "cancelled"
-            ) {
+            if (!election?.id) {
+                setError(
+                    "Unable to edit this election because the election ID is missing."
+                );
+                return;
+            }
+
+            if (!canEditElection(election)) {
                 setError(
                     "This election cannot be edited in its current status."
                 );
                 return;
             }
 
+            setError("");
+            setSuccess("");
+
             const yearLevels =
-                election.yearLevelAccess
-                    .map(
-                        (item) =>
-                            item.year_level ||
-                            item
-                    );
+                Array.isArray(
+                    election.yearLevelAccess
+                )
+                    ? election.yearLevelAccess
+                          .map(
+                              (item) =>
+                                  item?.year_level ||
+                                  item
+                          )
+                          .filter(
+                              (year) =>
+                                  YEAR_LEVELS.includes(
+                                      year
+                                  )
+                          )
+                    : [];
+
+            // Store the exact election passed by either
+            // the table Edit button or the Details Edit button.
+            setEditingElection(
+                election
+            );
 
             setEditForm({
                 title:
@@ -852,25 +1071,34 @@ function ElectionManagement() {
                     "",
 
                 electionDate:
-                    election.electionDate ||
-                    "",
+                    normalizeDateForInput(
+                        election.electionDate
+                    ),
 
                 startTime:
-                    election.startTime ||
-                    "08:00",
+                    normalizeTimeForInput(
+                        election.startTime,
+                        "08:00"
+                    ),
 
                 endTime:
-                    election.endTime ||
-                    "16:00",
+                    normalizeTimeForInput(
+                        election.endTime,
+                        "16:00"
+                    ),
 
                 yearLevelAccess:
-                    yearLevels.filter(
-                        (year) =>
-                            YEAR_LEVELS.includes(
-                                year
-                            )
-                    ),
+                    yearLevels,
             });
+
+            // If Edit was clicked from the Details modal,
+            // close Details first. Both modals previously had
+            // the same z-index, which made the Details modal
+            // sit above the Edit modal and made the Edit button
+            // appear to do nothing.
+            setSelectedElection(
+                null
+            );
 
             setShowEditModal(
                 true
@@ -887,6 +1115,10 @@ function ElectionManagement() {
 
             setShowEditModal(
                 false
+            );
+
+            setEditingElection(
+                null
             );
         };
 
@@ -956,22 +1188,55 @@ function ElectionManagement() {
 
             event.preventDefault();
 
-            if (!selectedElection) {
+            if (!editingElection?.id) {
+                setError(
+                    "No election is selected for editing."
+                );
                 return;
             }
 
-            if (
-                !editForm.title.trim()
-            ) {
+            const normalizedDate =
+                normalizeDateForInput(
+                    editForm.electionDate
+                );
+
+            const normalizedStartTime =
+                normalizeTimeForInput(
+                    editForm.startTime
+                );
+
+            const normalizedEndTime =
+                normalizeTimeForInput(
+                    editForm.endTime
+                );
+
+            if (!editForm.title.trim()) {
                 setError(
                     "Election title is required."
                 );
                 return;
             }
 
+            if (!normalizedDate) {
+                setError(
+                    "Please select a valid election date."
+                );
+                return;
+            }
+
             if (
-                editForm.startTime >=
-                editForm.endTime
+                !normalizedStartTime ||
+                !normalizedEndTime
+            ) {
+                setError(
+                    "Voting start and end times are required."
+                );
+                return;
+            }
+
+            if (
+                normalizedStartTime >=
+                normalizedEndTime
             ) {
                 setError(
                     "Voting end time must be later than start time."
@@ -980,8 +1245,7 @@ function ElectionManagement() {
             }
 
             if (
-                editForm.yearLevelAccess
-                    .length === 0
+                editForm.yearLevelAccess.length === 0
             ) {
                 setError(
                     "Select at least one eligible year level."
@@ -993,29 +1257,40 @@ function ElectionManagement() {
 
                 setSaving(true);
                 setError("");
+                setSuccess("");
+
+                const updatePayload = {
+                    title:
+                        editForm.title.trim(),
+
+                    description:
+                        editForm.description.trim(),
+
+                    // Always send YYYY-MM-DD.
+                    electionDate:
+                        normalizedDate,
+
+                    // Always send HH:MM.
+                    startTime:
+                        normalizedStartTime,
+
+                    endTime:
+                        normalizedEndTime,
+
+                    yearLevelAccess:
+                        editForm.yearLevelAccess,
+                };
+
+                console.log(
+                    "Updating election:",
+                    editingElection.id,
+                    updatePayload
+                );
 
                 const response =
                     await updateElection(
-                        selectedElection.id,
-                        {
-                            title:
-                                editForm.title.trim(),
-
-                            description:
-                                editForm.description.trim(),
-
-                            electionDate:
-                                editForm.electionDate,
-
-                            startTime:
-                                editForm.startTime,
-
-                            endTime:
-                                editForm.endTime,
-
-                            yearLevelAccess:
-                                editForm.yearLevelAccess,
-                        }
+                        editingElection.id,
+                        updatePayload
                     );
 
                 const updated =
@@ -1024,31 +1299,85 @@ function ElectionManagement() {
                     response?.data ||
                     response;
 
+                if (!updated?.id) {
+                    throw new Error(
+                        "The election update did not return the updated election."
+                    );
+                }
+
+                const normalized =
+                    normalizeElection(
+                        updated
+                    );
+
                 setShowEditModal(
                     false
                 );
 
-                setSuccess(
-                    "Election information updated successfully."
+                setEditingElection(
+                    null
                 );
 
+                setEditForm({
+                    title:
+                        normalized.name || "",
+
+                    description:
+                        normalized.description || "",
+
+                    electionDate:
+                        normalizeDateForInput(
+                            normalized.electionDate
+                        ),
+
+                    startTime:
+                        normalizeTimeForInput(
+                            normalized.startTime,
+                            "08:00"
+                        ),
+
+                    endTime:
+                        normalizeTimeForInput(
+                            normalized.endTime,
+                            "16:00"
+                        ),
+
+                    yearLevelAccess:
+                        Array.isArray(
+                            normalized.yearLevelAccess
+                        )
+                            ? normalized.yearLevelAccess
+                                  .map(
+                                      (item) =>
+                                          item?.year_level ||
+                                          item
+                                  )
+                                  .filter(
+                                      (year) =>
+                                          YEAR_LEVELS.includes(
+                                              year
+                                          )
+                                  )
+                            : [],
+                });
+
+                setSelectedElection(
+                    normalized
+                );
+
+                setSuccess(
+                    `Election information updated successfully. The election date is now ${formatDate(
+                        normalized.electionDate
+                    )}.`
+                );
+
+                await loadPositions(
+                    normalized.id
+                );
+
+                // Refresh the table without depending on the
+                // returned object to populate the list.
                 await loadElections();
-
-                if (updated?.id) {
-
-                    const normalized =
-                        normalizeElection(
-                            updated
-                        );
-
-                    setSelectedElection(
-                        normalized
-                    );
-
-                    await loadPositions(
-                        updated.id
-                    );
-                }
 
             } catch (err) {
 
@@ -1057,11 +1386,16 @@ function ElectionManagement() {
                     err
                 );
 
-                setError(
-                    err?.response?.data
-                        ?.message ||
+                const serverMessage =
+                    err?.response?.data?.message ||
+                    err?.response?.data?.error ||
                     err?.message ||
-                    "Failed to update election."
+                    "Failed to update election.";
+
+                // Keep the modal open when saving fails so
+                // the EB can immediately see the actual reason.
+                setError(
+                    `Unable to save the election changes: ${serverMessage}`
                 );
 
             } finally {
@@ -1228,7 +1562,7 @@ function ElectionManagement() {
                         ? "Election published successfully."
                         : actionType ===
                           "unpublish"
-                        ? "Election unpublished successfully."
+                        ? "Election publishing cancelled. The election is back in Draft and can be published again."
                         : `Election status changed to ${formatStatus(
                               newStatus
                           )}.`
@@ -1338,7 +1672,7 @@ function ElectionManagement() {
                     "Unpublish Election",
 
                 message:
-                    `Unpublish "${election.name}"? The election will return to Draft status and will no longer be published.`,
+                    `Cancel publishing "${election.name}"? The election will return to Draft status. You can publish it again later.`,
 
                 actionLabel:
                     "Unpublish",
@@ -1412,6 +1746,27 @@ function ElectionManagement() {
                     "cancelled",
             });
         };
+
+
+    // =====================================================
+    // OPEN CANDIDATE MANAGEMENT
+    // =====================================================
+
+    const openCandidateManagement = (election) => {
+    if (!election?.id) {
+        setError(
+            "Unable to open Candidate Management because the election ID is missing."
+        );
+        return;
+    }
+
+    navigate("/electoral-board/candidates", {
+        state: {
+            electionId: election.id,
+            electionTitle: election.name,
+        },
+    });
+};
 
 
     // =====================================================
@@ -1626,87 +1981,10 @@ function ElectionManagement() {
     const applyPositionPreset =
         (preset) => {
 
-            const presets = {
-
-                President: {
-                    name:
-                        "President",
-                    description:
-                        "President of the student organization.",
-                    yearLevelAccess: [
-                        "2nd Year",
-                        "3rd Year",
-                        "4th Year",
-                    ],
-                },
-
-                "Vice President": {
-                    name:
-                        "Vice President",
-                    description:
-                        "Vice President of the student organization.",
-                    yearLevelAccess: [
-                        "4th Year",
-                    ],
-                },
-
-                Treasurer: {
-                    name:
-                        "Treasurer",
-                    description:
-                        "Manages organization financial responsibilities.",
-                    yearLevelAccess: [
-                        "2nd Year",
-                        "3rd Year",
-                        "4th Year",
-                    ],
-                },
-
-                Secretary: {
-                    name:
-                        "Secretary",
-                    description:
-                        "Manages official records and documentation.",
-                    yearLevelAccess: [
-                        "2nd Year",
-                        "3rd Year",
-                        "4th Year",
-                    ],
-                },
-
-                "2nd Year Representative": {
-                    name:
-                        "2nd Year Representative",
-                    description:
-                        "Representative for 2nd Year students.",
-                    yearLevelAccess: [
-                        "2nd Year",
-                    ],
-                },
-
-                "3rd Year Representative": {
-                    name:
-                        "3rd Year Representative",
-                    description:
-                        "Representative for 3rd Year students.",
-                    yearLevelAccess: [
-                        "3rd Year",
-                    ],
-                },
-
-                "4th Year Representative": {
-                    name:
-                        "4th Year Representative",
-                    description:
-                        "Representative for 4th Year students.",
-                    yearLevelAccess: [
-                        "4th Year",
-                    ],
-                },
-            };
-
             const selected =
-                presets[preset];
+                STANDARD_POSITION_PRESETS.find(
+                    (item) => item.name === preset
+                );
 
             if (!selected) {
                 return;
@@ -1715,17 +1993,117 @@ function ElectionManagement() {
             setPositionForm(
                 (current) => ({
                     ...current,
-
                     ...selected,
-
-                    order:
-                        positions.length +
-                        1,
-
-                    isRequired:
-                        true,
+                    order: positions.length + 1,
+                    isRequired: true,
                 })
             );
+        };
+
+
+    // =====================================================
+    // ADD ALL STANDARD POSITIONS
+    // =====================================================
+
+    const handleAddAllStandardPositions =
+        async () => {
+
+            if (!selectedElection) {
+                return;
+            }
+
+            if (
+                selectedElection.rawStatus === "open" ||
+                selectedElection.rawStatus === "closed" ||
+                selectedElection.rawStatus === "cancelled"
+            ) {
+                setError(
+                    "Positions cannot be modified while the election is Open, Completed, or Cancelled."
+                );
+                return;
+            }
+
+            try {
+                setSaving(true);
+                setError("");
+                setSuccess("");
+
+                const existingNames = new Set(
+                    positions
+                        .map((position) =>
+                            String(position?.name || "")
+                                .trim()
+                                .toLowerCase()
+                        )
+                        .filter(Boolean)
+                );
+
+                const missingPositions =
+                    STANDARD_POSITION_PRESETS.filter(
+                        (position) =>
+                            !existingNames.has(
+                                position.name.toLowerCase()
+                            )
+                    );
+
+                if (missingPositions.length === 0) {
+                    setSuccess(
+                        "All 11 standard VOTARA positions are already configured for this election."
+                    );
+                    return;
+                }
+
+                let nextOrder =
+                    Math.max(
+                        0,
+                        ...positions.map((position) =>
+                            Number(
+                                position?.display_order ??
+                                position?.order ??
+                                0
+                            )
+                        )
+                    ) + 1;
+
+                for (const position of missingPositions) {
+                    await addPosition(
+                        selectedElection.id,
+                        {
+                            name: position.name,
+                            description: position.description,
+                            order: nextOrder,
+                            isRequired: true,
+                            yearLevelAccess: position.yearLevelAccess,
+                        }
+                    );
+
+                    nextOrder += 1;
+                }
+
+                await loadPositions(
+                    selectedElection.id
+                );
+
+                await loadElections();
+
+                setSuccess(
+                    `${missingPositions.length} standard position${missingPositions.length === 1 ? "" : "s"} added. All 11 VOTARA positions are now configured.`
+                );
+
+            } catch (err) {
+                console.error(
+                    "Add standard positions error:",
+                    err
+                );
+
+                setError(
+                    err?.response?.data?.message ||
+                    err?.message ||
+                    "Failed to add the standard VOTARA positions."
+                );
+            } finally {
+                setSaving(false);
+            }
         };
 
 
@@ -1845,30 +2223,17 @@ function ElectionManagement() {
         >
 
             {/* =================================================
-                PAGE HEADER
+                PAGE TOOLBAR
             ================================================= */}
 
             <div
                 className="election-management-header"
                 style={{
-                    background:
-                        "#ffffff",
-                    border:
-                        "1px solid #e5eaf2",
-                    borderRadius:
-                        "18px",
-                    padding:
-                        "25px",
-                    marginBottom:
-                        "20px",
-                    display:
-                        "flex",
-                    justifyContent:
-                        "space-between",
-                    alignItems:
-                        "center",
-                    gap:
-                        "20px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "14px",
+                    marginBottom: "20px",
                 }}
             >
 
@@ -1922,37 +2287,24 @@ function ElectionManagement() {
 
                 </div>
 
-
                 <button
                     className="election-create-button"
                     type="button"
-                    onClick={
-                        openCreateModal
-                    }
+                    onClick={openCreateModal}
                     style={{
-                        border:
-                            "none",
-                        background:
-                            "#266EFF",
-                        color:
-                            "#ffffff",
-                        padding:
-                            "12px 19px",
-                        borderRadius:
-                            "10px",
-                        fontWeight:
-                            800,
-                        cursor:
-                            "pointer",
-                        boxShadow:
-                            "0 7px 18px rgba(38,110,255,.20)",
+                        border: "none",
+                        background: "#266EFF",
+                        color: "#ffffff",
+                        padding: "12px 19px",
+                        borderRadius: "10px",
+                        fontWeight: 800,
+                        cursor: "pointer",
+                        boxShadow: "0 7px 18px rgba(38,110,255,.20)",
                     }}
                 >
                     + Create Election
                 </button>
-
             </div>
-
 
             {/* =================================================
                 ERROR
@@ -2632,132 +2984,552 @@ function ElectionManagement() {
                                                 style={{
                                                     padding:
                                                         "15px",
+                                                    textAlign:
+                                                        "right",
                                                 }}
                                             >
 
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        openElectionDetails(
-                                                            election
-                                                        )
-                                                    }
+                                                <div
+                                                    data-election-action-menu
                                                     style={{
-                                                        border:
-                                                            "1px solid #cfd9e8",
-                                                        background:
-                                                            "#ffffff",
-                                                        color:
-                                                            "#266EFF",
-                                                        padding:
-                                                            "8px 13px",
-                                                        borderRadius:
-                                                            "8px",
-                                                        cursor:
-                                                            "pointer",
-                                                        fontWeight:
-                                                            700,
-                                                        marginRight:
-                                                            "7px",
+                                                        position:
+                                                            "relative",
+                                                        display:
+                                                            "inline-block",
                                                     }}
                                                 >
-                                                    View
-                                                </button>
 
-
-                                                {(
-                                                    election.rawStatus ===
-                                                        "draft" ||
-                                                    election.rawStatus ===
-                                                        "scheduled"
-                                                ) && (
                                                     <button
                                                         type="button"
-                                                        onClick={() =>
-                                                            openEditModal(
-                                                                election
-                                                            )
+                                                        aria-label={`Open actions for ${election.name}`}
+                                                        aria-haspopup="menu"
+                                                        aria-expanded={
+                                                            openActionMenuId ===
+                                                            election.id
                                                         }
+                                                        disabled={
+                                                            saving
+                                                        }
+                                                        onClick={(event) => {
+                                                            event.stopPropagation();
+
+                                                            const buttonRect =
+                                                                event.currentTarget.getBoundingClientRect();
+
+                                                            if (
+                                                                openActionMenuId ===
+                                                                election.id
+                                                            ) {
+                                                                setOpenActionMenuId(
+                                                                    null
+                                                                );
+                                                                setActionMenuPosition(
+                                                                    null
+                                                                );
+                                                                return;
+                                                            }
+
+                                                            const menuWidth =
+                                                                210;
+
+                                                            // Estimate the actual menu height from the actions
+                                                            // available for this election. The previous fixed
+                                                            // 310px height made short menus (such as View + Delete)
+                                                            // incorrectly jump all the way toward the top of the
+                                                            // viewport.
+                                                            const actionItemCount =
+                                                                2 +
+                                                                (
+                                                                    election.rawStatus ===
+                                                                        "draft"
+                                                                        ? 2
+                                                                        : election.rawStatus ===
+                                                                            "scheduled"
+                                                                            ? 3
+                                                                            : election.rawStatus ===
+                                                                                "open"
+                                                                                ? 1
+                                                                                : 0
+                                                                );
+
+                                                            const menuHeight =
+                                                                actionItemCount *
+                                                                    34 +
+                                                                42;
+
+                                                            const gap =
+                                                                7;
+                                                            const viewportPadding =
+                                                                10;
+
+                                                            let left =
+                                                                buttonRect.right -
+                                                                menuWidth;
+
+                                                            let top =
+                                                                buttonRect.bottom +
+                                                                gap;
+
+                                                            // Keep the complete menu inside the viewport.
+                                                            if (
+                                                                left <
+                                                                viewportPadding
+                                                            ) {
+                                                                left =
+                                                                    viewportPadding;
+                                                            }
+
+                                                            if (
+                                                                left +
+                                                                    menuWidth >
+                                                                window.innerWidth -
+                                                                    viewportPadding
+                                                            ) {
+                                                                left =
+                                                                    window.innerWidth -
+                                                                    menuWidth -
+                                                                    viewportPadding;
+                                                            }
+
+                                                            // If there is not enough room below the button,
+                                                            // open the menu above it instead.
+                                                            if (
+                                                                top +
+                                                                    menuHeight >
+                                                                window.innerHeight -
+                                                                    viewportPadding
+                                                            ) {
+                                                                top =
+                                                                    buttonRect.top -
+                                                                    menuHeight -
+                                                                    gap;
+                                                            }
+
+                                                            if (
+                                                                top <
+                                                                viewportPadding
+                                                            ) {
+                                                                top =
+                                                                    viewportPadding;
+                                                            }
+
+                                                            setActionMenuPosition({
+                                                                top,
+                                                                left,
+                                                            });
+
+                                                            setOpenActionMenuId(
+                                                                election.id
+                                                            );
+                                                        }}
                                                         style={{
+                                                            width:
+                                                                "38px",
+                                                            height:
+                                                                "38px",
                                                             border:
                                                                 "1px solid #d9e0eb",
                                                             background:
-                                                                "#f8fafc",
-                                                            padding:
-                                                                "8px 13px",
+                                                                openActionMenuId ===
+                                                                election.id
+                                                                    ? "#eef4ff"
+                                                                    : "#ffffff",
+                                                            color:
+                                                                "#344054",
                                                             borderRadius:
-                                                                "8px",
+                                                                "9px",
                                                             cursor:
-                                                                "pointer",
+                                                                saving
+                                                                    ? "not-allowed"
+                                                                    : "pointer",
+                                                            fontSize:
+                                                                "22px",
+                                                            lineHeight:
+                                                                1,
                                                             fontWeight:
-                                                                700,
+                                                                800,
+                                                            letterSpacing:
+                                                                "2px",
+                                                            padding:
+                                                                "0 0 5px",
+                                                            opacity:
+                                                                saving
+                                                                    ? 0.6
+                                                                    : 1,
                                                         }}
                                                     >
-                                                        Edit
+                                                        ⋯
                                                     </button>
-                                                )}
 
-                                                {election.rawStatus ===
-                                                    "scheduled" && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            requestStatusChange(
-                                                                election,
-                                                                "open"
-                                                            )
-                                                        }
-                                                        disabled={saving}
-                                                        style={{
-                                                            border: "none",
-                                                            background: "#16A34A",
-                                                            color: "#ffffff",
-                                                            padding: "8px 13px",
-                                                            borderRadius: "8px",
-                                                            cursor: saving
-                                                                ? "not-allowed"
-                                                                : "pointer",
-                                                            fontWeight: 800,
-                                                            marginLeft: "7px",
-                                                            opacity: saving ? 0.6 : 1,
-                                                        }}
-                                                    >
-                                                        Open Election
-                                                    </button>
-                                                )}
 
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        requestDeleteElection(
-                                                            election
-                                                        )
-                                                    }
-                                                    disabled={
-                                                        saving
-                                                    }
-                                                    style={{
-                                                        border:
-                                                            "1px solid #fecaca",
-                                                        background:
-                                                            "#fff7f7",
-                                                        color:
-                                                            "#dc2626",
-                                                        padding:
-                                                            "8px 13px",
-                                                        borderRadius:
-                                                            "8px",
-                                                        cursor:
-                                                            "pointer",
-                                                        fontWeight:
-                                                            700,
-                                                        marginLeft:
-                                                            "7px",
-                                                    }}
-                                                    title="Permanently delete this election"
-                                                >
-                                                    Delete
-                                                </button>
+                                                    {openActionMenuId ===
+                                                        election.id && (
+                                                        <div
+                                                            role="menu"
+                                                            style={{
+                                                                position:
+                                                                    "fixed",
+                                                                top:
+                                                                    actionMenuPosition?.top ??
+                                                                    10,
+                                                                left:
+                                                                    actionMenuPosition?.left ??
+                                                                    10,
+                                                                width:
+                                                                    "210px",
+                                                                maxHeight:
+                                                                    "calc(100vh - 20px)",
+                                                                overflow:
+                                                                    "visible",
+                                                                background:
+                                                                    "#ffffff",
+                                                                border:
+                                                                    "1px solid #e2e8f0",
+                                                                borderRadius:
+                                                                    "11px",
+                                                                boxShadow:
+                                                                    "0 14px 35px rgba(15,23,42,.16)",
+                                                                padding:
+                                                                    "6px",
+                                                                zIndex:
+                                                                    1000,
+                                                            }}
+                                                        >
+
+                                                            {/* VIEW */}
+                                                            <button
+                                                                type="button"
+                                                                role="menuitem"
+                                                                onClick={() => {
+                                                                    setOpenActionMenuId(
+                                                                        null
+                                                                    );
+                                                                    setActionMenuPosition(
+                                                                        null
+                                                                    );
+                                                                    openElectionDetails(
+                                                                        election
+                                                                    );
+                                                                }}
+                                                                style={{
+                                                                    ...electionMenuItemStyle,
+                                                                    color:
+                                                                        "#266EFF",
+                                                                }}
+                                                            >
+                                                                <span>
+                                                                    View
+                                                                </span>
+                                                                <span
+                                                                    style={{
+                                                                        color:
+                                                                            "#94a3b8",
+                                                                    }}
+                                                                >
+                                                                    ›
+                                                                </span>
+                                                            </button>
+
+
+                                                            {/* EDIT */}
+                                                            {(
+                                                                election.rawStatus ===
+                                                                    "draft" ||
+                                                                election.rawStatus ===
+                                                                    "scheduled"
+                                                            ) && (
+                                                                <button
+                                                                    type="button"
+                                                                    role="menuitem"
+                                                                    onClick={() => {
+                                                                        setOpenActionMenuId(
+                                                                            null
+                                                                        );
+                                                                    setActionMenuPosition(
+                                                                        null
+                                                                    );
+                                                                        openEditModal(
+                                                                            election
+                                                                        );
+                                                                    }}
+                                                                    style={
+                                                                        electionMenuItemStyle
+                                                                    }
+                                                                >
+                                                                    <span>
+                                                                        Edit
+                                                                    </span>
+                                                                    <span
+                                                                        style={{
+                                                                            color:
+                                                                                "#94a3b8",
+                                                                        }}
+                                                                    >
+                                                                        ›
+                                                                    </span>
+                                                                </button>
+                                                            )}
+
+
+                                                            {/* PUBLISH */}
+                                                            {election.rawStatus ===
+                                                                "draft" && (
+                                                                <button
+                                                                    type="button"
+                                                                    role="menuitem"
+                                                                    disabled={
+                                                                        saving
+                                                                    }
+                                                                    onClick={() => {
+                                                                        setOpenActionMenuId(
+                                                                            null
+                                                                        );
+                                                                    setActionMenuPosition(
+                                                                        null
+                                                                    );
+                                                                        requestPublish(
+                                                                            election
+                                                                        );
+                                                                    }}
+                                                                    style={{
+                                                                        ...electionMenuItemStyle,
+                                                                        color:
+                                                                            "#266EFF",
+                                                                        opacity:
+                                                                            saving
+                                                                                ? 0.55
+                                                                                : 1,
+                                                                        cursor:
+                                                                            saving
+                                                                                ? "not-allowed"
+                                                                                : "pointer",
+                                                                    }}
+                                                                >
+                                                                    <span>
+                                                                        Publish
+                                                                    </span>
+                                                                    <span
+                                                                        style={{
+                                                                            color:
+                                                                                "#94a3b8",
+                                                                        }}
+                                                                    >
+                                                                        ›
+                                                                    </span>
+                                                                </button>
+                                                            )}
+
+
+                                                            {/* OPEN ELECTION */}
+                                                            {election.rawStatus ===
+                                                                "scheduled" && (
+                                                                <button
+                                                                    type="button"
+                                                                    role="menuitem"
+                                                                    disabled={
+                                                                        saving
+                                                                    }
+                                                                    onClick={() => {
+                                                                        setOpenActionMenuId(
+                                                                            null
+                                                                        );
+                                                                    setActionMenuPosition(
+                                                                        null
+                                                                    );
+                                                                        requestStatusChange(
+                                                                            election,
+                                                                            "open"
+                                                                        );
+                                                                    }}
+                                                                    style={{
+                                                                        ...electionMenuItemStyle,
+                                                                        color:
+                                                                            "#16A34A",
+                                                                        opacity:
+                                                                            saving
+                                                                                ? 0.55
+                                                                                : 1,
+                                                                        cursor:
+                                                                            saving
+                                                                                ? "not-allowed"
+                                                                                : "pointer",
+                                                                    }}
+                                                                >
+                                                                    <span>
+                                                                        Open Election
+                                                                    </span>
+                                                                    <span
+                                                                        style={{
+                                                                            color:
+                                                                                "#94a3b8",
+                                                                        }}
+                                                                    >
+                                                                        ›
+                                                                    </span>
+                                                                </button>
+                                                            )}
+
+
+                                                            {/* CANCEL PUBLISH */}
+                                                            {election.rawStatus ===
+                                                                "scheduled" && (
+                                                                <button
+                                                                    type="button"
+                                                                    role="menuitem"
+                                                                    disabled={
+                                                                        saving
+                                                                    }
+                                                                    onClick={() => {
+                                                                        setOpenActionMenuId(
+                                                                            null
+                                                                        );
+                                                                    setActionMenuPosition(
+                                                                        null
+                                                                    );
+                                                                        requestUnpublish(
+                                                                            election
+                                                                        );
+                                                                    }}
+                                                                    style={{
+                                                                        ...electionMenuItemStyle,
+                                                                        color:
+                                                                            "#DC2626",
+                                                                        opacity:
+                                                                            saving
+                                                                                ? 0.55
+                                                                                : 1,
+                                                                        cursor:
+                                                                            saving
+                                                                                ? "not-allowed"
+                                                                                : "pointer",
+                                                                    }}
+                                                                >
+                                                                    <span>
+                                                                        Cancel Publish
+                                                                    </span>
+                                                                    <span
+                                                                        style={{
+                                                                            color:
+                                                                                "#94a3b8",
+                                                                        }}
+                                                                    >
+                                                                        ›
+                                                                    </span>
+                                                                </button>
+                                                            )}
+
+
+                                                            {/* CLOSE ELECTION */}
+                                                            {election.rawStatus ===
+                                                                "open" && (
+                                                                <button
+                                                                    type="button"
+                                                                    role="menuitem"
+                                                                    disabled={
+                                                                        saving
+                                                                    }
+                                                                    onClick={() => {
+                                                                        setOpenActionMenuId(
+                                                                            null
+                                                                        );
+                                                                    setActionMenuPosition(
+                                                                        null
+                                                                    );
+                                                                        requestStatusChange(
+                                                                            election,
+                                                                            "closed"
+                                                                        );
+                                                                    }}
+                                                                    style={{
+                                                                        ...electionMenuItemStyle,
+                                                                        color:
+                                                                            "#7C3AED",
+                                                                        opacity:
+                                                                            saving
+                                                                                ? 0.55
+                                                                                : 1,
+                                                                        cursor:
+                                                                            saving
+                                                                                ? "not-allowed"
+                                                                                : "pointer",
+                                                                    }}
+                                                                >
+                                                                    <span>
+                                                                        Close Election
+                                                                    </span>
+                                                                    <span
+                                                                        style={{
+                                                                            color:
+                                                                                "#94a3b8",
+                                                                        }}
+                                                                    >
+                                                                        ›
+                                                                    </span>
+                                                                </button>
+                                                            )}
+
+
+                                                            {/* DELETE */}
+                                                            <div
+                                                                style={{
+                                                                    height:
+                                                                        "1px",
+                                                                    background:
+                                                                        "#edf0f5",
+                                                                    margin:
+                                                                        "5px 4px",
+                                                                }}
+                                                            />
+
+                                                            <button
+                                                                type="button"
+                                                                role="menuitem"
+                                                                disabled={
+                                                                    saving
+                                                                }
+                                                                onClick={() => {
+                                                                    setOpenActionMenuId(
+                                                                        null
+                                                                    );
+                                                                    setActionMenuPosition(
+                                                                        null
+                                                                    );
+                                                                    requestDeleteElection(
+                                                                        election
+                                                                    );
+                                                                }}
+                                                                style={{
+                                                                    ...electionMenuItemStyle,
+                                                                    color:
+                                                                        "#dc2626",
+                                                                    opacity:
+                                                                        saving
+                                                                            ? 0.55
+                                                                            : 1,
+                                                                    cursor:
+                                                                        saving
+                                                                            ? "not-allowed"
+                                                                            : "pointer",
+                                                                }}
+                                                                title="Permanently delete this election"
+                                                            >
+                                                                <span>
+                                                                    Delete
+                                                                </span>
+                                                                <span
+                                                                    style={{
+                                                                        color:
+                                                                            "#f87171",
+                                                                    }}
+                                                                >
+                                                                    ›
+                                                                </span>
+                                                            </button>
+
+                                                        </div>
+                                                    )}
+
+                                                </div>
 
                                             </td>
 
@@ -3012,10 +3784,7 @@ function ElectionManagement() {
                                             "#7b8798",
                                     }}
                                 >
-                                    1st Year students
-                                    are not included
-                                    in the VOTARA
-                                    election.
+                                    1st Year students do not use a general year-level representative. Their section president serves as the section representative.
                                 </small>
 
                             </FormField>
@@ -3121,6 +3890,23 @@ function ElectionManagement() {
                             }
                         >
 
+                            {error && (
+                                <div
+                                    style={{
+                                        background: "#fff1f2",
+                                        border: "1px solid #fecdd3",
+                                        color: "#be123c",
+                                        padding: "11px 13px",
+                                        borderRadius: "9px",
+                                        marginBottom: "15px",
+                                        fontSize: "12px",
+                                        lineHeight: 1.5,
+                                    }}
+                                >
+                                    {error}
+                                </div>
+                            )}
+
                             <FormField
                                 label="Election Title"
                                 required
@@ -3174,6 +3960,7 @@ function ElectionManagement() {
 
                                 <FormField
                                     label="Election Date"
+                                    required
                                 >
                                     <input
                                         type="date"
@@ -3184,6 +3971,7 @@ function ElectionManagement() {
                                         onChange={
                                             handleEditChange
                                         }
+                                        required
                                         style={
                                             inputStyle
                                         }
@@ -3320,9 +4108,17 @@ function ElectionManagement() {
                                     disabled={
                                         saving
                                     }
-                                    style={
-                                        primaryButtonStyle
-                                    }
+                                    style={{
+                                        ...primaryButtonStyle,
+                                        opacity:
+                                            saving
+                                                ? 0.6
+                                                : 1,
+                                        cursor:
+                                            saving
+                                                ? "not-allowed"
+                                                : "pointer",
+                                    }}
                                 >
                                     {saving
                                         ? "Saving..."
@@ -3779,12 +4575,18 @@ function ElectionManagement() {
 
                         <div
                             style={{
+                                position:
+                                    "sticky",
+                                bottom:
+                                    0,
                                 marginTop:
                                     "20px",
-                                paddingTop:
-                                    "18px",
+                                padding:
+                                    "14px 0 2px",
                                 borderTop:
                                     "1px solid #edf0f5",
+                                background:
+                                    "#ffffff",
                                 display:
                                     "flex",
                                 gap:
@@ -3793,6 +4595,8 @@ function ElectionManagement() {
                                     "wrap",
                                 justifyContent:
                                     "flex-end",
+                                zIndex:
+                                    5,
                             }}
                         >
 
@@ -3821,89 +4625,22 @@ function ElectionManagement() {
                                 Delete Election
                             </button>
 
-                            {(selectedElection.rawStatus ===
-                                "draft" ||
-                                selectedElection.rawStatus ===
-                                    "scheduled") && (
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        openEditModal(
-                                            selectedElection
-                                        )
-                                    }
-                                    style={
-                                        secondaryButtonStyle
-                                    }
-                                >
-                                    Edit Election
-                                </button>
-                            )}
-
-
-                            {selectedElection.rawStatus ===
-                                "draft" && (
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        requestPublish(
-                                            selectedElection
-                                        )
-                                    }
-                                    disabled={
-                                        saving
-                                    }
-                                    style={
-                                        primaryButtonStyle
-                                    }
-                                >
-                                    Publish Election
-                                </button>
-                            )}
-
-
-                            {selectedElection.rawStatus ===
-                                "scheduled" && (
-                                <>
-
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            requestUnpublish(
-                                                selectedElection
-                                            )
-                                        }
-                                        disabled={
-                                            saving
-                                        }
-                                        style={
-                                            secondaryButtonStyle
-                                        }
-                                    >
-                                        Unpublish
-                                    </button>
-
-
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            requestStatusChange(
-                                                selectedElection,
-                                                "open"
-                                            )
-                                        }
-                                        disabled={
-                                            saving
-                                        }
-                                        style={
-                                            primaryButtonStyle
-                                        }
-                                    >
-                                        Open Election
-                                    </button>
-
-                                </>
-                            )}
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    openCandidateManagement(
+                                        selectedElection
+                                    )
+                                }
+                                style={{
+                                    ...secondaryButtonStyle,
+                                    color: "#266EFF",
+                                    borderColor: "#bfdbfe",
+                                    background: "#f8fbff",
+                                }}
+                            >
+                                Manage Candidates
+                            </button>
 
 
                             {selectedElection.rawStatus ===
@@ -3930,16 +4667,13 @@ function ElectionManagement() {
                             )}
 
 
-                            {(selectedElection.rawStatus ===
-                                "draft" ||
-                                selectedElection.rawStatus ===
-                                    "scheduled") && (
+                            {selectedElection.rawStatus ===
+                                "scheduled" && (
                                 <button
                                     type="button"
                                     onClick={() =>
-                                        requestStatusChange(
-                                            selectedElection,
-                                            "cancelled"
+                                        requestUnpublish(
+                                            selectedElection
                                         )
                                     }
                                     disabled={
@@ -3953,7 +4687,7 @@ function ElectionManagement() {
                                             "#fecaca",
                                     }}
                                 >
-                                    Cancel Election
+                                    Cancel Publish
                                 </button>
                             )}
 
@@ -3975,7 +4709,7 @@ function ElectionManagement() {
 
                     <ModalCard
                         title="Add Election Position"
-                        subtitle={`Configure a position for ${selectedElection?.name || "this election"}.`}
+                        subtitle={`Configure one of the 11 standard VOTARA positions for ${selectedElection?.name || "this election"}.`}
                         onClose={
                             closePositionModal
                         }
@@ -4004,7 +4738,7 @@ function ElectionManagement() {
                                         "12px",
                                 }}
                             >
-                                Quick Position Presets
+                                Standard VOTARA Positions
                             </strong>
 
                             <div
@@ -4020,49 +4754,53 @@ function ElectionManagement() {
                                 }}
                             >
 
-                                {[
-                                    "President",
-                                    "Vice President",
-                                    "Treasurer",
-                                    "Secretary",
-                                    "2nd Year Representative",
-                                    "3rd Year Representative",
-                                    "4th Year Representative",
-                                ].map(
-                                    (
-                                        preset
-                                    ) => (
+                                {STANDARD_POSITION_PRESETS.map(
+                                    (preset) => (
                                         <button
                                             type="button"
-                                            key={
-                                                preset
-                                            }
+                                            key={preset.name}
                                             onClick={() =>
                                                 applyPositionPreset(
-                                                    preset
+                                                    preset.name
                                                 )
                                             }
                                             style={{
-                                                padding:
-                                                    "7px 9px",
-                                                border:
-                                                    "1px solid #d5deec",
-                                                background:
-                                                    "#ffffff",
-                                                borderRadius:
-                                                    "7px",
-                                                cursor:
-                                                    "pointer",
-                                                fontSize:
-                                                    "10px",
-                                                fontWeight:
-                                                    700,
+                                                padding: "7px 9px",
+                                                border: "1px solid #d5deec",
+                                                background: "#ffffff",
+                                                borderRadius: "7px",
+                                                cursor: "pointer",
+                                                fontSize: "10px",
+                                                fontWeight: 700,
                                             }}
                                         >
-                                            {preset}
+                                            {preset.name}
                                         </button>
                                     )
                                 )}
+
+                                <button
+                                    type="button"
+                                    onClick={handleAddAllStandardPositions}
+                                    disabled={saving}
+                                    style={{
+                                        padding: "8px 11px",
+                                        border: "1px solid #266EFF",
+                                        background: "#266EFF",
+                                        color: "#ffffff",
+                                        borderRadius: "7px",
+                                        cursor: saving ? "not-allowed" : "pointer",
+                                        fontSize: "10px",
+                                        fontWeight: 800,
+                                        opacity: saving ? 0.6 : 1,
+                                        flexBasis: "100%",
+                                        marginTop: "2px",
+                                    }}
+                                >
+                                    {saving
+                                        ? "Adding Standard Positions..."
+                                        : "＋ Fill All 11 Standard Positions"}
+                                </button>
 
                             </div>
 
@@ -4759,6 +5497,34 @@ const ModalActions = ({
 // =========================================================
 // SHARED STYLES
 // =========================================================
+
+const electionMenuItemStyle = {
+    width:
+        "100%",
+    border:
+        "none",
+    background:
+        "transparent",
+    padding:
+        "10px 11px",
+    borderRadius:
+        "8px",
+    cursor:
+        "pointer",
+    fontWeight:
+        700,
+    fontSize:
+        "12px",
+    display:
+        "flex",
+    alignItems:
+        "center",
+    justifyContent:
+        "space-between",
+    textAlign:
+        "left",
+};
+
 
 const inputStyle = {
     width:

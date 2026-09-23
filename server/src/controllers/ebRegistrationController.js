@@ -4,56 +4,82 @@ const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 
 const {
-    sendRegistrationApprovalEmail
+    sendRegistrationApprovalEmail,
 } = require("../services/emailService");
-
 
 // =========================================================
 // AUTHENTICATE ELECTORAL BOARD
 // =========================================================
 
 const authenticateEB = async (req) => {
-
     const authHeader =
-        req.headers.authorization;
+        req.headers.authorization || "";
 
     if (
-        !authHeader ||
         !authHeader.startsWith("Bearer ")
     ) {
-        throw new Error(
+        const error = new Error(
             "Authentication token is required."
         );
+
+        error.statusCode = 401;
+
+        throw error;
     }
 
     const token =
-        authHeader.split(" ")[1];
+        authHeader
+            .substring(7)
+            .trim();
 
     if (!token) {
-        throw new Error(
+        const error = new Error(
             "Authentication token is missing."
         );
+
+        error.statusCode = 401;
+
+        throw error;
     }
 
-    const decoded =
-        jwt.verify(
+    let decoded;
+
+    try {
+        decoded = jwt.verify(
             token,
             process.env.JWT_SECRET
         );
+    } catch (error) {
+        const authError = new Error(
+            "Invalid or expired Electoral Board session."
+        );
+
+        authError.statusCode = 401;
+
+        throw authError;
+    }
 
     if (
         !decoded ||
         decoded.role !== "electoral_board"
     ) {
-        throw new Error(
+        const error = new Error(
             "Electoral Board access is required."
         );
+
+        error.statusCode = 403;
+
+        throw error;
     }
 
     if (!decoded.userId) {
-        throw new Error(
+        const error = new Error(
             "Invalid Electoral Board account."
         );
+
+        error.statusCode = 401;
+
+        throw error;
     }
 
     // -----------------------------------------------------
@@ -89,15 +115,23 @@ const authenticateEB = async (req) => {
     }
 
     if (!staff) {
-        throw new Error(
+        const authError = new Error(
             "Electoral Board account was not found."
         );
+
+        authError.statusCode = 401;
+
+        throw authError;
     }
 
     if (staff.is_active !== true) {
-        throw new Error(
+        const authError = new Error(
             "This Electoral Board account is inactive."
         );
+
+        authError.statusCode = 401;
+
+        throw authError;
     }
 
     return {
@@ -124,7 +158,9 @@ const getStudentRegistrations = async (
             data: applications,
             error,
         } = await supabase
-            .from("registration_applications")
+            .from(
+                "registration_applications"
+            )
             .select(`
                 id,
                 student_id,
@@ -180,47 +216,17 @@ const getStudentRegistrations = async (
             error
         );
 
-        if (
-            error.name === "JsonWebTokenError" ||
-            error.name === "TokenExpiredError" ||
-            error.message.includes(
-                "Electoral Board"
-            ) ||
-            error.message.includes(
-                "Authentication token"
-            ) ||
-            error.message.includes(
-                "inactive"
-            )
-        ) {
-
-            return res.status(401).json({
-
-                success: false,
-
-                message:
-                    error.message ||
-                    "Electoral Board authentication failed.",
-
-            });
-
-        }
-
-        return res.status(500).json({
+        return res.status(
+            error.statusCode || 500
+        ).json({
 
             success: false,
 
             message:
+                error.message ||
                 "Unable to load student registration applications.",
 
-            error:
-                process.env.NODE_ENV ===
-                "development"
-                    ? error.message
-                    : undefined,
-
         });
-
     }
 };
 
@@ -252,14 +258,20 @@ const getStudentRegistrationById = async (
                     "Registration application ID is required.",
 
             });
-
         }
+
+
+        // =================================================
+        // LOAD APPLICATION
+        // =================================================
 
         const {
             data: application,
             error,
         } = await supabase
-            .from("registration_applications")
+            .from(
+                "registration_applications"
+            )
             .select(`
                 id,
                 student_id,
@@ -291,20 +303,9 @@ const getStudentRegistrationById = async (
 
         if (error) {
 
-            console.error(
-                "❌ Student registration lookup error:",
-                error.message
+            throw new Error(
+                `Unable to load registration application: ${error.message}`
             );
-
-            return res.status(500).json({
-
-                success: false,
-
-                message:
-                    "Unable to load the student registration application.",
-
-            });
-
         }
 
         if (!application) {
@@ -317,8 +318,8 @@ const getStudentRegistrationById = async (
                     "Student registration application not found.",
 
             });
-
         }
+
 
         // =================================================
         // LOAD REGISTRATION DOCUMENTS
@@ -328,7 +329,9 @@ const getStudentRegistrationById = async (
             data: registrationDocuments,
             error: documentsError,
         } = await supabase
-            .from("registration_documents")
+            .from(
+                "registration_documents"
+            )
             .select(`
                 id,
                 registration_id,
@@ -356,85 +359,75 @@ const getStudentRegistrationById = async (
 
         if (documentsError) {
 
-            console.error(
-                "❌ Registration documents lookup error:",
-                documentsError.message
+            throw new Error(
+                `Unable to load registration documents: ${documentsError.message}`
             );
-
-            return res.status(500).json({
-
-                success: false,
-
-                message:
-                    "Unable to load the student's submitted documents.",
-
-            });
-
         }
 
+
         // =================================================
-        // CREATE SIGNED URLS
+        // CREATE SIGNED DOCUMENT URLS
         // =================================================
 
         const documentsWithSignedUrls =
             await Promise.all(
 
-                (registrationDocuments || [])
-                    .map(
-                        async (document) => {
+                (
+                    registrationDocuments ||
+                    []
+                ).map(
+                    async (document) => {
 
-                            let signedUrl = null;
+                        let signedUrl = null;
+
+                        if (
+                            document.storage_path
+                        ) {
+
+                            const {
+                                data:
+                                    signedUrlData,
+                                error:
+                                    signedUrlError,
+                            } = await supabase
+                                .storage
+                                .from(
+                                    "student-verification"
+                                )
+                                .createSignedUrl(
+                                    document.storage_path,
+                                    10 * 60
+                                );
 
                             if (
-                                document.storage_path
+                                signedUrlError
                             ) {
 
-                                const {
-                                    data:
-                                        signedUrlData,
-                                    error:
-                                        signedUrlError,
-                                } = await supabase
-                                    .storage
-                                    .from(
-                                        "student-verification"
-                                    )
-                                    .createSignedUrl(
-                                        document.storage_path,
-                                        10 * 60
-                                    );
+                                console.error(
+                                    `⚠️ Unable to create signed URL for ${document.document_type}:`,
+                                    signedUrlError.message
+                                );
 
-                                if (
-                                    signedUrlError
-                                ) {
+                            } else {
 
-                                    console.error(
-                                        `⚠️ Unable to create signed URL for ${document.document_type}:`,
-                                        signedUrlError.message
-                                    );
-
-                                } else {
-
-                                    signedUrl =
-                                        signedUrlData?.signedUrl ||
-                                        null;
-
-                                }
-
+                                signedUrl =
+                                    signedUrlData?.signedUrl ||
+                                    null;
                             }
-
-                            return {
-
-                                ...document,
-
-                                signed_url:
-                                    signedUrl,
-
-                            };
-
                         }
-                    )
+
+                        return {
+
+                            ...document,
+
+                            signed_url:
+                                signedUrl,
+
+                        };
+                    }
+                )
             );
+
 
         // =================================================
         // LOAD IDENTITY VERIFICATION
@@ -475,21 +468,11 @@ const getStudentRegistrationById = async (
 
         if (identityError) {
 
-            console.error(
-                "❌ Identity verification lookup error:",
-                identityError.message
+            throw new Error(
+                `Unable to load identity verification: ${identityError.message}`
             );
-
-            return res.status(500).json({
-
-                success: false,
-
-                message:
-                    "Unable to load the student's identity verification.",
-
-            });
-
         }
+
 
         // =================================================
         // CREATE SELFIE SIGNED URL
@@ -529,10 +512,13 @@ const getStudentRegistrationById = async (
                 selfieSignedUrl =
                     selfieUrlData?.signedUrl ||
                     null;
-
             }
-
         }
+
+
+        // =================================================
+        // RESPONSE
+        // =================================================
 
         return res.status(200).json({
 
@@ -571,41 +557,17 @@ const getStudentRegistrationById = async (
             error
         );
 
-        if (
-            error.name === "JsonWebTokenError" ||
-            error.name === "TokenExpiredError" ||
-            error.message.includes(
-                "Electoral Board"
-            ) ||
-            error.message.includes(
-                "Authentication token"
-            ) ||
-            error.message.includes(
-                "inactive"
-            )
-        ) {
-
-            return res.status(401).json({
-
-                success: false,
-
-                message:
-                    error.message ||
-                    "Electoral Board authentication failed.",
-
-            });
-
-        }
-
-        return res.status(500).json({
+        return res.status(
+            error.statusCode || 500
+        ).json({
 
             success: false,
 
             message:
+                error.message ||
                 "Unable to load the student registration application.",
 
         });
-
     }
 };
 
@@ -624,10 +586,7 @@ const generateTemporaryPassword = () => {
                 /[^a-zA-Z0-9]/g,
                 ""
             )
-            .slice(
-                0,
-                10
-            );
+            .slice(0, 10);
 
     return `Votara@${randomPart}9`;
 };
@@ -648,7 +607,9 @@ const createStudentNotification = async ({
     const {
         error,
     } = await supabase
-        .from("notifications")
+        .from(
+            "notifications"
+        )
         .insert({
 
             student_id:
@@ -695,9 +656,7 @@ const reviewStudentRegistration = async (
     res
 ) => {
 
-    let ebAccount;
-
-    let approvalEmailSent = false;
+    let ebAccount = null;
 
     try {
 
@@ -710,6 +669,7 @@ const reviewStudentRegistration = async (
 
         ebAccount =
             authResult.staff;
+
 
         // =================================================
         // GET APPLICATION ID
@@ -729,8 +689,8 @@ const reviewStudentRegistration = async (
                     "Registration application ID is required.",
 
             });
-
         }
+
 
         // =================================================
         // REQUEST DATA
@@ -741,6 +701,7 @@ const reviewStudentRegistration = async (
             reason,
         } = req.body;
 
+
         const cleanDecision =
             String(
                 decision || ""
@@ -748,10 +709,12 @@ const reviewStudentRegistration = async (
                 .trim()
                 .toLowerCase();
 
+
         const cleanReason =
             typeof reason === "string"
                 ? reason.trim()
                 : "";
+
 
         // =================================================
         // VALID DECISIONS
@@ -771,6 +734,7 @@ const reviewStudentRegistration = async (
 
         ];
 
+
         if (
             !allowedDecisions.includes(
                 cleanDecision
@@ -785,8 +749,8 @@ const reviewStudentRegistration = async (
                     "Invalid review decision. Use approve, reject, or request_correction.",
 
             });
-
         }
+
 
         // =================================================
         // NORMALIZE DECISION
@@ -814,8 +778,8 @@ const reviewStudentRegistration = async (
 
             normalizedDecision =
                 "needs_correction";
-
         }
+
 
         // =================================================
         // REASON REQUIRED
@@ -838,12 +802,14 @@ const reviewStudentRegistration = async (
                 message:
                     normalizedDecision ===
                     "rejected"
+
                         ? "A rejection reason is required."
+
                         : "A correction reason is required.",
 
             });
-
         }
+
 
         // =================================================
         // LOAD APPLICATION
@@ -876,13 +842,14 @@ const reviewStudentRegistration = async (
             )
             .maybeSingle();
 
+
         if (applicationError) {
 
             throw new Error(
                 `Unable to load registration application: ${applicationError.message}`
             );
-
         }
+
 
         if (!application) {
 
@@ -894,11 +861,11 @@ const reviewStudentRegistration = async (
                     "Student registration application not found.",
 
             });
-
         }
 
+
         // =================================================
-        // ONLY PENDING REVIEW
+        // ONLY PENDING APPLICATIONS
         // =================================================
 
         if (
@@ -914,37 +881,39 @@ const reviewStudentRegistration = async (
                     `This application cannot be reviewed because its current status is "${application.application_status}".`,
 
             });
-
         }
 
+
         // =================================================
-        // DETERMINE REGISTRATION SOURCE
+        // DETERMINE EMAIL AVAILABILITY
         // =================================================
         //
-        // ONLINE:
-        // Email OTP is required.
+        // Email availability controls whether email OTP
+        // is required and whether the temporary password
+        // is sent by email.
         //
-        // KIOSK:
-        // Email/phone is not required.
-        // EB verifies the student using the kiosk
-        // registration process, documents, enrollment
-        // proof, and real-time selfie.
+        // Registration source (online/kiosk) does NOT
+        // change this rule.
         // =================================================
 
-        const isKioskRegistration =
+        const studentEmail =
             String(
-                application.registration_source || ""
+                application.email ||
+                ""
             )
                 .trim()
-                .toLowerCase() ===
-            "kiosk";
+                .toLowerCase();
+
+        const hasEmail =
+            studentEmail.length > 0;
+
 
         // =================================================
-        // VERIFY EMAIL OTP
+        // VERIFY EMAIL OTP WHEN EMAIL IS PROVIDED
         // =================================================
 
         if (
-            !isKioskRegistration &&
+            hasEmail &&
             !application.otp_verified_at
         ) {
 
@@ -956,11 +925,17 @@ const reviewStudentRegistration = async (
                     "This application cannot be approved because the student's email OTP has not been verified.",
 
             });
-
         }
+
 
         // =================================================
         // VERIFY OFFICIAL STUDENT
+        //
+        // IMPORTANT:
+        // The students table contains the official roster.
+        //
+        // DO NOT request registration-specific columns
+        // from students.
         // =================================================
 
         const {
@@ -975,15 +950,9 @@ const reviewStudentRegistration = async (
             .select(`
                 id,
                 student_id,
-                registration_type,
-                registration_source,
-                application_status,
-                email,
                 full_name,
                 year_level,
-                enrollment_status,
-                otp_verified_at,
-                submitted_at
+                enrollment_status
             `)
             .eq(
                 "student_id",
@@ -991,13 +960,14 @@ const reviewStudentRegistration = async (
             )
             .maybeSingle();
 
+
         if (officialStudentError) {
 
             throw new Error(
                 `Unable to verify official student record: ${officialStudentError.message}`
             );
-
         }
+
 
         if (!officialStudent) {
 
@@ -1009,8 +979,8 @@ const reviewStudentRegistration = async (
                     "This student does not exist in the official enrollment records.",
 
             });
-
         }
+
 
         // =================================================
         // VERIFY ACTIVE ENROLLMENT
@@ -1018,8 +988,11 @@ const reviewStudentRegistration = async (
 
         if (
             String(
-                officialStudent.enrollment_status
-            ).toUpperCase() !==
+                officialStudent.enrollment_status ||
+                ""
+            )
+                .trim()
+                .toUpperCase() !==
             "ACTIVE"
         ) {
 
@@ -1031,8 +1004,8 @@ const reviewStudentRegistration = async (
                     "This student is not currently marked as ACTIVE in the official enrollment records.",
 
             });
-
         }
+
 
         // =================================================
         // VERIFY NAME
@@ -1042,10 +1015,14 @@ const reviewStudentRegistration = async (
             application.full_name &&
             String(
                 application.full_name
-            ).trim() !==
+            )
+                .trim()
+                .toLowerCase() !==
             String(
                 officialStudent.full_name
-            ).trim()
+            )
+                .trim()
+                .toLowerCase()
         ) {
 
             return res.status(409).json({
@@ -1056,8 +1033,8 @@ const reviewStudentRegistration = async (
                     "The student's submitted name does not match the official enrollment record. Request correction instead.",
 
             });
-
         }
+
 
         // =================================================
         // VERIFY YEAR LEVEL
@@ -1067,10 +1044,14 @@ const reviewStudentRegistration = async (
             application.year_level &&
             String(
                 application.year_level
-            ).trim() !==
+            )
+                .trim()
+                .toLowerCase() !==
             String(
                 officialStudent.year_level
-            ).trim()
+            )
+                .trim()
+                .toLowerCase()
         ) {
 
             return res.status(409).json({
@@ -1081,11 +1062,11 @@ const reviewStudentRegistration = async (
                     "The student's submitted year level does not match the official enrollment record. Request correction instead.",
 
             });
-
         }
 
+
         // =================================================
-        // LOAD DOCUMENTS
+        // LOAD REGISTRATION DOCUMENTS
         // =================================================
 
         const {
@@ -1110,19 +1091,21 @@ const reviewStudentRegistration = async (
                 application.id
             );
 
+
         if (documentsError) {
 
             throw new Error(
                 `Unable to verify registration documents: ${documentsError.message}`
             );
-
         }
+
 
         const documentList =
             documents || [];
 
+
         // =================================================
-        // REQUIRED ID DOCUMENTS
+        // REQUIRED STUDENT ID DOCUMENTS
         // =================================================
 
         const hasStudentIdFront =
@@ -1132,12 +1115,18 @@ const reviewStudentRegistration = async (
                     "student_id_front"
             );
 
+
         const hasStudentIdBack =
             documentList.some(
                 (document) =>
                     document.document_type ===
                     "student_id_back"
             );
+
+
+        // =================================================
+        // APPROVAL REQUIRES BOTH SIDES
+        // =================================================
 
         if (
             normalizedDecision ===
@@ -1156,11 +1145,11 @@ const reviewStudentRegistration = async (
                     "Approval is blocked because the required Student ID front and back documents are incomplete.",
 
             });
-
         }
 
+
         // =================================================
-        // IDENTITY / SELFIE
+        // LOAD IDENTITY VERIFICATION
         // =================================================
 
         const {
@@ -1178,7 +1167,9 @@ const reviewStudentRegistration = async (
                 student_id,
                 selfie_storage_path,
                 verification_method,
-                verification_status
+                verification_status,
+                verified_by,
+                verified_at
             `)
             .eq(
                 "registration_id",
@@ -1193,13 +1184,18 @@ const reviewStudentRegistration = async (
             .limit(1)
             .maybeSingle();
 
+
         if (identityError) {
 
             throw new Error(
                 `Unable to verify identity record: ${identityError.message}`
             );
-
         }
+
+
+        // =================================================
+        // SELFIE REQUIRED FOR APPROVAL
+        // =================================================
 
         if (
             normalizedDecision ===
@@ -1218,8 +1214,8 @@ const reviewStudentRegistration = async (
                     "Approval is blocked because the student's selfie/identity verification record is missing.",
 
             });
-
         }
+
 
         // =================================================
         // REJECT
@@ -1267,13 +1263,14 @@ const reviewStudentRegistration = async (
                     "pending_review"
                 );
 
+
             if (rejectError) {
 
                 throw new Error(
                     `Unable to reject registration: ${rejectError.message}`
                 );
-
             }
+
 
             await createStudentNotification({
 
@@ -1294,6 +1291,7 @@ const reviewStudentRegistration = async (
 
             });
 
+
             return res.status(200).json({
 
                 success: true,
@@ -1311,8 +1309,8 @@ const reviewStudentRegistration = async (
                     cleanReason,
 
             });
-
         }
+
 
         // =================================================
         // REQUEST CORRECTION
@@ -1360,13 +1358,14 @@ const reviewStudentRegistration = async (
                     "pending_review"
                 );
 
+
             if (correctionError) {
 
                 throw new Error(
                     `Unable to request registration correction: ${correctionError.message}`
                 );
-
             }
+
 
             await createStudentNotification({
 
@@ -1387,6 +1386,7 @@ const reviewStudentRegistration = async (
 
             });
 
+
             return res.status(200).json({
 
                 success: true,
@@ -1404,8 +1404,8 @@ const reviewStudentRegistration = async (
                     cleanReason,
 
             });
-
         }
+
 
         // =================================================
         // APPROVAL
@@ -1415,72 +1415,35 @@ const reviewStudentRegistration = async (
         // CHECK EXISTING STUDENT ACCOUNT
         // -------------------------------------------------
 
-        const emailValue =
-            application.email
-                ? String(
-                    application.email
-                ).trim()
-                : null;
-
-        let existingAccountQuery =
-            supabase
-                .from(
-                    "student_accounts"
-                )
-                .select(`
-                    id,
-                    student_id,
-                    email,
-                    account_status
-                `)
-                .eq(
-                    "student_id",
-                    application.student_id
-                );
-
-        if (emailValue) {
-
-            existingAccountQuery =
-                supabase
-                    .from(
-                        "student_accounts"
-                    )
-                    .select(`
-                        id,
-                        student_id,
-                        email,
-                        account_status
-                    `)
-                    .or(
-                        `student_id.eq.${application.student_id},email.eq.${emailValue}`
-                    )
-                    .limit(1)
-                    .maybeSingle();
-
-        } else {
-
-            existingAccountQuery =
-                existingAccountQuery
-                    .limit(1)
-                    .maybeSingle();
-
-        }
-
         const {
             data:
                 existingAccount,
             error:
                 existingAccountError,
-        } =
-            await existingAccountQuery;
+        } = await supabase
+            .from(
+                "student_accounts"
+            )
+            .select(`
+                id,
+                student_id,
+                email,
+                account_status
+            `)
+            .or(
+                `student_id.eq.${application.student_id},email.eq.${studentEmail}`
+            )
+            .limit(1)
+            .maybeSingle();
+
 
         if (existingAccountError) {
 
             throw new Error(
                 `Unable to check existing student account: ${existingAccountError.message}`
             );
-
         }
+
 
         if (existingAccount) {
 
@@ -1492,8 +1455,8 @@ const reviewStudentRegistration = async (
                     "A student account already exists for this Student ID or email address.",
 
             });
-
         }
+
 
         // =================================================
         // GENERATE TEMPORARY PASSWORD
@@ -1502,8 +1465,9 @@ const reviewStudentRegistration = async (
         const temporaryPassword =
             generateTemporaryPassword();
 
+
         // =================================================
-        // HASH PASSWORD
+        // HASH TEMPORARY PASSWORD
         // =================================================
 
         const passwordHash =
@@ -1511,6 +1475,7 @@ const reviewStudentRegistration = async (
                 temporaryPassword,
                 12
             );
+
 
         // =================================================
         // CREATE STUDENT ACCOUNT
@@ -1534,7 +1499,9 @@ const reviewStudentRegistration = async (
                     application.id,
 
                 email:
-                    emailValue,
+                    hasEmail
+                        ? studentEmail
+                        : null,
 
                 password_hash:
                     passwordHash,
@@ -1554,12 +1521,14 @@ const reviewStudentRegistration = async (
             `)
             .single();
 
+
         if (accountError) {
 
             console.error(
                 "❌ Student account creation error:",
                 accountError
             );
+
 
             if (
                 accountError.code ===
@@ -1574,17 +1543,17 @@ const reviewStudentRegistration = async (
                         "A student account already exists for this Student ID or email address.",
 
                 });
-
             }
+
 
             throw new Error(
                 `Unable to create student account: ${accountError.message}`
             );
-
         }
 
+
         // =================================================
-        // UPDATE APPLICATION TO APPROVED
+        // UPDATE APPLICATION
         // =================================================
 
         const {
@@ -1634,7 +1603,18 @@ const reviewStudentRegistration = async (
             `)
             .maybeSingle();
 
+
         if (approvalUpdateError) {
+
+            console.error(
+                "❌ Registration approval update failed:",
+                approvalUpdateError.message
+            );
+
+
+            // -------------------------------------------------
+            // ROLLBACK ACCOUNT CREATION
+            // -------------------------------------------------
 
             await supabase
                 .from(
@@ -1645,14 +1625,19 @@ const reviewStudentRegistration = async (
                     "id",
                     createdAccount.id
                 );
+
 
             throw new Error(
                 `Unable to finalize registration approval: ${approvalUpdateError.message}`
             );
-
         }
 
+
         if (!updatedApplication) {
+
+            // -------------------------------------------------
+            // APPLICATION CHANGED BEFORE APPROVAL
+            // -------------------------------------------------
 
             await supabase
                 .from(
@@ -1663,6 +1648,7 @@ const reviewStudentRegistration = async (
                     "id",
                     createdAccount.id
                 );
+
 
             return res.status(409).json({
 
@@ -1672,8 +1658,111 @@ const reviewStudentRegistration = async (
                     "This application changed before approval could be completed. Please refresh the application list and review it again.",
 
             });
-
         }
+
+
+        // =================================================
+        // SEND DEFAULT PASSWORD BY EMAIL WHEN EMAIL EXISTS
+        // =================================================
+
+        let approvalEmailSent = false;
+
+        if (hasEmail) {
+
+            try {
+
+                console.log(
+                    "================================="
+                );
+
+                console.log(
+                    "📧 SENDING VOTARA APPROVAL EMAIL"
+                );
+
+                console.log(
+                    "================================="
+                );
+
+                console.log(
+                    "To:",
+                    studentEmail
+                );
+
+
+                await sendRegistrationApprovalEmail(
+                    studentEmail,
+                    application.student_id,
+                    officialStudent.full_name,
+                    officialStudent.year_level,
+                    temporaryPassword
+                );
+
+
+                approvalEmailSent = true;
+
+
+                console.log(
+                    "================================="
+                );
+
+                console.log(
+                    "✅ VOTARA APPROVAL EMAIL SENT SUCCESSFULLY"
+                );
+
+                console.log(
+                    "================================="
+                );
+
+            } catch (emailError) {
+
+                approvalEmailSent = false;
+
+                console.error(
+                    "================================="
+                );
+
+                console.error(
+                    "❌ VOTARA APPROVAL EMAIL FAILED"
+                );
+
+                console.error(
+                    "================================="
+                );
+
+                console.error(
+                    "Email:",
+                    studentEmail
+                );
+
+                console.error(
+                    "Error:",
+                    emailError.message
+                );
+            }
+
+        } else {
+
+            console.log(
+                "================================="
+            );
+
+            console.log(
+                "ℹ️ NO EMAIL PROVIDED"
+            );
+
+            console.log(
+                "ℹ️ APPROVAL EMAIL NOT SENT"
+            );
+
+            console.log(
+                "ℹ️ STUDENT WILL CONTINUE NO-EMAIL ACTIVATION"
+            );
+
+            console.log(
+                "================================="
+            );
+        }
+
 
         // =================================================
         // CREATE APPROVAL NOTIFICATION
@@ -1694,72 +1783,19 @@ const reviewStudentRegistration = async (
                 "VOTARA Registration Approved",
 
             message:
-                "Your VOTARA registration has been approved. A temporary password has been generated for your first login. You will be required to change it after signing in.",
+                hasEmail
+                    ? (
+                        approvalEmailSent
+                            ? "Your VOTARA registration has been approved. Your temporary password has been sent to your registered email address. You will be required to change it after signing in."
+                            : "Your VOTARA registration has been approved. Your temporary password was generated, but the email could not be delivered."
+                    )
+                    : "Your VOTARA registration has been approved. No email was provided, so please continue through the no-email activation process.",
 
         });
 
-        // =================================================
-        // SEND APPROVAL EMAIL
-        // =================================================
-        //
-        // Kiosk students may not have an email.
-        // Therefore email failure does NOT undo approval.
-        // =================================================
-
-        if (emailValue) {
-
-            try {
-
-                await sendRegistrationApprovalEmail(
-
-                    emailValue,
-
-                    application.student_id,
-
-                    officialStudent.full_name,
-
-                    officialStudent.year_level,
-
-                    temporaryPassword
-
-                );
-
-                approvalEmailSent = true;
-
-                console.log(
-                    "✅ VOTARA approval email sent."
-                );
-
-            } catch (emailError) {
-
-                approvalEmailSent = false;
-
-                console.error(
-                    "⚠️ VOTARA approval email could not be sent."
-                );
-
-                console.error(
-                    "Email:",
-                    emailValue
-                );
-
-                console.error(
-                    "Error:",
-                    emailError.message
-                );
-
-            }
-
-        } else {
-
-            console.log(
-                "ℹ️ Kiosk registration has no email. Approval email skipped."
-            );
-
-        }
 
         // =================================================
-        // SUCCESS
+        // SUCCESS RESPONSE
         // =================================================
 
         return res.status(200).json({
@@ -1773,9 +1809,13 @@ const reviewStudentRegistration = async (
                 "approved",
 
             message:
-                emailValue && approvalEmailSent
-                    ? "Student registration approved, student account created, and approval email sent successfully."
-                    : "Student registration approved and student account created successfully.",
+                hasEmail
+                    ? (
+                        approvalEmailSent
+                            ? "Student registration approved, account created, and the default password was sent successfully to the student's email."
+                            : "Student registration approved and account created, but the default password email could not be sent."
+                    )
+                    : "Student registration approved successfully. No email was provided, so the student will continue through the no-email activation process.",
 
             student: {
 
@@ -1789,7 +1829,8 @@ const reviewStudentRegistration = async (
                     officialStudent.year_level,
 
                 email:
-                    emailValue,
+                    studentEmail ||
+                    null,
 
             },
 
@@ -1806,7 +1847,10 @@ const reviewStudentRegistration = async (
 
             },
 
-            temporaryPassword,
+            temporaryPassword:
+                hasEmail
+                    ? temporaryPassword
+                    : null,
 
             approvalEmailSent,
 
@@ -1819,27 +1863,24 @@ const reviewStudentRegistration = async (
             error
         );
 
+
         // =================================================
         // AUTHENTICATION ERRORS
         // =================================================
 
         if (
+            error.statusCode === 401 ||
+            error.statusCode === 403 ||
             error.name ===
                 "JsonWebTokenError" ||
             error.name ===
-                "TokenExpiredError" ||
-            error.message.includes(
-                "Electoral Board"
-            ) ||
-            error.message.includes(
-                "Authentication token"
-            ) ||
-            error.message.includes(
-                "inactive"
-            )
+                "TokenExpiredError"
         ) {
 
-            return res.status(401).json({
+            return res.status(
+                error.statusCode ||
+                401
+            ).json({
 
                 success: false,
 
@@ -1848,11 +1889,11 @@ const reviewStudentRegistration = async (
                     "Electoral Board authentication failed.",
 
             });
-
         }
 
+
         // =================================================
-        // CLIENT / VALIDATION ERRORS
+        // VALIDATION / CONFLICT ERRORS
         // =================================================
 
         if (
@@ -1860,7 +1901,19 @@ const reviewStudentRegistration = async (
                 "cannot be approved"
             ) ||
             error.message.includes(
-                "Unable to verify"
+                "does not exist"
+            ) ||
+            error.message.includes(
+                "does not match"
+            ) ||
+            error.message.includes(
+                "Approval is blocked"
+            ) ||
+            error.message.includes(
+                "not currently marked as ACTIVE"
+            ) ||
+            error.message.includes(
+                "already exists"
             )
         ) {
 
@@ -1872,8 +1925,8 @@ const reviewStudentRegistration = async (
                     error.message,
 
             });
-
         }
+
 
         // =================================================
         // SERVER ERROR
@@ -1893,7 +1946,6 @@ const reviewStudentRegistration = async (
                     : undefined,
 
         });
-
     }
 };
 

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import api from "../../services/api";
 
 /*
@@ -9,9 +10,10 @@ Electoral Board
 
 Features:
 - Election selection
+- Election Management integration (selected election can be passed automatically)
 - Registered student search
 - Student ID / full name search
-- 13 election positions
+- 11 standard VOTARA election positions
 - Year-level representative restrictions
 - Party List selection
 - Independent candidate option
@@ -44,9 +46,7 @@ const POSITION_NAMES = [
     "President",
     "Vice President",
     "Secretary",
-    "Ass. Secretary",
     "Treasurer",
-    "Ass. Treasurer",
     "Auditor",
     "Business Manager",
     "Public Information Officer",
@@ -246,7 +246,17 @@ const isStudentEligibleForPosition = (
 // COMPONENT
 // ============================================================
 
-function CandidateManagement() {
+function EBCandidateManagement() {
+
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    // The Back button is shown only when Candidate Management
+    // was opened from Election Management -> Manage Candidates.
+    const cameFromElectionManagement = Boolean(
+        location.state?.electionId
+    );
+
     // ========================================================
     // DATA
     // ========================================================
@@ -259,6 +269,23 @@ function CandidateManagement() {
 
     const [selectedElectionId, setSelectedElectionId] =
         useState("");
+
+    // ========================================================
+    // PARTY LIST CONTEXT
+    // ========================================================
+
+    // When Candidate Management is opened from a specific
+    // party list, keep the selected party list as the active
+    // context so only its candidates are displayed and new
+    // candidates are automatically assigned to that party.
+    const partyListContextId =
+        location.state?.partyListId || "";
+
+    const partyListContextName =
+        location.state?.partyListName || "";
+
+    const isPartyListScoped =
+        Boolean(partyListContextId);
 
     // ========================================================
     // SEARCH
@@ -359,7 +386,22 @@ function CandidateManagement() {
 
             setElections(list);
 
-            if (
+            const incomingElectionId =
+                location.state?.electionId;
+
+            const incomingElectionExists =
+                incomingElectionId &&
+                list.some(
+                    (election) =>
+                        String(getId(election)) ===
+                        String(incomingElectionId)
+                );
+
+            if (incomingElectionExists) {
+                setSelectedElectionId(
+                    String(incomingElectionId)
+                );
+            } else if (
                 !selectedElectionId &&
                 list.length > 0
             ) {
@@ -468,6 +510,30 @@ function CandidateManagement() {
                 ]
             );
 
+            // -----------------------------------------------------
+            // PARTY LIST FILTER
+            // -----------------------------------------------------
+            // Candidate Management can be opened directly from a
+            // specific Party List. In that case, only candidates
+            // belonging to that Party List should be displayed.
+            //
+            // When opened normally, all candidates for the selected
+            // election remain visible exactly as before.
+            const visibleCandidates =
+                isPartyListScoped
+                    ? candidateList.filter(
+                          (candidate) =>
+                              String(
+                                  candidate.party_list_id ||
+                                  candidate.party_list?.id ||
+                                  ""
+                              ) ===
+                              String(
+                                  partyListContextId
+                              )
+                      )
+                    : candidateList;
+
             setStudents(studentList);
 
             /*
@@ -513,7 +579,7 @@ function CandidateManagement() {
             );
 
             setPartyLists(partyList);
-            setCandidates(candidateList);
+            setCandidates(visibleCandidates);
         } catch (err) {
             console.error(
                 "Candidate options loading error:",
@@ -627,31 +693,92 @@ function CandidateManagement() {
     // ========================================================
 
 const availablePositions = useMemo(() => {
-    if (!selectedStudentForForm) {
-        return positions.filter(
+    const activePositions =
+        positions.filter(
             (position) =>
                 position.is_active !== false
         );
-    }
 
-    return positions.filter(
+    // -----------------------------------------------------
+    // PARTY LIST POSITION AVAILABILITY
+    // -----------------------------------------------------
+    // A party list may have only one candidate per position.
+    // When this page is scoped to a party list, positions
+    // already occupied by that party are removed from the
+    // Add Candidate form. The currently edited candidate keeps
+    // its own position available while editing.
+    const occupiedPositionIds =
+        new Set(
+            candidates
+                .filter((candidate) => {
+                    if (!isPartyListScoped) {
+                        return true;
+                    }
+
+                    return (
+                        String(
+                            candidate.party_list_id ||
+                            candidate.party_list?.id ||
+                            ""
+                        ) ===
+                        String(
+                            partyListContextId
+                        )
+                    );
+                })
+                .filter(
+                    (candidate) =>
+                        String(
+                            getId(candidate)
+                        ) !==
+                        String(
+                            getId(
+                                editingCandidate
+                            )
+                        )
+                )
+                .map(
+                    (candidate) =>
+                        candidate.position_id ||
+                        candidate.position?.id
+                )
+                .filter(Boolean)
+                .map((id) => String(id))
+        );
+
+    return activePositions.filter(
         (position) => {
+            if (!selectedStudentForForm) {
+                return !occupiedPositionIds.has(
+                    String(
+                        getId(position)
+                    )
+                );
+            }
+
             if (
-                position.is_active ===
-                false
+                !isStudentEligibleForPosition(
+                    selectedStudentForForm,
+                    position
+                )
             ) {
                 return false;
             }
 
-            return isStudentEligibleForPosition(
-                selectedStudentForForm,
-                position
+            return !occupiedPositionIds.has(
+                String(
+                    getId(position)
+                )
             );
         }
     );
 }, [
     positions,
     selectedStudentForForm,
+    candidates,
+    editingCandidate,
+    isPartyListScoped,
+    partyListContextId,
 ]);
 
     // ========================================================
@@ -776,7 +903,12 @@ const availablePositions = useMemo(() => {
         setForm({
             student_id: "",
             position_id: "",
-            party_list_id: "",
+            party_list_id:
+                isPartyListScoped
+                    ? String(
+                          partyListContextId
+                      )
+                    : "",
             platform: "",
             profile_picture: "",
         });
@@ -798,6 +930,19 @@ const availablePositions = useMemo(() => {
         }
 
         resetForm();
+
+        // If opened from Party List Management, the party list is
+        // fixed to the party that the EB selected.
+        if (isPartyListScoped) {
+            setForm((previous) => ({
+                ...previous,
+                party_list_id:
+                    String(
+                        partyListContextId
+                    ),
+            }));
+        }
+
         setError("");
         setSuccess("");
         setShowModal(true);
@@ -1222,6 +1367,38 @@ const availablePositions = useMemo(() => {
             selectedPositionForForm
                 ?.name ||
             "this position";
+
+        // A Party List can have only one candidate per position.
+        // The availablePositions list normally prevents this in
+        // the UI, but keep a final frontend guard as well.
+        if (isPartyListScoped && !editingCandidate) {
+            const positionAlreadyUsed =
+                candidates.some((candidate) => {
+                    const candidatePartyId =
+                        candidate.party_list_id ||
+                        candidate.party_list?.id ||
+                        "";
+
+                    const candidatePositionId =
+                        candidate.position_id ||
+                        candidate.position?.id ||
+                        "";
+
+                    return (
+                        String(candidatePartyId) ===
+                            String(partyListContextId) &&
+                        String(candidatePositionId) ===
+                            String(form.position_id)
+                    );
+                });
+
+            if (positionAlreadyUsed) {
+                setError(
+                    "This party list already has a candidate for the selected position. Please choose another available position."
+                );
+                return;
+            }
+        }
 
         setConfirmation({
             title: editingCandidate
@@ -1678,29 +1855,91 @@ const deleteCandidate = async (
 
             <div
                 className="top-header"
-                style={styles.topHeader}
+                style={{
+                    ...styles.topHeader,
+                    gap: "16px",
+                }}
             >
-                <div>
-                    <h1 style={styles.topTitle}>
-                        Candidate Management
-                    </h1>
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                        minWidth: 0,
+                    }}
+                >
+                    {cameFromElectionManagement && (
+                        <button
+                            type="button"
+                            onClick={() =>
+                                navigate("/electoral-board/dashboard")
+                            }
+                            aria-label="Back to Electoral Board Dashboard"
+                            title="Back to EB Dashboard"
+                            style={{
+                                width: "38px",
+                                height: "38px",
+                                flex: "0 0 38px",
+                                border: "1px solid #d8e1ef",
+                                background: "#ffffff",
+                                color: "#266EFF",
+                                borderRadius: "10px",
+                                cursor: "pointer",
+                                fontSize: "21px",
+                                fontWeight: 800,
+                                lineHeight: 1,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                            }}
+                        >
+                            ←
+                        </button>
+                    )}
 
-                    <p style={styles.topSubtitle}>
-                        Manage and prepare candidates
-                        for the official VOTARA
-                        election ballot.
-                    </p>
+                    <div>
+                        <h1 style={styles.topTitle}>
+                            Candidate Management
+                        </h1>
+
+                        <p style={styles.topSubtitle}>
+                            Manage and prepare candidates
+                            for the official VOTARA
+                            election ballot.
+                        </p>
+
+                        {isPartyListScoped && (
+                            <div
+                                style={{
+                                    marginTop: "8px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "7px",
+                                    padding: "7px 11px",
+                                    borderRadius: "9px",
+                                    background: "#eef4ff",
+                                    border: "1px solid #d7e4ff",
+                                    color: "#1e3a8a",
+                                    fontSize: "11px",
+                                    fontWeight: 700,
+                                }}
+                            >
+                                <span>▰</span>
+                                <span>
+                                    Party List: {partyListContextName || "Selected Party List"}
+                                </span>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                <div style={styles.accountBox}>
-                    <strong>
-                        Electoral Board
-                    </strong>
-
-                    <span>
-                        Candidate Administration
-                    </span>
-                </div>
+                <button
+                    className="votara-button"
+                    style={styles.primaryButton}
+                    onClick={openAddModal}
+                >
+                    + Add Candidate
+                </button>
             </div>
 
             {/* ==================================================
@@ -1711,70 +1950,6 @@ const deleteCandidate = async (
                 className="main-content"
                 style={styles.content}
             >
-                {/* ==================================================
-                    PAGE HEADER
-                =================================================== */}
-
-                <div
-                    className="header-layout"
-                    style={styles.pageHeader}
-                >
-                    <div
-                        style={
-                            styles.pageHeaderLeft
-                        }
-                    >
-                        <div
-                            style={
-                                styles.iconBox
-                            }
-                        >
-                            ♟
-                        </div>
-
-                        <div>
-                            <div
-                                style={
-                                    styles.overline
-                                }
-                            >
-                                CANDIDATE MANAGEMENT
-                            </div>
-
-                            <h2
-                                style={
-                                    styles.pageTitle
-                                }
-                            >
-                                Candidate Management
-                            </h2>
-
-                            <p
-                                style={
-                                    styles.pageDescription
-                                }
-                            >
-                                Register, review,
-                                activate, and prepare
-                                candidates for the
-                                election.
-                            </p>
-                        </div>
-                    </div>
-
-                    <button
-                        className="votara-button"
-                        style={
-                            styles.primaryButton
-                        }
-                        onClick={
-                            openAddModal
-                        }
-                    >
-                        + Add Candidate
-                    </button>
-                </div>
-
                 {/* ==================================================
                     ALERTS
                 =================================================== */}
@@ -2131,17 +2306,6 @@ const deleteCandidate = async (
                             </p>
                         </div>
 
-                        <button
-                            className="votara-button"
-                            style={
-                                styles.primaryButton
-                            }
-                            onClick={
-                                openAddModal
-                            }
-                        >
-                            + Add Candidate
-                        </button>
                     </div>
 
                     {/* SEARCH */}
@@ -2232,19 +2396,6 @@ const deleteCandidate = async (
                                     : "Add the first candidate for this election."
                             }
                         >
-                            {!candidateSearch && (
-                                <button
-                                    className="votara-button"
-                                    style={
-                                        styles.primaryButton
-                                    }
-                                    onClick={
-                                        openAddModal
-                                    }
-                                >
-                                    + Add Candidate
-                                </button>
-                            )}
                         </EmptyState>
                     ) : (
                         <div
@@ -3020,11 +3171,16 @@ const deleteCandidate = async (
                                     style={
                                         styles.input
                                     }
+                                    disabled={
+                                        isPartyListScoped
+                                    }
                                 >
-                                    <option value="">
-                                        Independent /
-                                        No Party List
-                                    </option>
+                                    {!isPartyListScoped && (
+                                        <option value="">
+                                            Independent /
+                                            No Party List
+                                        </option>
+                                    )}
 
                                     {partyLists
                                         .filter(
@@ -3034,7 +3190,16 @@ const deleteCandidate = async (
                                                 party.is_active !==
                                                     false &&
                                                 party.approval_status ===
-                                                    "approved"
+                                                    "approved" &&
+                                                (
+                                                    !isPartyListScoped ||
+                                                    String(
+                                                        getId(party)
+                                                    ) ===
+                                                        String(
+                                                            partyListContextId
+                                                        )
+                                                )
                                         )
                                         .map(
                                             (
@@ -3061,9 +3226,10 @@ const deleteCandidate = async (
                                         styles.helperText
                                     }
                                 >
-                                    Only approved and
-                                    active party lists
-                                    are available.
+                                    {isPartyListScoped
+                                        ? `Candidates added from this page will be assigned to ${partyListContextName || "this party list"}. Only unfilled positions are available.`
+                                        : `Only approved and active party lists can be assigned to candidates.`}
+
                                 </small>
                             </div>
 
@@ -6358,4 +6524,4 @@ const styles = {
     },
 };
 
-export default CandidateManagement;
+export default EBCandidateManagement;

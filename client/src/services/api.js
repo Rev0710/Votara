@@ -97,9 +97,12 @@ const isVotingRequest = (url = "") => {
         String(url).toLowerCase();
 
     return (
-        normalizedUrl.includes("/voting/") ||
-        normalizedUrl.includes("/voting") ||
-        normalizedUrl.includes("/vote/")
+        /\/voting(\/|$)/.test(
+            normalizedUrl
+        ) ||
+        /\/vote(\/|$)/.test(
+            normalizedUrl
+        )
     );
 };
 
@@ -160,6 +163,7 @@ api.interceptors.request.use(
         // Kiosk students use the temporary kiosk JWT.
         // This must take priority over EB/staff tokens.
         //
+
         if (
             kioskMode &&
             isVotingRequest(requestUrl) &&
@@ -177,6 +181,7 @@ api.interceptors.request.use(
         //
         // /voting/* must ALWAYS use the student JWT.
         //
+
         else if (
             isVotingRequest(requestUrl) &&
             studentToken
@@ -194,6 +199,7 @@ api.interceptors.request.use(
         // Keep the kiosk token available for kiosk-specific
         // student requests when kiosk mode is active.
         //
+
         else if (
             kioskMode &&
             isKioskRequest(requestUrl) &&
@@ -211,6 +217,7 @@ api.interceptors.request.use(
         //
         // EB-specific API calls use the EB token.
         //
+
         else if (ebToken) {
 
             token = ebToken;

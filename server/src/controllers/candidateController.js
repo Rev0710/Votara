@@ -429,22 +429,31 @@ const createCandidate = async (req, res) => {
         }
 
         // -----------------------------------------------------
-        // Check duplicate student/position
+        // CANDIDATE UNIQUENESS RULES
+        // -----------------------------------------------------
+        // 1. A student can only be a candidate ONCE per election.
+        //    This prevents the same student from appearing in
+        //    multiple party lists or multiple positions.
+        //
+        // 2. A party list can only have ONE candidate per position.
+        //    Different party lists may have candidates for the same
+        //    position.
+        //
+        // 3. Independent candidates are not assigned to any party
+        //    list, so the party-position rule does not apply to them.
         // -----------------------------------------------------
 
         const {
-            data: duplicate,
-            error: duplicateError,
+            data: existingStudentCandidate,
+            error: existingStudentCandidateError,
         } = await supabase
             .from("candidates")
-            .select("id")
+            .select(
+                "id, party_list_id, position_id, full_name"
+            )
             .eq(
                 "election_id",
                 election_id
-            )
-            .eq(
-                "position_id",
-                position_id
             )
             .eq(
                 "student_id",
@@ -452,16 +461,56 @@ const createCandidate = async (req, res) => {
             )
             .maybeSingle();
 
-        if (duplicateError) {
-            throw duplicateError;
+        if (existingStudentCandidateError) {
+            throw existingStudentCandidateError;
         }
 
-        if (duplicate) {
+        if (existingStudentCandidate) {
             return res.status(409).json({
                 success: false,
                 message:
-                    "This student is already assigned to this position.",
+                    "This student is already registered as a candidate for this election. A student can only be assigned to one candidate position.",
             });
+        }
+
+        if (party_list_id) {
+            const {
+                data: existingPartyPositionCandidate,
+                error: existingPartyPositionCandidateError,
+            } = await supabase
+                .from("candidates")
+                .select(
+                    "id, full_name, student_id"
+                )
+                .eq(
+                    "election_id",
+                    election_id
+                )
+                .eq(
+                    "party_list_id",
+                    party_list_id
+                )
+                .eq(
+                    "position_id",
+                    position_id
+                )
+                .maybeSingle();
+
+            if (
+                existingPartyPositionCandidateError
+            ) {
+                throw existingPartyPositionCandidateError;
+            }
+
+            if (
+                existingPartyPositionCandidate
+            ) {
+                return res.status(409).json({
+                    success: false,
+                    message:
+                        `The party list already has a candidate for ${position.name}. Please choose another position.`,
+                });
+            }
         }
 
         // -----------------------------------------------------
@@ -737,22 +786,23 @@ const updateCandidate = async (
         }
 
         // -----------------------------------------------------
-        // Duplicate check
+        // CANDIDATE UNIQUENESS RULES
+        // -----------------------------------------------------
+        // Keep the candidate unique within the election while
+        // allowing different party lists to have the same position.
         // -----------------------------------------------------
 
         const {
-            data: duplicate,
-            error: duplicateError,
+            data: existingStudentCandidate,
+            error: existingStudentCandidateError,
         } = await supabase
             .from("candidates")
-            .select("id")
+            .select(
+                "id, party_list_id, position_id, full_name"
+            )
             .eq(
                 "election_id",
                 finalElectionId
-            )
-            .eq(
-                "position_id",
-                finalPositionId
             )
             .eq(
                 "student_id",
@@ -761,16 +811,57 @@ const updateCandidate = async (
             .neq("id", id)
             .maybeSingle();
 
-        if (duplicateError) {
-            throw duplicateError;
+        if (existingStudentCandidateError) {
+            throw existingStudentCandidateError;
         }
 
-        if (duplicate) {
+        if (existingStudentCandidate) {
             return res.status(409).json({
                 success: false,
                 message:
-                    "This student is already assigned to this position.",
+                    "This student is already registered as a candidate for this election. A student can only be assigned to one candidate position.",
             });
+        }
+
+        if (party_list_id) {
+            const {
+                data: existingPartyPositionCandidate,
+                error: existingPartyPositionCandidateError,
+            } = await supabase
+                .from("candidates")
+                .select(
+                    "id, full_name, student_id"
+                )
+                .eq(
+                    "election_id",
+                    finalElectionId
+                )
+                .eq(
+                    "party_list_id",
+                    party_list_id
+                )
+                .eq(
+                    "position_id",
+                    finalPositionId
+                )
+                .neq("id", id)
+                .maybeSingle();
+
+            if (
+                existingPartyPositionCandidateError
+            ) {
+                throw existingPartyPositionCandidateError;
+            }
+
+            if (
+                existingPartyPositionCandidate
+            ) {
+                return res.status(409).json({
+                    success: false,
+                    message:
+                        `The party list already has a candidate for ${position.name}. Please choose another position.`,
+                });
+            }
         }
 
         // -----------------------------------------------------

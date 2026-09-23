@@ -973,6 +973,122 @@ const deactivatePartyList = async (req, res) => {
 
 
 // =====================================================
+// DELETE PARTY LIST
+// =====================================================
+// DELETE /api/party-lists/:id
+// =====================================================
+
+const deletePartyList = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: "Party List ID is required.",
+            });
+        }
+
+        const { data: party, error: partyError } =
+            await supabase
+                .from("party_lists")
+                .select("id, name")
+                .eq("id", id)
+                .maybeSingle();
+
+        if (partyError) {
+            return res.status(500).json({
+                success: false,
+                message: "Failed to find party list.",
+                error: partyError.message,
+            });
+        }
+
+        if (!party) {
+            return res.status(404).json({
+                success: false,
+                message: "Party list not found.",
+            });
+        }
+
+        // Do not silently remove candidates belonging to this party list.
+        const { count, error: candidateError } =
+            await supabase
+                .from("candidates")
+                .select(
+                    "id",
+                    {
+                        count: "exact",
+                        head: true,
+                    }
+                )
+                .eq(
+                    "party_list_id",
+                    id
+                );
+
+        if (candidateError) {
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Unable to check party list candidates.",
+                error:
+                    candidateError.message,
+            });
+        }
+
+        if (Number(count || 0) > 0) {
+            return res.status(409).json({
+                success: false,
+                message:
+                    `Cannot delete "${party.name}" because it still has ${count} candidate(s). Deactivate the party list instead or remove its candidates first.`,
+            });
+        }
+
+        const {
+            error: deleteError,
+        } = await supabase
+            .from("party_lists")
+            .delete()
+            .eq("id", id);
+
+        if (deleteError) {
+            console.error(
+                "❌ Delete party list error:",
+                deleteError
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Failed to delete party list.",
+                error:
+                    deleteError.message,
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message:
+                "Party list deleted successfully.",
+        });
+
+    } catch (error) {
+        console.error(
+            "❌ Delete party list exception:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message:
+                "Unable to delete party list.",
+        });
+    }
+};
+
+
+// =====================================================
 // GET PARTY LIST CANDIDATES
 // =====================================================
 // GET /api/party-lists/:id/candidates
@@ -1110,5 +1226,6 @@ module.exports = {
     rejectPartyList,
     activatePartyList,
     deactivatePartyList,
+    deletePartyList,
     getPartyListCandidates,
 };

@@ -28,8 +28,14 @@ import ElectoralBoardManagement from "./src/pages/admin/ElectoralBoardManagement
 import AdminAccountManagement from "./src/pages/admin/AdminAccountManagement";
 import RegistrationRequirements from "./src/pages/auth/RegistrationRequirements";
 import StudentManagement from "./src/pages/admin/StudentManagement";
+
 import CandidateManagement from "./src/pages/admin/CandidateManagement";
 import Election from "./src/pages/admin/Election";
+
+import EBCandidateManagement from "./src/pages/electoralBoard/EBCandidateManagement";
+import ElectionManagement from "./src/pages/electoralBoard/ElectionManagement";
+import CreateElection from "./src/pages/electoralBoard/CreateElection";
+
 import KioskVoting from "./src/pages/electoralBoard/KioskVoting";
 import AuditLogs from "./src/pages/admin/AuditLogs";
 import Reports from "./src/pages/admin/Reports";
@@ -241,7 +247,14 @@ const App = () => {
                     path="/staff-change-password"
                     element={<StaffChangePassword />}
                 />
-
+                <Route
+                    path="/electoral-board/election-management"
+                    element={<ElectionManagement />}
+                />
+                <Route
+                    path="/electoral-board/create-election"
+                    element={<CreateElection />}
+                />
 
 
                 {/* =================================================
@@ -265,6 +278,7 @@ const App = () => {
                     }
                 />
                 <Route
+
                     path="/admin/election"
                     element={
                         <Election />
@@ -273,8 +287,16 @@ const App = () => {
 
                 <Route
                     path="/admin/candidates"
+
                     element={
                         <CandidateManagement />
+                    }
+                />
+                <Route
+                    path="/electoral-board/candidates"
+
+                    element={
+                        <EBCandidateManagement />
                     }
                 />
 

@@ -227,6 +227,7 @@ function StudentDashboard() {
 
     const [voteLoading, setVoteLoading] = useState(false);
     const [hasVoted, setHasVoted] = useState(false);
+    const [voteConfirmation, setVoteConfirmation] = useState(null);
 
     // =================================================
     // FETCH CURRENT STUDENT
@@ -810,10 +811,25 @@ const candidatesByPosition = useMemo(() => {
             setHasVoted(true);
             setSelectedVotes({});
 
-            alert(
-                result?.message ||
-                "Your vote has been successfully recorded."
-            );
+            const confirmationSource =
+                result?.ballotId ||
+                "";
+
+            const confirmationId =
+                confirmationSource
+                    ? `VTR-${String(confirmationSource)
+                          .replace(/-/g, "")
+                          .slice(0, 8)
+                          .toUpperCase()}`
+                    : `VTR-${Date.now()
+                          .toString(36)
+                          .slice(-8)
+                          .toUpperCase()}`;
+
+            setVoteConfirmation({
+                confirmationId,
+                submittedAt: new Date(),
+            });
 
             console.log(
                 "Vote submission result:",
@@ -1539,208 +1555,180 @@ const candidatesByPosition = useMemo(() => {
                         )}
                     </section>
 
-                    {electionLoading && (
-                        <section className="vote-position-section">
-                            <div className="vote-position-heading">
-                                <h2>
-                                    Loading election...
-                                </h2>
+                    {hasVoted ? (
+                        <section className="vote-confirmation-panel">
+                            <div className="vote-confirmation-icon">
+                                ✓
                             </div>
-                        </section>
-                    )}
 
-                    {!electionLoading &&
-                        electionError && (
-                            <section className="vote-position-section">
-                                <div className="vote-position-heading">
-                                    <h2>
-                                        Unable to load election
-                                    </h2>
+                            <div className="vote-confirmation-content">
+                                <span className="vote-confirmation-badge">
+                                    Vote Successfully Recorded
+                                </span>
 
-                                    <p>
-                                        {
-                                            electionError
-                                        }
-                                    </p>
-                                </div>
-                            </section>
-                        )}
+                                <h2>Your vote has been recorded</h2>
 
-                    {election &&
-                        !electionIsOpen && (
-                            <section className="vote-status-panel">
-                                <div
-                                    className={`vote-status-icon ${electionStatusClass}`}
-                                >
-                                    {electionStatus === "scheduled"
-                                        ? "!"
-                                        : electionStatus === "closed"
-                                        ? "✓"
-                                        : "!"}
-                                </div>
-
-                                <div>
-                                    <span
-                                        className={`election-status-badge ${electionStatusClass}`}
-                                    >
-                                        {electionStatusLabel}
-                                    </span>
-
-                                    <h2>
-                                        {electionStatus === "scheduled"
-                                            ? "Voting has not opened yet"
-                                            : electionStatus === "closed"
-                                            ? "Voting has ended"
-                                            : electionStatus === "cancelled"
-                                            ? "Election cancelled"
-                                            : "Voting is unavailable"}
-                                    </h2>
-
-                                    <p>
-                                        {electionStatus === "scheduled"
-                                            ? "Please wait for the Electoral Board to open the election."
-                                            : electionStatus === "closed"
-                                            ? "The Electoral Board has closed voting for this election."
-                                            : "This election is not currently available for voting."}
-                                    </p>
-                                </div>
-                            </section>
-                        )}
-
-                    {election &&
-                        electionIsOpen &&
-                        !studentEligible && (
-                            <section className="vote-status-panel status-warning">
-                                <div className="vote-status-icon status-warning">
-                                    !
-                                </div>
-
-                                <div>
-                                    <span className="election-status-badge status-warning">
-                                        Not Eligible
-                                    </span>
-
-                                    <h2>
-                                        You are not eligible to vote
-                                    </h2>
-
-                                    <p>
-                                        1st Year students are not eligible
-                                        to vote in this election.
-                                    </p>
-                                </div>
-                            </section>
-                        )}
-
-                    {!electionLoading &&
-                        !electionError &&
-                        !election && (
-                            <section className="vote-position-section">
-                                <div className="vote-position-heading">
-                                    <h2>
-                                        No Active Election
-                                    </h2>
-
-                                    <p>
-                                        There is currently no published election available for voting.
-                                    </p>
-                                </div>
-                            </section>
-                        )}
-
-                    {election &&
-                        eligiblePositions.length ===
-                            0 && (
-                            <section className="vote-position-section">
-                                <div className="vote-position-heading">
-                                    <h2>
-                                        No Available Positions
-                                    </h2>
-
-                                    <p>
-                                        There are currently
-                                        no voting positions
-                                        available for your
-                                        year level.
-                                    </p>
-                                </div>
-                            </section>
-                        )}
-
-                    {election &&
-                        electionIsOpen &&
-                        studentEligible &&
-                        eligiblePositions.map(
-                            (position) => (
-                                <section
-                                    className="vote-position-section"
-                                    key={
-                                        position.id
-                                    }
-                                >
-                                    <div className="vote-position-heading">
-                                        <h2>
-                                            {
-                                                position.name
-                                            }
-                                        </h2>
-
-                                        <p>
-                                            {position.is_required !==
-                                            false
-                                                ? "You must select one candidate for this position."
-                                                : "This position is optional."}
-                                        </p>
-
-                                        {position.description && (
-                                            <p>
-                                                {
-                                                    position.description
-                                                }
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    <div className="candidate-grid">
-                                        {renderCandidateCards(
-                                            position
-                                        )}
-                                    </div>
-                                </section>
-                            )
-                        )}
-
-                    {election &&
-                        electionIsOpen &&
-                        studentEligible &&
-                        eligiblePositions.length >
-                            0 && (
-                            <section className="vote-submit-section">
-                                <p>
-                                    {hasVoted
-                                        ? "Your vote for this election has already been recorded."
-                                        : "Double check your choices before submitting your votes."}
+                                <p className="vote-confirmation-message">
+                                    Your ballot was successfully submitted.
                                 </p>
+
+                                {election && (
+                                    <div className="vote-confirmation-details">
+                                        <div className="vote-confirmation-detail">
+                                            <span>Election</span>
+                                            <strong>{election.title}</strong>
+                                        </div>
+
+                                        {voteConfirmation?.submittedAt && (
+                                            <div className="vote-confirmation-detail">
+                                                <span>Submitted</span>
+                                                <strong>
+                                                    {voteConfirmation.submittedAt.toLocaleString()}
+                                                </strong>
+                                            </div>
+                                        )}
+
+                                        {voteConfirmation?.confirmationId && (
+                                            <div className="vote-confirmation-detail">
+                                                <span>Confirmation ID</span>
+                                                <strong>{voteConfirmation.confirmationId}</strong>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div className="vote-confirmation-privacy">
+                                    <strong>Your selections are private.</strong>
+                                    <span>
+                                        Candidate choices are not displayed on this confirmation screen.
+                                    </span>
+                                </div>
 
                                 <button
                                     type="button"
-                                    className="submit-vote-button"
-                                    disabled={
-                                        hasVoted ||
-                                        voteLoading
-                                    }
-                                    onClick={
-                                        handleSubmitVotes
-                                    }
+                                    className="vote-confirmation-return-button"
+                                    onClick={() => handleMenuClick("dashboard")}
                                 >
-                                    {voteLoading
-                                        ? "SUBMITTING..."
-                                        : hasVoted
-                                        ? "VOTE SUBMITTED"
-                                        : "SUBMIT VOTE"}
+                                    Return to Dashboard
                                 </button>
-                            </section>
-                        )}
+                            </div>
+                        </section>
+                    ) : (
+                        <>
+                            {electionLoading && (
+                                <section className="vote-position-section">
+                                    <div className="vote-position-heading">
+                                        <h2>Loading election...</h2>
+                                    </div>
+                                </section>
+                            )}
+
+                            {!electionLoading && electionError && (
+                                <section className="vote-position-section">
+                                    <div className="vote-position-heading">
+                                        <h2>Unable to load election</h2>
+                                        <p>{electionError}</p>
+                                    </div>
+                                </section>
+                            )}
+
+                            {election && !electionIsOpen && (
+                                <section className="vote-status-panel">
+                                    <div className={`vote-status-icon ${electionStatusClass}`}>
+                                        {electionStatus === "scheduled" ? "!" : electionStatus === "closed" ? "✓" : "!"}
+                                    </div>
+                                    <div>
+                                        <span className={`election-status-badge ${electionStatusClass}`}>
+                                            {electionStatusLabel}
+                                        </span>
+                                        <h2>
+                                            {electionStatus === "scheduled"
+                                                ? "Voting has not opened yet"
+                                                : electionStatus === "closed"
+                                                ? "Voting has ended"
+                                                : electionStatus === "cancelled"
+                                                ? "Election cancelled"
+                                                : "Voting is unavailable"}
+                                        </h2>
+                                        <p>
+                                            {electionStatus === "scheduled"
+                                                ? "Please wait for the Electoral Board to open the election."
+                                                : electionStatus === "closed"
+                                                ? "The Electoral Board has closed voting for this election."
+                                                : "This election is not currently available for voting."}
+                                        </p>
+                                    </div>
+                                </section>
+                            )}
+
+                            {election && electionIsOpen && !studentEligible && (
+                                <section className="vote-status-panel status-warning">
+                                    <div className="vote-status-icon status-warning">!</div>
+                                    <div>
+                                        <span className="election-status-badge status-warning">Not Eligible</span>
+                                        <h2>You are not eligible to vote</h2>
+                                        <p>
+                                            1st Year students are not eligible to vote in this election.
+                                        </p>
+                                    </div>
+                                </section>
+                            )}
+
+                            {!electionLoading && !electionError && !election && (
+                                <section className="vote-position-section">
+                                    <div className="vote-position-heading">
+                                        <h2>No Active Election</h2>
+                                        <p>
+                                            There is currently no published election available for voting.
+                                        </p>
+                                    </div>
+                                </section>
+                            )}
+
+                            {election && eligiblePositions.length === 0 && (
+                                <section className="vote-position-section">
+                                    <div className="vote-position-heading">
+                                        <h2>No Available Positions</h2>
+                                        <p>
+                                            There are currently no voting positions available for your year level.
+                                        </p>
+                                    </div>
+                                </section>
+                            )}
+
+                            {election && electionIsOpen && studentEligible && eligiblePositions.map((position) => (
+                                <section className="vote-position-section" key={position.id}>
+                                    <div className="vote-position-heading">
+                                        <h2>{position.name}</h2>
+                                        <p>
+                                            {position.is_required !== false
+                                                ? "You must select one candidate for this position."
+                                                : "This position is optional."}
+                                        </p>
+                                        {position.description && <p>{position.description}</p>}
+                                    </div>
+                                    <div className="candidate-grid">
+                                        {renderCandidateCards(position)}
+                                    </div>
+                                </section>
+                            ))}
+
+                            {election && electionIsOpen && studentEligible && eligiblePositions.length > 0 && (
+                                <section className="vote-submit-section">
+                                    <p>Double check your choices before submitting your votes.</p>
+                                    <button
+                                        type="button"
+                                        className="submit-vote-button"
+                                        disabled={voteLoading}
+                                        onClick={handleSubmitVotes}
+                                    >
+                                        {voteLoading ? "SUBMITTING..." : "SUBMIT VOTE"}
+                                    </button>
+                                </section>
+                            )}
+                        </>
+                    )}
+
                 </main>
             );
         }

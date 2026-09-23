@@ -1,12 +1,14 @@
 const express = require("express");
 
 const {
-    getResultsReports
+    getResultsReports,
+    exportResultsReports
 } = require(
     "../controllers/resultsReportsController"
 );
 
 const router = express.Router();
+
 
 // =========================================================
 // RESULTS & REPORTS
@@ -17,5 +19,17 @@ router.get(
     "/",
     getResultsReports
 );
+
+
+// =========================================================
+// EXPORT RESULTS & REPORTS
+// =========================================================
+
+// GET Excel export of election results
+router.get(
+    "/export",
+    exportResultsReports
+);
+
 
 module.exports = router;
