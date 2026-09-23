@@ -1997,23 +1997,23 @@ function KioskVoting() {
                             }
                         >
 
-                            <input
-                                value={
-                                    studentId
-                                }
-                                onChange={
-                                    (event) =>
-                                        setStudentId(
-                                            event.target
-                                                .value
-                                        )
-                                }
-                                placeholder="Student ID"
-                                autoFocus
-                                disabled={
-                                    actionLoading
-                                }
-                            />
+                           <input
+                            type="text"
+                            inputMode="numeric"
+                            value={studentId}
+                            onChange={(event) => {
+                                const value =
+                                    event.target.value
+                                        .replace(/\D/g, "")
+                                        .slice(0, 5);
+
+                                setStudentId(value);
+                            }}
+                            placeholder="Student ID"
+                            maxLength={5}
+                            autoFocus
+                            disabled={actionLoading}
+                        />
 
 
                             <button

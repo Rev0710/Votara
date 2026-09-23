@@ -20,6 +20,9 @@ const ResultsReports = () => {
     const [refreshing, setRefreshing] =
         useState(false);
 
+    const [exporting, setExporting] =
+        useState(false);
+
     const [error, setError] =
         useState("");
 
@@ -129,6 +132,127 @@ const ResultsReports = () => {
         loadResults(
             electionId
         );
+    };
+
+    // =====================================================
+    // EXPORT RESULTS
+    // =====================================================
+
+    const handleExportResults = async () => {
+
+        if (!election?.id) {
+            setError(
+                "Please select an election before exporting results."
+            );
+            return;
+        }
+
+        try {
+
+            setExporting(true);
+            setError("");
+
+            const endpoint =
+                `/electoral-board/results-reports/export?election_id=${encodeURIComponent(
+                    election.id
+                )}`;
+
+            const response =
+                await api.get(
+                    endpoint,
+                    {
+                        responseType: "blob"
+                    }
+                );
+
+            const contentType =
+                response?.headers?.["content-type"] ||
+                "";
+
+            if (
+                contentType.includes(
+                    "application/json"
+                )
+            ) {
+
+                const text =
+                    await response.data.text();
+
+                let message =
+                    "Unable to export election results.";
+
+                try {
+                    const parsed =
+                        JSON.parse(text);
+
+                    message =
+                        parsed?.message ||
+                        message;
+                } catch {
+                    // Use fallback message.
+                }
+
+                throw new Error(message);
+            }
+
+            const blob =
+                new Blob(
+                    [response.data],
+                    {
+                        type:
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    }
+                );
+
+            const url =
+                window.URL.createObjectURL(
+                    blob
+                );
+
+            const link =
+                document.createElement("a");
+
+            link.href = url;
+
+            const contentDisposition =
+                response?.headers?.[
+                    "content-disposition"
+                ] || "";
+
+            const filenameMatch =
+                contentDisposition.match(
+                    /filename="?([^"]+)"?/i
+                );
+
+            link.setAttribute(
+                "download",
+                filenameMatch?.[1] ||
+                    "VOTARA_Results.xlsx"
+            );
+
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+
+            window.URL.revokeObjectURL(url);
+
+        } catch (err) {
+
+            console.error(
+                "Results export error:",
+                err
+            );
+
+            setError(
+                err?.response?.data?.message ||
+                err?.message ||
+                "Unable to export election results."
+            );
+
+        } finally {
+
+            setExporting(false);
+        }
     };
 
     // =====================================================
@@ -371,29 +495,57 @@ const ResultsReports = () => {
 
                 </div>
 
-                <button
-                    type="button"
-                    className="rr-refresh-button"
-                    onClick={() =>
-                        loadResults(
-                            selectedElectionId,
-                            true
-                        )
-                    }
-                    disabled={refreshing}
-                >
+                <div className="rr-header-actions">
 
-                    <span>
+                    <button
+                        type="button"
+                        className="rr-export-button"
+                        onClick={
+                            handleExportResults
+                        }
+                        disabled={
+                            exporting ||
+                            !election?.id
+                        }
+                    >
+
+                        <span>
+                            {exporting
+                                ? "↻"
+                                : "⇩"}
+                        </span>
+
+                        {exporting
+                            ? "Exporting..."
+                            : "Export Excel"}
+
+                    </button>
+
+                    <button
+                        type="button"
+                        className="rr-refresh-button"
+                        onClick={() =>
+                            loadResults(
+                                selectedElectionId,
+                                true
+                            )
+                        }
+                        disabled={refreshing}
+                    >
+
+                        <span>
+                            {refreshing
+                                ? "↻"
+                                : "⟳"}
+                        </span>
+
                         {refreshing
-                            ? "↻"
-                            : "⟳"}
-                    </span>
+                            ? "Refreshing..."
+                            : "Refresh"}
 
-                    {refreshing
-                        ? "Refreshing..."
-                        : "Refresh"}
+                    </button>
 
-                </button>
+                </div>
 
             </div>
 

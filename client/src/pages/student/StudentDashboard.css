@@ -2084,3 +2084,171 @@
     width: 118px;
   }
 }
+
+/* =====================================================
+   VOTE CONFIRMATION PANEL
+   Added without changing the existing voting styles.
+===================================================== */
+
+.vote-confirmation-panel {
+  max-width: 900px;
+  margin: 0 auto 35px;
+  padding: 34px;
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  border: 1px solid rgba(22, 163, 74, 0.22);
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(25, 35, 60, 0.09);
+}
+
+.vote-confirmation-icon {
+  width: 58px;
+  height: 58px;
+  min-width: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #ffffff;
+  background: #16a34a;
+  font-size: 28px;
+  font-weight: 900;
+  box-shadow: 0 8px 18px rgba(22, 163, 74, 0.22);
+}
+
+.vote-confirmation-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.vote-confirmation-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  color: #166534;
+  background: #dcfce7;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.vote-confirmation-content h2 {
+  margin: 14px 0 8px;
+  color: #252b3b;
+  font-size: 28px;
+  line-height: 1.2;
+}
+
+.vote-confirmation-message {
+  margin: 0;
+  color: #6b7280;
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+.vote-confirmation-details {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.vote-confirmation-detail {
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.vote-confirmation-detail span {
+  display: block;
+  margin-bottom: 7px;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.vote-confirmation-detail strong {
+  display: block;
+  color: #252b3b;
+  font-size: 14px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.vote-confirmation-privacy {
+  margin-top: 22px;
+  padding: 17px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  border-left: 4px solid #1e3a8a;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.vote-confirmation-privacy strong {
+  color: #252b3b;
+  font-size: 14px;
+}
+
+.vote-confirmation-privacy span {
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.vote-confirmation-return-button {
+  margin-top: 24px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  color: #ffffff;
+  background: #1e3a8a;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.vote-confirmation-return-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(30, 58, 138, 0.18);
+}
+
+@media (max-width: 760px) {
+  .vote-confirmation-panel {
+    padding: 24px;
+    gap: 18px;
+  }
+
+  .vote-confirmation-details {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .vote-confirmation-panel {
+    padding: 20px;
+    flex-direction: column;
+  }
+
+  .vote-confirmation-icon {
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+  }
+
+  .vote-confirmation-content h2 {
+    font-size: 24px;
+  }
+
+  .vote-confirmation-return-button {
+    width: 100%;
+  }
+}

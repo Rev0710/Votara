@@ -24,8 +24,6 @@ const API = {
     reject: (id) =>
         `/electoral-board/late-enrollees/${id}/reject`,
 
-    correction: (id) =>
-        `/electoral-board/late-enrollees/${id}/correction`,
 };
 
 // ============================================================
@@ -73,7 +71,12 @@ const getYearLevel = (item) =>
 const getEmail = (item) =>
     item?.email ||
     item?.student?.email ||
-    "—";
+    "";
+
+const hasEmail = (item) =>
+    Boolean(
+        String(getEmail(item) || "").trim()
+    );
 
 const getStatus = (item) =>
     String(
@@ -85,9 +88,37 @@ const getStatus = (item) =>
         .toLowerCase()
         .replace(/\s+/g, "_");
 
+const getRejectionReason = (item) =>
+    item?.rejection_reason ||
+    item?.rejectionReason ||
+    item?.reason ||
+    item?.remarks ||
+    "";
+
 const formatStatus = (status) => {
-    const value = String(status || "pending")
-        .replace(/_/g, " ");
+    const normalized = String(status || "pending")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "_");
+
+    if (
+        normalized === "pending" ||
+        normalized === "pending_review" ||
+        normalized === "submitted" ||
+        normalized === "under_review"
+    ) {
+        return "In Review";
+    }
+
+    if (normalized === "approved") {
+        return "Approved";
+    }
+
+    if (normalized === "rejected") {
+        return "Rejected";
+    }
+
+    const value = normalized.replace(/_/g, " ");
 
     return value.replace(
         /\b\w/g,
@@ -134,6 +165,8 @@ const getInitials = (name) => {
 const getDocumentUrl = (document) =>
     document?.signed_url ||
     document?.signedUrl ||
+    document?.public_url ||
+    document?.publicUrl ||
     document?.file_url ||
     document?.fileUrl ||
     document?.url ||
@@ -156,6 +189,38 @@ const getDocumentType = (document) =>
     document?.documentType ||
     document?.type ||
     "Submitted Document";
+
+const getDocumentMimeType = (document) =>
+    String(
+        document?.file_type ||
+        document?.fileType ||
+        document?.mime_type ||
+        document?.mimeType ||
+        ""
+    ).toLowerCase();
+
+const getDocumentReviewStatus = (application) => {
+    const status = getStatus(application);
+
+    if (status === "approved") {
+        return {
+            label: "Submitted",
+            className: "submitted",
+        };
+    }
+
+    if (status === "rejected") {
+        return {
+            label: "Rejected",
+            className: "rejected",
+        };
+    }
+
+    return {
+        label: "In Review",
+        className: "in-review",
+    };
+};
 
 // ============================================================
 // COMPONENT
@@ -212,6 +277,11 @@ function LateEnrolleeManagement() {
         useState("");
 
     const [
+        documentPreview,
+        setDocumentPreview,
+    ] = useState(null);
+
+    const [
         actionLoading,
         setActionLoading,
     ] = useState(false);
@@ -234,18 +304,8 @@ function LateEnrolleeManagement() {
         setRejectModalOpen,
     ] = useState(false);
 
-    const [
-        correctionModalOpen,
-        setCorrectionModalOpen,
-    ] = useState(false);
-
     const [rejectReason, setRejectReason] =
         useState("");
-
-    const [
-        correctionReason,
-        setCorrectionReason,
-    ] = useState("");
 
     // ========================================================
     // LOAD APPLICATIONS
@@ -453,6 +513,14 @@ function LateEnrolleeManagement() {
                 )
                     ? body.documents
                     : Array.isArray(
+                          body.registration_documents
+                      )
+                    ? body.registration_documents
+                    : Array.isArray(
+                          body.registrationDocuments
+                      )
+                    ? body.registrationDocuments
+                    : Array.isArray(
                           body.data
                       )
                     ? body.data
@@ -514,6 +582,8 @@ function LateEnrolleeManagement() {
 
         setSelfieUrl("");
 
+        setDocumentPreview(null);
+
         setDocumentsError("");
 
         setActionError("");
@@ -524,11 +594,7 @@ function LateEnrolleeManagement() {
 
         setRejectModalOpen(false);
 
-        setCorrectionModalOpen(false);
-
         setRejectReason("");
-
-        setCorrectionReason("");
     };
 
     // ========================================================
@@ -566,9 +632,6 @@ function LateEnrolleeManagement() {
                         API.approve(id)
                     );
 
-                const data =
-                    response?.data || {};
-
                 setApplications(
                     (current) =>
                         current.map(
@@ -601,8 +664,9 @@ function LateEnrolleeManagement() {
                 );
 
                 setActionSuccess(
-                    data?.message ||
-                    "Late enrollee approved successfully. The student account has been activated and the temporary password was sent to the registered email address."
+                    hasEmail(selectedApplication)
+                        ? "Late enrollee approved successfully. The student's account has been activated and the temporary password has been sent to the registered email address."
+                        : "Late enrollee approved successfully. The student account has been activated. Since no email address was provided, account activation will continue on the current kiosk device."
                 );
 
                 await loadApplications(
@@ -728,113 +792,6 @@ function LateEnrolleeManagement() {
                     err?.response?.data?.error ||
                     err?.message ||
                     "Unable to reject this application."
-                );
-
-            } finally {
-                setActionLoading(false);
-            }
-        };
-
-    // ========================================================
-    // CORRECTION
-    // ========================================================
-
-    const requestCorrection =
-        async () => {
-
-            if (!selectedApplication)
-                return;
-
-            const id =
-                getApplicationId(
-                    selectedApplication
-                );
-
-            const reason =
-                correctionReason.trim();
-
-            if (!reason) {
-                setActionError(
-                    "A correction reason is required."
-                );
-                return;
-            }
-
-            try {
-
-                setActionLoading(true);
-
-                setActionError("");
-
-                setActionSuccess("");
-
-                await api.patch(
-                    API.correction(id),
-                    {
-                        reason,
-                        remarks: reason,
-                        correction_message:
-                            reason,
-                    }
-                );
-
-                setApplications(
-                    (current) =>
-                        current.map(
-                            (item) =>
-                                getApplicationId(
-                                    item
-                                ) === id
-                                    ? {
-                                          ...item,
-                                          application_status:
-                                              "needs_correction",
-                                          correction_message:
-                                              reason,
-                                      }
-                                    : item
-                        )
-                );
-
-                setSelectedApplication(
-                    (current) =>
-                        current
-                            ? {
-                                  ...current,
-                                  application_status:
-                                      "needs_correction",
-                                  correction_message:
-                                      reason,
-                              }
-                            : current
-                );
-
-                setCorrectionModalOpen(
-                    false
-                );
-
-                setCorrectionReason("");
-
-                setActionSuccess(
-                    "Correction request sent successfully."
-                );
-
-                await loadApplications(
-                    true
-                );
-
-            } catch (err) {
-
-                console.error(
-                    "Correction request error:",
-                    err
-                );
-
-                setActionError(
-                    err?.response?.data?.message ||
-                    err?.response?.data?.error ||
-                    err?.message ||
-                    "Unable to request correction."
                 );
 
             } finally {
@@ -1411,11 +1368,16 @@ function LateEnrolleeManagement() {
                 .open-link,
                 .document-open {
                     display: inline-flex;
-                    margin-top: 8px;
+                    margin-top: 9px;
                     color: #2563eb;
                     font-size: 10px;
                     font-weight: 800;
                     text-decoration: none;
+                    cursor: pointer;
+                }
+
+                .document-open:hover {
+                    text-decoration: underline;
                 }
 
                 .document-list {
@@ -1445,12 +1407,174 @@ function LateEnrolleeManagement() {
                 }
 
                 .document-status {
-                    background: #ecfdf5;
-                    color: #15803d;
                     border-radius: 999px;
                     padding: 5px 9px;
                     font-size: 9px;
                     font-weight: 800;
+                    white-space: nowrap;
+                }
+
+                .document-status.in-review {
+                    background: #fff7ed;
+                    color: #c2410c;
+                }
+
+                .document-status.submitted {
+                    background: #ecfdf5;
+                    color: #15803d;
+                }
+
+                .document-status.rejected {
+                    background: #fef2f2;
+                    color: #dc2626;
+                }
+
+                .document-preview {
+                    width: 74px;
+                    height: 54px;
+                    border-radius: 9px;
+                    overflow: hidden;
+                    border: 1px solid #dbe3ef;
+                    background: #f8fafc;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
+                }
+
+                .document-preview img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                }
+
+                .document-file-icon {
+                    font-size: 23px;
+                }
+
+                .document-actions {
+                    display: flex;
+                    align-items: center;
+                    justify-content: flex-end;
+                    gap: 10px;
+                    flex-shrink: 0;
+                }
+
+                .document-view-btn {
+                    height: 32px;
+                    padding: 0 11px;
+                    border: 1px solid #2563eb;
+                    border-radius: 8px;
+                    background: #eff6ff;
+                    color: #2563eb;
+                    cursor: pointer;
+                    font-size: 10px;
+                    font-weight: 800;
+                }
+
+                .document-view-btn:hover {
+                    background: #dbeafe;
+                }
+
+                .document-view-btn:disabled {
+                    border-color: #e2e8f0;
+                    background: #f8fafc;
+                    color: #94a3b8;
+                    cursor: not-allowed;
+                }
+
+                .document-path-note {
+                    margin-top: 8px;
+                    color: #94a3b8;
+                    font-size: 9px;
+                }
+
+                .document-preview-modal {
+                    width: min(1050px, 100%);
+                    height: min(90vh, 850px);
+                    background: #0f172a;
+                    border-radius: 16px;
+                    overflow: hidden;
+                    display: flex;
+                    flex-direction: column;
+                    box-shadow:
+                        0 25px 80px
+                        rgba(15, 23, 42, .35);
+                }
+
+                .document-preview-header {
+                    min-height: 58px;
+                    padding: 12px 16px;
+                    background: #ffffff;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 12px;
+                }
+
+                .document-preview-title {
+                    min-width: 0;
+                }
+
+                .document-preview-name {
+                    font-size: 13px;
+                    font-weight: 800;
+                    color: #0f172a;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .document-preview-type {
+                    margin-top: 3px;
+                    font-size: 9px;
+                    color: #64748b;
+                }
+
+                .document-preview-body {
+                    flex: 1;
+                    min-height: 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 16px;
+                    background: #0f172a;
+                }
+
+                .document-preview-body img {
+                    max-width: 100%;
+                    max-height: 100%;
+                    object-fit: contain;
+                    border-radius: 8px;
+                    background: #ffffff;
+                }
+
+                .document-preview-body iframe {
+                    width: 100%;
+                    height: 100%;
+                    border: 0;
+                    border-radius: 8px;
+                    background: #ffffff;
+                }
+
+                .document-preview-open {
+                    color: #2563eb;
+                    font-size: 10px;
+                    font-weight: 800;
+                    text-decoration: none;
+                    white-space: nowrap;
+                }
+
+                .document-preview-open:hover {
+                    text-decoration: underline;
+                }
+
+                .document-preview-fallback {
+                    color: #cbd5e1;
+                    text-align: center;
+                    font-size: 12px;
+                    line-height: 1.6;
+                    max-width: 420px;
                 }
 
                 .no-documents {
@@ -1526,6 +1650,29 @@ function LateEnrolleeManagement() {
                     color: #c2410c;
                 }
 
+                .final-review-status {
+                    min-height: 41px;
+                    padding: 0 18px;
+                    border-radius: 9px;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 11px;
+                    font-weight: 800;
+                }
+
+                .final-review-status.approved {
+                    background: #ecfdf5;
+                    border: 1px solid #bbf7d0;
+                    color: #15803d;
+                }
+
+                .final-review-status.rejected {
+                    background: #fef2f2;
+                    border: 1px solid #fecaca;
+                    color: #dc2626;
+                }
+
                 .small-modal {
                     width: min(480px, 100%);
                     background: white;
@@ -1550,10 +1697,6 @@ function LateEnrolleeManagement() {
 
                 .small-icon.reject {
                     background: #fef2f2;
-                }
-
-                .small-icon.correction {
-                    background: #fff7ed;
                 }
 
                 .small-title {
@@ -1609,12 +1752,6 @@ function LateEnrolleeManagement() {
                 .small-btn.reject {
                     background: #dc2626;
                     border-color: #dc2626;
-                    color: white;
-                }
-
-                .small-btn.correction {
-                    background: #ea580c;
-                    border-color: #ea580c;
                     color: white;
                 }
 
@@ -2318,9 +2455,13 @@ function LateEnrolleeManagement() {
 
                                         <div className="detail-value">
                                             {
-                                                getEmail(
+                                                hasEmail(
                                                     selectedApplication
                                                 )
+                                                    ? getEmail(
+                                                          selectedApplication
+                                                      )
+                                                    : "No email provided"
                                             }
                                         </div>
 
@@ -2491,6 +2632,37 @@ function LateEnrolleeManagement() {
                                                         document
                                                     );
 
+                                                const mimeType =
+                                                    getDocumentMimeType(
+                                                        document
+                                                    );
+
+                                                const documentStatus =
+                                                    getDocumentReviewStatus(
+                                                        selectedApplication
+                                                    );
+
+                                                const isImage =
+                                                    mimeType.startsWith(
+                                                        "image/"
+                                                    ) ||
+                                                    /\.(jpg|jpeg|png|webp|gif|bmp)$/i.test(
+                                                        getDocumentName(
+                                                            document,
+                                                            index
+                                                        )
+                                                    );
+
+                                                const isPdf =
+                                                    mimeType ===
+                                                        "application/pdf" ||
+                                                    /\.pdf$/i.test(
+                                                        getDocumentName(
+                                                            document,
+                                                            index
+                                                        )
+                                                    );
+
                                                 return (
 
                                                     <div
@@ -2501,47 +2673,130 @@ function LateEnrolleeManagement() {
                                                         }
                                                     >
 
-                                                        <div>
+                                                        <div
+                                                            style={{
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                gap: 12,
+                                                                minWidth: 0,
+                                                            }}
+                                                        >
 
-                                                            <div className="document-name">
-                                                                📄{" "}
-                                                                {
-                                                                    getDocumentName(
-                                                                        document,
-                                                                        index
-                                                                    )
-                                                                }
+                                                            <div className="document-preview">
+
+                                                                {url &&
+                                                                isImage ? (
+
+                                                                    <img
+                                                                        src={
+                                                                            url
+                                                                        }
+                                                                        alt={
+                                                                            getDocumentName(
+                                                                                document,
+                                                                                index
+                                                                            )
+                                                                        }
+                                                                    />
+
+                                                                ) : (
+
+                                                                    <div className="document-file-icon">
+                                                                        {isPdf
+                                                                            ? "📑"
+                                                                            : "📄"}
+                                                                    </div>
+
+                                                                )}
+
                                                             </div>
 
-                                                            <div className="document-type">
-                                                                Type:{" "}
-                                                                {
-                                                                    getDocumentType(
-                                                                        document
-                                                                    )
-                                                                }
-                                                            </div>
+                                                            <div
+                                                                style={{
+                                                                    minWidth: 0,
+                                                                }}
+                                                            >
 
-                                                            {url && (
-
-                                                                <a
-                                                                    href={
-                                                                        url
+                                                                <div className="document-name">
+                                                                    📄{" "}
+                                                                    {
+                                                                        getDocumentName(
+                                                                            document,
+                                                                            index
+                                                                        )
                                                                     }
-                                                                    target="_blank"
-                                                                    rel="noreferrer"
-                                                                    className="document-open"
-                                                                >
-                                                                    Open Document ↗
-                                                                </a>
+                                                                </div>
 
-                                                            )}
+                                                                <div className="document-type">
+                                                                    Type:{" "}
+                                                                    {
+                                                                        getDocumentType(
+                                                                            document
+                                                                        )
+                                                                    }
+                                                                </div>
+
+                                                                <div className="document-path-note">
+                                                                    {url
+                                                                        ? "Available for EB review."
+                                                                        : "The secure document URL was not returned by the server."}
+                                                                </div>
+
+                                                            </div>
 
                                                         </div>
 
-                                                        <span className="document-status">
-                                                            Submitted
-                                                        </span>
+                                                        <div className="document-actions">
+
+                                                            {url ? (
+
+                                                                <button
+                                                                    type="button"
+                                                                    className="document-view-btn"
+                                                                    onClick={() =>
+                                                                        setDocumentPreview(
+                                                                            {
+                                                                                url,
+                                                                                name:
+                                                                                    getDocumentName(
+                                                                                        document,
+                                                                                        index
+                                                                                    ),
+                                                                                type:
+                                                                                    getDocumentType(
+                                                                                        document
+                                                                                    ),
+                                                                                mimeType,
+                                                                                isImage,
+                                                                                isPdf,
+                                                                            }
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    View & Review ↗
+                                                                </button>
+
+                                                            ) : (
+
+                                                                <button
+                                                                    type="button"
+                                                                    className="document-view-btn"
+                                                                    disabled
+                                                                >
+                                                                    Loading unavailable
+                                                                </button>
+
+                                                            )}
+
+                                                            <span
+                                                                className={`document-status ${documentStatus.className}`}
+                                                            >
+                                                                {
+                                                                    documentStatus.label
+                                                                }
+                                                            </span>
+
+                                                        </div>
 
                                                     </div>
 
@@ -2555,7 +2810,9 @@ function LateEnrolleeManagement() {
 
                                 {/* REJECTION */}
 
-                                {selectedApplication?.rejection_reason && (
+                                {getRejectionReason(
+                                    selectedApplication
+                                ) && (
 
                                     <div className="review-message rejection">
 
@@ -2563,9 +2820,13 @@ function LateEnrolleeManagement() {
                                             Rejection Reason
                                         </div>
 
-                                        {
-                                            selectedApplication.rejection_reason
-                                        }
+                                        <div>
+                                            {
+                                                getRejectionReason(
+                                                    selectedApplication
+                                                )
+                                            }
+                                        </div>
 
                                     </div>
 
@@ -2608,91 +2869,79 @@ function LateEnrolleeManagement() {
 
                                 )}
 
-                                {/* EXACTLY THREE ACTIONS */}
+                                {/* ====================================================
+                                    REVIEW ACTIONS / FINAL STATUS
+                                ===================================================== */}
 
-                                <div className="modal-actions">
+                                {getStatus(
+                                    selectedApplication
+                                ) === "approved" ? (
 
-                                    <button
-                                        className="modal-action approve"
-                                        disabled={
-                                            actionLoading ||
-                                            getStatus(
-                                                selectedApplication
-                                            ) ===
-                                                "approved"
-                                        }
-                                        onClick={() => {
+                                    <div className="modal-actions">
 
-                                            setActionError(
-                                                ""
-                                            );
+                                        <div className="final-review-status approved">
+                                            ✓ Approved
+                                        </div>
 
-                                            setApproveModalOpen(
-                                                true
-                                            );
+                                    </div>
 
-                                        }}
-                                    >
-                                        ✓ Approve
-                                    </button>
+                                ) : getStatus(
+                                    selectedApplication
+                                ) === "rejected" ? (
 
-                                    <button
-                                        className="modal-action reject"
-                                        disabled={
-                                            actionLoading ||
-                                            getStatus(
-                                                selectedApplication
-                                            ) ===
-                                                "approved"
-                                        }
-                                        onClick={() => {
+                                    <div className="modal-actions">
 
-                                            setActionError(
-                                                ""
-                                            );
+                                        <div className="final-review-status rejected">
+                                            ✕ Rejected
+                                        </div>
 
-                                            setRejectReason(
-                                                ""
-                                            );
+                                    </div>
 
-                                            setRejectModalOpen(
-                                                true
-                                            );
+                                ) : (
 
-                                        }}
-                                    >
-                                        ✕ Reject
-                                    </button>
+                                    <div className="modal-actions">
 
-                                    <button
-                                        className="modal-action correction"
-                                        disabled={
-                                            actionLoading ||
-                                            getStatus(
-                                                selectedApplication
-                                            ) ===
-                                                "approved"
-                                        }
-                                        onClick={() => {
+                                        <button
+                                            className="modal-action approve"
+                                            disabled={
+                                                actionLoading
+                                            }
+                                            onClick={() => {
 
-                                            setActionError(
-                                                ""
-                                            );
+                                                setActionError("");
 
-                                            setCorrectionReason(
-                                                ""
-                                            );
+                                                setApproveModalOpen(
+                                                    true
+                                                );
 
-                                            setCorrectionModalOpen(
-                                                true
-                                            );
+                                            }}
+                                        >
+                                            ✓ Approve
+                                        </button>
 
-                                        }}
-                                    >
-                                        ↻ Correction
-                                    </button>
+                                        <button
+                                            className="modal-action reject"
+                                            disabled={
+                                                actionLoading
+                                            }
+                                            onClick={() => {
 
-                                </div>
+                                                setActionError("");
+
+                                                setRejectReason("");
+
+                                                setRejectModalOpen(
+                                                    true
+                                                );
+
+                                            }}
+                                        >
+                                            ✕ Reject
+                                        </button>
+
+                                    </div>
+
+                                )}
 
                             </div>
 
@@ -2701,6 +2950,134 @@ function LateEnrolleeManagement() {
                     </div>
 
                 )}
+
+            {/* ====================================================
+                DOCUMENT PREVIEW
+            ===================================================== */}
+
+            {documentPreview && (
+
+                <div
+                    className="modal-overlay"
+                    onMouseDown={(e) => {
+
+                        if (
+                            e.target ===
+                            e.currentTarget
+                        ) {
+                            setDocumentPreview(null);
+                        }
+
+                    }}
+                >
+
+                    <div className="document-preview-modal">
+
+                        <div className="document-preview-header">
+
+                            <div className="document-preview-title">
+
+                                <div className="document-preview-name">
+                                    {documentPreview.name}
+                                </div>
+
+                                <div className="document-preview-type">
+                                    {documentPreview.type}
+                                </div>
+
+                            </div>
+
+                            <div
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 14,
+                                }}
+                            >
+
+                                <a
+                                    href={
+                                        documentPreview.url
+                                    }
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="document-preview-open"
+                                >
+                                    Open in New Tab ↗
+                                </a>
+
+                                <button
+                                    type="button"
+                                    className="modal-close"
+                                    onClick={() =>
+                                        setDocumentPreview(
+                                            null
+                                        )
+                                    }
+                                >
+                                    ×
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                        <div className="document-preview-body">
+
+                            {documentPreview.isImage ? (
+
+                                <img
+                                    src={
+                                        documentPreview.url
+                                    }
+                                    alt={
+                                        documentPreview.name
+                                    }
+                                />
+
+                            ) : documentPreview.isPdf ? (
+
+                                <iframe
+                                    src={
+                                        documentPreview.url
+                                    }
+                                    title={
+                                        documentPreview.name
+                                    }
+                                />
+
+                            ) : (
+
+                                <div className="document-preview-fallback">
+
+                                    <div
+                                        style={{
+                                            fontSize: 38,
+                                            marginBottom: 10,
+                                        }}
+                                    >
+                                        📄
+                                    </div>
+
+                                    This document format cannot be
+                                    previewed directly here.
+
+                                    <br />
+
+                                    Use <strong>Open in New Tab</strong>
+                                    to review the submitted file.
+
+                                </div>
+
+                            )}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            )}
 
             {/* ====================================================
                 APPROVE CONFIRMATION
@@ -2738,26 +3115,48 @@ function LateEnrolleeManagement() {
                             <br />
                             <br />
 
-                            A temporary password will be
-                            generated and sent directly to:
+                            {hasEmail(
+                                selectedApplication
+                            ) ? (
+                                <>
+                                    A temporary password will be
+                                    generated and sent directly to:
 
-                            <br />
+                                    <br />
 
-                            <strong>
-                                {
-                                    getEmail(
-                                        selectedApplication
-                                    )
-                                }
-                            </strong>
+                                    <strong>
+                                        {
+                                            getEmail(
+                                                selectedApplication
+                                            )
+                                        }
+                                    </strong>
 
-                            <br />
-                            <br />
+                                    <br />
+                                    <br />
 
-                            The student will be required to
-                            create a personal password and
-                            complete their profile photo before
-                            accessing the dashboard.
+                                    The student will be required to
+                                    create a personal password and
+                                    complete their profile photo before
+                                    accessing the dashboard.
+                                </>
+                            ) : (
+                                <>
+                                    No email address was provided.
+                                    The account will be activated
+                                    without sending an email, and
+                                    activation will continue on the
+                                    current kiosk device.
+
+                                    <br />
+                                    <br />
+
+                                    The student will create their
+                                    personal 8-character password on
+                                    the kiosk before accessing the
+                                    dashboard.
+                                </>
+                            )}
 
                         </p>
 
@@ -2880,87 +3279,7 @@ function LateEnrolleeManagement() {
 
             )}
 
-            {/* ====================================================
-                CORRECTION
-            ===================================================== */}
 
-            {correctionModalOpen && (
-
-                <div className="modal-overlay">
-
-                    <div className="small-modal">
-
-                        <div className="small-icon correction">
-                            ↻
-                        </div>
-
-                        <h3 className="small-title">
-                            Request Correction
-                        </h3>
-
-                        <p className="small-text">
-                            Enter exactly what the student
-                            needs to correct before the
-                            application can be reviewed again.
-                        </p>
-
-                        <textarea
-                            className="reason-textarea"
-                            value={
-                                correctionReason
-                            }
-                            onChange={(e) =>
-                                setCorrectionReason(
-                                    e.target.value
-                                )
-                            }
-                            placeholder="Example: Please upload a clearer image of the back of your School ID."
-                            disabled={
-                                actionLoading
-                            }
-                        />
-
-                        <div className="small-actions">
-
-                            <button
-                                className="small-btn"
-                                onClick={() => {
-
-                                    setCorrectionModalOpen(
-                                        false
-                                    );
-
-                                    setCorrectionReason(
-                                        ""
-                                    );
-
-                                }}
-                            >
-                                Cancel
-                            </button>
-
-                            <button
-                                className="small-btn correction"
-                                onClick={
-                                    requestCorrection
-                                }
-                                disabled={
-                                    actionLoading ||
-                                    !correctionReason.trim()
-                                }
-                            >
-                                {actionLoading
-                                    ? "Sending..."
-                                    : "Request Correction"}
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            )}
 
         </div>
     );

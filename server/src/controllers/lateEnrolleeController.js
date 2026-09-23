@@ -8,24 +8,6 @@ const {
     sendRegistrationApprovalEmail,
 } = require("../services/emailService");
 
-// ============================================================
-// LATE ENROLLEE CONTROLLER
-// ============================================================
-//
-// Handles late enrollee applications.
-//
-// Final VOTARA rule:
-// - Late enrollees may NOT exist in the original students roster.
-// - EB verifies the submitted registration.
-// - On approval, the student is added to students.
-// - A student account is created/activated.
-// - Temporary password is generated.
-// - Approval email is sent.
-// - Student must change password and complete profile photo
-//   before dashboard access.
-//
-// ============================================================
-
 const LATE_REGISTRATION_TYPES = [
     "late_enrollee",
     "late",
@@ -37,14 +19,18 @@ const ALLOWED_YEAR_LEVELS = [
     "4th Year",
 ];
 
-// IMPORTANT:
-// Registration documents use registration-documents.
-// Registration selfie uses student-verification.
 const DOCUMENT_BUCKET =
-    "registration-documents";
+    "student-verification";
 
 const SELFIE_BUCKET =
     "student-verification";
+
+const LEGACY_DOCUMENT_BUCKET =
+    "registration-documents";
+
+const SIGNED_URL_EXPIRATION =
+    60 * 60;
+
 
 // ============================================================
 // BASIC HELPERS
@@ -61,10 +47,19 @@ const clean = (value) => {
     return String(value).trim();
 };
 
+
+// ============================================================
+// YEAR LEVEL
+// ============================================================
+
 const normalizeYearLevel = (value) => {
     const cleaned = clean(value);
 
     const aliases = {
+        "1": "1st Year",
+        "1st": "1st Year",
+        "1st year": "1st Year",
+
         "2": "2nd Year",
         "2nd": "2nd Year",
         "2nd year": "2nd Year",
@@ -79,11 +74,61 @@ const normalizeYearLevel = (value) => {
     };
 
     return (
-        aliases[
-            cleaned.toLowerCase()
-        ] || cleaned
+        aliases[cleaned.toLowerCase()] ||
+        cleaned
     );
 };
+
+
+// ============================================================
+// EMAIL VALIDATION
+// ============================================================
+
+const isValidEmail = (email) => {
+    const value = clean(email);
+
+    if (!value) {
+        return false;
+    }
+
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+};
+
+
+// ============================================================
+// REGISTRATION SOURCE
+// ============================================================
+
+const getRegistrationSource = (
+    application
+) => {
+    const source = clean(
+        application?.registration_source
+    ).toLowerCase();
+
+    const email = clean(
+        application?.email
+    ).toLowerCase();
+
+    if (
+        source === "kiosk"
+    ) {
+        return "kiosk";
+    }
+
+    if (!email) {
+        return "kiosk";
+    }
+
+    if (
+        source === "online"
+    ) {
+        return "online";
+    }
+
+    return "online";
+};
+
 
 // ============================================================
 // ELECTORAL BOARD AUTHENTICATION
@@ -174,6 +219,7 @@ const authenticateEB = async (req) => {
     return staff;
 };
 
+
 // ============================================================
 // FIND STUDENT
 // ============================================================
@@ -217,13 +263,13 @@ const findStudent = async (
     return data || null;
 };
 
+
 // ============================================================
 // FIND LATE APPLICATION
 // ============================================================
 
 const findLateApplication =
     async (id) => {
-
         const {
             data,
             error,
@@ -231,7 +277,29 @@ const findLateApplication =
             .from(
                 "registration_applications"
             )
-            .select("*")
+            .select(`
+                id,
+                student_id,
+                registration_type,
+                registration_source,
+                application_status,
+                email,
+                full_name,
+                year_level,
+                birthday,
+                contact_number,
+                province,
+                barangay,
+                city,
+                otp_verified_at,
+                submitted_at,
+                reviewed_at,
+                reviewed_by,
+                rejection_reason,
+                correction_message,
+                created_at,
+                updated_at
+            `)
             .eq(
                 "id",
                 id
@@ -251,15 +319,13 @@ const findLateApplication =
         return data || null;
     };
 
+
 // ============================================================
 // FIND IDENTITY VERIFICATION
 // ============================================================
 
 const findIdentityVerification =
-    async (
-        registrationId
-    ) => {
-
+    async (registrationId) => {
         const {
             data,
             error,
@@ -290,304 +356,291 @@ const findIdentityVerification =
         return data || null;
     };
 
+
 // ============================================================
-// SELFIE STORAGE HELPERS
+// STORAGE HELPERS
 // ============================================================
 
-const findStoredSelfieValue =
-    (
-        identityVerification
-    ) => {
+const isUrl = (value) => {
+    const valueString =
+        clean(value);
 
-        if (!identityVerification) {
+    return (
+        valueString.startsWith(
+            "http://"
+        ) ||
+        valueString.startsWith(
+            "https://"
+        )
+    );
+};
+
+
+const normalizeStoragePath = (
+    value,
+    bucketName
+) => {
+    let path =
+        clean(value);
+
+    if (!path) {
+        return "";
+    }
+
+    if (isUrl(path)) {
+        return path;
+    }
+
+    path =
+        path.replace(
+            /^\/+/,
+            ""
+        );
+
+    if (bucketName) {
+        path =
+            path.replace(
+                new RegExp(
+                    `^${bucketName}/`
+                ),
+                ""
+            );
+    }
+
+    path =
+        path.replace(
+            new RegExp(
+                `^${DOCUMENT_BUCKET}/`
+            ),
+            ""
+        );
+
+    path =
+        path.replace(
+            new RegExp(
+                `^${SELFIE_BUCKET}/`
+            ),
+            ""
+        );
+
+    path =
+        path.replace(
+            new RegExp(
+                `^${LEGACY_DOCUMENT_BUCKET}/`
+            ),
+            ""
+        );
+
+    path =
+        path.replace(
+            /^storage\/v1\/object\/public\/[^/]+\//,
+            ""
+        );
+
+    path =
+        path.replace(
+            /^storage\/v1\/object\/sign\/[^/]+\//,
+            ""
+        );
+
+    return path;
+};
+
+
+const createSignedUrl = async (
+    bucket,
+    storagePath
+) => {
+    const original =
+        clean(storagePath);
+
+    if (!original) {
+        return "";
+    }
+
+    if (isUrl(original)) {
+        return original;
+    }
+
+    const normalizedPath =
+        normalizeStoragePath(
+            original,
+            bucket
+        );
+
+    if (!normalizedPath) {
+        return "";
+    }
+
+    const {
+        data,
+        error,
+    } =
+        await supabase.storage
+            .from(bucket)
+            .createSignedUrl(
+                normalizedPath,
+                SIGNED_URL_EXPIRATION
+            );
+
+    if (
+        !error &&
+        data?.signedUrl
+    ) {
+        return data.signedUrl;
+    }
+
+    return "";
+};
+
+
+// ============================================================
+// CREATE DOCUMENT SIGNED URL
+// ============================================================
+
+const createDocumentSignedUrl =
+    async (document) => {
+        if (!document) {
             return "";
         }
 
-        const fields = [
-            "selfie_url",
-            "selfieUrl",
-            "selfie_signed_url",
-            "selfieSignedUrl",
-            "selfie_path",
-            "selfiePath",
-            "selfie_storage_path",
-            "selfieStoragePath",
-            "selfie_file_path",
-            "selfieFilePath",
-            "file_url",
-            "fileUrl",
-            "storage_path",
-            "storagePath",
-            "file_path",
-            "filePath",
+        const possibleValues = [
+            document.storage_path,
+            document.storagePath,
+            document.file_path,
+            document.filePath,
+            document.file_url,
+            document.fileUrl,
+            document.url,
+            document.public_url,
+            document.publicUrl,
         ];
 
         for (
-            const field of fields
+            const value of possibleValues
         ) {
+            const path =
+                clean(value);
 
-            const value =
-                clean(
-                    identityVerification[
-                        field
-                    ]
+            if (!path) {
+                continue;
+            }
+
+            if (isUrl(path)) {
+                return path;
+            }
+
+            const currentBucketUrl =
+                await createSignedUrl(
+                    DOCUMENT_BUCKET,
+                    path
                 );
 
-            if (value) {
-                return value;
+            if (currentBucketUrl) {
+                return currentBucketUrl;
+            }
+
+            const legacyBucketUrl =
+                await createSignedUrl(
+                    LEGACY_DOCUMENT_BUCKET,
+                    path
+                );
+
+            if (legacyBucketUrl) {
+                return legacyBucketUrl;
             }
         }
 
         return "";
     };
 
-const normalizeStoragePath =
-    (
-        value
-    ) => {
 
-        let path =
-            clean(value);
+// ============================================================
+// SELFIE HELPERS
+// ============================================================
 
-        if (!path) {
-            return "";
+const findStoredSelfieValue = (
+    identityVerification
+) => {
+    if (!identityVerification) {
+        return "";
+    }
+
+    const fields = [
+        "selfie_url",
+        "selfieUrl",
+        "selfie_signed_url",
+        "selfieSignedUrl",
+        "selfie_path",
+        "selfiePath",
+        "selfie_storage_path",
+        "selfieStoragePath",
+        "selfie_file_path",
+        "selfieFilePath",
+        "file_url",
+        "fileUrl",
+        "storage_path",
+        "storagePath",
+        "file_path",
+        "filePath",
+    ];
+
+    for (
+        const field of fields
+    ) {
+        const value =
+            clean(
+                identityVerification[field]
+            );
+
+        if (value) {
+            return value;
         }
+    }
 
-        if (
-            path.startsWith(
-                "http://"
-            ) ||
-            path.startsWith(
-                "https://"
-            )
-        ) {
-            return path;
-        }
+    return "";
+};
 
-        path =
-            path.replace(
-                /^\/+/,
-                ""
-            );
-
-        path =
-            path.replace(
-                new RegExp(
-                    `^${SELFIE_BUCKET}/`
-                ),
-                ""
-            );
-
-        path =
-            path.replace(
-                new RegExp(
-                    `^${DOCUMENT_BUCKET}/`
-                ),
-                ""
-            );
-
-        path =
-            path.replace(
-                /^storage\/v1\/object\/public\/[^/]+\//,
-                ""
-            );
-
-        path =
-            path.replace(
-                /^storage\/v1\/object\/sign\/[^/]+\//,
-                ""
-            );
-
-        return path;
-    };
 
 const createSelfieUrlFromPath =
-    async (
-        storagePath
-    ) => {
+    async (storagePath) => {
+        const value =
+            clean(storagePath);
 
-        const normalizedPath =
-            normalizeStoragePath(
-                storagePath
-            );
-
-        if (!normalizedPath) {
+        if (!value) {
             return "";
         }
 
-        if (
-            normalizedPath.startsWith(
-                "http://"
-            ) ||
-            normalizedPath.startsWith(
-                "https://"
-            )
-        ) {
-            return normalizedPath;
+        if (isUrl(value)) {
+            return value;
         }
 
-        const {
-            data,
-            error,
-        } =
-            await supabase.storage
-                .from(
-                    SELFIE_BUCKET
-                )
-                .createSignedUrl(
-                    normalizedPath,
-                    60 * 60
-                );
+        const currentBucketUrl =
+            await createSignedUrl(
+                SELFIE_BUCKET,
+                value
+            );
 
-        if (
-            !error &&
-            data?.signedUrl
-        ) {
-            return data.signedUrl;
+        if (currentBucketUrl) {
+            return currentBucketUrl;
         }
 
-        console.warn(
-            "Selfie path could not be resolved:",
-            {
-                originalPath:
-                    storagePath,
-                normalizedPath,
-                error:
-                    error?.message || "",
-            }
-        );
+        const legacyBucketUrl =
+            await createSignedUrl(
+                LEGACY_DOCUMENT_BUCKET,
+                value
+            );
+
+        if (legacyBucketUrl) {
+            return legacyBucketUrl;
+        }
 
         return "";
     };
 
-// ============================================================
-// FIND SELFIE FROM STORAGE
-// ============================================================
-
-const findSelfieFromStorage =
-    async (
-        registrationId
-    ) => {
-
-        if (!registrationId) {
-            return "";
-        }
-
-        const folder =
-            `registrations/${registrationId}`;
-
-        const {
-            data: files,
-            error,
-        } =
-            await supabase.storage
-                .from(
-                    SELFIE_BUCKET
-                )
-                .list(
-                    folder,
-                    {
-                        limit: 100,
-                        offset: 0,
-                        sortBy: {
-                            column:
-                                "created_at",
-                            order:
-                                "desc",
-                        },
-                    }
-                );
-
-        if (error) {
-
-            console.warn(
-                "Unable to list selfie storage:",
-                error.message
-            );
-
-            return "";
-        }
-
-        if (
-            !files ||
-            files.length === 0
-        ) {
-            return "";
-        }
-
-        const selfieFile =
-            files.find(
-                (file) => {
-
-                    const name =
-                        clean(
-                            file.name
-                        ).toLowerCase();
-
-                    return (
-                        name ===
-                            "selfie.jpg" ||
-                        name ===
-                            "selfie.jpeg" ||
-                        name ===
-                            "selfie.png" ||
-                        name ===
-                            "selfie.webp" ||
-                        name.includes(
-                            "selfie"
-                        )
-                    );
-                }
-            );
-
-        if (!selfieFile) {
-            return "";
-        }
-
-        const path =
-            `${folder}/${selfieFile.name}`;
-
-        const {
-            data,
-            error:
-                signedUrlError,
-        } =
-            await supabase.storage
-                .from(
-                    SELFIE_BUCKET
-                )
-                .createSignedUrl(
-                    path,
-                    60 * 60
-                );
-
-        if (
-            signedUrlError
-        ) {
-
-            console.warn(
-                "Unable to create selfie signed URL:",
-                signedUrlError.message
-            );
-
-            return "";
-        }
-
-        return (
-            data?.signedUrl ||
-            ""
-        );
-    };
-
-// ============================================================
-// FIND SELFIE FROM REGISTRATION DOCUMENTS
-// ============================================================
 
 const findSelfieFromDocuments =
-    async (
-        registrationId
-    ) => {
-
+    async (registrationId) => {
         const {
             data,
             error,
@@ -627,57 +680,102 @@ const findSelfieFromDocuments =
             return "";
         }
 
-        const fields = [
-            "file_url",
-            "fileUrl",
-            "storage_path",
-            "storagePath",
-            "file_path",
-            "filePath",
-            "url",
-        ];
-
-        for (
-            const field of fields
-        ) {
-
-            const value =
-                clean(data[field]);
-
-            if (!value) {
-                continue;
-            }
-
-            const url =
-                await createSelfieUrlFromPath(
-                    value
-                );
-
-            if (url) {
-                return url;
-            }
-        }
-
-        return "";
+        return await createSelfieUrlFromPath(
+            data.storage_path ||
+            data.storagePath ||
+            data.file_path ||
+            data.filePath ||
+            data.file_url ||
+            data.fileUrl ||
+            data.url
+        );
     };
 
-// ============================================================
-// GET SELFIE URL
-// ============================================================
+
+const findSelfieFromStorage =
+    async (registrationId) => {
+        if (!registrationId) {
+            return "";
+        }
+
+        const folder =
+            `registrations/${registrationId}`;
+
+        const {
+            data: files,
+            error,
+        } =
+            await supabase.storage
+                .from(
+                    SELFIE_BUCKET
+                )
+                .list(
+                    folder,
+                    {
+                        limit: 100,
+                        offset: 0,
+                        sortBy: {
+                            column: "created_at",
+                            order: "desc",
+                        },
+                    }
+                );
+
+        if (error) {
+            console.warn(
+                "Unable to list selfie storage:",
+                error.message
+            );
+
+            return "";
+        }
+
+        if (
+            !files ||
+            files.length === 0
+        ) {
+            return "";
+        }
+
+        const selfieFile =
+            files.find(
+                (file) => {
+                    const name =
+                        clean(
+                            file.name
+                        ).toLowerCase();
+
+                    return (
+                        name.includes("selfie") ||
+                        name === "selfie.jpg" ||
+                        name === "selfie.jpeg" ||
+                        name === "selfie.png" ||
+                        name === "selfie.webp"
+                    );
+                }
+            );
+
+        if (!selfieFile) {
+            return "";
+        }
+
+        return await createSelfieUrlFromPath(
+            `${folder}/${selfieFile.name}`
+        );
+    };
+
 
 const getSelfieUrl =
     async (
         identityVerification,
         registrationId
     ) => {
-
         const identityValue =
             findStoredSelfieValue(
                 identityVerification
             );
 
         if (identityValue) {
-
             const url =
                 await createSelfieUrlFromPath(
                     identityValue
@@ -709,28 +807,246 @@ const getSelfieUrl =
         return "";
     };
 
+
+// ============================================================
+// ENSURE IDENTITY VERIFICATION
+// ============================================================
+//
+// This fixes the situation where the selfie exists in
+// registration_documents/storage but the corresponding
+// identity_verifications row was not created.
+//
+// ============================================================
+
+const ensureIdentityVerification =
+    async (
+        registrationId,
+        studentUuid,
+        registrationSource
+    ) => {
+        let identityVerification =
+            await findIdentityVerification(
+                registrationId
+            );
+
+        if (identityVerification) {
+            if (
+                studentUuid &&
+                !identityVerification.student_id
+            ) {
+                const {
+                    data: updatedIdentity,
+                    error: updateIdentityError,
+                } =
+                    await supabase
+                        .from(
+                            "identity_verifications"
+                        )
+                        .update({
+                            student_id:
+                                studentUuid,
+                        })
+                        .eq(
+                            "id",
+                            identityVerification.id
+                        )
+                        .select("*")
+                        .single();
+
+                if (updateIdentityError) {
+                    throw new Error(
+                        `Unable to update identity verification: ${updateIdentityError.message}`
+                    );
+                }
+
+                identityVerification =
+                    updatedIdentity;
+            }
+
+            return identityVerification;
+        }
+
+        // ----------------------------------------------------
+        // FIRST: FIND SELFIE IN REGISTRATION DOCUMENTS
+        // ----------------------------------------------------
+
+        const {
+            data: selfieDocument,
+            error: selfieDocumentError,
+        } =
+            await supabase
+                .from(
+                    "registration_documents"
+                )
+                .select(`
+                    id,
+                    registration_id,
+                    student_id,
+                    document_type,
+                    storage_path
+                `)
+                .eq(
+                    "registration_id",
+                    registrationId
+                )
+                .eq(
+                    "document_type",
+                    "selfie"
+                )
+                .order(
+                    "uploaded_at",
+                    {
+                        ascending: false,
+                    }
+                )
+                .limit(1)
+                .maybeSingle();
+
+        if (selfieDocumentError) {
+            console.warn(
+                "Unable to find selfie document while repairing identity verification:",
+                selfieDocumentError.message
+            );
+        }
+
+        let selfieStoragePath =
+            clean(
+                selfieDocument?.storage_path
+            );
+
+        // ----------------------------------------------------
+        // SECOND: STORAGE FALLBACK
+        // ----------------------------------------------------
+
+        if (!selfieStoragePath) {
+            const folder =
+                `registrations/${registrationId}`;
+
+            const {
+                data: files,
+                error: storageError,
+            } =
+                await supabase.storage
+                    .from(
+                        SELFIE_BUCKET
+                    )
+                    .list(
+                        folder,
+                        {
+                            limit: 100,
+                            offset: 0,
+                            sortBy: {
+                                column:
+                                    "created_at",
+                                order:
+                                    "desc",
+                            },
+                        }
+                    );
+
+            if (!storageError) {
+                const selfieFile =
+                    files?.find(
+                        (file) => {
+                            const name =
+                                clean(
+                                    file.name
+                                ).toLowerCase();
+
+                            return (
+                                name.includes(
+                                    "selfie"
+                                ) ||
+                                name ===
+                                    "selfie.jpg" ||
+                                name ===
+                                    "selfie.jpeg" ||
+                                name ===
+                                    "selfie.png" ||
+                                name ===
+                                    "selfie.webp"
+                            );
+                        }
+                    );
+
+                if (selfieFile) {
+                    selfieStoragePath =
+                        `${folder}/${selfieFile.name}`;
+                }
+            }
+        }
+
+        // ----------------------------------------------------
+        // NO SELFIE FOUND
+        // ----------------------------------------------------
+
+        if (!selfieStoragePath) {
+            return null;
+        }
+
+        const verificationMethod =
+            registrationSource ===
+            "kiosk"
+                ? "kiosk"
+                : "online";
+
+        // ----------------------------------------------------
+        // CREATE MISSING IDENTITY VERIFICATION
+        // ----------------------------------------------------
+
+        const {
+            data: createdIdentity,
+            error: createIdentityError,
+        } =
+            await supabase
+                .from(
+                    "identity_verifications"
+                )
+                .insert({
+                    registration_id:
+                        registrationId,
+
+                    student_id:
+                        studentUuid ||
+                        null,
+
+                    selfie_storage_path:
+                        selfieStoragePath,
+
+                    verification_method:
+                        verificationMethod,
+
+                    verification_status:
+                        "pending",
+                })
+                .select("*")
+                .single();
+
+        if (createIdentityError) {
+            throw new Error(
+                `Unable to create missing identity verification record: ${createIdentityError.message}`
+            );
+        }
+
+        return createdIdentity;
+    };
+
+
 // ============================================================
 // ENRICH APPLICATION
 // ============================================================
 
 const enrichApplication =
-    async (
-        application
-    ) => {
-
+    async (application) => {
         let student = null;
-        let identityVerification =
-            null;
+        let identityVerification = null;
 
         try {
-
             student =
                 await findStudent(
                     application.student_id
                 );
-
         } catch (error) {
-
             console.error(
                 "Student lookup warning:",
                 error.message
@@ -738,14 +1054,11 @@ const enrichApplication =
         }
 
         try {
-
             identityVerification =
                 await findIdentityVerification(
                     application.id
                 );
-
         } catch (error) {
-
             console.error(
                 "Identity verification warning:",
                 error.message
@@ -753,7 +1066,6 @@ const enrichApplication =
         }
 
         return {
-
             ...application,
 
             student:
@@ -794,10 +1106,11 @@ const enrichApplication =
                 identityVerification ||
                 null,
         };
-    };
+};
+
 
 // ============================================================
-// GET APPLICATIONS
+// GET LATE ENROLLEE APPLICATIONS
 // ============================================================
 
 const getLateEnrolleeApplications =
@@ -805,12 +1118,8 @@ const getLateEnrolleeApplications =
         req,
         res
     ) => {
-
         try {
-
-            await authenticateEB(
-                req
-            );
+            await authenticateEB(req);
 
             const {
                 status,
@@ -828,6 +1137,7 @@ const getLateEnrolleeApplications =
                         registration_type,
                         application_status,
                         email,
+                        registration_source,
                         full_name,
                         year_level,
                         otp_verified_at,
@@ -855,7 +1165,6 @@ const getLateEnrolleeApplications =
                 status &&
                 status !== "all"
             ) {
-
                 query =
                     query.eq(
                         "application_status",
@@ -867,7 +1176,6 @@ const getLateEnrolleeApplications =
                 search &&
                 clean(search)
             ) {
-
                 const value =
                     clean(search);
 
@@ -884,11 +1192,9 @@ const getLateEnrolleeApplications =
                 await query;
 
             if (error) {
-
                 return res
                     .status(500)
                     .json({
-
                         success:
                             false,
 
@@ -913,7 +1219,6 @@ const getLateEnrolleeApplications =
             return res
                 .status(200)
                 .json({
-
                     success:
                         true,
 
@@ -927,7 +1232,6 @@ const getLateEnrolleeApplications =
                 });
 
         } catch (error) {
-
             console.error(
                 "❌ Late enrollee applications error:",
                 error
@@ -941,7 +1245,6 @@ const getLateEnrolleeApplications =
                         : 500
                 )
                 .json({
-
                     success:
                         false,
 
@@ -954,6 +1257,7 @@ const getLateEnrolleeApplications =
         }
     };
 
+
 // ============================================================
 // GET DOCUMENTS + SELFIE
 // ============================================================
@@ -963,28 +1267,20 @@ const getLateEnrolleeDocuments =
         req,
         res
     ) => {
-
         try {
-
-            await authenticateEB(
-                req
-            );
+            await authenticateEB(req);
 
             const {
                 id,
             } = req.params;
 
             const application =
-                await findLateApplication(
-                    id
-                );
+                await findLateApplication(id);
 
             if (!application) {
-
                 return res
                     .status(404)
                     .json({
-
                         success:
                             false,
 
@@ -995,8 +1291,7 @@ const getLateEnrolleeDocuments =
 
             const {
                 data: documents,
-                error:
-                    documentsError,
+                error: documentsError,
             } =
                 await supabase
                     .from(
@@ -1016,11 +1311,9 @@ const getLateEnrolleeDocuments =
                     );
 
             if (documentsError) {
-
                 return res
                     .status(500)
                     .json({
-
                         success:
                             false,
 
@@ -1031,6 +1324,36 @@ const getLateEnrolleeDocuments =
                             documentsError.message,
                     });
             }
+
+            const documentsWithSignedUrls =
+                await Promise.all(
+                    (
+                        documents ||
+                        []
+                    ).map(
+                        async (
+                            document
+                        ) => {
+                            const signedUrl =
+                                await createDocumentSignedUrl(
+                                    document
+                                );
+
+                            return {
+                                ...document,
+
+                                signed_url:
+                                    signedUrl,
+
+                                signedUrl:
+                                    signedUrl,
+
+                                document_url:
+                                    signedUrl,
+                            };
+                        }
+                    )
+                );
 
             const identityVerification =
                 await findIdentityVerification(
@@ -1046,15 +1369,17 @@ const getLateEnrolleeDocuments =
             return res
                 .status(200)
                 .json({
-
                     success:
                         true,
 
                     documents:
-                        documents || [],
+                        documentsWithSignedUrls,
+
+                    registration_documents:
+                        documentsWithSignedUrls,
 
                     data:
-                        documents || [],
+                        documentsWithSignedUrls,
 
                     identity_verification:
                         identityVerification ||
@@ -1068,7 +1393,6 @@ const getLateEnrolleeDocuments =
                 });
 
         } catch (error) {
-
             console.error(
                 "❌ Late enrollee documents error:",
                 error
@@ -1082,7 +1406,6 @@ const getLateEnrolleeDocuments =
                         : 500
                 )
                 .json({
-
                     success:
                         false,
 
@@ -1095,6 +1418,7 @@ const getLateEnrolleeDocuments =
         }
     };
 
+
 // ============================================================
 // VERIFY ENROLLMENT
 // ============================================================
@@ -1104,29 +1428,20 @@ const verifyEnrollment =
         req,
         res
     ) => {
-
         try {
-
-            const eb =
-                await authenticateEB(
-                    req
-                );
+            await authenticateEB(req);
 
             const {
                 id,
             } = req.params;
 
             const application =
-                await findLateApplication(
-                    id
-                );
+                await findLateApplication(id);
 
             if (!application) {
-
                 return res
                     .status(404)
                     .json({
-
                         success:
                             false,
 
@@ -1141,11 +1456,9 @@ const verifyEnrollment =
                 );
 
             if (!student) {
-
                 return res
                     .status(200)
                     .json({
-
                         success:
                             true,
 
@@ -1160,7 +1473,6 @@ const verifyEnrollment =
             return res
                 .status(200)
                 .json({
-
                     success:
                         true,
 
@@ -1175,7 +1487,6 @@ const verifyEnrollment =
                 });
 
         } catch (error) {
-
             console.error(
                 "❌ Verify enrollment error:",
                 error
@@ -1184,7 +1495,6 @@ const verifyEnrollment =
             return res
                 .status(500)
                 .json({
-
                     success:
                         false,
 
@@ -1195,6 +1505,7 @@ const verifyEnrollment =
         }
     };
 
+
 // ============================================================
 // VERIFY STUDENT IDENTITY
 // ============================================================
@@ -1204,34 +1515,39 @@ const verifyStudent =
         req,
         res
     ) => {
-
         try {
-
             const eb =
-                await authenticateEB(
-                    req
-                );
+                await authenticateEB(req);
 
             const {
                 id,
             } = req.params;
 
-            const identityVerification =
+            let identityVerification =
                 await findIdentityVerification(
                     id
                 );
 
+            // If the verification record is missing,
+            // attempt to recreate it from the submitted selfie.
             if (!identityVerification) {
+                identityVerification =
+                    await ensureIdentityVerification(
+                        id,
+                        null,
+                        "online"
+                    );
+            }
 
+            if (!identityVerification) {
                 return res
                     .status(404)
                     .json({
-
                         success:
                             false,
 
                         message:
-                            "Identity verification record not found.",
+                            "Identity verification record not found and no submitted selfie could be recovered.",
                     });
             }
 
@@ -1244,7 +1560,6 @@ const verifyStudent =
                         "identity_verifications"
                     )
                     .update({
-
                         verification_status:
                             "verified",
 
@@ -1253,7 +1568,6 @@ const verifyStudent =
 
                         verified_at:
                             new Date().toISOString(),
-
                     })
                     .eq(
                         "id",
@@ -1271,7 +1585,6 @@ const verifyStudent =
             return res
                 .status(200)
                 .json({
-
                     success:
                         true,
 
@@ -1282,7 +1595,6 @@ const verifyStudent =
                 });
 
         } catch (error) {
-
             console.error(
                 "❌ Verify student error:",
                 error
@@ -1291,7 +1603,6 @@ const verifyStudent =
             return res
                 .status(500)
                 .json({
-
                     success:
                         false,
 
@@ -1302,6 +1613,35 @@ const verifyStudent =
         }
     };
 
+
+// ============================================================
+// GENERATE RANDOM PASSWORD
+// ============================================================
+
+const generateRandomPassword =
+    (length) => {
+        const characters =
+            "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
+
+        let password = "";
+
+        while (
+            password.length <
+            length
+        ) {
+            password +=
+                characters[
+                    crypto.randomInt(
+                        0,
+                        characters.length
+                    )
+                ];
+        }
+
+        return password;
+    };
+
+
 // ============================================================
 // APPROVE LATE ENROLLEE
 // ============================================================
@@ -1311,33 +1651,21 @@ const approveLateEnrollee =
         req,
         res
     ) => {
-
         try {
-
             const eb =
-                await authenticateEB(
-                    req
-                );
+                await authenticateEB(req);
 
             const {
                 id,
             } = req.params;
 
-            // ------------------------------------------------
-            // LOAD APPLICATION
-            // ------------------------------------------------
-
             const application =
-                await findLateApplication(
-                    id
-                );
+                await findLateApplication(id);
 
             if (!application) {
-
                 return res
                     .status(404)
                     .json({
-
                         success:
                             false,
 
@@ -1355,11 +1683,9 @@ const approveLateEnrollee =
                 currentStatus ===
                 "approved"
             ) {
-
                 return res
                     .status(409)
                     .json({
-
                         success:
                             false,
 
@@ -1372,11 +1698,9 @@ const approveLateEnrollee =
                 currentStatus ===
                 "rejected"
             ) {
-
                 return res
                     .status(409)
                     .json({
-
                         success:
                             false,
 
@@ -1384,10 +1708,6 @@ const approveLateEnrollee =
                             "A rejected application cannot be approved directly.",
                     });
             }
-
-            // ------------------------------------------------
-            // VALIDATE YEAR LEVEL
-            // ------------------------------------------------
 
             const yearLevel =
                 normalizeYearLevel(
@@ -1399,11 +1719,9 @@ const approveLateEnrollee =
                     yearLevel
                 )
             ) {
-
                 return res
                     .status(400)
                     .json({
-
                         success:
                             false,
 
@@ -1411,10 +1729,6 @@ const approveLateEnrollee =
                             "Late enrollee registration is only available for 2nd Year, 3rd Year, and 4th Year.",
                     });
             }
-
-            // ------------------------------------------------
-            // VALIDATE BASIC INFORMATION
-            // ------------------------------------------------
 
             const studentId =
                 clean(
@@ -1431,12 +1745,23 @@ const approveLateEnrollee =
                     application.email
                 ).toLowerCase();
 
-            if (!studentId) {
+            const registrationSource =
+                getRegistrationSource(
+                    application
+                );
 
+            const isKioskRegistration =
+                registrationSource ===
+                "kiosk";
+
+            const isEmailRegistration =
+                registrationSource ===
+                "online";
+
+            if (!studentId) {
                 return res
                     .status(400)
                     .json({
-
                         success:
                             false,
 
@@ -1446,11 +1771,9 @@ const approveLateEnrollee =
             }
 
             if (!fullName) {
-
                 return res
                     .status(400)
                     .json({
-
                         success:
                             false,
 
@@ -1459,88 +1782,23 @@ const approveLateEnrollee =
                     });
             }
 
-            if (!email) {
-
-                return res
-                    .status(400)
-                    .json({
-
-                        success:
-                            false,
-
-                        message:
-                            "A valid email address is required before approval.",
-                    });
-            }
-
-            // ------------------------------------------------
-            // IDENTITY VERIFICATION
-            // ------------------------------------------------
-
-            const identityVerification =
-                await findIdentityVerification(
-                    id
-                );
-
-            if (!identityVerification) {
-
-                return res
-                    .status(400)
-                    .json({
-
-                        success:
-                            false,
-
-                        message:
-                            "The registration selfie/identity verification record is missing.",
-                    });
-            }
-
-            /*
-             * The EB's Approve action finalizes the submitted
-             * identity verification.
-             */
-
             if (
-                identityVerification.verification_status !==
-                "verified"
+                isEmailRegistration &&
+                !isValidEmail(email)
             ) {
+                return res
+                    .status(400)
+                    .json({
+                        success:
+                            false,
 
-                const {
-                    error:
-                        verifyError,
-                } =
-                    await supabase
-                        .from(
-                            "identity_verifications"
-                        )
-                        .update({
-
-                            verification_status:
-                                "verified",
-
-                            verified_by:
-                                eb.id,
-
-                            verified_at:
-                                new Date().toISOString(),
-
-                        })
-                        .eq(
-                            "id",
-                            identityVerification.id
-                        );
-
-                if (verifyError) {
-
-                    throw new Error(
-                        `Unable to finalize identity verification: ${verifyError.message}`
-                    );
-                }
+                        message:
+                            "A valid email address is required for online late-enrollee approval.",
+                    });
             }
 
             // ------------------------------------------------
-            // CHECK IF STUDENT ALREADY EXISTS
+            // FIND STUDENT FIRST
             // ------------------------------------------------
 
             let student =
@@ -1549,11 +1807,10 @@ const approveLateEnrollee =
                 );
 
             // ------------------------------------------------
-            // CREATE STUDENT IF LATE ENROLLEE IS NEW
+            // CREATE STUDENT IF NEEDED
             // ------------------------------------------------
 
             if (!student) {
-
                 const now =
                     new Date().toISOString();
 
@@ -1568,7 +1825,6 @@ const approveLateEnrollee =
                             "students"
                         )
                         .insert({
-
                             student_id:
                                 studentId,
 
@@ -1586,7 +1842,6 @@ const approveLateEnrollee =
 
                             updated_at:
                                 now,
-
                         })
                         .select(`
                             id,
@@ -1602,51 +1857,32 @@ const approveLateEnrollee =
                 if (
                     createStudentError
                 ) {
-
-                    /*
-                     * Another process may have created the
-                     * student between our lookup and insert.
-                     */
-
                     if (
                         createStudentError.code ===
-                            "23505"
+                        "23505"
                     ) {
-
                         student =
                             await findStudent(
                                 studentId
                             );
 
                         if (!student) {
-
                             throw new Error(
                                 `Unable to create late enrollee student record: ${createStudentError.message}`
                             );
                         }
-
                     } else {
-
                         throw new Error(
                             `Unable to create late enrollee student record: ${createStudentError.message}`
                         );
                     }
-
                 } else {
-
                     student =
                         createdStudent;
                 }
             }
 
-            // ------------------------------------------------
-            // ENSURE STUDENT INFORMATION IS CORRECT
-            // ------------------------------------------------
-
-            if (
-                !student
-            ) {
-
+            if (!student) {
                 throw new Error(
                     "Student record could not be created or retrieved."
                 );
@@ -1658,11 +1894,9 @@ const approveLateEnrollee =
                 ) !==
                 studentId
             ) {
-
                 return res
                     .status(400)
                     .json({
-
                         success:
                             false,
 
@@ -1672,28 +1906,126 @@ const approveLateEnrollee =
             }
 
             // ------------------------------------------------
-            // GENERATE TEMPORARY PASSWORD
+            // ENSURE IDENTITY VERIFICATION
+            // ------------------------------------------------
+            //
+            // This is the important fix.
+            //
+            // If identity_verifications is missing but the
+            // selfie was submitted through registration_documents
+            // or stored in Supabase Storage, the controller
+            // recreates the missing verification record.
             // ------------------------------------------------
 
-            const characters =
-                "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
+            let identityVerification =
+                await ensureIdentityVerification(
+                    id,
+                    student.id,
+                    registrationSource
+                );
 
-            let temporaryPassword =
-                "";
+            if (!identityVerification) {
+                return res
+                    .status(400)
+                    .json({
+                        success:
+                            false,
 
-            while (
-                temporaryPassword.length <
-                12
-            ) {
-
-                temporaryPassword +=
-                    characters[
-                        crypto.randomInt(
-                            0,
-                            characters.length
-                        )
-                    ];
+                        message:
+                            "The registration selfie could not be found. Please verify that the student submitted a selfie during registration.",
+                    });
             }
+
+            // ------------------------------------------------
+            // FINALIZE IDENTITY VERIFICATION
+            // ------------------------------------------------
+
+            if (
+                identityVerification.verification_status !==
+                "verified"
+            ) {
+                const {
+                    data:
+                        verifiedIdentity,
+                    error:
+                        verifyError,
+                } =
+                    await supabase
+                        .from(
+                            "identity_verifications"
+                        )
+                        .update({
+                            student_id:
+                                student.id,
+
+                            verification_status:
+                                "verified",
+
+                            verified_by:
+                                eb.id,
+
+                            verified_at:
+                                new Date().toISOString(),
+                        })
+                        .eq(
+                            "id",
+                            identityVerification.id
+                        )
+                        .select("*")
+                        .single();
+
+                if (verifyError) {
+                    throw new Error(
+                        `Unable to finalize identity verification: ${verifyError.message}`
+                    );
+                }
+
+                identityVerification =
+                    verifiedIdentity;
+            } else if (
+                !identityVerification.student_id
+            ) {
+                const {
+                    data:
+                        updatedIdentity,
+                    error:
+                        updateIdentityError,
+                } =
+                    await supabase
+                        .from(
+                            "identity_verifications"
+                        )
+                        .update({
+                            student_id:
+                                student.id,
+                        })
+                        .eq(
+                            "id",
+                            identityVerification.id
+                        )
+                        .select("*")
+                        .single();
+
+                if (updateIdentityError) {
+                    throw new Error(
+                        `Unable to associate identity verification with student: ${updateIdentityError.message}`
+                    );
+                }
+
+                identityVerification =
+                    updatedIdentity;
+            }
+
+            // ------------------------------------------------
+            // PASSWORD
+            // ------------------------------------------------
+
+            const temporaryPassword =
+                generateRandomPassword(
+                    isKioskRegistration
+                        ? 32
+                        : 12
+                );
 
             const passwordHash =
                 await bcrypt.hash(
@@ -1733,7 +2065,6 @@ const approveLateEnrollee =
             if (
                 accountLookupError
             ) {
-
                 throw new Error(
                     `Unable to check student account: ${accountLookupError.message}`
                 );
@@ -1741,12 +2072,16 @@ const approveLateEnrollee =
 
             let account;
 
+            const accountEmail =
+                isKioskRegistration
+                    ? null
+                    : email;
+
             // ------------------------------------------------
-            // CREATE STUDENT ACCOUNT
+            // CREATE ACCOUNT
             // ------------------------------------------------
 
             if (!existingAccount) {
-
                 const now =
                     new Date().toISOString();
 
@@ -1761,14 +2096,14 @@ const approveLateEnrollee =
                             "student_accounts"
                         )
                         .insert({
-
                             student_id:
                                 studentId,
 
                             registration_id:
                                 id,
 
-                            email,
+                            email:
+                                accountEmail,
 
                             password_hash:
                                 passwordHash,
@@ -1784,7 +2119,6 @@ const approveLateEnrollee =
 
                             updated_at:
                                 now,
-
                         })
                         .select(`
                             id,
@@ -1802,7 +2136,6 @@ const approveLateEnrollee =
                 if (
                     createAccountError
                 ) {
-
                     throw new Error(
                         `Unable to create student account: ${createAccountError.message}`
                     );
@@ -1812,11 +2145,6 @@ const approveLateEnrollee =
                     createdAccount;
 
             } else {
-
-                // ------------------------------------------------
-                // REACTIVATE / RESET EXISTING ACCOUNT
-                // ------------------------------------------------
-
                 const {
                     data:
                         updatedAccount,
@@ -1828,11 +2156,11 @@ const approveLateEnrollee =
                             "student_accounts"
                         )
                         .update({
-
                             registration_id:
                                 id,
 
-                            email,
+                            email:
+                                accountEmail,
 
                             password_hash:
                                 passwordHash,
@@ -1845,7 +2173,6 @@ const approveLateEnrollee =
 
                             updated_at:
                                 new Date().toISOString(),
-
                         })
                         .eq(
                             "id",
@@ -1867,7 +2194,6 @@ const approveLateEnrollee =
                 if (
                     updateAccountError
                 ) {
-
                     throw new Error(
                         `Unable to activate student account: ${updateAccountError.message}`
                     );
@@ -1895,7 +2221,6 @@ const approveLateEnrollee =
                         "registration_applications"
                     )
                     .update({
-
                         application_status:
                             "approved",
 
@@ -1913,7 +2238,6 @@ const approveLateEnrollee =
 
                         updated_at:
                             now,
-
                     })
                     .eq(
                         "id",
@@ -1925,6 +2249,7 @@ const approveLateEnrollee =
                         registration_type,
                         application_status,
                         email,
+                        registration_source,
                         full_name,
                         year_level,
                         otp_verified_at,
@@ -1941,7 +2266,6 @@ const approveLateEnrollee =
             if (
                 applicationUpdateError
             ) {
-
                 throw new Error(
                     `Unable to approve late enrollee application: ${applicationUpdateError.message}`
                 );
@@ -1951,69 +2275,84 @@ const approveLateEnrollee =
             // SEND APPROVAL EMAIL
             // ------------------------------------------------
 
-            try {
+            let emailSent = false;
 
-                const emailResult =
-                    await sendRegistrationApprovalEmail(
-                        email,
-                        studentId,
-                        fullName,
-                        yearLevel,
-                        temporaryPassword
+            if (
+                isEmailRegistration
+            ) {
+                try {
+                    const emailResult =
+                        await sendRegistrationApprovalEmail(
+                            email,
+                            studentId,
+                            fullName,
+                            yearLevel,
+                            temporaryPassword
+                        );
+
+                    if (
+                        emailResult &&
+                        emailResult.success ===
+                            false
+                    ) {
+                        throw new Error(
+                            emailResult.message ||
+                            "Approval email could not be sent."
+                        );
+                    }
+
+                    emailSent = true;
+
+                } catch (emailError) {
+                    console.error(
+                        "❌ Approval email failed:",
+                        emailError
                     );
 
-                if (
-                    emailResult &&
-                    emailResult.success ===
-                        false
-                ) {
+                    return res
+                        .status(502)
+                        .json({
+                            success:
+                                false,
 
-                    throw new Error(
-                        emailResult.message ||
-                        "Approval email could not be sent."
-                    );
+                            message:
+                                "The late enrollee account was created, but the approval email could not be sent. Please check the email service before allowing the student to log in.",
+
+                            accountCreated:
+                                true,
+
+                            accountActivated:
+                                true,
+
+                            emailSent:
+                                false,
+
+                            studentId,
+                        });
                 }
 
-            } catch (emailError) {
-
-                console.error(
-                    "❌ Approval email failed:",
-                    emailError
+            } else {
+                console.log(
+                    "ℹ️ Kiosk late enrollee approved without email."
                 );
 
-                /*
-                 * Keep the account/application approved only
-                 * if the email service itself throws after
-                 * sending. The temporary password is never
-                 * returned to the browser.
-                 *
-                 * We return an explicit email failure so the EB
-                 * knows that the approval email needs attention.
-                 */
+                console.log(
+                    "ℹ️ Student activation continues on kiosk."
+                );
 
-                return res
-                    .status(502)
-                    .json({
-
-                        success:
-                            false,
-
-                        message:
-                            "The late enrollee account was created, but the approval email could not be sent. Please check the email service before allowing the student to log in.",
-
-                        accountCreated:
-                            true,
-
-                        emailSent:
-                            false,
-
-                        studentId,
-                    });
+                console.log(
+                    "ℹ️ Student will create personal 8-character password."
+                );
             }
 
             // ------------------------------------------------
             // CREATE NOTIFICATION
             // ------------------------------------------------
+
+            const notificationMessage =
+                isKioskRegistration
+                    ? "Your VOTARA late enrollee registration has been approved. Account activation will continue on the kiosk device, where you will create your personal 8-character password and complete your profile."
+                    : "Your VOTARA late enrollee registration has been approved. A temporary password was sent to your registered email address. You must change your password and complete your profile photo before accessing your dashboard.";
 
             const {
                 error:
@@ -2024,7 +2363,6 @@ const approveLateEnrollee =
                         "notifications"
                     )
                     .insert({
-
                         student_id:
                             studentId,
 
@@ -2038,7 +2376,7 @@ const approveLateEnrollee =
                             "VOTARA Registration Approved",
 
                         message:
-                            "Your VOTARA late enrollee registration has been approved. A temporary password was sent to your registered email address. You must change your password and complete your profile photo before accessing your dashboard.",
+                            notificationMessage,
 
                         is_read:
                             false,
@@ -2048,13 +2386,11 @@ const approveLateEnrollee =
 
                         created_at:
                             now,
-
                     });
 
             if (
                 notificationError
             ) {
-
                 console.warn(
                     "⚠️ Notification creation warning:",
                     notificationError.message
@@ -2062,11 +2398,10 @@ const approveLateEnrollee =
             }
 
             // ------------------------------------------------
-            // FINAL RESPONSE
+            // FINAL RESULT
             // ------------------------------------------------
 
             const result = {
-
                 ...updatedApplication,
 
                 student,
@@ -2082,7 +2417,6 @@ const approveLateEnrollee =
 
                 verification_status:
                     "verified",
-
             };
 
             console.log(
@@ -2109,13 +2443,15 @@ const approveLateEnrollee =
             );
 
             console.log(
-                "Email:",
-                email
+                "Registration source:",
+                registrationSource
             );
 
             console.log(
-                "Student record:",
-                "Created/Activated"
+                "Email:",
+                isKioskRegistration
+                    ? "Not provided / not required"
+                    : email
             );
 
             console.log(
@@ -2130,7 +2466,11 @@ const approveLateEnrollee =
 
             console.log(
                 "Approval email:",
-                "Sent"
+                isKioskRegistration
+                    ? "Not sent - kiosk activation"
+                    : emailSent
+                        ? "Sent"
+                        : "Not sent"
             );
 
             console.log(
@@ -2140,12 +2480,13 @@ const approveLateEnrollee =
             return res
                 .status(200)
                 .json({
-
                     success:
                         true,
 
                     message:
-                        "Late enrollee approved successfully. The student account is active and the temporary password was sent to the registered email address. The student must change the password and complete the profile photo before accessing the dashboard.",
+                        isKioskRegistration
+                            ? "Late enrollee approved successfully. The student account is active without requiring an email address. Account activation will continue through the kiosk device, where the student creates their personal 8-character password."
+                            : "Late enrollee approved successfully. The student account is active and the temporary password was sent to the registered email address. The student must change the password and complete the profile photo before accessing the dashboard.",
 
                     status:
                         "approved",
@@ -2156,8 +2497,11 @@ const approveLateEnrollee =
                     data:
                         result,
 
+                    registrationSource:
+                        registrationSource,
+
                     emailSent:
-                        true,
+                        emailSent,
 
                     accountCreated:
                         !existingAccount,
@@ -2165,10 +2509,11 @@ const approveLateEnrollee =
                     accountActivated:
                         true,
 
+                    activationRequired:
+                        isKioskRegistration,
                 });
 
         } catch (error) {
-
             console.error(
                 "❌ Approve late enrollee error:",
                 error
@@ -2182,7 +2527,6 @@ const approveLateEnrollee =
                         : 500
                 )
                 .json({
-
                     success:
                         false,
 
@@ -2196,8 +2540,9 @@ const approveLateEnrollee =
         }
     };
 
+
 // ============================================================
-// REJECT
+// REJECT LATE ENROLLEE
 // ============================================================
 
 const rejectLateEnrollee =
@@ -2205,13 +2550,9 @@ const rejectLateEnrollee =
         req,
         res
     ) => {
-
         try {
-
             const eb =
-                await authenticateEB(
-                    req
-                );
+                await authenticateEB(req);
 
             const {
                 id,
@@ -2225,11 +2566,9 @@ const rejectLateEnrollee =
                 );
 
             if (!reason) {
-
                 return res
                     .status(400)
                     .json({
-
                         success:
                             false,
 
@@ -2239,16 +2578,12 @@ const rejectLateEnrollee =
             }
 
             const application =
-                await findLateApplication(
-                    id
-                );
+                await findLateApplication(id);
 
             if (!application) {
-
                 return res
                     .status(404)
                     .json({
-
                         success:
                             false,
 
@@ -2261,11 +2596,9 @@ const rejectLateEnrollee =
                 application.application_status ===
                 "approved"
             ) {
-
                 return res
                     .status(409)
                     .json({
-
                         success:
                             false,
 
@@ -2273,6 +2606,9 @@ const rejectLateEnrollee =
                             "An approved application cannot be rejected.",
                     });
             }
+
+            const now =
+                new Date().toISOString();
 
             const {
                 data,
@@ -2283,7 +2619,6 @@ const rejectLateEnrollee =
                         "registration_applications"
                     )
                     .update({
-
                         application_status:
                             "rejected",
 
@@ -2294,14 +2629,13 @@ const rejectLateEnrollee =
                             null,
 
                         reviewed_at:
-                            new Date().toISOString(),
+                            now,
 
                         reviewed_by:
                             eb.id,
 
                         updated_at:
-                            new Date().toISOString(),
-
+                            now,
                     })
                     .eq(
                         "id",
@@ -2311,7 +2645,6 @@ const rejectLateEnrollee =
                     .single();
 
             if (error) {
-
                 throw new Error(
                     `Unable to reject application: ${error.message}`
                 );
@@ -2320,7 +2653,6 @@ const rejectLateEnrollee =
             return res
                 .status(200)
                 .json({
-
                     success:
                         true,
 
@@ -2331,7 +2663,6 @@ const rejectLateEnrollee =
                 });
 
         } catch (error) {
-
             console.error(
                 "❌ Reject late enrollee error:",
                 error
@@ -2345,7 +2676,6 @@ const rejectLateEnrollee =
                         : 500
                 )
                 .json({
-
                     success:
                         false,
 
@@ -2358,8 +2688,9 @@ const rejectLateEnrollee =
         }
     };
 
+
 // ============================================================
-// REQUEST CORRECTION
+// CORRECTION
 // ============================================================
 
 const requestCorrection =
@@ -2367,13 +2698,9 @@ const requestCorrection =
         req,
         res
     ) => {
-
         try {
-
             const eb =
-                await authenticateEB(
-                    req
-                );
+                await authenticateEB(req);
 
             const {
                 id,
@@ -2387,11 +2714,9 @@ const requestCorrection =
                 );
 
             if (!reason) {
-
                 return res
                     .status(400)
                     .json({
-
                         success:
                             false,
 
@@ -2401,16 +2726,12 @@ const requestCorrection =
             }
 
             const application =
-                await findLateApplication(
-                    id
-                );
+                await findLateApplication(id);
 
             if (!application) {
-
                 return res
                     .status(404)
                     .json({
-
                         success:
                             false,
 
@@ -2423,11 +2744,9 @@ const requestCorrection =
                 application.application_status ===
                 "approved"
             ) {
-
                 return res
                     .status(409)
                     .json({
-
                         success:
                             false,
 
@@ -2435,6 +2754,9 @@ const requestCorrection =
                             "An approved application cannot be sent for correction.",
                     });
             }
+
+            const now =
+                new Date().toISOString();
 
             const {
                 data,
@@ -2445,7 +2767,6 @@ const requestCorrection =
                         "registration_applications"
                     )
                     .update({
-
                         application_status:
                             "needs_correction",
 
@@ -2456,14 +2777,13 @@ const requestCorrection =
                             null,
 
                         reviewed_at:
-                            new Date().toISOString(),
+                            now,
 
                         reviewed_by:
                             eb.id,
 
                         updated_at:
-                            new Date().toISOString(),
-
+                            now,
                     })
                     .eq(
                         "id",
@@ -2473,7 +2793,6 @@ const requestCorrection =
                     .single();
 
             if (error) {
-
                 throw new Error(
                     `Unable to request correction: ${error.message}`
                 );
@@ -2482,7 +2801,6 @@ const requestCorrection =
             return res
                 .status(200)
                 .json({
-
                     success:
                         true,
 
@@ -2493,7 +2811,6 @@ const requestCorrection =
                 });
 
         } catch (error) {
-
             console.error(
                 "❌ Correction request error:",
                 error
@@ -2507,7 +2824,6 @@ const requestCorrection =
                         : 500
                 )
                 .json({
-
                     success:
                         false,
 
@@ -2520,14 +2836,9 @@ const requestCorrection =
         }
     };
 
+
 // ============================================================
 // LEGACY NOTIFY STUDENT
-// ============================================================
-//
-// Kept only so existing routes do not crash.
-// Your current EB UI should use only:
-// Approve / Reject / Correction.
-//
 // ============================================================
 
 const notifyStudent =
@@ -2535,28 +2846,20 @@ const notifyStudent =
         req,
         res
     ) => {
-
         try {
-
-            await authenticateEB(
-                req
-            );
+            await authenticateEB(req);
 
             const {
                 id,
             } = req.params;
 
             const application =
-                await findLateApplication(
-                    id
-                );
+                await findLateApplication(id);
 
             if (!application) {
-
                 return res
                     .status(404)
                     .json({
-
                         success:
                             false,
 
@@ -2568,7 +2871,6 @@ const notifyStudent =
             return res
                 .status(200)
                 .json({
-
                     success:
                         true,
 
@@ -2580,7 +2882,6 @@ const notifyStudent =
                 });
 
         } catch (error) {
-
             console.error(
                 "❌ Notify student error:",
                 error
@@ -2594,7 +2895,6 @@ const notifyStudent =
                         : 500
                 )
                 .json({
-
                     success:
                         false,
 
@@ -2607,26 +2907,18 @@ const notifyStudent =
         }
     };
 
+
 // ============================================================
 // EXPORTS
 // ============================================================
 
 module.exports = {
-
     getLateEnrolleeApplications,
-
     getLateEnrolleeDocuments,
-
     verifyEnrollment,
-
     approveLateEnrollee,
-
     rejectLateEnrollee,
-
     requestCorrection,
-
     verifyStudent,
-
     notifyStudent,
-
 };

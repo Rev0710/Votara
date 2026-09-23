@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "../../services/api";
 
 import Registrations from "./Registrations";
 import LateEnrolleeManagement from "./LateEnrolleeManagement";
@@ -27,6 +28,26 @@ const EBDashboard = () => {
 
     const [sidebarOpen, setSidebarOpen] =
         useState(false);
+
+    // =====================================================
+    // DASHBOARD STATISTICS
+    // =====================================================
+
+    const [dashboardStats, setDashboardStats] = useState({
+        registeredStudents: 0,
+        pendingApplications: 0,
+        approvedStudents: 0,
+        activeCandidates: 0,
+        votesCast: 0,
+    });
+
+    const [currentElection, setCurrentElection] = useState(null);
+
+    const [dashboardLoading, setDashboardLoading] =
+        useState(true);
+
+    const [dashboardError, setDashboardError] =
+        useState("");
 
 
     // =====================================================
@@ -62,8 +83,109 @@ const EBDashboard = () => {
 
 
     // =====================================================
-    // LOGOUT
+    // LOAD DASHBOARD STATISTICS
     // =====================================================
+
+    const loadDashboardStats = async () => {
+
+        try {
+
+            setDashboardLoading(true);
+            setDashboardError("");
+
+            const response =
+                await api.get(
+                    "/registration/eb/dashboard-stats"
+                );
+
+            const data =
+                response?.data || {};
+
+            const statistics =
+                data.statistics || {};
+
+            setDashboardStats({
+
+                registeredStudents:
+                    Number(
+                        statistics.registeredStudents
+                    ) || 0,
+
+                pendingApplications:
+                    Number(
+                        statistics.pendingApplications
+                    ) || 0,
+
+                approvedStudents:
+                    Number(
+                        statistics.approvedStudents
+                    ) || 0,
+
+                activeCandidates:
+                    Number(
+                        statistics.activeCandidates
+                    ) || 0,
+
+                votesCast:
+                    Number(
+                        statistics.votesCast
+                    ) || 0,
+
+            });
+
+            setCurrentElection(
+                data.currentElection || null
+            );
+
+        } catch (error) {
+
+            console.error(
+                "❌ Unable to load EB dashboard statistics:",
+                error
+            );
+
+            setDashboardError(
+                error?.response?.data?.message ||
+                "Unable to load the latest dashboard statistics."
+            );
+
+        } finally {
+
+            setDashboardLoading(false);
+
+        }
+
+    };
+
+
+    useEffect(() => {
+
+        if (
+            activeSection !==
+            "dashboard"
+        ) {
+            return;
+        }
+
+        loadDashboardStats();
+
+        const refreshInterval =
+            setInterval(
+                loadDashboardStats,
+                30000
+            );
+
+        return () =>
+            clearInterval(
+                refreshInterval
+            );
+
+    }, [activeSection]);
+
+
+    // =====================================================
+    // LOGOUT
+    //=====================================================
 
     const handleLogout = () => {
 
@@ -658,7 +780,11 @@ const EBDashboard = () => {
 
                                 <StatCard
                                     title="Pending Registrations"
-                                    value="0"
+                                    value={
+                                        dashboardLoading
+                                            ? "..."
+                                            : dashboardStats.pendingApplications
+                                    }
                                     description="Awaiting EB review"
                                     icon="▤"
                                     onClick={() =>
@@ -671,7 +797,11 @@ const EBDashboard = () => {
 
                                 <StatCard
                                     title="Approved Students"
-                                    value="0"
+                                    value={
+                                        dashboardLoading
+                                            ? "..."
+                                            : dashboardStats.approvedStudents
+                                    }
                                     description="Approved voters"
                                     icon="✓"
                                     onClick={() =>
@@ -683,9 +813,13 @@ const EBDashboard = () => {
 
 
                                 <StatCard
-                                    title="Approved Candidates"
-                                    value="0"
-                                    description="Eligible candidates"
+                                    title="Active Candidates"
+                                    value={
+                                        dashboardLoading
+                                            ? "..."
+                                            : dashboardStats.activeCandidates
+                                    }
+                                    description="Currently active candidates"
                                     icon="♙"
                                     onClick={() =>
                                         handleNavigation(
@@ -697,7 +831,11 @@ const EBDashboard = () => {
 
                                 <StatCard
                                     title="Votes Cast"
-                                    value="0"
+                                    value={
+                                        dashboardLoading
+                                            ? "..."
+                                            : dashboardStats.votesCast
+                                    }
                                     description="Recorded ballots"
                                     icon="◉"
                                     onClick={() =>
@@ -708,6 +846,92 @@ const EBDashboard = () => {
                                 />
 
                             </div>
+
+
+                            {/* =================================================
+                                CURRENT ELECTION STATUS
+                            ================================================= */}
+
+                            <div
+                                style={
+                                    styles.currentElectionCard
+                                }
+                            >
+
+                                <div>
+
+                                    <div
+                                        style={
+                                            styles.currentElectionLabel
+                                        }
+                                    >
+                                        CURRENT ELECTION
+                                    </div>
+
+                                    <h3
+                                        style={
+                                            styles.currentElectionTitle
+                                        }
+                                    >
+                                        {
+                                            dashboardLoading
+                                                ? "Loading election..."
+                                                : currentElection?.title ||
+                                                  "No election configured"
+                                        }
+                                    </h3>
+
+                                    <p
+                                        style={
+                                            styles.currentElectionDescription
+                                        }
+                                    >
+                                        {
+                                            currentElection
+                                                ? `Election status: ${formatElectionStatus(
+                                                      currentElection.status
+                                                  )}`
+                                                : dashboardError
+                                                  ? "The dashboard could not retrieve the current election."
+                                                  : "No current election is available."
+                                        }
+                                    </p>
+
+                                </div>
+
+                                <div
+                                    style={{
+                                        ...styles.electionStatusBadge,
+                                        ...(getElectionStatusStyle(
+                                            currentElection?.status
+                                        )),
+                                    }}
+                                >
+                                    {
+                                        dashboardLoading
+                                            ? "LOADING"
+                                            : formatElectionStatus(
+                                                  currentElection?.status
+                                              )
+                                    }
+                                </div>
+
+                            </div>
+
+
+                            {
+                                dashboardError && (
+
+                                    <div
+                                        style={
+                                            styles.dashboardError
+                                        }
+                                    >
+                                        {dashboardError}
+                                    </div>
+
+                                )
+                            }
 
 
                             {/* =================================================
@@ -1466,6 +1690,69 @@ const getFirstName = (name) => {
 };
 
 
+const formatElectionStatus = (status) => {
+
+    const labels = {
+
+        draft: "DRAFT",
+        scheduled: "SCHEDULED",
+        open: "OPEN",
+        closed: "COMPLETED",
+        cancelled: "CANCELLED",
+
+    };
+
+    return (
+        labels[String(status || "").toLowerCase()] ||
+        "NO ELECTION"
+    );
+
+};
+
+
+const getElectionStatusStyle = (status) => {
+
+    const normalizedStatus =
+        String(status || "").toLowerCase();
+
+    if (
+        normalizedStatus === "open"
+    ) {
+
+        return {
+            background: "#eaf9f0",
+            color: "#16a34a",
+        };
+
+    }
+
+    if (
+        normalizedStatus === "cancelled"
+    ) {
+
+        return {
+            background: "#fff1f1",
+            color: "#dc2626",
+        };
+
+    }
+
+    if (
+        normalizedStatus === "closed"
+    ) {
+
+        return {
+            background: "#f1f5f9",
+            color: "#475569",
+        };
+
+    }
+
+    return {};
+
+};
+
+
 const getSectionTitle = (section) => {
 
     const titles = {
@@ -1939,6 +2226,68 @@ const styles = {
         marginTop: "4px",
         fontSize: "10px",
         color: "#8b95a5",
+    },
+
+
+    currentElectionCard: {
+        background: "#ffffff",
+        border: "1px solid #e7ebf2",
+        borderRadius: "15px",
+        padding: "18px 20px",
+        marginBottom: "32px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: "18px",
+    },
+
+
+    currentElectionLabel: {
+        fontSize: "9px",
+        fontWeight: "800",
+        letterSpacing: "1.2px",
+        color: "#8b95a5",
+        marginBottom: "5px",
+    },
+
+
+    currentElectionTitle: {
+        margin: 0,
+        fontSize: "15px",
+        fontWeight: "800",
+        color: "#172033",
+    },
+
+
+    currentElectionDescription: {
+        margin: "5px 0 0",
+        fontSize: "11px",
+        color: "#7c8798",
+    },
+
+
+    electionStatusBadge: {
+        minWidth: "86px",
+        padding: "8px 11px",
+        borderRadius: "999px",
+        background: "#edf3ff",
+        color: "#266EFF",
+        fontSize: "9px",
+        fontWeight: "800",
+        textAlign: "center",
+    },
+
+
+    dashboardError: {
+        background: "#fff1f1",
+        border: "1px solid #f2c7c7",
+        color: "#b42318",
+        borderRadius: "10px",
+        padding: "10px 13px",
+        marginTop: "-20px",
+        marginBottom: "32px",
+        fontSize: "11px",
+        fontWeight: "600",
     },
 
 

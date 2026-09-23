@@ -11,6 +11,7 @@ const {
     rejectPartyList,
     activatePartyList,
     deactivatePartyList,
+    deletePartyList,
     getPartyListCandidates,
 } = require("../controllers/partyListController");
 
@@ -18,7 +19,11 @@ const {
 // PARTY LIST ROUTES
 // =====================================================
 
+
+// =====================================================
 // GET ALL PARTY LISTS
+// =====================================================
+
 // GET /api/party-lists
 // Optional:
 // GET /api/party-lists?election_id=UUID
@@ -110,6 +115,18 @@ router.patch(
 router.patch(
     "/:id/deactivate",
     deactivatePartyList
+);
+
+
+// =====================================================
+// DELETE PARTY LIST
+// =====================================================
+
+// DELETE /api/party-lists/:id
+
+router.delete(
+    "/:id",
+    deletePartyList
 );
 
 

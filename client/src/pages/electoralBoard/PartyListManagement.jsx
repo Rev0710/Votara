@@ -81,66 +81,64 @@ const PartyListManagement = () => {
     // LOAD ELECTIONS
     // =====================================================
 
-const loadElections = async () => {
-    try {
-        setLoading(true);
-        setError("");
+    const loadElections = async () => {
+        try {
+            setLoading(true);
+            setError("");
 
-        const response = await getAllElections();
+            const response = await getAllElections();
 
-        console.log(
-            "VOTARA Elections received:",
-            response
-        );
-
-        const electionData =
-            Array.isArray(response)
-                ? response
-                : Array.isArray(response?.elections)
-                    ? response.elections
-                    : Array.isArray(response?.data)
-                        ? response.data
-                        : [];
-
-        console.log(
-            "VOTARA Election List:",
-            electionData
-        );
-
-        setElections(electionData);
-
-        if (electionData.length > 0) {
-            setSelectedElection(
-                electionData[0].id
+            console.log(
+                "VOTARA Elections received:",
+                response
             );
-        } else {
+
+            const electionData =
+                Array.isArray(response)
+                    ? response
+                    : Array.isArray(response?.elections)
+                        ? response.elections
+                        : Array.isArray(response?.data)
+                            ? response.data
+                            : [];
+
+            console.log(
+                "VOTARA Election List:",
+                electionData
+            );
+
+            setElections(electionData);
+
+            if (electionData.length > 0) {
+                setSelectedElection(
+                    electionData[0].id
+                );
+            } else {
+                setSelectedElection("");
+                setPartyLists([]);
+                setError(
+                    "No elections are available yet. Please create an election first in Election Management."
+                );
+            }
+        } catch (err) {
+            console.error(
+                "Failed to load elections:",
+                err
+            );
+
+            setElections([]);
             setSelectedElection("");
             setPartyLists([]);
+
             setError(
-                "No elections are available yet. Please create an election first in Election Management."
+                err?.response?.data?.message ||
+                err?.message ||
+                "Unable to load elections."
             );
+        } finally {
+            setLoading(false);
         }
-
-    } catch (err) {
-        console.error(
-            "Failed to load elections:",
-            err
-        );
-
-        setElections([]);
-        setSelectedElection("");
-        setPartyLists([]);
-
-        setError(
-            err?.response?.data?.message ||
-            err?.message ||
-            "Unable to load elections."
-        );
-
-    } finally {
-        setLoading(false);
-    }
-};
+    };
 
     // =====================================================
     // LOAD PARTY LISTS
@@ -404,7 +402,9 @@ const loadElections = async () => {
 
     const executeApprove = async (party) => {
         try {
-            setActionLoading(`approve-${party.id}`);
+            setActionLoading(
+                `approve-${party.id}`
+            );
             setError("");
             setSuccess("");
             setConfirmation(null);
@@ -629,6 +629,60 @@ const loadElections = async () => {
     };
 
     // =====================================================
+    // DELETE PARTY LIST
+    // =====================================================
+
+    const handleDelete = (party) => {
+        if (!party?.id) return;
+
+        setConfirmation({
+            type: "delete",
+            title: "Delete Party List",
+            message: `Delete "${party.name}" permanently? This action cannot be undone.`,
+            confirmText: "Yes, Delete",
+            cancelText: "Cancel",
+            onConfirm: () =>
+                executeDelete(party),
+        });
+    };
+
+    const executeDelete = async (party) => {
+        try {
+            setActionLoading(
+                `delete-${party.id}`
+            );
+            setError("");
+            setSuccess("");
+            setConfirmation(null);
+
+            await api.delete(
+                `/party-lists/${party.id}`
+            );
+
+            setSuccess(
+                `"${party.name}" was deleted successfully.`
+            );
+
+            setModal(null);
+            setSelectedParty(null);
+
+            await loadPartyLists(selectedElection);
+        } catch (err) {
+            console.error(
+                "Delete party list error:",
+                err
+            );
+
+            setError(
+                err?.response?.data?.message ||
+                "Unable to delete party list."
+            );
+        } finally {
+            setActionLoading("");
+        }
+    };
+
+    // =====================================================
     // VIEW CANDIDATES
     // =====================================================
 
@@ -677,7 +731,6 @@ const loadElections = async () => {
     const handleFeatureClick = (
         featureNumber
     ) => {
-
         // =================================================
         // FEATURE 1 - ADD
         // =================================================
@@ -735,7 +788,6 @@ const loadElections = async () => {
         party,
         featureNumber = featureSelection
     ) => {
-
         if (!party || !featureNumber) {
             return;
         }
@@ -1044,9 +1096,7 @@ const loadElections = async () => {
                                     election.name ||
                                     "Untitled Election"}
                             </option>
-                        ))
-                        
-                        }
+                        ))}
 
                     </select>
 
@@ -1437,44 +1487,8 @@ const loadElections = async () => {
                                         )
                                     }
 
-                                    onLogo={() =>
-                                        openLogoModal(
-                                            party
-                                        )
-                                    }
-
                                     onCandidates={() =>
                                         openCandidatesModal(
-                                            party
-                                        )
-                                    }
-
-                                    onApproval={() => {
-                                        setSelectedParty(
-                                            party
-                                        );
-                                        setModal(
-                                            "approval"
-                                        );
-                                    }}
-
-                                    onStatus={() => {
-                                        setSelectedParty(
-                                            party
-                                        );
-                                        setModal(
-                                            "status"
-                                        );
-                                    }}
-
-                                    onApprove={() =>
-                                        handleApprove(
-                                            party
-                                        )
-                                    }
-
-                                    onReject={() =>
-                                        handleReject(
                                             party
                                         )
                                     }
@@ -1487,6 +1501,12 @@ const loadElections = async () => {
 
                                     onDeactivate={() =>
                                         handleDeactivate(
+                                            party
+                                        )
+                                    }
+
+                                    onDelete={() =>
+                                        handleDelete(
                                             party
                                         )
                                     }
@@ -2509,20 +2529,200 @@ const Feature = ({
 };
 
 // =====================================================
+// PARTY ACTION MENU
+// =====================================================
+
+const PartyActionMenu = ({
+    party,
+    onEdit,
+    onCandidates,
+    onActivate,
+    onDeactivate,
+    onDelete,
+    actionLoading,
+}) => {
+    const [open, setOpen] = useState(false);
+
+    const close = () => setOpen(false);
+
+    const run = (callback) => {
+        close();
+        callback?.();
+    };
+
+    return (
+        <div style={styles.menuWrapper}>
+
+            <button
+                type="button"
+                style={styles.menuButton}
+                onClick={() =>
+                    setOpen(
+                        (value) => !value
+                    )
+                }
+                aria-label={`Actions for ${
+                    party?.name ||
+                    "party list"
+                }`}
+                aria-expanded={open}
+            >
+                ⋮
+            </button>
+
+            {open && (
+                <>
+
+                    <button
+                        type="button"
+                        style={styles.menuBackdrop}
+                        onClick={close}
+                        aria-label="Close menu"
+                    />
+
+                    <div
+                        style={
+                            styles.actionMenu
+                        }
+                    >
+
+                        {/* CANDIDATES */}
+
+                        <button
+                            type="button"
+                            style={
+                                styles.menuItem
+                            }
+                            onClick={() =>
+                                run(
+                                    onCandidates
+                                )
+                            }
+                        >
+                            Candidates
+                        </button>
+
+                        {/* EDIT PARTY LIST */}
+
+                        <button
+                            type="button"
+                            style={
+                                styles.menuItem
+                            }
+                            onClick={() =>
+                                run(
+                                    onEdit
+                                )
+                            }
+                        >
+                            Edit Party List
+                        </button>
+
+                        {/* ACTIVATE / DEACTIVATE */}
+
+                        {party?.is_active ? (
+
+                            <button
+                                type="button"
+                                style={
+                                    styles.menuItem
+                                }
+                                onClick={() =>
+                                    run(
+                                        onDeactivate
+                                    )
+                                }
+                                disabled={
+                                    actionLoading ===
+                                    `deactivate-${party.id}`
+                                }
+                            >
+                                {
+                                    actionLoading ===
+                                    `deactivate-${party.id}`
+                                        ? "Deactivating..."
+                                        : "Deactivate"
+                                }
+                            </button>
+
+                        ) : (
+
+                            <button
+                                type="button"
+                                style={
+                                    styles.menuItem
+                                }
+                                onClick={() =>
+                                    run(
+                                        onActivate
+                                    )
+                                }
+                                disabled={
+                                    actionLoading ===
+                                    `activate-${party.id}`
+                                }
+                            >
+                                {
+                                    actionLoading ===
+                                    `activate-${party.id}`
+                                        ? "Activating..."
+                                        : "Activate"
+                                }
+                            </button>
+
+                        )}
+
+                        <div
+                            style={
+                                styles.menuDivider
+                            }
+                        />
+
+                        {/* DELETE PARTY LIST */}
+
+                        <button
+                            type="button"
+                            style={
+                                styles.menuDeleteItem
+                            }
+                            onClick={() =>
+                                run(
+                                    onDelete
+                                )
+                            }
+                            disabled={
+                                actionLoading ===
+                                `delete-${party.id}`
+                            }
+                        >
+                            {
+                                actionLoading ===
+                                `delete-${party.id}`
+                                    ? "Deleting..."
+                                    : "Delete Party List"
+                            }
+                        </button>
+
+                    </div>
+
+                </>
+            )}
+
+        </div>
+    );
+};
+
+// =====================================================
 // PARTY ROW
 // =====================================================
 
 const PartyRow = ({
     party,
     onEdit,
-    onLogo,
     onCandidates,
-    onApproval,
-    onStatus,
-    onApprove,
-    onReject,
     onActivate,
     onDeactivate,
+    onDelete,
     actionLoading,
 }) => {
     return (
@@ -2594,112 +2794,17 @@ const PartyRow = ({
                 }
             >
 
-                <button
-                    type="button"
-                    style={
-                        styles.smallButton
+                <PartyActionMenu
+                    party={party}
+                    onEdit={onEdit}
+                    onCandidates={onCandidates}
+                    onActivate={onActivate}
+                    onDeactivate={onDeactivate}
+                    onDelete={onDelete}
+                    actionLoading={
+                        actionLoading
                     }
-                    onClick={
-                        onEdit
-                    }
-                >
-                    Edit
-                </button>
-
-                <button
-                    type="button"
-                    style={
-                        styles.smallButton
-                    }
-                    onClick={
-                        onLogo
-                    }
-                >
-                    Logo
-                </button>
-
-                <button
-                    type="button"
-                    style={
-                        styles.smallButton
-                    }
-                    onClick={
-                        onCandidates
-                    }
-                >
-                    Candidates
-                </button>
-
-                <button
-                    type="button"
-                    style={
-                        styles.smallButton
-                    }
-                    onClick={
-                        onApproval
-                    }
-                >
-                    Review
-                </button>
-
-                {party.approval_status ===
-                    "pending" && (
-                    <>
-                        <button
-                            type="button"
-                            style={
-                                styles.smallApproveButton
-                            }
-                            onClick={
-                                onApprove
-                            }
-                            disabled={
-                                actionLoading ===
-                                `approve-${party.id}`
-                            }
-                        >
-                            {actionLoading ===
-                            `approve-${party.id}`
-                                ? "Approving..."
-                                : "Approve"}
-                        </button>
-
-                        <button
-                            type="button"
-                            style={
-                                styles.smallRejectButton
-                            }
-                            onClick={
-                                onReject
-                            }
-                            disabled={
-                                actionLoading ===
-                                `reject-${party.id}`
-                            }
-                        >
-                            {actionLoading ===
-                            `reject-${party.id}`
-                                ? "Rejecting..."
-                                : "Reject"}
-                        </button>
-                    </>
-                )}
-
-                <button
-                    type="button"
-                    style={
-                        party.is_active
-                            ? styles.smallDeactivateButton
-                            : styles.smallActivateButton
-                    }
-                    onClick={
-                        onStatus
-                    }
-                >
-                    {party.is_active
-                        ? "Deactivate"
-                        : "Activate"}
-                </button>
+                />
 
             </div>
 
@@ -2765,9 +2870,9 @@ const PartyLogo = ({
 // STATUS BADGE
 // =====================================================
 
-const StatusBadge = ({
+function StatusBadge({
     status,
-}) => {
+}) {
 
     const normalized =
         String(
@@ -3364,6 +3469,83 @@ const styles = {
         margin: "6px 0 0",
         fontSize: "11px",
         color: "#7c8798",
+    },
+
+    menuWrapper: {
+        position: "relative",
+        display: "inline-flex",
+        alignItems: "center",
+    },
+
+    menuButton: {
+        width: "38px",
+        height: "38px",
+        border: "1px solid #dbe2ee",
+        borderRadius: "9px",
+        background: "#ffffff",
+        color: "#334155",
+        fontSize: "23px",
+        lineHeight: 1,
+        fontWeight: "900",
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+
+    menuBackdrop: {
+        position: "fixed",
+        inset: 0,
+        zIndex: 998,
+        border: "none",
+        background: "transparent",
+        cursor: "default",
+    },
+
+    actionMenu: {
+        position: "absolute",
+        top: "calc(100% + 7px)",
+        right: 0,
+        width: "190px",
+        background: "#ffffff",
+        border: "1px solid #dbe2ee",
+        borderRadius: "11px",
+        padding: "6px",
+        boxShadow:
+            "0 18px 45px rgba(15, 23, 42, 0.16)",
+        zIndex: 999,
+    },
+
+    menuItem: {
+        width: "100%",
+        border: "none",
+        background: "transparent",
+        color: "#334155",
+        textAlign: "left",
+        borderRadius: "7px",
+        padding: "9px 10px",
+        fontSize: "11px",
+        fontWeight: "700",
+        cursor: "pointer",
+    },
+
+    menuDeleteItem: {
+        width: "100%",
+        border: "none",
+        background: "#fff1f2",
+        color: "#dc2626",
+        textAlign: "left",
+        borderRadius: "7px",
+        padding: "9px 10px",
+        fontSize: "11px",
+        fontWeight: "800",
+        cursor: "pointer",
+    },
+
+    menuDivider: {
+        height: "1px",
+        background: "#eef2f7",
+        margin: "5px 3px",
     },
 
     partyActions: {
@@ -3975,6 +4157,8 @@ const styles = {
         cursor: "pointer",
     },
 };
+
+const statusBadge = StatusBadge;
 
 // =====================================================
 // SPINNER ANIMATION

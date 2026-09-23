@@ -23,7 +23,7 @@ import ElectoralBoardManagement from "./src/pages/admin/ElectoralBoardManagement
 import AdminAccountManagement from "./src/pages/admin/AdminAccountManagement";
 import RegistrationRequirements from "./src/pages/auth/RegistrationRequirements";
 import StudentManagement from "./src/pages/admin/StudentManagement";
-import CandidateManagement from "./src/pages/admin/CandidateManagement";
+import CandidateManagement from "./src/pages/electoralBoard/CandidateManagement";
 import ElectionManagement from "./src/pages/electoralBoard/ElectionManagement";
 import KioskVoting from "./src/pages/electoralBoard/KioskVoting";
 import AuditLogs from "./src/pages/admin/AuditLogs";
@@ -251,7 +251,7 @@ const App = () => {
                     }
                 />
                 <Route
-                    path="/admin/candidates"
+                    path="/electoral-board/candidates"
                     element={
                         <CandidateManagement />
                     }

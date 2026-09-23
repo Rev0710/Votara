@@ -1,49 +1,80 @@
 const jwt = require("jsonwebtoken");
+const XLSX = require("xlsx");
+
 const supabase = require("../config/supabase");
+
+const {
+    getResultsReportsData,
+    buildResultsExportData
+} = require("../services/resultsReportsService");
+
 
 // =========================================================
 // AUTHENTICATE ELECTORAL BOARD
 // =========================================================
 
 const authenticateEB = async (req) => {
-    const authHeader = req.headers.authorization;
+
+    const authHeader =
+        req.headers.authorization;
 
     if (
         !authHeader ||
         !authHeader.startsWith("Bearer ")
     ) {
+
         throw new Error(
             "Authentication token is required."
         );
+
     }
 
     const token =
         authHeader.split(" ")[1];
 
     if (!token) {
+
         throw new Error(
             "Authentication token is required."
         );
+
     }
 
-    const decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET
-    );
+    let decoded;
+
+    try {
+
+        decoded =
+            jwt.verify(
+                token,
+                process.env.JWT_SECRET
+            );
+
+    } catch (error) {
+
+        throw new Error(
+            "Invalid or expired authentication token."
+        );
+
+    }
 
     if (
         !decoded ||
         decoded.role !== "electoral_board"
     ) {
+
         throw new Error(
             "Electoral Board access is required."
         );
+
     }
 
     if (!decoded.userId) {
+
         throw new Error(
-            "Invalid Electoral Board account."
+            "Electoral Board user ID is required."
         );
+
     }
 
     const {
@@ -51,15 +82,13 @@ const authenticateEB = async (req) => {
         error
     } = await supabase
         .from("staff_users")
-        .select(
-            `
+        .select(`
             id,
             full_name,
             email,
             role,
             is_active
-            `
-        )
+        `)
         .eq(
             "id",
             decoded.userId
@@ -75,24 +104,24 @@ const authenticateEB = async (req) => {
         .maybeSingle();
 
     if (error) {
-        console.error(
-            "EB authentication database error:",
-            error
-        );
 
         throw new Error(
-            "Unable to verify Electoral Board account."
+            error.message
         );
+
     }
 
     if (!staff) {
+
         throw new Error(
-            "Electoral Board account is inactive or unavailable."
+            "Electoral Board account is inactive or not found."
         );
+
     }
 
     return staff;
 };
+
 
 // =========================================================
 // GET RESULTS & REPORTS
@@ -111,6 +140,7 @@ const getResultsReports = async (
 
         await authenticateEB(req);
 
+
         // -------------------------------------------------
         // OPTIONAL ELECTION ID
         // -------------------------------------------------
@@ -120,741 +150,36 @@ const getResultsReports = async (
             req.query.electionId ||
             null;
 
+
         // -------------------------------------------------
-        // GET ELECTIONS
+        // LOAD RESULTS DATA
         // -------------------------------------------------
 
-        const {
-            data: elections,
-            error: electionsError
-        } = await supabase
-            .from("elections")
-            .select(
-                `
-                id,
-                title,
-                description,
-                election_date,
-                start_time,
-                end_time,
-                status,
-                is_published,
-                published_at,
-                closed_at,
-                created_at
-                `
-            )
-            .order(
-                "created_at",
-                {
-                    ascending: false
-                }
+        const resultsData =
+            await getResultsReportsData(
+                requestedElectionId
             );
 
-        if (electionsError) {
-            throw electionsError;
-        }
-
-        if (
-            !elections ||
-            elections.length === 0
-        ) {
-
-            return res.json({
-                success: true,
-                election: null,
-                elections: [],
-                statistics: {
-                    eligibleVoters: 0,
-                    votersWhoVoted: 0,
-                    remainingVoters: 0,
-                    turnoutPercentage: 0,
-                    submittedBallots: 0
-                },
-                positions: [],
-                generatedAt:
-                    new Date().toISOString()
-            });
-        }
-
-        // -------------------------------------------------
-        // SELECT ELECTION
-        // -------------------------------------------------
-
-        let election = null;
-
-        if (requestedElectionId) {
-
-            election =
-                elections.find(
-                    (item) =>
-                        item.id ===
-                        requestedElectionId
-                ) || null;
-        }
-
-        // If no specific election was requested,
-        // prefer the latest closed election,
-        // otherwise active/scheduled/draft/latest.
-        if (!election) {
-
-            election =
-                elections.find(
-                    (item) =>
-                        item.status === "closed"
-                ) ||
-                elections.find(
-                    (item) =>
-                        item.status === "active"
-                ) ||
-                elections.find(
-                    (item) =>
-                        item.status === "scheduled"
-                ) ||
-                elections[0];
-        }
-
-        // -------------------------------------------------
-        // GET ELECTION YEAR LEVELS
-        // -------------------------------------------------
-
-        const {
-            data: yearLevelRows,
-            error: yearLevelError
-        } = await supabase
-            .from("election_year_levels")
-            .select(
-                `
-                id,
-                year_level
-                `
-            )
-            .eq(
-                "election_id",
-                election.id
-            );
-
-        if (yearLevelError) {
-            throw yearLevelError;
-        }
-
-        // VOTARA voting rule:
-        // 1st Year students do NOT vote.
-        const eligibleYearLevels =
-            (yearLevelRows || [])
-                .filter(
-                    (item) =>
-                        item.year_level !==
-                        "1st Year"
-                );
-
-        // -------------------------------------------------
-        // COUNT ELIGIBLE STUDENTS
-        // -------------------------------------------------
-
-        let eligibleVoters = 0;
-
-        const allowedYearLevels =
-            eligibleYearLevels.map(
-                (item) =>
-                    item.year_level
-            );
-
-        if (
-            allowedYearLevels.length > 0
-        ) {
-
-            const {
-                count,
-                error: studentCountError
-            } = await supabase
-                .from("students")
-                .select(
-                    "id",
-                    {
-                        count: "exact",
-                        head: true
-                    }
-                )
-                .in(
-                    "year_level",
-                    allowedYearLevels
-                );
-
-            if (studentCountError) {
-                throw studentCountError;
-            }
-
-            eligibleVoters =
-                count || 0;
-        }
-
-        // -------------------------------------------------
-        // COUNT VOTERS WHO VOTED
-        // -------------------------------------------------
-
-        const {
-            count: votersWhoVoted,
-            error: participationError
-        } = await supabase
-            .from("vote_participations")
-            .select(
-                "id",
-                {
-                    count: "exact",
-                    head: true
-                }
-            )
-            .eq(
-                "election_id",
-                election.id
-            )
-            .eq(
-                "has_voted",
-                true
-            );
-
-        if (participationError) {
-            throw participationError;
-        }
-
-        const totalVotersWhoVoted =
-            votersWhoVoted || 0;
-
-        // -------------------------------------------------
-        // COUNT SUBMITTED BALLOTS
-        // -------------------------------------------------
-
-        const {
-            count: submittedBallots,
-            error: ballotsError
-        } = await supabase
-            .from("ballots")
-            .select(
-                "id",
-                {
-                    count: "exact",
-                    head: true
-                }
-            )
-            .eq(
-                "election_id",
-                election.id
-            )
-            .eq(
-                "status",
-                "submitted"
-            );
-
-        if (ballotsError) {
-            throw ballotsError;
-        }
-
-        const totalSubmittedBallots =
-            submittedBallots || 0;
-
-        // -------------------------------------------------
-        // TURNOUT
-        // -------------------------------------------------
-
-        const remainingVoters =
-            Math.max(
-                eligibleVoters -
-                totalVotersWhoVoted,
-                0
-            );
-
-        const turnoutPercentage =
-            eligibleVoters > 0
-                ? Number(
-                    (
-                        (
-                            totalVotersWhoVoted /
-                            eligibleVoters
-                        ) * 100
-                    ).toFixed(2)
-                )
-                : 0;
-
-        // -------------------------------------------------
-        // GET POSITIONS
-        // -------------------------------------------------
-
-        const {
-            data: positions,
-            error: positionsError
-        } = await supabase
-            .from("positions")
-            .select(
-                `
-                id,
-                name,
-                description,
-                display_order,
-                is_required,
-                is_active
-                `
-            )
-            .eq(
-                "election_id",
-                election.id
-            )
-            .eq(
-                "is_active",
-                true
-            )
-            .order(
-                "display_order",
-                {
-                    ascending: true
-                }
-            );
-
-        if (positionsError) {
-            throw positionsError;
-        }
-
-        // -------------------------------------------------
-        // GET CANDIDATES
-        // -------------------------------------------------
-
-        const {
-            data: candidates,
-            error: candidatesError
-        } = await supabase
-            .from("candidates")
-            .select(
-                `
-                id,
-                position_id,
-                student_id,
-                full_name,
-                profile_picture,
-                platform,
-                party_list_id,
-                is_active
-                `
-            )
-            .eq(
-                "election_id",
-                election.id
-            )
-            .eq(
-                "is_active",
-                true
-            );
-
-        if (candidatesError) {
-            throw candidatesError;
-        }
-
-        // -------------------------------------------------
-        // GET PARTY LIST NAMES
-        // -------------------------------------------------
-
-        const partyListIds =
-            (candidates || [])
-                .map(
-                    (candidate) =>
-                        candidate.party_list_id
-                )
-                .filter(Boolean);
-
-        let partyLists = [];
-
-        if (partyListIds.length > 0) {
-
-            const {
-                data,
-                error
-            } = await supabase
-                .from("party_lists")
-                .select(
-                    `
-                    id,
-                    name
-                    `
-                )
-                .in(
-                    "id",
-                    partyListIds
-                );
-
-            if (error) {
-                throw error;
-            }
-
-            partyLists =
-                data || [];
-        }
-
-        // -------------------------------------------------
-        // GET SUBMITTED BALLOT VOTES
-        //
-        // IMPORTANT:
-        // Only aggregate candidate/position IDs are
-        // processed here.
-        //
-        // Student identity is NOT returned.
-        // Individual ballot records are NOT returned.
-        // -------------------------------------------------
-
-       const {
-    data: submittedBallotRows,
-    error: submittedBallotsQueryError
-} = await supabase
-    .from("ballots")
-    .select("id")
-    .eq(
-        "election_id",
-        election.id
-    )
-    .eq(
-        "status",
-        "submitted"
-    );
-
-if (submittedBallotsQueryError) {
-    throw submittedBallotsQueryError;
-}
-
-const submittedBallotIds =
-    (submittedBallotRows || [])
-        .map(
-            (ballot) =>
-                ballot.id
-        );
-
-let ballotVotes = [];
-
-if (submittedBallotIds.length > 0) {
-
-    const {
-        data,
-        error
-    } = await supabase
-        .from("ballot_votes")
-        .select(
-            `
-            id,
-            candidate_id,
-            position_id,
-            ballot_id
-            `
-        )
-        .in(
-            "ballot_id",
-            submittedBallotIds
-        );
-
-    if (error) {
-        throw error;
-    }
-
-    ballotVotes =
-        data || [];
-}
-
-        // -------------------------------------------------
-        // COUNT VOTES PER CANDIDATE
-        // -------------------------------------------------
-
-        const voteCounts = {};
-
-        (ballotVotes || [])
-            .forEach(
-                (vote) => {
-
-                    if (
-                        !vote.candidate_id
-                    ) {
-                        return;
-                    }
-
-                    voteCounts[
-                        vote.candidate_id
-                    ] =
-                        (
-                            voteCounts[
-                                vote.candidate_id
-                            ] || 0
-                        ) + 1;
-                }
-            );
-
-        // -------------------------------------------------
-        // PARTY LIST LOOKUP
-        // -------------------------------------------------
-
-        const partyListMap =
-            {};
-
-        partyLists.forEach(
-            (party) => {
-
-                partyListMap[
-                    party.id
-                ] = party.name;
-
-            }
-        );
-
-        // -------------------------------------------------
-        // POSITION RESULTS
-        // -------------------------------------------------
-
-        const resultPositions =
-            (positions || []).map(
-                (position) => {
-
-                    const positionCandidates =
-                        (candidates || [])
-                            .filter(
-                                (candidate) =>
-                                    candidate.position_id ===
-                                    position.id
-                            )
-                            .map(
-                                (candidate) => ({
-                                    id:
-                                        candidate.id,
-
-                                    fullName:
-                                        candidate.full_name,
-
-                                    profilePicture:
-                                        candidate.profile_picture ||
-                                        "",
-
-                                    platform:
-                                        candidate.platform ||
-                                        "",
-
-                                    partyListId:
-                                        candidate.party_list_id ||
-                                        null,
-
-                                    partyListName:
-                                        candidate.party_list_id
-                                            ? (
-                                                partyListMap[
-                                                    candidate.party_list_id
-                                                ] || "Independent"
-                                            )
-                                            : "Independent",
-
-                                    voteCount:
-                                        voteCounts[
-                                            candidate.id
-                                        ] || 0
-                                })
-                            )
-                            .sort(
-                                (
-                                    a,
-                                    b
-                                ) =>
-                                    b.voteCount -
-                                    a.voteCount
-                            );
-
-                    // -----------------------------------------
-                    // DETERMINE RESULT STATUS
-                    // -----------------------------------------
-
-                    let resultStatus =
-                        "no_votes";
-
-                    let winner = null;
-
-                    if (
-                        positionCandidates.length >
-                        0
-                    ) {
-
-                        const highestVoteCount =
-                            Math.max(
-                                ...positionCandidates.map(
-                                    (candidate) =>
-                                        candidate.voteCount
-                                )
-                            );
-
-                        const leaders =
-                            positionCandidates.filter(
-                                (candidate) =>
-                                    candidate.voteCount ===
-                                    highestVoteCount
-                            );
-
-                        if (
-                            highestVoteCount ===
-                            0
-                        ) {
-
-                            resultStatus =
-                                "no_votes";
-
-                        } else if (
-                            leaders.length >
-                            1
-                        ) {
-
-                            resultStatus =
-                                "tie";
-
-                        } else {
-
-                            resultStatus =
-                                "winner";
-
-                            winner =
-                                leaders[0];
-                        }
-                    }
-
-                    return {
-                        id:
-                            position.id,
-
-                        name:
-                            position.name,
-
-                        description:
-                            position.description ||
-                            "",
-
-                        displayOrder:
-                            position.display_order,
-
-                        isRequired:
-                            position.is_required,
-
-                        resultStatus,
-
-                        winner,
-
-                        candidates:
-                            positionCandidates
-                    };
-                }
-            );
-
-        // -------------------------------------------------
-        // SUMMARY
-        // -------------------------------------------------
-
-        const totalPositions =
-            resultPositions.length;
-
-        const positionsWithResults =
-            resultPositions.filter(
-                (position) =>
-                    position.resultStatus ===
-                    "winner"
-            ).length;
-
-        const tiedPositions =
-            resultPositions.filter(
-                (position) =>
-                    position.resultStatus ===
-                    "tie"
-            ).length;
-
-        const positionsWithoutVotes =
-            resultPositions.filter(
-                (position) =>
-                    position.resultStatus ===
-                    "no_votes"
-            ).length;
 
         // -------------------------------------------------
         // RESPONSE
         // -------------------------------------------------
+        //
+        // ResultsReports.jsx expects:
+        //
+        // response.data.success === true
+        //
+        // The service returns the actual results,
+        // so we add success: true here.
+        //
+        // -------------------------------------------------
 
-        return res.json({
+        return res.status(200).json({
 
             success: true,
 
-            election: {
-                id:
-                    election.id,
+            ...resultsData
 
-                title:
-                    election.title,
-
-                description:
-                    election.description,
-
-                election_date:
-                    election.election_date,
-
-                start_time:
-                    election.start_time,
-
-                end_time:
-                    election.end_time,
-
-                status:
-                    election.status,
-
-                is_published:
-                    election.is_published,
-
-                published_at:
-                    election.published_at,
-
-                closed_at:
-                    election.closed_at
-            },
-
-            elections:
-                elections.map(
-                    (item) => ({
-                        id:
-                            item.id,
-
-                        title:
-                            item.title,
-
-                        election_date:
-                            item.election_date,
-
-                        status:
-                            item.status
-                    })
-                ),
-
-            eligibleYearLevels,
-
-            statistics: {
-
-                eligibleVoters,
-
-                votersWhoVoted:
-                    totalVotersWhoVoted,
-
-                remainingVoters,
-
-                turnoutPercentage,
-
-                submittedBallots:
-                    totalSubmittedBallots,
-
-                totalPositions,
-
-                positionsWithResults,
-
-                tiedPositions,
-
-                positionsWithoutVotes
-            },
-
-            positions:
-                resultPositions,
-
-            generatedAt:
-                new Date().toISOString()
         });
 
     } catch (error) {
@@ -864,9 +189,11 @@ if (submittedBallotIds.length > 0) {
             error
         );
 
+
         const message =
             error?.message ||
             "Failed to load election results.";
+
 
         // -------------------------------------------------
         // AUTH ERRORS
@@ -874,18 +201,23 @@ if (submittedBallotIds.length > 0) {
 
         if (
             message.includes(
-                "Authentication"
+                "Authentication token"
+            ) ||
+            message.includes(
+                "Invalid or expired"
             ) ||
             message.includes(
                 "Electoral Board access"
             ) ||
             message.includes(
+                "Electoral Board account"
+            ) ||
+            message.includes(
                 "Invalid Electoral Board"
             ) ||
-            error?.name ===
-                "JsonWebTokenError" ||
-            error?.name ===
-                "TokenExpiredError"
+            message.includes(
+                "user ID is required"
+            )
         ) {
 
             return res.status(401).json({
@@ -895,7 +227,9 @@ if (submittedBallotIds.length > 0) {
                 message
 
             });
+
         }
+
 
         // -------------------------------------------------
         // SERVER ERROR
@@ -905,22 +239,703 @@ if (submittedBallotIds.length > 0) {
 
             success: false,
 
-            message:
-                "Failed to load election results.",
+            message
 
-            error:
-                process.env.NODE_ENV ===
-                "development"
-                    ? message
-                    : undefined
         });
+
     }
+
 };
 
+
 // =========================================================
-// EXPORT
+// EXPORT RESULTS & REPORTS TO EXCEL
+// =========================================================
+
+const exportResultsReports = async (
+    req,
+    res
+) => {
+
+    try {
+
+        // -----------------------------------------------------
+        // AUTHENTICATE ELECTORAL BOARD
+        // -----------------------------------------------------
+
+        await authenticateEB(req);
+
+
+        // -----------------------------------------------------
+        // GET SELECTED ELECTION
+        // -----------------------------------------------------
+
+        const requestedElectionId =
+            req.query.election_id ||
+            req.query.electionId ||
+            null;
+
+
+        // -----------------------------------------------------
+        // LOAD RESULTS DATA
+        // -----------------------------------------------------
+
+        const resultsData =
+            await getResultsReportsData(
+                requestedElectionId
+            );
+
+
+        // -----------------------------------------------------
+        // BUILD SAFE EXPORT DATA
+        // -----------------------------------------------------
+
+        const exportData =
+            buildResultsExportData(
+                resultsData
+            );
+
+
+        // -----------------------------------------------------
+        // CREATE WORKBOOK
+        // -----------------------------------------------------
+
+        const workbook =
+            XLSX.utils.book_new();
+
+
+        // =====================================================
+        // SAFE DATA REFERENCES
+        // =====================================================
+
+        const election =
+            exportData?.election ||
+            {};
+
+        const summary =
+            exportData?.summary ||
+            {};
+
+        const positions =
+            Array.isArray(
+                exportData?.positions
+            )
+                ? exportData.positions
+                : [];
+
+
+        // =====================================================
+        // CALCULATE TOTAL CANDIDATES
+        // =====================================================
+
+        const totalCandidates =
+            positions.reduce(
+                (
+                    total,
+                    position
+                ) => {
+
+                    const candidates =
+                        Array.isArray(
+                            position?.candidates
+                        )
+                            ? position.candidates
+                            : [];
+
+                    return (
+                        total +
+                        candidates.length
+                    );
+
+                },
+                0
+            );
+
+
+        // =====================================================
+        // SUMMARY SHEET
+        // =====================================================
+
+        const summaryRows = [
+
+            [
+                "VOTARA - RESULTS & REPORTS"
+            ],
+
+            [],
+
+            [
+                "Election Information"
+            ],
+
+            [
+                "Election",
+                election.title ||
+                "N/A"
+            ],
+
+            [
+                "Election Date",
+                election.electionDate ||
+                "N/A"
+            ],
+
+            [
+                "Start Time",
+                election.startTime ||
+                "N/A"
+            ],
+
+            [
+                "End Time",
+                election.endTime ||
+                "N/A"
+            ],
+
+            [
+                "Status",
+                election.status ||
+                "N/A"
+            ],
+
+            [],
+
+            [
+                "Participation Summary"
+            ],
+
+            [
+                "Eligible Voters",
+                summary.eligibleVoters ??
+                0
+            ],
+
+            [
+                "Votes Cast",
+                summary.votersWhoVoted ??
+                0
+            ],
+
+            [
+                "Remaining Voters",
+                summary.remainingVoters ??
+                0
+            ],
+
+            [
+                "Turnout",
+                `${Number(
+                    summary.turnoutPercentage ??
+                    0
+                ).toFixed(2)}%`
+            ],
+
+            [
+                "Submitted Ballots",
+                summary.submittedBallots ??
+                0
+            ],
+
+            [],
+
+            [
+                "Result Summary"
+            ],
+
+            [
+                "Positions",
+                summary.totalPositions ??
+                positions.length
+            ],
+
+            [
+                "Candidates",
+                totalCandidates
+            ],
+
+            [
+                "Positions with Results",
+                summary.positionsWithResults ??
+                0
+            ],
+
+            [
+                "Positions without Results",
+                summary.positionsWithoutVotes ??
+                0
+            ],
+
+            [
+                "Tied Positions",
+                summary.tiedPositions ??
+                0
+            ],
+
+            [],
+
+            [
+                "Generated At",
+                exportData.generatedAt ||
+                new Date().toISOString()
+            ],
+
+            [],
+
+            [
+                "Privacy Notice"
+            ],
+
+            [
+                "This export contains aggregate election results only."
+            ],
+
+            [
+                "It does not contain individual student selections,"
+            ],
+
+            [
+                "ballot tokens, authentication tokens, passwords,"
+            ],
+
+            [
+                "private student documents, selfie images, or raw ballot records."
+            ]
+
+        ];
+
+
+        const summaryWorksheet =
+            XLSX.utils.aoa_to_sheet(
+                summaryRows
+            );
+
+
+        // -----------------------------------------------------
+        // SUMMARY COLUMN WIDTHS
+        // -----------------------------------------------------
+
+        summaryWorksheet["!cols"] = [
+
+            {
+                wch: 32
+            },
+
+            {
+                wch: 55
+            }
+
+        ];
+
+
+        XLSX.utils.book_append_sheet(
+            workbook,
+            summaryWorksheet,
+            "Summary"
+        );
+
+
+        // =====================================================
+        // ELECTION RESULTS SHEET
+        // =====================================================
+
+        const resultRows = [
+
+            [
+                "Position",
+                "Candidate",
+                "Party List",
+                "Votes",
+                "Percentage",
+                "Result Status",
+                "Winner / Tie"
+            ]
+
+        ];
+
+
+        // =====================================================
+        // BUILD CANDIDATE RESULTS
+        // =====================================================
+
+        positions.forEach(
+            (position) => {
+
+                const candidates =
+                    Array.isArray(
+                        position?.candidates
+                    )
+                        ? position.candidates
+                        : [];
+
+
+                const positionName =
+                    position?.position ||
+                    "N/A";
+
+
+                // -------------------------------------------------
+                // POSITION WITHOUT CANDIDATES
+                // -------------------------------------------------
+
+                if (
+                    candidates.length === 0
+                ) {
+
+                    resultRows.push([
+
+                        positionName,
+
+                        "No candidates",
+
+                        "",
+
+                        0,
+
+                        "0%",
+
+                        position?.status ||
+                        "no_votes",
+
+                        ""
+
+                    ]);
+
+                    return;
+                }
+
+
+                // -------------------------------------------------
+                // TOTAL VOTES FOR THIS POSITION
+                // -------------------------------------------------
+
+                const totalVotes =
+                    candidates.reduce(
+                        (
+                            total,
+                            candidate
+                        ) => {
+
+                            return (
+                                total +
+                                Number(
+                                    candidate?.votes ||
+                                    0
+                                )
+                            );
+
+                        },
+                        0
+                    );
+
+
+                // -------------------------------------------------
+                // WINNER INFORMATION
+                // -------------------------------------------------
+
+                const winner =
+                    position?.winner ||
+                    null;
+
+
+                // -------------------------------------------------
+                // ADD EACH CANDIDATE
+                // -------------------------------------------------
+
+                candidates.forEach(
+                    (candidate) => {
+
+                        const votes =
+                            Number(
+                                candidate?.votes ||
+                                0
+                            );
+
+
+                        // -------------------------------------------------
+                        // CALCULATE PERCENTAGE
+                        // -------------------------------------------------
+
+                        const percentage =
+                            totalVotes > 0
+                                ? (
+                                    (
+                                        votes /
+                                        totalVotes
+                                    ) *
+                                    100
+                                ).toFixed(2) + "%"
+                                : "0%";
+
+
+                        let resultLabel =
+                            "";
+
+
+                        // -------------------------------------------------
+                        // WINNER
+                        // -------------------------------------------------
+
+                        if (
+                            winner &&
+                            winner.name ===
+                                candidate.name
+                        ) {
+
+                            resultLabel =
+                                "Winner";
+
+                        }
+
+
+                        // -------------------------------------------------
+                        // TIE
+                        // -------------------------------------------------
+
+                        else if (
+                            position?.status ===
+                            "tie"
+                        ) {
+
+                            resultLabel =
+                                "Tie";
+
+                        }
+
+
+                        // -------------------------------------------------
+                        // ADD CANDIDATE RESULT ROW
+                        // -------------------------------------------------
+
+                        resultRows.push([
+
+                            positionName,
+
+                            candidate?.name ||
+                            "N/A",
+
+                            candidate?.party ||
+                            "Independent",
+
+                            votes,
+
+                            percentage,
+
+                            position?.status ||
+                            "no_votes",
+
+                            resultLabel
+
+                        ]);
+
+                    }
+                );
+
+            }
+        );
+
+
+        // =====================================================
+        // CREATE RESULTS WORKSHEET
+        // =====================================================
+
+        const resultsWorksheet =
+            XLSX.utils.aoa_to_sheet(
+                resultRows
+            );
+
+
+        // -----------------------------------------------------
+        // RESULTS COLUMN WIDTHS
+        // -----------------------------------------------------
+
+        resultsWorksheet["!cols"] = [
+
+            {
+                wch: 30
+            },
+
+            {
+                wch: 35
+            },
+
+            {
+                wch: 28
+            },
+
+            {
+                wch: 14
+            },
+
+            {
+                wch: 14
+            },
+
+            {
+                wch: 18
+            },
+
+            {
+                wch: 18
+            }
+
+        ];
+
+
+        // -----------------------------------------------------
+        // ADD RESULTS SHEET
+        // -----------------------------------------------------
+
+        XLSX.utils.book_append_sheet(
+            workbook,
+            resultsWorksheet,
+            "Election Results"
+        );
+
+
+        // =====================================================
+        // GENERATE EXCEL FILE
+        // =====================================================
+
+        const excelBuffer =
+            XLSX.write(
+                workbook,
+                {
+                    type: "buffer",
+                    bookType: "xlsx"
+                }
+            );
+
+
+        // =====================================================
+        // SAFE FILE NAME
+        // =====================================================
+
+        const electionTitle =
+            election.title ||
+            "Election";
+
+
+        const safeFileName =
+            String(
+                electionTitle
+            )
+                .replace(
+                    /[^a-z0-9]/gi,
+                    "_"
+                )
+                .replace(
+                    /_+/g,
+                    "_"
+                )
+                .replace(
+                    /^_+|_+$/g,
+                    ""
+                );
+
+
+        const finalFileName =
+            `${safeFileName || "Election"}_Results.xlsx`;
+
+
+        // =====================================================
+        // RESPONSE HEADERS
+        // =====================================================
+
+        res.setHeader(
+            "Content-Type",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        );
+
+
+        res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="${finalFileName}"`
+        );
+
+
+        // =====================================================
+        // SEND EXCEL FILE
+        // =====================================================
+
+        return res
+            .status(200)
+            .send(excelBuffer);
+
+
+    } catch (error) {
+
+        console.error(
+            "❌ Export Results & Reports Error:",
+            error
+        );
+
+
+        const message =
+            error?.message ||
+            "Failed to export election results.";
+
+
+        // -----------------------------------------------------
+        // AUTH ERRORS
+        // -----------------------------------------------------
+
+        if (
+            message.includes(
+                "Authentication token"
+            ) ||
+            message.includes(
+                "Invalid or expired"
+            ) ||
+            message.includes(
+                "Electoral Board access"
+            ) ||
+            message.includes(
+                "Electoral Board account"
+            ) ||
+            message.includes(
+                "Invalid Electoral Board"
+            ) ||
+            message.includes(
+                "user ID is required"
+            )
+        ) {
+
+            return res.status(401).json({
+
+                success: false,
+
+                message
+
+            });
+
+        }
+
+
+        // -----------------------------------------------------
+        // SERVER ERROR
+        // -----------------------------------------------------
+
+        return res.status(500).json({
+
+            success: false,
+
+            message
+
+        });
+
+    }
+
+};
+
+
+// =========================================================
+// EXPORT CONTROLLER FUNCTIONS
 // =========================================================
 
 module.exports = {
-    getResultsReports
+
+    getResultsReports,
+
+    exportResultsReports
+
 };

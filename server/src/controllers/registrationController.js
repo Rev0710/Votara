@@ -785,6 +785,19 @@ const checkStudent = async (
 
 // =========================================================
 // CREATE OR UPDATE REGISTRATION APPLICATION
+//
+// REGISTRATION SOURCE:
+// - This controller handles ONLINE registration.
+// - Therefore registration_source must be "online".
+//
+// KIOSK REGISTRATION:
+// - KioskController.js handles kiosk registration.
+// - KioskController.js must use registration_source = "kiosk".
+//
+// IMPORTANT:
+// Keeping the source explicitly separated prevents a kiosk
+// application from accidentally being treated as an online
+// registration.
 // =========================================================
 
 const createOrUpdateRegistration =
@@ -844,7 +857,14 @@ const createOrUpdateRegistration =
                 )
                 .update({
 
-                    email,
+                    email:
+                        email
+                            ? String(
+                                email
+                            )
+                                .trim()
+                                .toLowerCase()
+                            : null,
 
                     full_name:
                         fullName,
@@ -854,6 +874,13 @@ const createOrUpdateRegistration =
 
                     registration_type:
                         registrationType,
+
+                    // =============================================
+                    // ONLINE REGISTRATION
+                    // =============================================
+
+                    registration_source:
+                        "online",
 
                     updated_at:
                         new Date().toISOString(),
@@ -866,36 +893,38 @@ const createOrUpdateRegistration =
                 .select()
                 .single();
 
+
             if (error) {
 
-    console.error(
-        "❌ REGISTRATION CREATION FAILED"
-    );
+                console.error(
+                    "❌ REGISTRATION UPDATE FAILED"
+                );
 
-    console.error(
-        "Code:",
-        error.code
-    );
+                console.error(
+                    "Code:",
+                    error.code
+                );
 
-    console.error(
-        "Message:",
-        error.message
-    );
+                console.error(
+                    "Message:",
+                    error.message
+                );
 
-    console.error(
-        "Details:",
-        error.details
-    );
+                console.error(
+                    "Details:",
+                    error.details
+                );
 
-    console.error(
-        "Hint:",
-        error.hint
-    );
+                console.error(
+                    "Hint:",
+                    error.hint
+                );
 
-    throw new Error(
-        "Unable to create registration application."
-    );
-}
+                throw new Error(
+                    "Unable to update registration application."
+                );
+            }
+
 
             return data;
         }
@@ -920,10 +949,24 @@ const createOrUpdateRegistration =
                 registration_type:
                     registrationType,
 
+                // =============================================
+                // ONLINE REGISTRATION
+                // =============================================
+
+                registration_source:
+                    "online",
+
                 application_status:
                     "draft",
 
-                email,
+                email:
+                    email
+                        ? String(
+                            email
+                        )
+                            .trim()
+                            .toLowerCase()
+                        : null,
 
                 full_name:
                     fullName || null,
@@ -935,17 +978,38 @@ const createOrUpdateRegistration =
             .select()
             .single();
 
+
         if (error) {
 
             console.error(
-                "❌ Registration creation error:",
+                "❌ REGISTRATION CREATION FAILED"
+            );
+
+            console.error(
+                "Code:",
+                error.code
+            );
+
+            console.error(
+                "Message:",
                 error.message
+            );
+
+            console.error(
+                "Details:",
+                error.details
+            );
+
+            console.error(
+                "Hint:",
+                error.hint
             );
 
             throw new Error(
                 "Unable to create registration application."
             );
         }
+
 
         return data;
     };
@@ -3570,12 +3634,7 @@ const authenticateEB = (req) => {
 
 
 // =========================================================
-// EB DASHBOARD STATISTICS
-//
-// Reads REAL registration data from Supabase.
-//
-// No fake numbers.
-// No student-side changes.
+// GET EB DASHBOARD STATISTICS
 // =========================================================
 
 const getEBDashboardStats = async (
@@ -3585,34 +3644,21 @@ const getEBDashboardStats = async (
 
     try {
 
-        // -------------------------------------------------
-        // VERIFY EB TOKEN
-        // -------------------------------------------------
-
         authenticateEB(req);
 
-
-        // -------------------------------------------------
+        // =====================================================
         // REGISTERED STUDENTS
-        //
-        // Official enrollment roster
-        // -------------------------------------------------
+        // =====================================================
 
         const {
-            count:
-                registeredStudents,
-            error:
-                studentsError,
+            count: registeredStudents,
+            error: studentsError,
         } = await supabase
             .from("students")
-            .select(
-                "id",
-                {
-                    count: "exact",
-                    head: true,
-                }
-            );
-
+            .select("id", {
+                count: "exact",
+                head: true,
+            });
 
         if (studentsError) {
 
@@ -3627,31 +3673,23 @@ const getEBDashboardStats = async (
         }
 
 
-        // -------------------------------------------------
-        // PENDING APPLICATIONS
-        // -------------------------------------------------
+        // =====================================================
+        // PENDING REGISTRATION APPLICATIONS
+        // =====================================================
 
         const {
-            count:
-                pendingApplications,
-            error:
-                pendingError,
+            count: pendingApplications,
+            error: pendingError,
         } = await supabase
-            .from(
-                "registration_applications"
-            )
-            .select(
-                "id",
-                {
-                    count: "exact",
-                    head: true,
-                }
-            )
+            .from("registration_applications")
+            .select("id", {
+                count: "exact",
+                head: true,
+            })
             .eq(
                 "application_status",
                 "pending_review"
             );
-
 
         if (pendingError) {
 
@@ -3666,31 +3704,23 @@ const getEBDashboardStats = async (
         }
 
 
-        // -------------------------------------------------
+        // =====================================================
         // APPROVED STUDENTS
-        // -------------------------------------------------
+        // =====================================================
 
         const {
-            count:
-                approvedStudents,
-            error:
-                approvedError,
+            count: approvedStudents,
+            error: approvedError,
         } = await supabase
-            .from(
-                "registration_applications"
-            )
-            .select(
-                "id",
-                {
-                    count: "exact",
-                    head: true,
-                }
-            )
+            .from("registration_applications")
+            .select("id", {
+                count: "exact",
+                head: true,
+            })
             .eq(
                 "application_status",
                 "approved"
             );
-
 
         if (approvedError) {
 
@@ -3705,9 +3735,210 @@ const getEBDashboardStats = async (
         }
 
 
-        // -------------------------------------------------
+        // =====================================================
+        // FIND CURRENT ELECTION
+        // =====================================================
+
+        let currentElection = null;
+
+
+        // -----------------------------------------------------
+        // FIRST: LOOK FOR OPEN + PUBLISHED ELECTION
+        // -----------------------------------------------------
+
+        const {
+            data: openElection,
+            error: openElectionError,
+        } = await supabase
+            .from("elections")
+            .select(`
+                id,
+                title,
+                description,
+                election_date,
+                start_time,
+                end_time,
+                status,
+                is_published,
+                published_at
+            `)
+            .eq(
+                "status",
+                "open"
+            )
+            .eq(
+                "is_published",
+                true
+            )
+            .order(
+                "election_date",
+                {
+                    ascending: false,
+                }
+            )
+            .limit(1)
+            .maybeSingle();
+
+        if (openElectionError) {
+
+            console.error(
+                "❌ Open election lookup error:",
+                openElectionError.message
+            );
+
+            throw new Error(
+                "Unable to retrieve the current election."
+            );
+        }
+
+
+        if (openElection) {
+
+            currentElection = openElection;
+
+        } else {
+
+            // -------------------------------------------------
+            // FALLBACK: LATEST PUBLISHED ELECTION
+            // -------------------------------------------------
+
+            const {
+                data: latestElection,
+                error: latestElectionError,
+            } = await supabase
+                .from("elections")
+                .select(`
+                    id,
+                    title,
+                    description,
+                    election_date,
+                    start_time,
+                    end_time,
+                    status,
+                    is_published,
+                    published_at
+                `)
+                .eq(
+                    "is_published",
+                    true
+                )
+                .order(
+                    "election_date",
+                    {
+                        ascending: false,
+                    }
+                )
+                .limit(1)
+                .maybeSingle();
+
+            if (latestElectionError) {
+
+                console.error(
+                    "❌ Latest election lookup error:",
+                    latestElectionError.message
+                );
+
+                throw new Error(
+                    "Unable to retrieve the latest election."
+                );
+            }
+
+            currentElection =
+                latestElection || null;
+        }
+
+
+        // =====================================================
+        // ACTIVE CANDIDATES
+        // =====================================================
+
+        let activeCandidates = 0;
+
+
+        if (currentElection?.id) {
+
+            const {
+                count: candidateCount,
+                error: candidateError,
+            } = await supabase
+                .from("candidates")
+                .select("id", {
+                    count: "exact",
+                    head: true,
+                })
+                .eq(
+                    "election_id",
+                    currentElection.id
+                )
+                .eq(
+                    "is_active",
+                    true
+                );
+
+            if (candidateError) {
+
+                console.error(
+                    "❌ EB active candidates count error:",
+                    candidateError.message
+                );
+
+                throw new Error(
+                    "Unable to retrieve active candidate count."
+                );
+            }
+
+            activeCandidates =
+                candidateCount || 0;
+        }
+
+
+        // =====================================================
+        // VOTES CAST
+        // =====================================================
+
+        let votesCast = 0;
+
+
+        if (currentElection?.id) {
+
+            const {
+                count: ballotCount,
+                error: ballotError,
+            } = await supabase
+                .from("ballots")
+                .select("id", {
+                    count: "exact",
+                    head: true,
+                })
+                .eq(
+                    "election_id",
+                    currentElection.id
+                )
+                .eq(
+                    "status",
+                    "submitted"
+                );
+
+            if (ballotError) {
+
+                console.error(
+                    "❌ EB submitted ballots count error:",
+                    ballotError.message
+                );
+
+                throw new Error(
+                    "Unable to retrieve votes cast count."
+                );
+            }
+
+            votesCast =
+                ballotCount || 0;
+        }
+
+
+        // =====================================================
         // RESPONSE
-        // -------------------------------------------------
+        // =====================================================
 
         return res.status(200).json({
 
@@ -3724,19 +3955,53 @@ const getEBDashboardStats = async (
                 approvedStudents:
                     approvedStudents || 0,
 
-                remoteVotes: 0,
+                activeCandidates:
+                    activeCandidates || 0,
 
-                kioskVotes: 0,
-
+                votesCast:
+                    votesCast || 0,
             },
 
+            currentElection:
+                currentElection
+                    ? {
+
+                        id:
+                            currentElection.id,
+
+                        title:
+                            currentElection.title,
+
+                        description:
+                            currentElection.description,
+
+                        electionDate:
+                            currentElection.election_date,
+
+                        startTime:
+                            currentElection.start_time,
+
+                        endTime:
+                            currentElection.end_time,
+
+                        status:
+                            currentElection.status,
+
+                        isPublished:
+                            currentElection.is_published,
+
+                        publishedAt:
+                            currentElection.published_at,
+
+                    }
+                    : null,
         });
 
     } catch (error) {
 
         console.error(
             "❌ getEBDashboardStats error:",
-            error.message
+            error
         );
 
         return res.status(
@@ -3748,19 +4013,14 @@ const getEBDashboardStats = async (
             message:
                 error.message ||
                 "Unable to retrieve Electoral Board dashboard statistics.",
-
         });
     }
 };
-
 
 // =========================================================
 // EB PENDING REGISTRATIONS
 //
 // Returns ONLY applications waiting for EB review.
-//
-// IMPORTANT:
-// This endpoint does NOT expose candidate vote choices.
 // =========================================================
 
 const getEBPendingRegistrations = async (
@@ -3770,16 +4030,7 @@ const getEBPendingRegistrations = async (
 
     try {
 
-        // -------------------------------------------------
-        // VERIFY EB TOKEN
-        // -------------------------------------------------
-
         authenticateEB(req);
-
-
-        // -------------------------------------------------
-        // FETCH PENDING APPLICATIONS
-        // -------------------------------------------------
 
         const {
             data,
@@ -3821,7 +4072,6 @@ const getEBPendingRegistrations = async (
                 }
             );
 
-
         if (error) {
 
             console.error(
@@ -3833,11 +4083,6 @@ const getEBPendingRegistrations = async (
                 "Unable to retrieve pending registration applications."
             );
         }
-
-
-        // -------------------------------------------------
-        // RESPONSE
-        // -------------------------------------------------
 
         return res.status(200).json({
 
@@ -3876,7 +4121,7 @@ const getEBPendingRegistrations = async (
 // =========================================================
 // EB REGISTRATION DETAILS
 //
-// Used when EB clicks a pending application.
+// Used when EB opens a registration application.
 // =========================================================
 
 const getEBRegistrationDetails = async (
@@ -3886,17 +4131,11 @@ const getEBRegistrationDetails = async (
 
     try {
 
-        // -------------------------------------------------
-        // VERIFY EB TOKEN
-        // -------------------------------------------------
-
         authenticateEB(req);
-
 
         const {
             id,
         } = req.params;
-
 
         if (!id) {
 
@@ -3909,11 +4148,6 @@ const getEBRegistrationDetails = async (
 
             });
         }
-
-
-        // -------------------------------------------------
-        // FIND APPLICATION
-        // -------------------------------------------------
 
         const {
             data:
@@ -3951,7 +4185,6 @@ const getEBRegistrationDetails = async (
             )
             .maybeSingle();
 
-
         if (error) {
 
             console.error(
@@ -3964,7 +4197,6 @@ const getEBRegistrationDetails = async (
             );
         }
 
-
         if (!application) {
 
             return res.status(404).json({
@@ -3976,11 +4208,6 @@ const getEBRegistrationDetails = async (
 
             });
         }
-
-
-        // -------------------------------------------------
-        // RESPONSE
-        // -------------------------------------------------
 
         return res.status(200).json({
 
