@@ -415,10 +415,41 @@
 }
 
 .profile-form-actions {
+    width: 100%;
     display: flex;
+    align-items: center;
     justify-content: flex-end;
-    gap: 10px;
-    margin-top: 22px;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 1px solid #ecebf0;
+}
+
+.profile-form-actions .profile-secondary-btn,
+.profile-form-actions .profile-primary-btn {
+    min-width: 150px;
+    min-height: 48px;
+    padding: 12px 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+.profile-form-actions .profile-secondary-btn {
+    border: 1px solid #d8d7df;
+    background: #ffffff;
+    color: #363a4c;
+}
+
+.profile-form-actions .profile-secondary-btn:hover:not(:disabled) {
+    border-color: #bdbbc7;
+    background: #f7f7fa;
+    transform: translateY(-1px);
+}
+
+.profile-form-actions .profile-primary-btn {
+    min-width: 165px;
 }
 
 
@@ -466,10 +497,27 @@
     gap: 16px;
 }
 
+.password-hint-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 2px;
+}
+
 .password-form small {
+    flex: 1;
     color: #85899a;
     font-size: 11px;
-    line-height: 1.4;
+    line-height: 1.45;
+}
+
+.password-character-count {
+    flex: 0 0 auto;
+    color: #7b7f90;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
 }
 
 .password-form .profile-form-actions {
@@ -609,11 +657,17 @@
     }
 
     .profile-form-actions {
-        justify-content: stretch;
+        justify-content: flex-end;
+        flex-wrap: wrap;
     }
 
     .profile-form-actions button {
-        flex: 1;
+        flex: 0 1 auto;
+        min-width: 135px;
+    }
+
+    .password-hint-row {
+        align-items: center;
     }
 }
 
@@ -649,6 +703,128 @@
     }
 
     .profile-info-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* =========================================================
+   PASSWORD LIVE VALIDATION
+   ========================================================= */
+
+.password-status-panel {
+    width: 100%;
+    margin-top: 8px;
+    padding: 11px 12px;
+
+    border: 1px solid #e8e6ee;
+    border-radius: 10px;
+
+    background: #fbfbfd;
+
+    box-sizing: border-box;
+}
+
+.password-status-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.password-status-header small {
+    color: #62677a;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.password-status-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 6px 12px;
+}
+
+.password-status-item {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 7px;
+
+    min-width: 0;
+
+    font-size: 11px;
+    line-height: 1.35;
+
+    transition:
+        color 0.18s ease,
+        background 0.18s ease;
+}
+
+.password-status-item.warning {
+    color: #9a6700;
+}
+
+.password-status-item.valid {
+    color: #147a45;
+}
+
+.password-status-icon {
+    width: 17px;
+    height: 17px;
+
+    flex: 0 0 17px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.password-status-item.warning
+    .password-status-icon {
+
+    background: #fff3cd;
+    color: #9a6700;
+}
+
+.password-status-item.valid
+    .password-status-icon {
+
+    background: #dcfce7;
+    color: #147a45;
+}
+
+.password-character-count.valid {
+    color: #147a45;
+}
+
+.password-form
+    input.password-input-valid {
+
+    border-color: #2ca66f;
+    box-shadow:
+        0 0 0 2px
+        rgba(44, 166, 111, 0.08);
+}
+
+.password-form
+    input.password-input-invalid {
+
+    border-color: #d4a32c;
+}
+
+@media (max-width: 760px) {
+
+    .password-status-grid {
         grid-template-columns: 1fr;
     }
 }

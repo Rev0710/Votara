@@ -647,17 +647,22 @@ const changeStudentPassword = async (
 
 
         // -------------------------------------------------
-        // EXACT 8 CHARACTER RULE
+        // PASSWORD LENGTH RULE
+        // Change-password flow allows 8–50 characters.
         // -------------------------------------------------
 
+        const passwordLength =
+            String(newPassword).length;
+
         if (
-            String(newPassword).length !== 8
+            passwordLength < 8 ||
+            passwordLength > 50
         ) {
 
             return res.status(400).json({
                 success: false,
                 message:
-                    "Your password must contain exactly 8 characters.",
+                    "Your password must contain between 8 and 50 characters.",
             });
 
         }
@@ -1215,7 +1220,7 @@ const deactivateStudentAccount = async (
     } catch (error) {
 
         console.error(
-            "❌ Deactivate account controller error:",
+            "❌ Deactivate account error:",
             error
         );
 
@@ -1304,7 +1309,7 @@ const requestStudentAccountDeletion = async (
     } catch (error) {
 
         console.error(
-            "❌ Account deletion controller error:",
+            "❌ Account deletion error:",
             error
         );
 

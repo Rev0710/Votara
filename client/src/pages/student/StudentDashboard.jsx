@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import "./StudentDashboard.css";
+import Profile from "./Profile";
 
 import {
     getActiveElection,
@@ -14,6 +15,10 @@ import {
     submitVote,
     checkVoteStatus,
 } from "../../services/votingService";
+
+import {
+    getStudentProfile,
+} from "../../services/studentService";
 
 // =====================================================
 // LOGO
@@ -209,6 +214,7 @@ function StudentDashboard() {
 
     const [settingsModal, setSettingsModal] = useState(null);
     const [profileImageError, setProfileImageError] = useState(false);
+    const [profileImageVersion, setProfileImageVersion] = useState(0);
 
     // =================================================
     // ELECTION / VOTING STATE
@@ -271,10 +277,51 @@ function StudentDashboard() {
                 }
 
                 if (data.success && data.student) {
-                    const mergedStudent = {
+
+                    let mergedStudent = {
                         ...(storedStudent || {}),
                         ...data.student,
                     };
+
+                    /*
+                     * The authentication endpoint may not return the
+                     * saved profile picture. When that happens, load
+                     * the existing student profile record so the
+                     * dashboard can immediately show the photo that
+                     * was already saved.
+                     */
+                    if (
+                        !getProfilePictureValue(
+                            mergedStudent
+                        )
+                    ) {
+
+                        try {
+
+                            const profileResponse =
+                                await getStudentProfile();
+
+                            if (
+                                profileResponse?.success &&
+                                profileResponse?.student
+                            ) {
+
+                                mergedStudent = {
+                                    ...mergedStudent,
+                                    ...profileResponse.student,
+                                };
+
+                            }
+
+                        } catch (profileError) {
+
+                            console.warn(
+                                "Unable to load saved student profile picture:",
+                                profileError
+                            );
+
+                        }
+                    }
 
                     setStudent(mergedStudent);
 
@@ -284,8 +331,46 @@ function StudentDashboard() {
                         "votaraStudent",
                         JSON.stringify(mergedStudent)
                     );
+
                 } else if (storedStudent) {
-                    setStudent(storedStudent);
+
+                    let restoredStudent =
+                        storedStudent;
+
+                    if (
+                        !getProfilePictureValue(
+                            restoredStudent
+                        )
+                    ) {
+
+                        try {
+
+                            const profileResponse =
+                                await getStudentProfile();
+
+                            if (
+                                profileResponse?.success &&
+                                profileResponse?.student
+                            ) {
+
+                                restoredStudent = {
+                                    ...restoredStudent,
+                                    ...profileResponse.student,
+                                };
+
+                            }
+
+                        } catch (profileError) {
+
+                            console.warn(
+                                "Unable to restore saved student profile picture:",
+                                profileError
+                            );
+
+                        }
+                    }
+
+                    setStudent(restoredStudent);
                 }
             } catch (error) {
                 console.error(
@@ -431,8 +516,19 @@ function StudentDashboard() {
     const profilePictureValue =
         getProfilePictureValue(student);
 
-    const profilePicture =
+    const resolvedProfilePicture =
         resolveImageUrl(profilePictureValue);
+
+    const profilePicture =
+        resolvedProfilePicture &&
+        !resolvedProfilePicture.startsWith("data:") &&
+        !resolvedProfilePicture.startsWith("blob:")
+            ? `${resolvedProfilePicture}${
+                resolvedProfilePicture.includes("?")
+                    ? "&"
+                    : "?"
+            }v=${profileImageVersion}`
+            : resolvedProfilePicture;
 
     useEffect(() => {
         setProfileImageError(false);
@@ -848,6 +944,49 @@ const candidatesByPosition = useMemo(() => {
             );
         } finally {
             setVoteLoading(false);
+        }
+    };
+
+    // =================================================
+    // PROFILE UPDATE
+    // =================================================
+
+    const handleProfileUpdated = (updatedStudent) => {
+
+        if (!updatedStudent) {
+            return;
+        }
+
+        setStudent((previous) => ({
+            ...(previous || {}),
+            ...updatedStudent,
+        }));
+
+        // Force the browser to refresh an unchanged image URL.
+        setProfileImageVersion(Date.now());
+        setProfileImageError(false);
+
+        try {
+            const storedStudent =
+                localStorage.getItem("votaraStudent");
+
+            const parsedStudent =
+                storedStudent
+                    ? JSON.parse(storedStudent)
+                    : {};
+
+            localStorage.setItem(
+                "votaraStudent",
+                JSON.stringify({
+                    ...parsedStudent,
+                    ...updatedStudent,
+                })
+            );
+        } catch (storageError) {
+            console.warn(
+                "Unable to synchronize updated profile with local storage:",
+                storageError
+            );
         }
     };
 
@@ -2174,63 +2313,94 @@ const candidatesByPosition = useMemo(() => {
                 {renderMainContent()}
             </div>
 
-            {/* ================= SETTINGS MODAL ================= */}
+            {/* ================= SETTINGS / PROFILE MODAL ================= */}
 
-            {settingsModal && (
+            {settingsModal === "Edit profile" && (
                 <div
                     className="settings-modal-overlay"
                     onClick={() =>
-                        setSettingsModal(
-                            null
-                        )
+                        setSettingsModal(null)
                     }
                 >
                     <div
-                        className="settings-modal"
+                        className="settings-modal profile-settings-modal"
                         onClick={(event) =>
                             event.stopPropagation()
                         }
                     >
                         <button
                             type="button"
-                            className="modal-close"
+                            className="modal-close profile-modal-close"
+                            aria-label="Close profile"
                             onClick={() =>
-                                setSettingsModal(
-                                    null
-                                )
+                                setSettingsModal(null)
                             }
                         >
                             ×
                         </button>
 
-                        <h2>
-                            {
-                                settingsModal
+                        <Profile
+                            onClose={() =>
+                                setSettingsModal(null)
                             }
-                        </h2>
-
-                        <p>
-                            This section is ready
-                            to be connected to its
-                            corresponding feature
-                            or API.
-                        </p>
-
-                        <button
-                            type="button"
-                            className="modal-confirm-button"
-                            onClick={() =>
-                                setSettingsModal(
-                                    null
-                                )
+                            onProfileUpdated={
+                                handleProfileUpdated
                             }
-                        >
-                            Close
-                        </button>
+                        />
                     </div>
                 </div>
             )}
-        </div>
+
+            {/* ================= OTHER SETTINGS MODALS ================= */}
+
+            {settingsModal &&
+                settingsModal !== "Edit profile" && (
+                    <div
+                        className="settings-modal-overlay"
+                        onClick={() =>
+                            setSettingsModal(null)
+                        }
+                    >
+                        <div
+                            className="settings-modal"
+                            onClick={(event) =>
+                                event.stopPropagation()
+                            }
+                        >
+                            <button
+                                type="button"
+                                className="modal-close"
+                                aria-label="Close settings"
+                                onClick={() =>
+                                    setSettingsModal(null)
+                                }
+                            >
+                                ×
+                            </button>
+
+                            <h2>{settingsModal}</h2>
+
+                            <p>
+                                This section is ready
+                                to be connected to its
+                                corresponding feature
+                                or API.
+                            </p>
+
+                            <button
+                                type="button"
+                                className="modal-confirm-button"
+                                onClick={() =>
+                                    setSettingsModal(null)
+                                }
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+            </div>
     );
 }
 

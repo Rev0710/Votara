@@ -328,9 +328,11 @@ function AuditLogs() {
                 data.success &&
                 data.log
             ) {
-                setSelectedLog(
-                    data.log
-                );
+                setSelectedLog({
+                    ...data.log,
+                    related:
+                        data.related || {}
+                });
             }
 
         } catch (err) {
@@ -566,6 +568,104 @@ function AuditLogs() {
 
         return "◌";
 
+    };
+
+    // -----------------------------------------------------
+    // READABLE METADATA
+    // -----------------------------------------------------
+
+    const getReadableMetadata = (
+        log
+    ) => {
+        const metadata =
+            log?.metadata || {};
+
+        const related =
+            log?.related || {};
+
+        const rows = [];
+
+        // Candidate-specific information
+        if (
+            String(
+                log?.target_type || ""
+            ).toLowerCase() === "candidate" ||
+            String(
+                log?.module || ""
+            ).toLowerCase().includes("candidate")
+        ) {
+            const candidateName =
+                related.targetName ||
+                metadata.candidateName;
+
+            const positionName =
+                related.positionName;
+
+            const partyListName =
+                related.partyListName;
+
+            if (candidateName) {
+                rows.push({
+                    label: "Candidate",
+                    value: candidateName
+                });
+            }
+
+            if (positionName) {
+                rows.push({
+                    label: "Position",
+                    value: positionName
+                });
+            }
+
+            rows.push({
+                label: "Party List",
+                value:
+                    partyListName ||
+                    "Independent / No Party List"
+            });
+
+            return rows;
+        }
+
+        // Generic metadata for other modules.
+        Object.entries(metadata).forEach(
+            ([key, value]) => {
+                if (
+                    key.toLowerCase().endsWith("id") ||
+                    key.toLowerCase() === "id"
+                ) {
+                    return;
+                }
+
+                if (
+                    value === null ||
+                    value === undefined ||
+                    value === ""
+                ) {
+                    return;
+                }
+
+                const label =
+                    key
+                        .replace(/([A-Z])/g, " $1")
+                        .replace(/_/g, " ")
+                        .replace(/\b\w/g, (letter) =>
+                            letter.toUpperCase()
+                        )
+                        .trim();
+
+                rows.push({
+                    label,
+                    value:
+                        typeof value === "object"
+                            ? JSON.stringify(value)
+                            : String(value)
+                });
+            }
+        );
+
+        return rows;
     };
 
     // -----------------------------------------------------
@@ -1535,17 +1635,21 @@ function AuditLogs() {
 
                                 {/* Related Election */}
 
-                                {selectedLog.election_id && (
+                                {(
+                                    selectedLog.election_id ||
+                                    selectedLog.related?.electionName
+                                ) && (
 
                                     <div className="audit-detail-section">
 
                                         <label>
-                                            Related Election ID
+                                            Related Election
                                         </label>
 
-                                        <code>
-                                            {selectedLog.election_id}
-                                        </code>
+                                        <strong>
+                                            {selectedLog.related?.electionName ||
+                                                "Election information unavailable"}
+                                        </strong>
 
                                     </div>
 
@@ -1559,42 +1663,58 @@ function AuditLogs() {
                                     <div className="audit-detail-section">
 
                                         <label>
-                                            Target ID
+                                            Target
                                         </label>
 
-                                        <code>
-                                            {selectedLog.target_id}
-                                        </code>
+                                        <strong>
+                                            {selectedLog.related?.targetName ||
+                                                selectedLog.metadata?.candidateName ||
+                                                "Target information unavailable"}
+                                        </strong>
 
                                     </div>
 
                                 )}
 
 
-                                {/* Metadata */}
+                                {/* Additional Information */}
 
-                                {selectedLog.metadata &&
-                                    Object.keys(
-                                        selectedLog.metadata
-                                    ).length > 0 && (
+                                {getReadableMetadata(
+                                    selectedLog
+                                ).length > 0 && (
 
-                                        <div className="audit-detail-section">
+                                    <div className="audit-detail-section">
 
-                                            <label>
-                                                Additional Information
-                                            </label>
+                                        <label>
+                                            Additional Information
+                                        </label>
 
-                                            <pre>
-                                                {JSON.stringify(
-                                                    selectedLog.metadata,
-                                                    null,
-                                                    2
-                                                )}
-                                            </pre>
+                                        <div className="audit-readable-details">
+
+                                            {getReadableMetadata(
+                                                selectedLog
+                                            ).map(
+                                                (item) => (
+                                                    <div
+                                                        className="audit-readable-row"
+                                                        key={`${item.label}-${item.value}`}
+                                                    >
+                                                        <span>
+                                                            {item.label}
+                                                        </span>
+
+                                                        <strong>
+                                                            {item.value}
+                                                        </strong>
+                                                    </div>
+                                                )
+                                            )}
 
                                         </div>
 
-                                    )}
+                                    </div>
+
+                                )}
 
 
                                 {/* Privacy */}

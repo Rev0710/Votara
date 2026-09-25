@@ -1,5 +1,128 @@
 const electionService = require("../services/electionService");
 
+// =========================================================
+// AUDIT LOG SERVICE
+// =========================================================
+
+const {
+    createAuditLog
+} = require("../services/auditLogsService");
+
+
+// =========================================================
+// AUDIT LOG HELPER
+// =========================================================
+//
+// IMPORTANT:
+// Audit logging must NEVER cause the actual election
+// operation to fail.
+//
+// If an election action succeeds but the audit log
+// encounters an error, the original election action
+// remains successful.
+//
+
+const writeAuditLog = async (
+    req,
+    {
+        action,
+        description,
+        electionId = null,
+        targetId = null,
+        targetType = null,
+        metadata = {}
+    }
+) => {
+
+    try {
+
+        const user =
+            req.user || {};
+
+        await createAuditLog({
+
+            // -------------------------------------------------
+            // ACTOR
+            // -------------------------------------------------
+
+            actorId:
+                user._id ||
+                user.id ||
+                user.user_id ||
+                null,
+
+            actorName:
+                user.full_name ||
+                user.fullName ||
+                user.name ||
+                null,
+
+            actorEmail:
+                user.email ||
+                null,
+
+            actorRole:
+                user.role ||
+                null,
+
+            // -------------------------------------------------
+            // ACTION
+            // -------------------------------------------------
+
+            action,
+
+            module:
+                "Election Management",
+
+            description,
+
+            // -------------------------------------------------
+            // TARGET
+            // -------------------------------------------------
+
+            electionId,
+
+            targetId,
+
+            targetType,
+
+            // -------------------------------------------------
+            // SAFE METADATA
+            // -------------------------------------------------
+
+            metadata,
+
+            // -------------------------------------------------
+            // REQUEST INFORMATION
+            // -------------------------------------------------
+
+            ipAddress:
+                req.ip ||
+                req.headers?.["x-forwarded-for"] ||
+                null,
+
+            userAgent:
+                req.get?.("user-agent") ||
+                null
+        });
+
+    } catch (auditError) {
+
+        // -----------------------------------------------------
+        // IMPORTANT
+        // Do NOT throw this error.
+        //
+        // The election operation has already succeeded.
+        // Audit logging failure must not undo it.
+        // -----------------------------------------------------
+
+        console.error(
+            "Audit log error:",
+            auditError
+        );
+    }
+};
+
 
 // =========================================================
 // CREATE ELECTION
@@ -9,6 +132,7 @@ const createElection = async (
     req,
     res
 ) => {
+
     try {
 
         const election =
@@ -18,7 +142,45 @@ const createElection = async (
                 req.user?.id
             );
 
+
+        // -------------------------------------------------
+        // AUDIT LOG
+        // -------------------------------------------------
+
+        await writeAuditLog(
+            req,
+            {
+                action:
+                    "create",
+
+                description:
+                    `Created election "${election?.title || election?.name || "Untitled election"}".`,
+
+                electionId:
+                    election?.id ||
+                    election?._id ||
+                    null,
+
+                targetId:
+                    election?.id ||
+                    election?._id ||
+                    null,
+
+                targetType:
+                    "election",
+
+                metadata: {
+                    electionTitle:
+                        election?.title ||
+                        election?.name ||
+                        null
+                }
+            }
+        );
+
+
         return res.status(201).json({
+
             success:
                 true,
 
@@ -26,6 +188,7 @@ const createElection = async (
                 "Election created successfully.",
 
             election,
+
         });
 
     } catch (error) {
@@ -35,12 +198,15 @@ const createElection = async (
             error
         );
 
+
         return res.status(400).json({
+
             success:
                 false,
 
             message:
                 error.message,
+
         });
     }
 };
@@ -54,21 +220,26 @@ const getAllElections = async (
     req,
     res
 ) => {
+
     try {
 
         const elections =
             await electionService.getAllElections();
+
 
         const electionList =
             Array.isArray(elections)
                 ? elections
                 : [];
 
+
         console.log(
             `📋 Elections loaded: ${electionList.length}`
         );
 
+
         return res.status(200).json({
+
             success:
                 true,
 
@@ -77,6 +248,7 @@ const getAllElections = async (
 
             elections:
                 electionList,
+
         });
 
     } catch (error) {
@@ -86,7 +258,9 @@ const getAllElections = async (
             error
         );
 
+
         return res.status(500).json({
+
             success:
                 false,
 
@@ -96,6 +270,7 @@ const getAllElections = async (
 
             elections:
                 [],
+
         });
     }
 };
@@ -109,6 +284,7 @@ const getElectionById = async (
     req,
     res
 ) => {
+
     try {
 
         const election =
@@ -126,20 +302,24 @@ const getElectionById = async (
         if (!election) {
 
             return res.status(404).json({
+
                 success:
                     false,
 
                 message:
                     "Election not found.",
+
             });
         }
 
 
         return res.status(200).json({
+
             success:
                 true,
 
             election,
+
         });
 
     } catch (error) {
@@ -149,13 +329,16 @@ const getElectionById = async (
             error
         );
 
+
         return res.status(404).json({
+
             success:
                 false,
 
             message:
                 error.message ||
                 "Election not found.",
+
         });
     }
 };
@@ -169,6 +352,7 @@ const deleteElection = async (
     req,
     res
 ) => {
+
     try {
 
         const electionId =
@@ -182,6 +366,7 @@ const deleteElection = async (
         if (!electionId) {
 
             return res.status(400).json({
+
                 success:
                     false,
 
@@ -190,6 +375,7 @@ const deleteElection = async (
 
                 message:
                     "Election ID is required.",
+
             });
         }
 
@@ -213,10 +399,45 @@ const deleteElection = async (
 
 
         // -------------------------------------------------
+        // AUDIT LOG
+        //
+        // The deletion succeeded, therefore record it.
+        // -------------------------------------------------
+
+        await writeAuditLog(
+            req,
+            {
+                action:
+                    "delete",
+
+                description:
+                    `Deleted election "${deletedElection?.title || deletedElection?.name || electionId}".`,
+
+                electionId:
+                    electionId,
+
+                targetId:
+                    electionId,
+
+                targetType:
+                    "election",
+
+                metadata: {
+                    electionTitle:
+                        deletedElection?.title ||
+                        deletedElection?.name ||
+                        null
+                }
+            }
+        );
+
+
+        // -------------------------------------------------
         // Successful deletion
         // -------------------------------------------------
 
         return res.status(200).json({
+
             success:
                 true,
 
@@ -225,6 +446,7 @@ const deleteElection = async (
 
             election:
                 deletedElection,
+
         });
 
     } catch (error) {
@@ -262,6 +484,7 @@ const deleteElection = async (
             message:
                 error?.message ||
                 "Unable to delete election.",
+
         });
     }
 };
@@ -275,6 +498,7 @@ const updateElection = async (
     req,
     res
 ) => {
+
     try {
 
         const election =
@@ -283,7 +507,41 @@ const updateElection = async (
                 req.body
             );
 
+
+        // -------------------------------------------------
+        // AUDIT LOG
+        // -------------------------------------------------
+
+        await writeAuditLog(
+            req,
+            {
+                action:
+                    "update",
+
+                description:
+                    `Updated election "${election?.title || election?.name || req.params.id}".`,
+
+                electionId:
+                    req.params.id,
+
+                targetId:
+                    req.params.id,
+
+                targetType:
+                    "election",
+
+                metadata: {
+                    electionTitle:
+                        election?.title ||
+                        election?.name ||
+                        null
+                }
+            }
+        );
+
+
         return res.status(200).json({
+
             success:
                 true,
 
@@ -291,6 +549,7 @@ const updateElection = async (
                 "Election updated successfully.",
 
             election,
+
         });
 
     } catch (error) {
@@ -300,12 +559,15 @@ const updateElection = async (
             error
         );
 
+
         return res.status(400).json({
+
             success:
                 false,
 
             message:
                 error.message,
+
         });
     }
 };
@@ -319,6 +581,7 @@ const updateElectionStatus = async (
     req,
     res
 ) => {
+
     try {
 
         const {
@@ -329,11 +592,13 @@ const updateElectionStatus = async (
         if (!status) {
 
             return res.status(400).json({
+
                 success:
                     false,
 
                 message:
                     "Election status is required.",
+
             });
         }
 
@@ -345,7 +610,37 @@ const updateElectionStatus = async (
             );
 
 
+        // -------------------------------------------------
+        // AUDIT LOG
+        // -------------------------------------------------
+
+        await writeAuditLog(
+            req,
+            {
+                action:
+                    "status_update",
+
+                description:
+                    `Updated election status to "${status}".`,
+
+                electionId:
+                    req.params.id,
+
+                targetId:
+                    req.params.id,
+
+                targetType:
+                    "election",
+
+                metadata: {
+                    status
+                }
+            }
+        );
+
+
         return res.status(200).json({
+
             success:
                 true,
 
@@ -353,6 +648,7 @@ const updateElectionStatus = async (
                 "Election status updated successfully.",
 
             election,
+
         });
 
     } catch (error) {
@@ -362,12 +658,15 @@ const updateElectionStatus = async (
             error
         );
 
+
         return res.status(400).json({
+
             success:
                 false,
 
             message:
                 error.message,
+
         });
     }
 };
@@ -381,6 +680,7 @@ const publishElection = async (
     req,
     res
 ) => {
+
     try {
 
         const election =
@@ -389,7 +689,40 @@ const publishElection = async (
             );
 
 
+        // -------------------------------------------------
+        // AUDIT LOG
+        // -------------------------------------------------
+
+        await writeAuditLog(
+            req,
+            {
+                action:
+                    "publish",
+
+                description:
+                    `Published election "${election?.title || election?.name || req.params.id}".`,
+
+                electionId:
+                    req.params.id,
+
+                targetId:
+                    req.params.id,
+
+                targetType:
+                    "election",
+
+                metadata: {
+                    electionTitle:
+                        election?.title ||
+                        election?.name ||
+                        null
+                }
+            }
+        );
+
+
         return res.status(200).json({
+
             success:
                 true,
 
@@ -397,6 +730,7 @@ const publishElection = async (
                 "Election published successfully.",
 
             election,
+
         });
 
     } catch (error) {
@@ -406,12 +740,15 @@ const publishElection = async (
             error
         );
 
+
         return res.status(400).json({
+
             success:
                 false,
 
             message:
                 error.message,
+
         });
     }
 };
@@ -425,6 +762,7 @@ const unpublishElection = async (
     req,
     res
 ) => {
+
     try {
 
         const election =
@@ -433,7 +771,40 @@ const unpublishElection = async (
             );
 
 
+        // -------------------------------------------------
+        // AUDIT LOG
+        // -------------------------------------------------
+
+        await writeAuditLog(
+            req,
+            {
+                action:
+                    "unpublish",
+
+                description:
+                    `Unpublished election "${election?.title || election?.name || req.params.id}".`,
+
+                electionId:
+                    req.params.id,
+
+                targetId:
+                    req.params.id,
+
+                targetType:
+                    "election",
+
+                metadata: {
+                    electionTitle:
+                        election?.title ||
+                        election?.name ||
+                        null
+                }
+            }
+        );
+
+
         return res.status(200).json({
+
             success:
                 true,
 
@@ -441,6 +812,7 @@ const unpublishElection = async (
                 "Election unpublished successfully.",
 
             election,
+
         });
 
     } catch (error) {
@@ -450,12 +822,15 @@ const unpublishElection = async (
             error
         );
 
+
         return res.status(400).json({
+
             success:
                 false,
 
             message:
                 error.message,
+
         });
     }
 };
@@ -469,6 +844,7 @@ const addPosition = async (
     req,
     res
 ) => {
+
     try {
 
         const position =
@@ -478,7 +854,42 @@ const addPosition = async (
             );
 
 
+        // -------------------------------------------------
+        // AUDIT LOG
+        // -------------------------------------------------
+
+        await writeAuditLog(
+            req,
+            {
+                action:
+                    "add_position",
+
+                description:
+                    `Added position "${position?.name || position?.position || "Unnamed position"}" to the election.`,
+
+                electionId:
+                    req.params.id,
+
+                targetId:
+                    position?.id ||
+                    position?._id ||
+                    null,
+
+                targetType:
+                    "position",
+
+                metadata: {
+                    positionName:
+                        position?.name ||
+                        position?.position ||
+                        null
+                }
+            }
+        );
+
+
         return res.status(201).json({
+
             success:
                 true,
 
@@ -486,6 +897,7 @@ const addPosition = async (
                 "Position added successfully.",
 
             position,
+
         });
 
     } catch (error) {
@@ -495,12 +907,15 @@ const addPosition = async (
             error
         );
 
+
         return res.status(400).json({
+
             success:
                 false,
 
             message:
                 error.message,
+
         });
     }
 };
@@ -514,6 +929,7 @@ const getElectionPositions = async (
     req,
     res
 ) => {
+
     try {
 
         const positions =
@@ -529,6 +945,7 @@ const getElectionPositions = async (
 
 
         return res.status(200).json({
+
             success:
                 true,
 
@@ -537,6 +954,7 @@ const getElectionPositions = async (
 
             positions:
                 positionList,
+
         });
 
     } catch (error) {
@@ -546,7 +964,9 @@ const getElectionPositions = async (
             error
         );
 
+
         return res.status(404).json({
+
             success:
                 false,
 
@@ -555,6 +975,7 @@ const getElectionPositions = async (
 
             positions:
                 [],
+
         });
     }
 };
@@ -568,6 +989,7 @@ const updatePosition = async (
     req,
     res
 ) => {
+
     try {
 
         const position =
@@ -577,7 +999,44 @@ const updatePosition = async (
             );
 
 
+        // -------------------------------------------------
+        // AUDIT LOG
+        // -------------------------------------------------
+
+        await writeAuditLog(
+            req,
+            {
+                action:
+                    "update_position",
+
+                description:
+                    `Updated position "${position?.name || position?.position || req.params.positionId}".`,
+
+                electionId:
+                    position?.election_id ||
+                    position?.electionId ||
+                    null,
+
+                targetId:
+                    position?.id ||
+                    position?._id ||
+                    req.params.positionId,
+
+                targetType:
+                    "position",
+
+                metadata: {
+                    positionName:
+                        position?.name ||
+                        position?.position ||
+                        null
+                }
+            }
+        );
+
+
         return res.status(200).json({
+
             success:
                 true,
 
@@ -585,6 +1044,7 @@ const updatePosition = async (
                 "Position updated successfully.",
 
             position,
+
         });
 
     } catch (error) {
@@ -594,12 +1054,15 @@ const updatePosition = async (
             error
         );
 
+
         return res.status(400).json({
+
             success:
                 false,
 
             message:
                 error.message,
+
         });
     }
 };
@@ -613,6 +1076,7 @@ const deactivatePosition = async (
     req,
     res
 ) => {
+
     try {
 
         const position =
@@ -621,7 +1085,44 @@ const deactivatePosition = async (
             );
 
 
+        // -------------------------------------------------
+        // AUDIT LOG
+        // -------------------------------------------------
+
+        await writeAuditLog(
+            req,
+            {
+                action:
+                    "deactivate_position",
+
+                description:
+                    `Deactivated position "${position?.name || position?.position || req.params.positionId}".`,
+
+                electionId:
+                    position?.election_id ||
+                    position?.electionId ||
+                    null,
+
+                targetId:
+                    position?.id ||
+                    position?._id ||
+                    req.params.positionId,
+
+                targetType:
+                    "position",
+
+                metadata: {
+                    positionName:
+                        position?.name ||
+                        position?.position ||
+                        null
+                }
+            }
+        );
+
+
         return res.status(200).json({
+
             success:
                 true,
 
@@ -629,6 +1130,7 @@ const deactivatePosition = async (
                 "Position deactivated successfully.",
 
             position,
+
         });
 
     } catch (error) {
@@ -638,12 +1140,15 @@ const deactivatePosition = async (
             error
         );
 
+
         return res.status(400).json({
+
             success:
                 false,
 
             message:
                 error.message,
+
         });
     }
 };
@@ -657,6 +1162,7 @@ const getActiveElection = async (
     req,
     res
 ) => {
+
     try {
 
         const election =
@@ -666,20 +1172,24 @@ const getActiveElection = async (
         if (!election) {
 
             return res.status(404).json({
+
                 success:
                     false,
 
                 message:
                     "There is currently no active election.",
+
             });
         }
 
 
         return res.status(200).json({
+
             success:
                 true,
 
             election,
+
         });
 
     } catch (error) {
@@ -689,12 +1199,15 @@ const getActiveElection = async (
             error
         );
 
+
         return res.status(500).json({
+
             success:
                 false,
 
             message:
                 error.message,
+
         });
     }
 };
@@ -708,6 +1221,7 @@ const getElectionConfiguration = async (
     req,
     res
 ) => {
+
     try {
 
         const configuration =
@@ -717,10 +1231,12 @@ const getElectionConfiguration = async (
 
 
         return res.status(200).json({
+
             success:
                 true,
 
             ...configuration,
+
         });
 
     } catch (error) {
@@ -730,12 +1246,15 @@ const getElectionConfiguration = async (
             error
         );
 
+
         return res.status(404).json({
+
             success:
                 false,
 
             message:
                 error.message,
+
         });
     }
 };
@@ -746,18 +1265,33 @@ const getElectionConfiguration = async (
 // =========================================================
 
 module.exports = {
+
     createElection,
+
     getAllElections,
+
     getElectionById,
+
     updateElection,
+
     deleteElection,
+
     updateElectionStatus,
+
     publishElection,
+
     unpublishElection,
+
     addPosition,
+
     getElectionPositions,
+
     updatePosition,
+
     deactivatePosition,
+
     getActiveElection,
+
     getElectionConfiguration,
+
 };

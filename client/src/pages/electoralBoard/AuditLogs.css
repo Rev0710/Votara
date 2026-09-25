@@ -1222,3 +1222,150 @@
     }
 
 }
+
+/* =========================================================
+   UPDATED ACTIVITY DETAILS
+   Readable metadata / related information
+========================================================= */
+
+.audit-detail-section > strong {
+    display: block;
+    margin: 0;
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.audit-readable-details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 2px;
+}
+
+.audit-readable-row {
+    display: grid;
+    grid-template-columns: 150px minmax(0, 1fr);
+    align-items: center;
+    gap: 16px;
+    min-height: 48px;
+    padding: 11px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #f8fafc;
+    box-sizing: border-box;
+    transition:
+        background 0.18s ease,
+        border-color 0.18s ease,
+        transform 0.18s ease;
+}
+
+.audit-readable-row:hover {
+    border-color: #dbeafe;
+    background: #eff6ff;
+}
+
+.audit-readable-row > span {
+    display: block;
+    color: #64748b;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.35px;
+    text-transform: uppercase;
+}
+
+.audit-readable-row > strong {
+    display: block;
+    min-width: 0;
+    color: #0f172a;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.audit-detail-section > label + strong {
+    margin-top: 2px;
+}
+
+.audit-detail-section > p {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+/* Better visual separation for the related election */
+.audit-detail-section .audit-related-value {
+    display: block;
+    padding: 12px 14px;
+    border: 1px solid #dbeafe;
+    border-radius: 10px;
+    background: #f8fbff;
+    color: #1e3a8a;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.5;
+}
+
+/* Keep long names readable inside the actor/details grid */
+.audit-detail-grid strong {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: normal;
+}
+
+
+/* =========================================================
+   MODAL SCROLLBAR
+========================================================= */
+
+.audit-modal::-webkit-scrollbar {
+    width: 8px;
+}
+
+.audit-modal::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.audit-modal::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: #cbd5e1;
+}
+
+.audit-modal::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+
+/* =========================================================
+   UPDATED ACTIVITY DETAILS - TABLET / MOBILE
+========================================================= */
+
+@media (max-width: 800px) {
+
+    .audit-readable-row {
+        grid-template-columns: 1fr;
+        gap: 5px;
+        align-items: flex-start;
+    }
+
+    .audit-readable-row > strong {
+        font-size: 12px;
+    }
+
+}
+
+
+@media (max-width: 560px) {
+
+    .audit-readable-row {
+        padding: 10px 12px;
+    }
+
+    .audit-detail-section > strong {
+        font-size: 13px;
+    }
+
+}

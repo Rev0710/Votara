@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const supabase = require("../config/supabase");
+const auditLogsService = require("../services/auditLogsService");
 
 const STORAGE_BUCKET = "student-verification";
 const MAX_FILE_SIZE = 5 * 1024 * 1024;

@@ -1,4 +1,157 @@
+const jwt = require("jsonwebtoken");
 const supabase = require("../config/supabase");
+const auditLogsService = require("../services/auditLogsService");
+
+// =====================================================
+// AUDIT LOG HELPERS
+// =====================================================
+
+const getAuditActor = async (req) => {
+    const user = req.user || {};
+    let staff = null;
+
+    const userId =
+        user.userId ||
+        user.id ||
+        user._id ||
+        user.user_id ||
+        null;
+
+    try {
+        let resolvedUserId = userId;
+
+        if (!resolvedUserId) {
+            const authHeader =
+                req.headers?.authorization || "";
+
+            if (
+                authHeader.startsWith(
+                    "Bearer "
+                )
+            ) {
+                const token =
+                    authHeader.split(" ")[1];
+
+                if (token) {
+                    const decoded =
+                        jwt.verify(
+                            token,
+                            process.env.JWT_SECRET
+                        );
+
+                    resolvedUserId =
+                        decoded?.userId || null;
+                }
+            }
+        }
+
+        if (resolvedUserId) {
+            const {
+                data,
+            } = await supabase
+                .from("staff_users")
+                .select(
+                    "id, full_name, email, role"
+                )
+                .eq(
+                    "id",
+                    resolvedUserId
+                )
+                .maybeSingle();
+
+            staff =
+                data || null;
+        }
+    } catch (error) {
+        console.error(
+            "⚠️ Party list audit actor lookup failed:",
+            error?.message || error
+        );
+    }
+
+    return {
+        actorId:
+            staff?.id ||
+            userId ||
+            null,
+
+        actorName:
+            staff?.full_name ||
+            user.full_name ||
+            user.fullName ||
+            user.name ||
+            user.username ||
+            "Electoral Board Member",
+
+        actorEmail:
+            staff?.email ||
+            user.email ||
+            null,
+
+        actorRole:
+            staff?.role ||
+            user.role ||
+            "electoral_board",
+
+        ipAddress:
+            req.ip ||
+            req.headers?.[
+                "x-forwarded-for"
+            ]
+                ?.split(",")[0]
+                ?.trim() ||
+            null,
+
+        userAgent:
+            typeof req.get === "function"
+                ? req.get("user-agent")
+                : null,
+    };
+};
+
+
+const writePartyListAuditLog = async (
+    req,
+    {
+        action,
+        description,
+        electionId = null,
+        targetId = null,
+        metadata = {},
+    }
+) => {
+    try {
+        const actor =
+            await getAuditActor(req);
+
+        await auditLogsService.createAuditLog({
+            ...actor,
+
+            action,
+
+            module:
+                "Party List Management",
+
+            description,
+
+            electionId,
+
+            targetId,
+
+            targetType:
+                "party_list",
+
+            metadata,
+        });
+    } catch (auditError) {
+        console.error(
+            "⚠️ Party list audit log write failed:",
+            auditError?.message ||
+                auditError
+        );
+    }
+};
+
 
 // =====================================================
 // PARTY LIST CONTROLLER
@@ -8,40 +161,49 @@ const supabase = require("../config/supabase");
 // =====================================================
 // GET ALL PARTY LISTS
 // =====================================================
-// GET /api/party-lists
-// Optional:
-// GET /api/party-lists?election_id=UUID
-// =====================================================
 
-const getAllPartyLists = async (req, res) => {
+const getAllPartyLists = async (
+    req,
+    res
+) => {
     try {
-        const { election_id } = req.query;
+        const {
+            election_id,
+        } = req.query;
 
-        let query = supabase
-            .from("party_lists")
-            .select(`
-                id,
-                election_id,
-                name,
-                description,
-                logo_url,
-                approval_status,
-                approval_remarks,
-                approved_at,
-                approved_by,
-                is_active,
-                created_at,
-                updated_at
-            `)
-            .order("created_at", {
-                ascending: false,
-            });
+        let query =
+            supabase
+                .from(
+                    "party_lists"
+                )
+                .select(`
+                    id,
+                    election_id,
+                    name,
+                    description,
+                    logo_url,
+                    approval_status,
+                    approval_remarks,
+                    approved_at,
+                    approved_by,
+                    is_active,
+                    created_at,
+                    updated_at
+                `)
+                .order(
+                    "created_at",
+                    {
+                        ascending:
+                            false,
+                    }
+                );
 
         if (election_id) {
-            query = query.eq(
-                "election_id",
-                election_id
-            );
+            query =
+                query.eq(
+                    "election_id",
+                    election_id
+                );
         }
 
         const {
@@ -55,18 +217,29 @@ const getAllPartyLists = async (req, res) => {
                 error
             );
 
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Failed to retrieve party lists.",
-                error: error.message,
-            });
+            return res
+                .status(500)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Failed to retrieve party lists.",
+
+                    error:
+                        error.message,
+                });
         }
 
-        return res.status(200).json({
-            success: true,
-            data: data || [],
-        });
+        return res
+            .status(200)
+            .json({
+                success:
+                    true,
+
+                data:
+                    data || [],
+            });
 
     } catch (error) {
         console.error(
@@ -74,11 +247,15 @@ const getAllPartyLists = async (req, res) => {
             error
         );
 
-        return res.status(500).json({
-            success: false,
-            message:
-                "Unable to retrieve party lists.",
-        });
+        return res
+            .status(500)
+            .json({
+                success:
+                    false,
+
+                message:
+                    "Unable to retrieve party lists.",
+            });
     }
 };
 
@@ -86,26 +263,35 @@ const getAllPartyLists = async (req, res) => {
 // =====================================================
 // GET PARTY LIST BY ID
 // =====================================================
-// GET /api/party-lists/:id
-// =====================================================
 
-const getPartyListById = async (req, res) => {
+const getPartyListById = async (
+    req,
+    res
+) => {
     try {
-        const { id } = req.params;
+        const {
+            id,
+        } = req.params;
 
         if (!id) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Party List ID is required.",
-            });
+            return res
+                .status(400)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Party List ID is required.",
+                });
         }
 
         const {
             data,
             error,
         } = await supabase
-            .from("party_lists")
+            .from(
+                "party_lists"
+            )
             .select(`
                 id,
                 election_id,
@@ -120,7 +306,10 @@ const getPartyListById = async (req, res) => {
                 created_at,
                 updated_at
             `)
-            .eq("id", id)
+            .eq(
+                "id",
+                id
+            )
             .maybeSingle();
 
         if (error) {
@@ -129,26 +318,40 @@ const getPartyListById = async (req, res) => {
                 error
             );
 
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Failed to retrieve party list.",
-                error: error.message,
-            });
+            return res
+                .status(500)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Failed to retrieve party list.",
+
+                    error:
+                        error.message,
+                });
         }
 
         if (!data) {
-            return res.status(404).json({
-                success: false,
-                message:
-                    "Party list not found.",
-            });
+            return res
+                .status(404)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Party list not found.",
+                });
         }
 
-        return res.status(200).json({
-            success: true,
-            data,
-        });
+        return res
+            .status(200)
+            .json({
+                success:
+                    true,
+
+                data,
+            });
 
     } catch (error) {
         console.error(
@@ -156,11 +359,15 @@ const getPartyListById = async (req, res) => {
             error
         );
 
-        return res.status(500).json({
-            success: false,
-            message:
-                "Unable to retrieve party list.",
-        });
+        return res
+            .status(500)
+            .json({
+                success:
+                    false,
+
+                message:
+                    "Unable to retrieve party list.",
+            });
     }
 };
 
@@ -168,10 +375,11 @@ const getPartyListById = async (req, res) => {
 // =====================================================
 // CREATE PARTY LIST
 // =====================================================
-// POST /api/party-lists
-// =====================================================
 
-const createPartyList = async (req, res) => {
+const createPartyList = async (
+    req,
+    res
+) => {
     try {
         const {
             election_id,
@@ -180,28 +388,36 @@ const createPartyList = async (req, res) => {
             logo_url,
         } = req.body;
 
-        // -------------------------------------------------
-        // VALIDATION
-        // -------------------------------------------------
-
         if (!election_id) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Election ID is required.",
-            });
+            return res
+                .status(400)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Election ID is required.",
+                });
         }
 
-        if (!name || !String(name).trim()) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Party list name is required.",
-            });
+        if (
+            !name ||
+            !String(name).trim()
+        ) {
+            return res
+                .status(400)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Party list name is required.",
+                });
         }
 
         const partyName =
             String(name).trim();
+
 
         // -------------------------------------------------
         // CHECK ELECTION
@@ -209,11 +425,17 @@ const createPartyList = async (req, res) => {
 
         const {
             data: election,
-            error: electionError,
+            error:
+                electionError,
         } = await supabase
-            .from("elections")
+            .from(
+                "elections"
+            )
             .select("id")
-            .eq("id", election_id)
+            .eq(
+                "id",
+                election_id
+            )
             .maybeSingle();
 
         if (electionError) {
@@ -222,32 +444,46 @@ const createPartyList = async (req, res) => {
                 electionError
             );
 
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Failed to validate election.",
-                error:
-                    electionError.message,
-            });
+            return res
+                .status(500)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Failed to validate election.",
+
+                    error:
+                        electionError.message,
+                });
         }
 
         if (!election) {
-            return res.status(404).json({
-                success: false,
-                message:
-                    "Election not found.",
-            });
+            return res
+                .status(404)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Election not found.",
+                });
         }
+
 
         // -------------------------------------------------
         // CHECK DUPLICATE PARTY
         // -------------------------------------------------
 
         const {
-            data: existingParty,
-            error: duplicateError,
+            data:
+                existingParty,
+            error:
+                duplicateError,
         } = await supabase
-            .from("party_lists")
+            .from(
+                "party_lists"
+            )
             .select("id")
             .eq(
                 "election_id",
@@ -265,68 +501,78 @@ const createPartyList = async (req, res) => {
                 duplicateError
             );
 
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Failed to validate party list.",
-                error:
-                    duplicateError.message,
-            });
+            return res
+                .status(500)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Failed to validate party list.",
+
+                    error:
+                        duplicateError.message,
+                });
         }
 
         if (existingParty) {
-            return res.status(409).json({
-                success: false,
-                message:
-                    "A party list with this name already exists for this election.",
-            });
+            return res
+                .status(409)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "A party list with this name already exists for this election.",
+                });
         }
 
+
         // -------------------------------------------------
-        // CREATE PARTY
+        // CREATE
         // -------------------------------------------------
 
         const {
             data,
             error,
         } = await supabase
-            .from("party_lists")
-            .insert({
-                election_id:
+            .from(
+                "party_lists"
+            )
+            .insert([
+                {
                     election_id,
 
-                name:
-                    partyName,
+                    name:
+                        partyName,
 
-                description:
-                    description
-                        ? String(
-                              description
-                          ).trim()
-                        : "",
+                    description:
+                        description
+                            ? String(
+                                  description
+                              ).trim()
+                            : null,
 
-                logo_url:
-                    logo_url
-                        ? String(
-                              logo_url
-                          ).trim()
-                        : "",
+                    logo_url:
+                        logo_url ||
+                        null,
 
-                approval_status:
-                    "pending",
+                    approval_status:
+                        "pending",
 
-                approval_remarks:
-                    "",
+                    approval_remarks:
+                        null,
 
-                approved_at:
-                    null,
+                    is_active:
+                        true,
 
-                approved_by:
-                    null,
+                    created_at:
+                        new Date().toISOString(),
 
-                is_active:
-                    true,
-            })
+                    updated_at:
+                        new Date().toISOString(),
+                },
+            ])
             .select()
             .single();
 
@@ -336,20 +582,59 @@ const createPartyList = async (req, res) => {
                 error
             );
 
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Failed to create party list.",
-                error: error.message,
-            });
+            return res
+                .status(500)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Failed to create party list.",
+
+                    error:
+                        error.message,
+                });
         }
 
-        return res.status(201).json({
-            success: true,
-            message:
-                "Party list created successfully.",
-            data,
-        });
+
+        // -------------------------------------------------
+        // AUDIT
+        // -------------------------------------------------
+
+        await writePartyListAuditLog(
+            req,
+            {
+                action:
+                    "create",
+
+                description:
+                    `Created party list "${data.name}".`,
+
+                electionId:
+                    data.election_id,
+
+                targetId:
+                    data.id,
+
+                metadata: {
+                    partyListName:
+                        data.name,
+                },
+            }
+        );
+
+
+        return res
+            .status(201)
+            .json({
+                success:
+                    true,
+
+                message:
+                    "Party list created successfully.",
+
+                data,
+            });
 
     } catch (error) {
         console.error(
@@ -357,11 +642,15 @@ const createPartyList = async (req, res) => {
             error
         );
 
-        return res.status(500).json({
-            success: false,
-            message:
-                "Unable to create party list.",
-        });
+        return res
+            .status(500)
+            .json({
+                success:
+                    false,
+
+                message:
+                    "Unable to create party list.",
+            });
     }
 };
 
@@ -369,12 +658,15 @@ const createPartyList = async (req, res) => {
 // =====================================================
 // UPDATE PARTY LIST
 // =====================================================
-// PUT /api/party-lists/:id
-// =====================================================
 
-const updatePartyList = async (req, res) => {
+const updatePartyList = async (
+    req,
+    res
+) => {
     try {
-        const { id } = req.params;
+        const {
+            id,
+        } = req.params;
 
         const {
             name,
@@ -383,59 +675,151 @@ const updatePartyList = async (req, res) => {
         } = req.body;
 
         if (!id) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Party List ID is required.",
-            });
+            return res
+                .status(400)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Party List ID is required.",
+                });
         }
 
-        if (!name || !String(name).trim()) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Party list name is required.",
-            });
+        if (
+            !name ||
+            !String(name).trim()
+        ) {
+            return res
+                .status(400)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Party list name is required.",
+                });
         }
 
         const partyName =
             String(name).trim();
 
+
         // -------------------------------------------------
-        // CHECK PARTY EXISTS
+        // FIND EXISTING PARTY
         // -------------------------------------------------
 
         const {
-            data: existingParty,
-            error: existingError,
+            data:
+                existingParty,
+            error:
+                existingError,
         } = await supabase
-            .from("party_lists")
-            .select("id, election_id")
-            .eq("id", id)
+            .from(
+                "party_lists"
+            )
+            .select(
+                "id, election_id, name"
+            )
+            .eq(
+                "id",
+                id
+            )
             .maybeSingle();
 
         if (existingError) {
             console.error(
-                "❌ Existing party check error:",
+                "❌ Party lookup error:",
                 existingError
             );
 
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Failed to find party list.",
-                error:
-                    existingError.message,
-            });
+            return res
+                .status(500)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Failed to find party list.",
+
+                    error:
+                        existingError.message,
+                });
         }
 
         if (!existingParty) {
-            return res.status(404).json({
-                success: false,
-                message:
-                    "Party list not found.",
-            });
+            return res
+                .status(404)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Party list not found.",
+                });
         }
+
+
+        // -------------------------------------------------
+        // CHECK DUPLICATE NAME
+        // -------------------------------------------------
+
+        const {
+            data:
+                duplicateParty,
+            error:
+                duplicateError,
+        } = await supabase
+            .from(
+                "party_lists"
+            )
+            .select("id")
+            .eq(
+                "election_id",
+                existingParty.election_id
+            )
+            .ilike(
+                "name",
+                partyName
+            )
+            .neq(
+                "id",
+                id
+            )
+            .maybeSingle();
+
+        if (duplicateError) {
+            console.error(
+                "❌ Duplicate party check error:",
+                duplicateError
+            );
+
+            return res
+                .status(500)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Failed to validate party list.",
+
+                    error:
+                        duplicateError.message,
+                });
+        }
+
+        if (duplicateParty) {
+            return res
+                .status(409)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Another party list with this name already exists for this election.",
+                });
+        }
+
 
         // -------------------------------------------------
         // UPDATE
@@ -445,29 +829,37 @@ const updatePartyList = async (req, res) => {
             data,
             error,
         } = await supabase
-            .from("party_lists")
+            .from(
+                "party_lists"
+            )
             .update({
                 name:
                     partyName,
 
                 description:
-                    description
-                        ? String(
-                              description
-                          ).trim()
-                        : "",
+                    description !==
+                    undefined
+                        ? description
+                            ? String(
+                                  description
+                              ).trim()
+                            : null
+                        : undefined,
 
                 logo_url:
-                    logo_url
-                        ? String(
-                              logo_url
-                          ).trim()
-                        : "",
+                    logo_url !==
+                    undefined
+                        ? logo_url ||
+                          null
+                        : undefined,
 
                 updated_at:
                     new Date().toISOString(),
             })
-            .eq("id", id)
+            .eq(
+                "id",
+                id
+            )
             .select()
             .single();
 
@@ -477,20 +869,59 @@ const updatePartyList = async (req, res) => {
                 error
             );
 
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Failed to update party list.",
-                error: error.message,
-            });
+            return res
+                .status(500)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Failed to update party list.",
+
+                    error:
+                        error.message,
+                });
         }
 
-        return res.status(200).json({
-            success: true,
-            message:
-                "Party list updated successfully.",
-            data,
-        });
+
+        // -------------------------------------------------
+        // AUDIT
+        // -------------------------------------------------
+
+        await writePartyListAuditLog(
+            req,
+            {
+                action:
+                    "update",
+
+                description:
+                    `Updated party list "${data.name}".`,
+
+                electionId:
+                    data.election_id,
+
+                targetId:
+                    data.id,
+
+                metadata: {
+                    partyListName:
+                        data.name,
+                },
+            }
+        );
+
+
+        return res
+            .status(200)
+            .json({
+                success:
+                    true,
+
+                message:
+                    "Party list updated successfully.",
+
+                data,
+            });
 
     } catch (error) {
         console.error(
@@ -498,11 +929,15 @@ const updatePartyList = async (req, res) => {
             error
         );
 
-        return res.status(500).json({
-            success: false,
-            message:
-                "Unable to update party list.",
-        });
+        return res
+            .status(500)
+            .json({
+                success:
+                    false,
+
+                message:
+                    "Unable to update party list.",
+            });
     }
 };
 
@@ -510,32 +945,53 @@ const updatePartyList = async (req, res) => {
 // =====================================================
 // APPROVE PARTY LIST
 // =====================================================
-// PATCH /api/party-lists/:id/approve
-// =====================================================
 
-const approvePartyList = async (req, res) => {
+const approvePartyList = async (
+    req,
+    res
+) => {
     try {
-        const { id } = req.params;
+        const {
+            id,
+        } = req.params;
 
         const {
             approval_remarks,
         } = req.body;
 
         if (!id) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Party List ID is required.",
-            });
+            return res
+                .status(400)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Party List ID is required.",
+                });
         }
 
+
+        // -------------------------------------------------
+        // FIND PARTY
+        // -------------------------------------------------
+
         const {
-            data: existingParty,
-            error: existingError,
+            data:
+                existingParty,
+            error:
+                existingError,
         } = await supabase
-            .from("party_lists")
-            .select("id")
-            .eq("id", id)
+            .from(
+                "party_lists"
+            )
+            .select(
+                "id, election_id, name, approval_status"
+            )
+            .eq(
+                "id",
+                id
+            )
             .maybeSingle();
 
         if (existingError) {
@@ -544,31 +1000,44 @@ const approvePartyList = async (req, res) => {
                 existingError
             );
 
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Failed to find party list.",
-                error:
-                    existingError.message,
-            });
+            return res
+                .status(500)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Failed to find party list.",
+
+                    error:
+                        existingError.message,
+                });
         }
 
         if (!existingParty) {
-            return res.status(404).json({
-                success: false,
-                message:
-                    "Party list not found.",
-            });
+            return res
+                .status(404)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Party list not found.",
+                });
         }
 
-        const now =
-            new Date().toISOString();
+
+        // -------------------------------------------------
+        // APPROVE
+        // -------------------------------------------------
 
         const {
             data,
             error,
         } = await supabase
-            .from("party_lists")
+            .from(
+                "party_lists"
+            )
             .update({
                 approval_status:
                     "approved",
@@ -578,21 +1047,18 @@ const approvePartyList = async (req, res) => {
                         ? String(
                               approval_remarks
                           ).trim()
-                        : "",
+                        : null,
 
                 approved_at:
-                    now,
-
-                approved_by:
-                    null,
-
-                is_active:
-                    true,
+                    new Date().toISOString(),
 
                 updated_at:
-                    now,
+                    new Date().toISOString(),
             })
-            .eq("id", id)
+            .eq(
+                "id",
+                id
+            )
             .select()
             .single();
 
@@ -602,20 +1068,63 @@ const approvePartyList = async (req, res) => {
                 error
             );
 
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Failed to approve party list.",
-                error: error.message,
-            });
+            return res
+                .status(500)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Failed to approve party list.",
+
+                    error:
+                        error.message,
+                });
         }
 
-        return res.status(200).json({
-            success: true,
-            message:
-                "Party list approved successfully.",
-            data,
-        });
+
+        // -------------------------------------------------
+        // AUDIT
+        // -------------------------------------------------
+
+        await writePartyListAuditLog(
+            req,
+            {
+                action:
+                    "approve",
+
+                description:
+                    `Approved party list "${data.name}".`,
+
+                electionId:
+                    data.election_id,
+
+                targetId:
+                    data.id,
+
+                metadata: {
+                    partyListName:
+                        data.name,
+
+                    remarks:
+                        data.approval_remarks ||
+                        null,
+                },
+            }
+        );
+
+
+        return res
+            .status(200)
+            .json({
+                success:
+                    true,
+
+                message:
+                    "Party list approved successfully.",
+
+                data,
+            });
 
     } catch (error) {
         console.error(
@@ -623,11 +1132,15 @@ const approvePartyList = async (req, res) => {
             error
         );
 
-        return res.status(500).json({
-            success: false,
-            message:
-                "Unable to approve party list.",
-        });
+        return res
+            .status(500)
+            .json({
+                success:
+                    false,
+
+                message:
+                    "Unable to approve party list.",
+            });
     }
 };
 
@@ -635,32 +1148,70 @@ const approvePartyList = async (req, res) => {
 // =====================================================
 // REJECT PARTY LIST
 // =====================================================
-// PATCH /api/party-lists/:id/reject
-// =====================================================
 
-const rejectPartyList = async (req, res) => {
+const rejectPartyList = async (
+    req,
+    res
+) => {
     try {
-        const { id } = req.params;
+        const {
+            id,
+        } = req.params;
 
         const {
             approval_remarks,
         } = req.body;
 
         if (!id) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Party List ID is required.",
-            });
+            return res
+                .status(400)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Party List ID is required.",
+                });
         }
 
+        if (
+            !approval_remarks ||
+            !String(
+                approval_remarks
+            ).trim()
+        ) {
+            return res
+                .status(400)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Rejection remarks are required.",
+                });
+        }
+
+
+        // -------------------------------------------------
+        // FIND PARTY
+        // -------------------------------------------------
+
         const {
-            data: existingParty,
-            error: existingError,
+            data:
+                existingParty,
+            error:
+                existingError,
         } = await supabase
-            .from("party_lists")
-            .select("id")
-            .eq("id", id)
+            .from(
+                "party_lists"
+            )
+            .select(
+                "id, election_id, name, approval_status"
+            )
+            .eq(
+                "id",
+                id
+            )
             .maybeSingle();
 
         if (existingError) {
@@ -669,41 +1220,56 @@ const rejectPartyList = async (req, res) => {
                 existingError
             );
 
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Failed to find party list.",
-                error:
-                    existingError.message,
-            });
+            return res
+                .status(500)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Failed to find party list.",
+
+                    error:
+                        existingError.message,
+                });
         }
 
         if (!existingParty) {
-            return res.status(404).json({
-                success: false,
-                message:
-                    "Party list not found.",
-            });
+            return res
+                .status(404)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Party list not found.",
+                });
         }
 
-        const now =
-            new Date().toISOString();
+
+        const cleanRemarks =
+            String(
+                approval_remarks
+            ).trim();
+
+
+        // -------------------------------------------------
+        // REJECT
+        // -------------------------------------------------
 
         const {
             data,
             error,
         } = await supabase
-            .from("party_lists")
+            .from(
+                "party_lists"
+            )
             .update({
                 approval_status:
                     "rejected",
 
                 approval_remarks:
-                    approval_remarks
-                        ? String(
-                              approval_remarks
-                          ).trim()
-                        : "",
+                    cleanRemarks,
 
                 approved_at:
                     null,
@@ -712,9 +1278,12 @@ const rejectPartyList = async (req, res) => {
                     null,
 
                 updated_at:
-                    now,
+                    new Date().toISOString(),
             })
-            .eq("id", id)
+            .eq(
+                "id",
+                id
+            )
             .select()
             .single();
 
@@ -724,20 +1293,62 @@ const rejectPartyList = async (req, res) => {
                 error
             );
 
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Failed to reject party list.",
-                error: error.message,
-            });
+            return res
+                .status(500)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Failed to reject party list.",
+
+                    error:
+                        error.message,
+                });
         }
 
-        return res.status(200).json({
-            success: true,
-            message:
-                "Party list rejected successfully.",
-            data,
-        });
+
+        // -------------------------------------------------
+        // AUDIT
+        // -------------------------------------------------
+
+        await writePartyListAuditLog(
+            req,
+            {
+                action:
+                    "reject",
+
+                description:
+                    `Rejected party list "${data.name}".`,
+
+                electionId:
+                    data.election_id,
+
+                targetId:
+                    data.id,
+
+                metadata: {
+                    partyListName:
+                        data.name,
+
+                    remarks:
+                        cleanRemarks,
+                },
+            }
+        );
+
+
+        return res
+            .status(200)
+            .json({
+                success:
+                    true,
+
+                message:
+                    "Party list rejected successfully.",
+
+                data,
+            });
 
     } catch (error) {
         console.error(
@@ -745,11 +1356,15 @@ const rejectPartyList = async (req, res) => {
             error
         );
 
-        return res.status(500).json({
-            success: false,
-            message:
-                "Unable to reject party list.",
-        });
+        return res
+            .status(500)
+            .json({
+                success:
+                    false,
+
+                message:
+                    "Unable to reject party list.",
+            });
     }
 };
 
@@ -757,30 +1372,44 @@ const rejectPartyList = async (req, res) => {
 // =====================================================
 // ACTIVATE PARTY LIST
 // =====================================================
-// PATCH /api/party-lists/:id/activate
-// =====================================================
 
-const activatePartyList = async (req, res) => {
+const activatePartyList = async (
+    req,
+    res
+) => {
     try {
-        const { id } = req.params;
+        const {
+            id,
+        } = req.params;
 
         if (!id) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Party List ID is required.",
-            });
+            return res
+                .status(400)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Party List ID is required.",
+                });
         }
 
         const {
-            data: existingParty,
-            error: existingError,
+            data:
+                existingParty,
+            error:
+                existingError,
         } = await supabase
-            .from("party_lists")
-            .select(
-                "id, approval_status"
+            .from(
+                "party_lists"
             )
-            .eq("id", id)
+            .select(
+                "id, election_id, name"
+            )
+            .eq(
+                "id",
+                id
+            )
             .maybeSingle();
 
         if (existingError) {
@@ -789,40 +1418,39 @@ const activatePartyList = async (req, res) => {
                 existingError
             );
 
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Failed to find party list.",
-                error:
-                    existingError.message,
-            });
+            return res
+                .status(500)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Failed to find party list.",
+
+                    error:
+                        existingError.message,
+                });
         }
 
         if (!existingParty) {
-            return res.status(404).json({
-                success: false,
-                message:
-                    "Party list not found.",
-            });
-        }
+            return res
+                .status(404)
+                .json({
+                    success:
+                        false,
 
-        // A rejected party should not be activated.
-        if (
-            existingParty.approval_status ===
-            "rejected"
-        ) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "A rejected party list cannot be activated. Approve it first.",
-            });
+                    message:
+                        "Party list not found.",
+                });
         }
 
         const {
             data,
             error,
         } = await supabase
-            .from("party_lists")
+            .from(
+                "party_lists"
+            )
             .update({
                 is_active:
                     true,
@@ -830,7 +1458,10 @@ const activatePartyList = async (req, res) => {
                 updated_at:
                     new Date().toISOString(),
             })
-            .eq("id", id)
+            .eq(
+                "id",
+                id
+            )
             .select()
             .single();
 
@@ -840,20 +1471,59 @@ const activatePartyList = async (req, res) => {
                 error
             );
 
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Failed to activate party list.",
-                error: error.message,
-            });
+            return res
+                .status(500)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Failed to activate party list.",
+
+                    error:
+                        error.message,
+                });
         }
 
-        return res.status(200).json({
-            success: true,
-            message:
-                "Party list activated successfully.",
-            data,
-        });
+
+        // -------------------------------------------------
+        // AUDIT
+        // -------------------------------------------------
+
+        await writePartyListAuditLog(
+            req,
+            {
+                action:
+                    "activate",
+
+                description:
+                    `Activated party list "${data.name}".`,
+
+                electionId:
+                    data.election_id,
+
+                targetId:
+                    data.id,
+
+                metadata: {
+                    partyListName:
+                        data.name,
+                },
+            }
+        );
+
+
+        return res
+            .status(200)
+            .json({
+                success:
+                    true,
+
+                message:
+                    "Party list activated successfully.",
+
+                data,
+            });
 
     } catch (error) {
         console.error(
@@ -861,11 +1531,15 @@ const activatePartyList = async (req, res) => {
             error
         );
 
-        return res.status(500).json({
-            success: false,
-            message:
-                "Unable to activate party list.",
-        });
+        return res
+            .status(500)
+            .json({
+                success:
+                    false,
+
+                message:
+                    "Unable to activate party list.",
+            });
     }
 };
 
@@ -873,28 +1547,44 @@ const activatePartyList = async (req, res) => {
 // =====================================================
 // DEACTIVATE PARTY LIST
 // =====================================================
-// PATCH /api/party-lists/:id/deactivate
-// =====================================================
 
-const deactivatePartyList = async (req, res) => {
+const deactivatePartyList = async (
+    req,
+    res
+) => {
     try {
-        const { id } = req.params;
+        const {
+            id,
+        } = req.params;
 
         if (!id) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Party List ID is required.",
-            });
+            return res
+                .status(400)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Party List ID is required.",
+                });
         }
 
         const {
-            data: existingParty,
-            error: existingError,
+            data:
+                existingParty,
+            error:
+                existingError,
         } = await supabase
-            .from("party_lists")
-            .select("id")
-            .eq("id", id)
+            .from(
+                "party_lists"
+            )
+            .select(
+                "id"
+            )
+            .eq(
+                "id",
+                id
+            )
             .maybeSingle();
 
         if (existingError) {
@@ -903,28 +1593,39 @@ const deactivatePartyList = async (req, res) => {
                 existingError
             );
 
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Failed to find party list.",
-                error:
-                    existingError.message,
-            });
+            return res
+                .status(500)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Failed to find party list.",
+
+                    error:
+                        existingError.message,
+                });
         }
 
         if (!existingParty) {
-            return res.status(404).json({
-                success: false,
-                message:
-                    "Party list not found.",
-            });
+            return res
+                .status(404)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Party list not found.",
+                });
         }
 
         const {
             data,
             error,
         } = await supabase
-            .from("party_lists")
+            .from(
+                "party_lists"
+            )
             .update({
                 is_active:
                     false,
@@ -932,7 +1633,10 @@ const deactivatePartyList = async (req, res) => {
                 updated_at:
                     new Date().toISOString(),
             })
-            .eq("id", id)
+            .eq(
+                "id",
+                id
+            )
             .select()
             .single();
 
@@ -942,20 +1646,59 @@ const deactivatePartyList = async (req, res) => {
                 error
             );
 
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Failed to deactivate party list.",
-                error: error.message,
-            });
+            return res
+                .status(500)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Failed to deactivate party list.",
+
+                    error:
+                        error.message,
+                });
         }
 
-        return res.status(200).json({
-            success: true,
-            message:
-                "Party list deactivated successfully.",
-            data,
-        });
+
+        // -------------------------------------------------
+        // AUDIT
+        // -------------------------------------------------
+
+        await writePartyListAuditLog(
+            req,
+            {
+                action:
+                    "deactivate",
+
+                description:
+                    `Deactivated party list "${data.name}".`,
+
+                electionId:
+                    data.election_id,
+
+                targetId:
+                    data.id,
+
+                metadata: {
+                    partyListName:
+                        data.name,
+                },
+            }
+        );
+
+
+        return res
+            .status(200)
+            .json({
+                success:
+                    true,
+
+                message:
+                    "Party list deactivated successfully.",
+
+                data,
+            });
 
     } catch (error) {
         console.error(
@@ -963,11 +1706,15 @@ const deactivatePartyList = async (req, res) => {
             error
         );
 
-        return res.status(500).json({
-            success: false,
-            message:
-                "Unable to deactivate party list.",
-        });
+        return res
+            .status(500)
+            .json({
+                success:
+                    false,
+
+                message:
+                    "Unable to deactivate party list.",
+            });
     }
 };
 
@@ -975,82 +1722,148 @@ const deactivatePartyList = async (req, res) => {
 // =====================================================
 // DELETE PARTY LIST
 // =====================================================
-// DELETE /api/party-lists/:id
-// =====================================================
 
-const deletePartyList = async (req, res) => {
+const deletePartyList = async (
+    req,
+    res
+) => {
     try {
-        const { id } = req.params;
+        const {
+            id,
+        } = req.params;
 
         if (!id) {
-            return res.status(400).json({
-                success: false,
-                message: "Party List ID is required.",
-            });
-        }
+            return res
+                .status(400)
+                .json({
+                    success:
+                        false,
 
-        const { data: party, error: partyError } =
-            await supabase
-                .from("party_lists")
-                .select("id, name")
-                .eq("id", id)
-                .maybeSingle();
-
-        if (partyError) {
-            return res.status(500).json({
-                success: false,
-                message: "Failed to find party list.",
-                error: partyError.message,
-            });
-        }
-
-        if (!party) {
-            return res.status(404).json({
-                success: false,
-                message: "Party list not found.",
-            });
-        }
-
-        // Do not silently remove candidates belonging to this party list.
-        const { count, error: candidateError } =
-            await supabase
-                .from("candidates")
-                .select(
-                    "id",
-                    {
-                        count: "exact",
-                        head: true,
-                    }
-                )
-                .eq(
-                    "party_list_id",
-                    id
-                );
-
-        if (candidateError) {
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Unable to check party list candidates.",
-                error:
-                    candidateError.message,
-            });
-        }
-
-        if (Number(count || 0) > 0) {
-            return res.status(409).json({
-                success: false,
-                message:
-                    `Cannot delete "${party.name}" because it still has ${count} candidate(s). Deactivate the party list instead or remove its candidates first.`,
-            });
+                    message:
+                        "Party List ID is required.",
+                });
         }
 
         const {
-            error: deleteError,
+            data: party,
+            error:
+                partyError,
         } = await supabase
-            .from("party_lists")
+            .from(
+                "party_lists"
+            )
+            .select(
+                "id, name"
+            )
+            .eq(
+                "id",
+                id
+            )
+            .maybeSingle();
+
+        if (partyError) {
+            return res
+                .status(500)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Failed to find party list.",
+
+                    error:
+                        partyError.message,
+                });
+        }
+
+        if (!party) {
+            return res
+                .status(404)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Party list not found.",
+                });
+        }
+
+
+        // -------------------------------------------------
+        // CHECK CANDIDATES
+        // -------------------------------------------------
+
+        const {
+            count,
+            error:
+                candidateError,
+        } = await supabase
+            .from(
+                "candidates"
+            )
+            .select(
+                "id",
+                {
+                    count:
+                        "exact",
+
+                    head:
+                        true,
+                }
+            )
+            .eq(
+                "party_list_id",
+                id
+            );
+
+        if (candidateError) {
+            return res
+                .status(500)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Unable to check party list candidates.",
+
+                    error:
+                        candidateError.message,
+                });
+        }
+
+        if (
+            Number(
+                count || 0
+            ) > 0
+        ) {
+            return res
+                .status(409)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        `Cannot delete "${party.name}" because it still has ${count} candidate(s). Deactivate the party list instead or remove its candidates first.`,
+                });
+        }
+
+
+        // -------------------------------------------------
+        // DELETE
+        // -------------------------------------------------
+
+        const {
+            error:
+                deleteError,
+        } = await supabase
+            .from(
+                "party_lists"
+            )
             .delete()
-            .eq("id", id);
+            .eq(
+                "id",
+                id
+            );
 
         if (deleteError) {
             console.error(
@@ -1058,20 +1871,54 @@ const deletePartyList = async (req, res) => {
                 deleteError
             );
 
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Failed to delete party list.",
-                error:
-                    deleteError.message,
-            });
+            return res
+                .status(500)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Failed to delete party list.",
+
+                    error:
+                        deleteError.message,
+                });
         }
 
-        return res.status(200).json({
-            success: true,
-            message:
-                "Party list deleted successfully.",
-        });
+
+        // -------------------------------------------------
+        // AUDIT
+        // -------------------------------------------------
+
+        await writePartyListAuditLog(
+            req,
+            {
+                action:
+                    "delete",
+
+                description:
+                    `Deleted party list "${party.name}".`,
+
+                targetId:
+                    party.id,
+
+                metadata: {
+                    partyListName:
+                        party.name,
+                },
+            }
+        );
+
+
+        return res
+            .status(200)
+            .json({
+                success:
+                    true,
+
+                message:
+                    "Party list deleted successfully.",
+            });
 
     } catch (error) {
         console.error(
@@ -1079,11 +1926,15 @@ const deletePartyList = async (req, res) => {
             error
         );
 
-        return res.status(500).json({
-            success: false,
-            message:
-                "Unable to delete party list.",
-        });
+        return res
+            .status(500)
+            .json({
+                success:
+                    false,
+
+                message:
+                    "Unable to delete party list.",
+            });
     }
 };
 
@@ -1091,20 +1942,28 @@ const deletePartyList = async (req, res) => {
 // =====================================================
 // GET PARTY LIST CANDIDATES
 // =====================================================
-// GET /api/party-lists/:id/candidates
-// =====================================================
 
-const getPartyListCandidates = async (req, res) => {
+const getPartyListCandidates = async (
+    req,
+    res
+) => {
     try {
-        const { id } = req.params;
+        const {
+            id,
+        } = req.params;
 
         if (!id) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Party List ID is required.",
-            });
+            return res
+                .status(400)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Party List ID is required.",
+                });
         }
+
 
         // -------------------------------------------------
         // CHECK PARTY EXISTS
@@ -1112,13 +1971,19 @@ const getPartyListCandidates = async (req, res) => {
 
         const {
             data: party,
-            error: partyError,
+            error:
+                partyError,
         } = await supabase
-            .from("party_lists")
+            .from(
+                "party_lists"
+            )
             .select(
                 "id, name"
             )
-            .eq("id", id)
+            .eq(
+                "id",
+                id
+            )
             .maybeSingle();
 
         if (partyError) {
@@ -1127,22 +1992,32 @@ const getPartyListCandidates = async (req, res) => {
                 partyError
             );
 
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Failed to find party list.",
-                error:
-                    partyError.message,
-            });
+            return res
+                .status(500)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Failed to find party list.",
+
+                    error:
+                        partyError.message,
+                });
         }
 
         if (!party) {
-            return res.status(404).json({
-                success: false,
-                message:
-                    "Party list not found.",
-            });
+            return res
+                .status(404)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Party list not found.",
+                });
         }
+
 
         // -------------------------------------------------
         // GET CANDIDATES
@@ -1152,7 +2027,9 @@ const getPartyListCandidates = async (req, res) => {
             data,
             error,
         } = await supabase
-            .from("candidates")
+            .from(
+                "candidates"
+            )
             .select(`
                 id,
                 election_id,
@@ -1174,7 +2051,8 @@ const getPartyListCandidates = async (req, res) => {
             .order(
                 "created_at",
                 {
-                    ascending: true,
+                    ascending:
+                        true,
                 }
             );
 
@@ -1184,19 +2062,31 @@ const getPartyListCandidates = async (req, res) => {
                 error
             );
 
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Failed to retrieve party candidates.",
-                error: error.message,
-            });
+            return res
+                .status(500)
+                .json({
+                    success:
+                        false,
+
+                    message:
+                        "Failed to retrieve party candidates.",
+
+                    error:
+                        error.message,
+                });
         }
 
-        return res.status(200).json({
-            success: true,
-            party: party,
-            data: data || [],
-        });
+        return res
+            .status(200)
+            .json({
+                success:
+                    true,
+
+                party,
+
+                data:
+                    data || [],
+            });
 
     } catch (error) {
         console.error(
@@ -1204,11 +2094,15 @@ const getPartyListCandidates = async (req, res) => {
             error
         );
 
-        return res.status(500).json({
-            success: false,
-            message:
-                "Unable to retrieve party candidates.",
-        });
+        return res
+            .status(500)
+            .json({
+                success:
+                    false,
+
+                message:
+                    "Unable to retrieve party candidates.",
+            });
     }
 };
 

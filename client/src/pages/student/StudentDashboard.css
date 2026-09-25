@@ -2252,3 +2252,333 @@
     width: 100%;
   }
 }
+
+
+/* =========================================================
+   FINAL FIX - PROFILE MODAL + TOP NOTIFICATION
+   These rules affect only the requested UI.
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   REMOVE ONLY THE TOP NAVBAR NOTIFICATION BELL
+   The sidebar Notifications menu item remains untouched.
+   --------------------------------------------------------- */
+
+.top-navbar .nav-right .nav-icon-button[aria-label="Notifications"] {
+    display: none !important;
+}
+
+
+/* ---------------------------------------------------------
+   PROFILE MODAL - FORCE WIDE LAYOUT
+   Overrides the generic 430px .settings-modal width.
+   --------------------------------------------------------- */
+
+.student-dashboard
+    .settings-modal-overlay
+    .settings-modal.profile-settings-modal {
+
+    width: min(
+        1180px,
+        calc(100vw - 40px)
+    ) !important;
+
+    max-width: 1180px !important;
+    min-width: 0 !important;
+
+    flex: 0 1 1180px !important;
+
+    height: auto !important;
+    max-height: calc(100vh - 40px) !important;
+
+    margin: 20px auto !important;
+    padding: 0 !important;
+
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+
+    border-radius: 20px !important;
+
+    background: #f8f7f0 !important;
+
+    box-sizing: border-box !important;
+
+    text-align: left !important;
+}
+
+
+/* The Profile page fills the modal. */
+
+.student-dashboard
+    .settings-modal-overlay
+    .settings-modal.profile-settings-modal
+    .votara-profile-page {
+
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+
+    min-height: auto !important;
+
+    margin: 0 !important;
+
+    padding: 30px !important;
+
+    box-sizing: border-box !important;
+}
+
+
+/* ---------------------------------------------------------
+   PROFILE HERO
+   --------------------------------------------------------- */
+
+.student-dashboard
+    .settings-modal-overlay
+    .settings-modal.profile-settings-modal
+    .profile-hero-card {
+
+    width: 100% !important;
+
+    display: grid !important;
+
+    grid-template-columns:
+        minmax(300px, 0.85fr)
+        minmax(0, 1.15fr) !important;
+
+    gap: 28px !important;
+
+    align-items: center !important;
+}
+
+
+/* ---------------------------------------------------------
+   PERSONAL INFORMATION
+   --------------------------------------------------------- */
+
+.student-dashboard
+    .settings-modal-overlay
+    .settings-modal.profile-settings-modal
+    .profile-info-grid {
+
+    width: 100% !important;
+
+    display: grid !important;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr)) !important;
+
+    gap: 14px !important;
+}
+
+.student-dashboard
+    .settings-modal-overlay
+    .settings-modal.profile-settings-modal
+    .profile-info-item {
+
+    min-width: 0 !important;
+
+    overflow: hidden !important;
+}
+
+.student-dashboard
+    .settings-modal-overlay
+    .settings-modal.profile-settings-modal
+    .profile-info-item strong {
+
+    display: block !important;
+
+    min-width: 0 !important;
+
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+}
+
+
+/* ---------------------------------------------------------
+   EDIT PROFILE FORM
+   --------------------------------------------------------- */
+
+.student-dashboard
+    .settings-modal-overlay
+    .settings-modal.profile-settings-modal
+    .profile-form-grid {
+
+    width: 100% !important;
+
+    display: grid !important;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr)) !important;
+
+    gap: 16px 18px !important;
+}
+
+
+/* ---------------------------------------------------------
+   PASSWORD FORM
+   --------------------------------------------------------- */
+
+.student-dashboard
+    .settings-modal-overlay
+    .settings-modal.profile-settings-modal
+    .password-form {
+
+    width: 100% !important;
+
+    display: grid !important;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr)) !important;
+
+    gap: 16px !important;
+}
+
+.student-dashboard
+    .settings-modal-overlay
+    .settings-modal.profile-settings-modal
+    .password-form
+    .profile-form-actions {
+
+    grid-column: 1 / -1 !important;
+}
+
+
+/* ---------------------------------------------------------
+   PROFILE MODAL CLOSE BUTTON
+   --------------------------------------------------------- */
+
+.student-dashboard
+    .settings-modal-overlay
+    .settings-modal.profile-settings-modal
+    .profile-modal-close {
+
+    position: sticky !important;
+
+    top: 12px !important;
+
+    float: right !important;
+
+    z-index: 1000 !important;
+
+    width: 38px !important;
+    height: 38px !important;
+
+    margin: 12px 12px 0 0 !important;
+
+    padding: 0 !important;
+
+    display: flex !important;
+
+    align-items: center !important;
+    justify-content: center !important;
+
+    border: 1px solid #dddbe5 !important;
+    border-radius: 50% !important;
+
+    background: #ffffff !important;
+
+    color: #3520b8 !important;
+
+    font-size: 22px !important;
+    line-height: 1 !important;
+
+    box-shadow:
+        0 5px 14px
+        rgba(0, 0, 0, 0.10) !important;
+}
+
+
+/* ---------------------------------------------------------
+   RESPONSIVE
+   --------------------------------------------------------- */
+
+@media (max-width: 1000px) {
+
+    .student-dashboard
+        .settings-modal-overlay
+        .settings-modal.profile-settings-modal {
+
+        width: calc(100vw - 28px) !important;
+
+        max-width: none !important;
+
+        max-height: calc(100vh - 28px) !important;
+
+        margin: 14px auto !important;
+    }
+
+    .student-dashboard
+        .settings-modal-overlay
+        .settings-modal.profile-settings-modal
+        .votara-profile-page {
+
+        padding: 24px !important;
+    }
+
+    .student-dashboard
+        .settings-modal-overlay
+        .settings-modal.profile-settings-modal
+        .profile-hero-card {
+
+        grid-template-columns: 1fr !important;
+    }
+
+    .student-dashboard
+        .settings-modal-overlay
+        .settings-modal.profile-settings-modal
+        .profile-info-grid {
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .student-dashboard
+        .settings-modal-overlay
+        .settings-modal.profile-settings-modal
+        .password-form {
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 640px) {
+
+    .student-dashboard
+        .settings-modal-overlay
+        .settings-modal.profile-settings-modal {
+
+        width: calc(100vw - 16px) !important;
+
+        max-height: calc(100vh - 16px) !important;
+
+        margin: 8px auto !important;
+
+        border-radius: 16px !important;
+    }
+
+    .student-dashboard
+        .settings-modal-overlay
+        .settings-modal.profile-settings-modal
+        .votara-profile-page {
+
+        padding: 18px !important;
+    }
+
+    .student-dashboard
+        .settings-modal-overlay
+        .settings-modal.profile-settings-modal
+        .profile-info-grid,
+    .student-dashboard
+        .settings-modal-overlay
+        .settings-modal.profile-settings-modal
+        .profile-form-grid,
+    .student-dashboard
+        .settings-modal-overlay
+        .settings-modal.profile-settings-modal
+        .password-form {
+
+        grid-template-columns: 1fr !important;
+    }
+}
+
