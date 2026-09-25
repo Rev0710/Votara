@@ -10,7 +10,6 @@ import Registrations from "./Registrations";
 import LateEnrolleeManagement from "./LateEnrolleeManagement";
 import PartyListManagement from "./PartyListManagement";
 import ElectionManagement from "./ElectionManagement";
-import CreateElection from "./CreateElection";
 import CandidateManagement from "./EBCandidateManagement";
 import KioskManagement from "./KioskManagement";
 import VotingMonitoring from "./VotingMonitoring";
@@ -21,6 +20,39 @@ import Settings from "./Settings";
 // =====================================================
 // ELECTORAL BOARD DASHBOARD
 // =====================================================
+
+
+// Use the JWT that actually belongs to the Electoral Board.
+// Both staff and EB tokens may exist in localStorage, so do not
+// blindly prefer the staff token.
+const getEBAuthToken = () => {
+    const candidates = [
+        localStorage.getItem("votaraEBToken"),
+        localStorage.getItem("votaraStaffToken"),
+    ].filter(Boolean);
+
+    for (const token of candidates) {
+        try {
+            const payload = JSON.parse(
+                atob(
+                    token
+                        .split(".")[1]
+                        .replace(/-/g, "+")
+                        .replace(/_/g, "/")
+                )
+            );
+
+            if (payload?.role === "electoral_board") {
+                return token;
+            }
+        } catch {
+            // Ignore malformed tokens and try the next token.
+        }
+    }
+
+    return null;
+};
+
 
 const EBDashboard = () => {
 
@@ -101,9 +133,24 @@ const EBDashboard = () => {
             setDashboardLoading(true);
             setDashboardError("");
 
+            const token = getEBAuthToken();
+
+            if (!token) {
+                setDashboardError(
+                    "Electoral Board authentication is required. Please log in again as an Electoral Board account."
+                );
+                setDashboardLoading(false);
+                return;
+            }
+
             const response =
                 await api.get(
-                    "/registration/eb/dashboard-stats"
+                    "/registration/eb/dashboard-stats",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
                 );
 
             const data =
@@ -567,13 +614,13 @@ const EBDashboard = () => {
 
                 <header className="eb-topbar" style={styles.topbar}>
                     <div className="eb-brand">
-                        <div className="eb-brand-mark">V</div>
+                        <div><img src="/src/images/Votara.png" alt="eb-brand-mark" className="eb-brand-mark"/></div>
                         <div className="eb-brand-name">Votara</div>
                     </div>
 
                     <nav className="eb-top-nav" aria-label="Electoral Board navigation">
                         {menuItems
-                            .filter((item) => !["partyLists", "monitoring", "results"].includes(item.id))
+                            .filter((item) => !["partyLists", "monitoring", "results", "lateEnrollees"].includes(item.id))
                             .map((item) => (
                                 <button
                                     key={item.id}
@@ -591,8 +638,8 @@ const EBDashboard = () => {
                             <span className="eb-duty-dot" />
                             On duty
                         </div>
-                        <button type="button" className="eb-icon-button" aria-label="Notifications">
-                            ♧
+                        <button type="button" aria-label="Notifications">
+                            <img src="/src/images/bell.png" alt="eb-icon-button" className="eb-icon-button"  />
                         </button>
                         <div className="eb-profile-wrapper">
                             <button
@@ -694,7 +741,7 @@ const EBDashboard = () => {
                                 <button
                                     type="button"
                                     className="eb-create-election-button"
-                                    onClick={() => handleNavigation("createElection")}
+                                    onClick={() => handleNavigation("election")}
                                 >
                                     Create Election
                                 </button>
@@ -851,6 +898,7 @@ const EBDashboard = () => {
                                 "Approve, reject, or request correction",
                                 "Generate temporary password after approval",
                             ]}
+                            onNavigate={handleNavigation}
                         />
                     )}
 
@@ -858,12 +906,11 @@ const EBDashboard = () => {
                         LATE ENROLLEES
                     ================================================= */}
 
-                    {activeSection ===
-                        "lateEnrollees" && (
-
-                        <LateEnrolleeManagement />
-
-                    )}
+                    {activeSection === "lateEnrollees" && (
+                        <LateEnrolleeManagement
+                        onNavigate={handleNavigation}
+                        />
+                        )}
 
 
                     {/* =================================================
@@ -888,24 +935,12 @@ const EBDashboard = () => {
 
 
                     {/* =================================================
-                        CREATE ELECTION
-                    ================================================= */}
-
-                    {activeSection === "createElection" && (
-                        <CreateElection
-                            onBack={() =>
-                                handleNavigation("dashboard")
-                            }
-                        />
-                    )}
-
-                    {/* =================================================
                         ELECTION MANAGEMENT
                     ================================================= */}
 
-                    {activeSection === "election" && (
-                        <ElectionManagement />
-                    )}
+                        {activeSection === "election" && (
+                            <ElectionManagement />
+                        )}
 
 
                     {/* =================================================
@@ -1469,9 +1504,6 @@ const getSectionTitle = (section) => {
 
         election:
             "Election Management",
-
-        createElection:
-            "Create Election",
 
         kiosk:
             "Kiosk Management",

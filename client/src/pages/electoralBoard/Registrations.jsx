@@ -1,14 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
-import "./Registration.css"
+import "./Registrations.css"
 
 // =====================================================
 // REGISTRATION MANAGEMENT
 // ELECTORAL BOARD
 // =====================================================
 
-const Registrations = () => {
+const Registrations = ({ onNavigate }) => {
     const navigate = useNavigate();
 
     const [applications, setApplications] = useState([]);
@@ -167,6 +167,15 @@ const Registrations = () => {
         statusFilter,
     ]);
 
+    // Automatically show the first application in the inline review layout.
+    // This must be declared AFTER filteredApplications so React does not
+    // access the const before it has been initialized.
+    useEffect(() => {
+        if (!selectedApplication && filteredApplications.length > 0) {
+            openReview(filteredApplications[0], "review", true);
+        }
+    }, [filteredApplications.length]);
+
     // =====================================================
     // STATISTICS
     // =====================================================
@@ -217,7 +226,8 @@ const Registrations = () => {
 
     const openReview = async (
         application,
-        action = "review"
+        action = "review",
+        inline = false
     ) => {
 
         try {
@@ -249,7 +259,7 @@ const Registrations = () => {
             setReviewMessage("");
 
             setShowReviewModal(
-                true
+                !inline
             );
 
             // -------------------------------------------------
@@ -932,1184 +942,513 @@ const Registrations = () => {
     // =====================================================
 
     return (
-        <div style={styles.page}>
+        <div className="registration-page">
+            <div className="registration-shell">
 
-            {/* =================================================
-                HEADER
-            ================================================= */}
-
-            <div style={styles.header}>
-
-                <div>
-
-                    <button
-                        onClick={() =>
-                            navigate(
-                                "/electoral-board/dashboard"
-                            )
-                        }
-                        style={styles.backButton}
-                    >
-                        ← Back to Dashboard
-                    </button>
-
-                    <div
-                        style={
-                            styles.eyebrow
-                        }
-                    >
-                        ELECTORAL BOARD
-                    </div>
-
-                    <h1
-                        style={
-                            styles.title
-                        }
-                    >
-                        Registration Management
-                    </h1>
-
-                    <p
-                        style={
-                            styles.subtitle
-                        }
-                    >
-                        Review and process student
-                        registration applications.
-                    </p>
-
-                </div>
-
-                <button
-                    onClick={
-                        handleRefresh
-                    }
-                    disabled={
-                        refreshing
-                    }
-                    style={
-                        styles.refreshButton
-                    }
-                >
-                    ↻{" "}
-                    {refreshing
-                        ? "Refreshing..."
-                        : "Refresh"}
-                </button>
-
-            </div>
-
-            {/* =================================================
-                SUCCESS
-            ================================================= */}
-
-            {success && (
-                <div
-                    style={
-                        styles.successAlert
-                    }
-                >
-                    <strong>
-                        ✓
-                    </strong>
-
-                    <span>
-                        {success}
-                    </span>
-                </div>
-            )}
-
-            {/* =================================================
-                ERROR
-            ================================================= */}
-
-            {error && (
-                <div
-                    style={
-                        styles.errorAlert
-                    }
-                >
-                    <strong>
-                        !
-                    </strong>
-
-                    <span>
-                        {error}
-                    </span>
-                </div>
-            )}
-
-            {/* =================================================
-                STATISTICS
-            ================================================= */}
-
-            <div
-                style={
-                    styles.statsGrid
-                }
-            >
-
-                <StatCard
-                    title="Total Applications"
-                    value={
-                        statistics.total
-                    }
-                    description="All submitted registrations"
-                    icon="▤"
-                />
-
-                <StatCard
-                    title="Pending Review"
-                    value={
-                        statistics.pending
-                    }
-                    description="Awaiting EB action"
-                    icon="◷"
-                    active
-                />
-
-                <StatCard
-                    title="Approved"
-                    value={
-                        statistics.approved
-                    }
-                    description="Approved voters"
-                    icon="✓"
-                />
-
-                <StatCard
-                    title="Rejected"
-                    value={
-                        statistics.rejected
-                    }
-                    description="Rejected applications"
-                    icon="×"
-                />
-
-            </div>
-
-            {/* =================================================
-                APPLICATIONS CARD
-            ================================================= */}
-
-            <div
-                style={
-                    styles.card
-                }
-            >
-
-                <div
-                    style={
-                        styles.cardHeader
-                    }
-                >
-
+                <div className="registration-heading">
                     <div>
-
-                        <h2
-                            style={
-                                styles.cardTitle
-                            }
-                        >
-                            Student Registration Applications
-                        </h2>
-
-                        <p
-                            style={
-                                styles.cardDescription
-                            }
-                        >
-                            Verify submitted student
-                            information before approving
-                            the registration.
-                        </p>
-
-                    </div>
-
-                </div>
-
-                {/* =================================================
-                    FILTERS
-                ================================================= */}
-
-                <div
-                    style={
-                        styles.filters
-                    }
-                >
-
-                    <div
-                        style={
-                            styles.searchWrapper
-                        }
-                    >
-
-                        <span
-                            style={
-                                styles.searchIcon
-                            }
-                        >
-                            ⌕
-                        </span>
-
-                        <input
-                            type="text"
-                            placeholder="Search Student ID, name, or email..."
-                            value={search}
-                            onChange={(event) =>
-                                setSearch(
-                                    event.target.value
-                                )
-                            }
-                            style={
-                                styles.searchInput
-                            }
-                        />
-
+                        <div className="registration-eyebrow">Online Registration Management</div>
+                        <h1>Review Student Approval</h1>
+                        <p>Check the submitted documents and selfie, then approve or reject the registration.</p>
                     </div>
 
                     <select
-                        value={
-                            statusFilter
-                        }
-                        onChange={(event) =>
-                            setStatusFilter(
-                                event.target.value
-                            )
-                        }
-                        style={
-                            styles.select
-                        }
+                        className="registration-enrollment-select"
+                        value="enrolled"
+                        onChange={(event) => {
+                            const value = event.target.value;
+
+                            if (value === "late_enrolled") {
+                                if (typeof onNavigate === "function") {
+                                    onNavigate("lateEnrollees");
+                                }
+                                return;
+                            }
+
+                            setStatusFilter("all");
+                        }}
+                        aria-label="Enrollment type"
                     >
-
-                        <option value="pending_review">
-                            Pending Review
-                        </option>
-
-                        <option value="approved">
-                            Approved
-                        </option>
-
-                        <option value="rejected">
-                            Rejected
-                        </option>
-
-                        <option value="needs_correction">
-                            Needs Revision
-                        </option>
-
-                        <option value="all">
-                            All Status
-                        </option>
-
+                        <option value="enrolled">Enrolled</option>
+                        <option value="late_enrolled">Late Enrolled</option>
                     </select>
-
                 </div>
 
-                {/* =================================================
-                    TABLE
-                ================================================= */}
+                {success && (
+                    <div className="registration-alert registration-alert-success">
+                        <span>✓</span>{success}
+                    </div>
+                )}
 
-                <div
-                    style={
-                        styles.tableWrapper
-                    }
-                >
+                {error && (
+                    <div className="registration-alert registration-alert-error">
+                        <span>!</span>{error}
+                    </div>
+                )}
 
-                    {loading ? (
+                <div className="registration-review-layout">
 
-                        <div
-                            style={
-                                styles.emptyState
-                            }
-                        >
-
-                            <div
-                                style={
-                                    styles.loadingIcon
-                                }
-                            >
-                                ◌
+                    {/* APPLICATION LIST */}
+                    <aside className="registration-applications">
+                        <div className="applications-heading">
+                            <div className="applications-icon">▣</div>
+                            <div>
+                                <h2>Applications</h2>
+                                <p>Submitted online registrations</p>
                             </div>
-
-                            <h3>
-                                Loading applications...
-                            </h3>
-
-                            <p>
-                                Please wait while
-                                registration data is loaded.
-                            </p>
-
                         </div>
 
-                    ) : filteredApplications.length ===
-                      0 ? (
-
-                        <div
-                            style={
-                                styles.emptyState
-                            }
-                        >
-
-                            <div
-                                style={
-                                    styles.emptyIcon
-                                }
-                            >
-                                ▤
-                            </div>
-
-                            <h3>
-                                No applications found
-                            </h3>
-
-                            <p>
-                                There are no student
-                                registrations matching
-                                your current filter.
-                            </p>
-
+                        <div className="applications-search">
+                            <span>⌕</span>
+                            <input
+                                type="text"
+                                placeholder="Search name or student ID"
+                                value={search}
+                                onChange={(event) => setSearch(event.target.value)}
+                            />
                         </div>
 
-                    ) : (
-
-                        <table
-                            style={
-                                styles.table
-                            }
-                        >
-
-                            <thead>
-
-                                <tr>
-
-                                    <th
-                                        style={
-                                            styles.th
-                                        }
-                                    >
-                                        Student
-                                    </th>
-
-                                    <th
-                                        style={
-                                            styles.th
-                                        }
-                                    >
-                                        Year Level
-                                    </th>
-
-                                    <th
-                                        style={
-                                            styles.th
-                                        }
-                                    >
-                                        Registration Type
-                                    </th>
-
-                                    <th
-                                        style={
-                                            styles.th
-                                        }
-                                    >
-                                        Submitted
-                                    </th>
-
-                                    <th
-                                        style={
-                                            styles.th
-                                        }
-                                    >
-                                        Status
-                                    </th>
-
-                                    <th
-                                        style={
-                                            styles.th
-                                        }
-                                    >
-                                        Action
-                                    </th>
-
-                                </tr>
-
-                            </thead>
-
-                            <tbody>
-
-                                {filteredApplications.map(
-                                    (
-                                        application
-                                    ) => {
-
-                                        const status =
-                                            application.application_status ||
-                                            "pending_review";
-
-                                        return (
-                                            <tr
-                                                key={
-                                                    application.id
-                                                }
-                                            >
-
-                                                <td
-                                                    style={
-                                                        styles.td
-                                                    }
-                                                >
-
-                                                    <div
-                                                        style={
-                                                            styles.studentCell
-                                                        }
-                                                    >
-
-                                                        <div
-                                                            style={
-                                                                styles.avatar
-                                                            }
-                                                        >
-                                                            {getInitials(
-                                                                application.full_name
-                                                            )}
-                                                        </div>
-
-                                                        <div>
-
-                                                            <strong
-                                                                style={
-                                                                    styles.studentName
-                                                                }
-                                                            >
-                                                                {
-                                                                    application.full_name ||
-                                                                    "Unknown Student"
-                                                                }
-                                                            </strong>
-
-                                                            <div
-                                                                style={
-                                                                    styles.studentId
-                                                                }
-                                                            >
-                                                                ID:{" "}
-                                                                {
-                                                                    application.student_id ||
-                                                                    "—"
-                                                                }
-                                                            </div>
-
-                                                        </div>
-
-                                                    </div>
-
-                                                </td>
-
-                                                <td
-                                                    style={
-                                                        styles.td
-                                                    }
-                                                >
-                                                    {
-                                                        application.year_level ||
-                                                        "—"
-                                                    }
-                                                </td>
-
-                                                <td
-                                                    style={
-                                                        styles.td
-                                                    }
-                                                >
-
-                                                    <span
-                                                        style={
-                                                            styles.typeBadge
-                                                        }
-                                                    >
-                                                        {
-                                                            application.registration_type ===
-                                                            "in_person"
-                                                                ? "In-Person"
-                                                                : "Online"
-                                                        }
-                                                    </span>
-
-                                                </td>
-
-                                                <td
-                                                    style={
-                                                        styles.td
-                                                    }
-                                                >
-                                                    {
-                                                        formatDate(
-                                                            application.submitted_at ||
-                                                            application.created_at
-                                                        )
-                                                    }
-                                                </td>
-
-                                                <td
-                                                    style={
-                                                        styles.td
-                                                    }
-                                                >
-
-                                                    <span
-                                                        style={{
-                                                            ...styles.statusBadge,
-                                                            ...getStatusStyle(
-                                                                status
-                                                            ),
-                                                        }}
-                                                    >
-                                                        {
-                                                            getStatusLabel(
-                                                                status
-                                                            )
-                                                        }
-                                                    </span>
-
-                                                </td>
-
-                                                <td
-                                                    style={
-                                                        styles.td
-                                                    }
-                                                >
-
-                                                    <button
-                                                        onClick={() =>
-                                                            openReview(
-                                                                application,
-                                                                "review"
-                                                            )
-                                                        }
-                                                        style={
-                                                            styles.reviewButton
-                                                        }
-                                                    >
-                                                        Review →
-                                                    </button>
-
-                                                </td>
-
-                                            </tr>
-                                        );
-                                    }
-                                )}
-
-                            </tbody>
-
-                        </table>
-
-                    )}
-
-                </div>
-
-                <div
-                    style={
-                        styles.cardFooter
-                    }
-                >
-                    Showing{" "}
-                    {
-                        filteredApplications.length
-                    }{" "}
-                    of{" "}
-                    {
-                        applications.length
-                    }{" "}
-                    applications
-                </div>
-
-            </div>
-
-            {/* =================================================
-                REVIEW MODAL
-            ================================================= */}
-
-            {showReviewModal &&
-                selectedApplication && (
-
-                    <div
-                        style={
-                            styles.modalOverlay
-                        }
-                    >
-
-                        <div
-                            style={
-                                styles.modal
-                            }
-                        >
-
-                            <div
-                                style={
-                                    styles.modalHeader
-                                }
+                        <div className="application-tabs">
+                            <button
+                                className={statusFilter === "pending_review" ? "active" : ""}
+                                onClick={() => setStatusFilter("pending_review")}
                             >
+                                Pending {statistics.pending}
+                            </button>
+                            <button
+                                className={statusFilter === "approved" ? "active" : ""}
+                                onClick={() => setStatusFilter("approved")}
+                            >
+                                Approved {statistics.approved}
+                            </button>
+                            <button
+                                className={statusFilter === "rejected" ? "active" : ""}
+                                onClick={() => setStatusFilter("rejected")}
+                            >
+                                Rejected {statistics.rejected}
+                            </button>
+                        </div>
 
-                                <div>
+                        <div className="application-list">
+                            {loading ? (
+                                <div className="application-list-empty">Loading applications...</div>
+                            ) : filteredApplications.length === 0 ? (
+                                <div className="application-list-empty">No applications found.</div>
+                            ) : (
+                                filteredApplications.map((application) => {
+                                    const status = application.application_status || "pending_review";
+                                    const isSelected =
+                                        selectedApplication?.id === application.id;
 
-                                    <div
-                                        style={
-                                            styles.modalEyebrow
-                                        }
-                                    >
-                                        REGISTRATION REVIEW
+                                    return (
+                                        <button
+                                            type="button"
+                                            key={application.id}
+                                            className={`application-item ${isSelected ? "selected" : ""}`}
+                                            onClick={() => openReview(application, "review", true)}
+                                        >
+                                            <div className={`application-avatar avatar-${getInitials(application.full_name).charAt(0).toLowerCase()}`}>
+                                                {getInitials(application.full_name)}
+                                            </div>
+                                            <div className="application-item-info">
+                                                <strong>{application.full_name || "Unknown Student"}</strong>
+                                                <span>ID {application.student_id || "—"}</span>
+                                            </div>
+                                            <span className={`application-status status-${status}`}>
+                                                {getStatusLabel(status).replace("Needs Revision", "Revision").replace("Pending Review", "Pending")}
+                                            </span>
+                                        </button>
+                                    );
+                                })
+                            )}
+                        </div>
+                    </aside>
+
+                    {/* REVIEW DETAIL */}
+                    <main className="registration-detail-card">
+                        {!selectedApplication ? (
+                            <div className="registration-empty-detail">
+                                <div className="empty-detail-icon">▣</div>
+                                <h2>Select a student application</h2>
+                                <p>Choose an application from the list to begin reviewing it.</p>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="student-detail-header">
+                                    <div className="student-profile">
+                                        <div className="student-detail-avatar">
+                                            {getInitials(selectedApplication.full_name)}
+                                        </div>
+                                        <div>
+                                            <div className="student-name-row">
+                                                <h2>{selectedApplication.full_name || "Unknown Student"}</h2>
+                                                <span className={`detail-status status-${selectedStatus}`}>
+                                                    {getStatusLabel(selectedStatus)}
+                                                </span>
+                                            </div>
+                                            <p>
+                                                Online registration · Submitted{" "}
+                                                {formatDate(
+                                                    selectedApplication.submitted_at ||
+                                                    selectedApplication.created_at
+                                                )}
+                                            </p>
+                                        </div>
                                     </div>
-
-                                    <h2
-                                        style={
-                                            styles.modalTitle
-                                        }
-                                    >
-                                        Student Application
-                                    </h2>
-
                                 </div>
 
-                                <button
-                                    onClick={
-                                        closeReview
-                                    }
-                                    style={
-                                        styles.closeButton
-                                    }
-                                >
-                                    ×
-                                </button>
+                                <div className="student-meta-grid">
+                                    <div>
+                                        <span>STUDENT ID</span>
+                                        <strong>{selectedApplication.student_id || "—"}</strong>
+                                    </div>
+                                    <div>
+                                        <span>GRADE &amp; SECTION</span>
+                                        <strong>
+                                            {selectedApplication.grade_section ||
+                                                selectedApplication.year_level ||
+                                                "—"}
+                                        </strong>
+                                    </div>
+                                    <div>
+                                        <span>SCHOOL EMAIL</span>
+                                        <strong>{selectedApplication.email || "—"}</strong>
+                                    </div>
+                                    <div>
+                                        <span>ENROLLMENT STATUS</span>
+                                        <strong className="enrolled-text">Enrolled</strong>
+                                    </div>
+                                </div>
 
+                                <section className="submitted-documents-section">
+                                    <div className="section-heading-row">
+                                        <h3>Submitted documents</h3>
+                                        <span>3 files</span>
+                                    </div>
+
+                                    <div className="document-preview-grid">
+                                        {[
+                                            ["student_id_front", "Student ID (front)"],
+                                            ["enrollment_proof", "Enrollment form"],
+                                        ].map(([type, label]) => {
+                                            const document = getDocumentByType(selectedApplication, type);
+                                            const url = getDocumentUrl(document);
+
+                                            return (
+                                                <div className="document-preview-card" key={type}>
+                                                    <div className="document-preview-box">
+                                                        {url ? (
+                                                            <img src={url} alt={label} />
+                                                        ) : (
+                                                            <>
+                                                                <div className="document-preview-icon">
+                                                                    {type === "student_id_front" ? "▧" : "▤"}
+                                                                </div>
+                                                                <span>Preview</span>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                    <div className="document-card-bottom">
+                                                        <div>
+                                                            <strong>{label}</strong>
+                                                            <span>{document?.original_file_name || "Not submitted"}</span>
+                                                        </div>
+                                                        {url && (
+                                                            <a href={url} target="_blank" rel="noreferrer">
+                                                                ◉ View
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+
+                                        <div className="document-preview-card">
+                                            <div className="document-preview-box">
+                                                {getSelfieUrl(selectedApplication) ? (
+                                                    <img
+                                                        src={getSelfieUrl(selectedApplication)}
+                                                        alt="Student real-time selfie"
+                                                    />
+                                                ) : (
+                                                    <>
+                                                        <div className="document-preview-icon">♙</div>
+                                                        <span>Preview</span>
+                                                    </>
+                                                )}
+                                            </div>
+                                            <div className="document-card-bottom">
+                                                <div>
+                                                    <strong>Real-time selfie</strong>
+                                                    <span>
+                                                        {getSelfieUrl(selectedApplication)
+                                                            ? "selfie_live.jpg"
+                                                            : "Not submitted"}
+                                                    </span>
+                                                </div>
+                                                {getSelfieUrl(selectedApplication) && (
+                                                    <a
+                                                        href={getSelfieUrl(selectedApplication)}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                    >
+                                                        ◉ View
+                                                    </a>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section className="verification-section">
+                                    <div className="section-heading-row">
+                                        <h3>Verification checklist</h3>
+                                        <span>3 of 4 done</span>
+                                    </div>
+
+                                    <div className="verification-list">
+                                        <div className="verification-row">
+                                            <span className="check checked">✓</span>
+                                            <span>Name matches the submitted student ID</span>
+                                        </div>
+                                        <div className="verification-row">
+                                            <span className="check checked">✓</span>
+                                            <span>Student ID is valid and enrolled</span>
+                                        </div>
+                                        <div className="verification-row">
+                                            <span className="check checked">✓</span>
+                                            <span>Documents are clear and readable</span>
+                                        </div>
+                                        <div className="verification-row">
+                                            <span className="check"></span>
+                                            <div>
+                                                <span>Selfie matches the ID photo</span>
+                                                <small>Compare the live selfie with the ID photo</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section className="decision-section">
+                                    <h3>Decision</h3>
+                                    <label>NOTE TO STUDENT</label>
+                                    <textarea
+                                        value={reviewMessage}
+                                        onChange={(event) => setReviewMessage(event.target.value)}
+                                        placeholder="Add a reason if you reject the application or ask for a revision..."
+                                        rows={2}
+                                    />
+
+                                    <div className="decision-actions">
+                                        <button
+                                            type="button"
+                                            className="decision-reject"
+                                            disabled={actionLoading || !canReview}
+                                            onClick={() => {
+                                                setReviewAction("reject");
+                                                setShowReviewModal(true);
+                                            }}
+                                        >
+                                            × &nbsp; Reject
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            className="decision-approve"
+                                            disabled={actionLoading || !canReview}
+                                            onClick={() => {
+                                                setReviewAction("approve");
+                                                setShowReviewModal(true);
+                                            }}
+                                        >
+                                            ✓ &nbsp; Approve
+                                        </button>
+                                    </div>
+
+                                    <div className="approval-notice">
+                                        <span>♧</span>
+                                        When you approve, the student is notified and receives a default password to log in for the first time.
+                                    </div>
+                                </section>
+                            </>
+                        )}
+                    </main>
+                </div>
+            </div>
+
+            {/* Existing review modal remains available for the actual review action. */}
+            {showReviewModal && selectedApplication && (
+                <div style={styles.modalOverlay}>
+                    <div style={styles.modal}>
+                        <div style={styles.modalHeader}>
+                            <div>
+                                <div style={styles.modalEyebrow}>REGISTRATION REVIEW</div>
+                                <h2 style={styles.modalTitle}>Student Application</h2>
                             </div>
+                            <button onClick={closeReview} style={styles.closeButton}>×</button>
+                        </div>
 
-                            {/* =================================================
-                                STUDENT INFORMATION
-                            ================================================= */}
-
-                            <div
-                                style={
-                                    styles.detailSection
-                                }
-                            >
-
-                                <h3
-                                    style={
-                                        styles.detailTitle
-                                    }
-                                >
-                                    Student Information
-                                </h3>
-
-                                <div
-                                style={
-                                    styles.detailGrid
-                                }
-                            >
-
-                                <DetailItem
-                                    label="Student ID"
-                                    value={
-                                        selectedApplication.student_id
-                                    }
-                                />
-
-                                <DetailItem
-                                    label="Full Name"
-                                    value={
-                                        selectedApplication.full_name
-                                    }
-                                />
-
-                                <DetailItem
-                                    label="Year Level"
-                                    value={
-                                        selectedApplication.year_level
-                                    }
-                                />
-
-                                <DetailItem
-                                    label="Email"
-                                    value={
-                                        selectedApplication.email
-                                    }
-                                />
-
+                        <div style={styles.detailSection}>
+                            <h3 style={styles.detailTitle}>Student Information</h3>
+                            <div style={styles.detailGrid}>
+                                <DetailItem label="Student ID" value={selectedApplication.student_id} />
+                                <DetailItem label="Full Name" value={selectedApplication.full_name} />
+                                <DetailItem label="Year Level" value={selectedApplication.year_level} />
+                                <DetailItem label="Email" value={selectedApplication.email} />
                                 <DetailItem
                                     label="Registration Type"
                                     value={
-                                        selectedApplication.registration_type ===
-                                        "in_person"
+                                        selectedApplication.registration_type === "in_person"
                                             ? "In-Person"
                                             : "Online"
                                     }
                                 />
-
                                 <DetailItem
                                     label="Submitted"
-                                    value={
-                                        formatDate(
-                                            selectedApplication.submitted_at
-                                        )
-                                    }
+                                    value={formatDate(selectedApplication.submitted_at)}
                                 />
-
                                 <DetailItem
                                     label="Current Status"
-                                    value={
-                                        getStatusLabel(
-                                            selectedApplication.application_status
-                                        )
-                                    }
+                                    value={getStatusLabel(selectedApplication.application_status)}
                                 />
-
                             </div>
-                            </div>
-
-                            {/* =================================================
-                                SUBMITTED REQUIREMENTS
-                            ================================================= */}
-
-                            <div
-                                style={
-                                    styles.detailSection
-                                }
-                            >
-
-                                <h3
-                                    style={
-                                        styles.detailTitle
-                                    }
-                                >
-                                    Submitted Requirements
-                                </h3>
-
-                                <p
-                                    style={
-                                        styles.sectionDescription
-                                    }
-                                >
-                                    Review the documents submitted
-                                    by the student before making a
-                                    decision.
-                                </p>
-
-                                <div
-                                    style={
-                                        styles.documentsGrid
-                                    }
-                                >
-
-                                    <DocumentCard
-                                        application={
-                                            selectedApplication
-                                        }
-                                        type="student_id_front"
-                                    />
-
-                                    <DocumentCard
-                                        application={
-                                            selectedApplication
-                                        }
-                                        type="student_id_back"
-                                    />
-
-                                    <DocumentCard
-                                        application={
-                                            selectedApplication
-                                        }
-                                        type="enrollment_proof"
-                                    />
-
-                                    <DocumentCard
-                                        application={
-                                            selectedApplication
-                                        }
-                                        type="supporting_document"
-                                    />
-
-                                </div>
-
-                            </div>
-
-                            {/* =================================================
-                                IDENTITY VERIFICATION
-                            ================================================= */}
-
-                            <div
-                                style={
-                                    styles.detailSection
-                                }
-                            >
-
-                                <h3
-                                    style={
-                                        styles.detailTitle
-                                    }
-                                >
-                                    Identity Verification
-                                </h3>
-
-                                <p
-                                    style={
-                                        styles.sectionDescription
-                                    }
-                                >
-                                    Review the real-time selfie
-                                    submitted during registration.
-                                </p>
-
-                                {getSelfieUrl(
-                                    selectedApplication
-                                ) ? (
-
-                                    <div
-                                        style={
-                                            styles.selfieContainer
-                                        }
-                                    >
-
-                                        <img
-                                            src={
-                                                getSelfieUrl(
-                                                    selectedApplication
-                                                )
-                                            }
-                                            alt="Student real-time selfie"
-                                            style={
-                                                styles.selfieImage
-                                            }
-                                        />
-
-                                        <div
-                                            style={
-                                                styles.selfieFooter
-                                            }
-                                        >
-                                            <span>
-                                                ✓ Selfie submitted
-                                            </span>
-
-                                            <a
-                                                href={
-                                                    getSelfieUrl(
-                                                        selectedApplication
-                                                    )
-                                                }
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                style={
-                                                    styles.viewDocumentButton
-                                                }
-                                            >
-                                                Open
-                                            </a>
-                                        </div>
-
-                                    </div>
-
-                                ) : (
-
-                                    <div
-                                        style={
-                                            styles.noFileBox
-                                        }
-                                    >
-                                        No selfie preview URL
-                                        was returned by the server.
-                                    </div>
-
-                                )}
-
-                            </div>
-
-                            {/* =================================================
-                                VERIFICATION NOTICE
-                            ================================================= */}
-
-                            <div
-                                style={
-                                    styles.verificationNotice
-                                }
-                            >
-
-                                <div
-                                    style={
-                                        styles.noticeIcon
-                                    }
-                                >
-                                    !
-                                </div>
-
-                                <div>
-
-                                    <strong>
-                                        Verify before approving
-                                    </strong>
-
-                                    <p
-                                        style={
-                                            styles.noticeText
-                                        }
-                                    >
-                                        Confirm that the submitted
-                                        student information,
-                                        requirements, and identity
-                                        verification are valid before
-                                        approving this registration.
-                                    </p>
-
-                                </div>
-
-                            </div>
-
-                            {/* =================================================
-                                REVIEW MESSAGE
-                            ================================================= */}
-
-                            {canReview && (
-
-                                <div
-                                    style={
-                                        styles.messageSection
-                                    }
-                                >
-
-                                    <label
-                                        style={
-                                            styles.label
-                                        }
-                                    >
-
-                                        {reviewAction ===
-                                        "request_correction"
-                                            ? "Correction Message"
-                                            : "Review Message"}
-
-                                        {(reviewAction ===
-                                            "reject" ||
-                                            reviewAction ===
-                                                "request_correction") && (
-                                            <span
-                                                style={{
-                                                    color:
-                                                        "#d64545",
-                                                }}
-                                            >
-                                                {" "}*
-                                            </span>
-                                        )}
-
-                                    </label>
-
-                                    <textarea
-                                        value={
-                                            reviewMessage
-                                        }
-                                        onChange={(event) =>
-                                            setReviewMessage(
-                                                event.target.value
-                                            )
-                                        }
-                                        placeholder={
-                                            reviewAction ===
-                                            "reject"
-                                                ? "Enter the reason for rejection..."
-                                                : reviewAction ===
-                                                  "request_correction"
-                                                ? "Tell the student what needs to be corrected..."
-                                                : "Optional note for this review..."
-                                        }
-                                        rows={4}
-                                        style={
-                                            styles.textarea
-                                        }
-                                    />
-
-                                </div>
-
-                            )}
-
-                            {/* =================================================
-                                ACTIONS
-                            ================================================= */}
-
-                            <div
-                                style={
-                                    styles.modalActions
-                                }
-                            >
-
-                                <button
-                                    onClick={
-                                        closeReview
-                                    }
-                                    disabled={
-                                        actionLoading
-                                    }
-                                    style={
-                                        styles.cancelButton
-                                    }
-                                >
-                                    Close
-                                </button>
-
-                                {canReview && (
-
-                                    <>
-                                        <button
-                                            onClick={() => {
-                                                setReviewAction(
-                                                    "request_correction"
-                                                );
-                                                setReviewMessage(
-                                                    ""
-                                                );
-                                                setError("");
-                                            }}
-                                            disabled={
-                                                actionLoading
-                                            }
-                                            style={
-                                                styles.correctionButton
-                                            }
-                                        >
-                                            Request Correction
-                                        </button>
-
-                                        <button
-                                            onClick={() => {
-                                                setReviewAction(
-                                                    "reject"
-                                                );
-                                                setReviewMessage(
-                                                    ""
-                                                );
-                                                setError("");
-                                            }}
-                                            disabled={
-                                                actionLoading
-                                            }
-                                            style={
-                                                styles.rejectButton
-                                            }
-                                        >
-                                            Reject
-                                        </button>
-
-                                        <button
-                                            onClick={() => {
-                                                setReviewAction(
-                                                    "approve"
-                                                );
-                                                setReviewMessage(
-                                                    ""
-                                                );
-                                                setError("");
-                                            }}
-                                            disabled={
-                                                actionLoading
-                                            }
-                                            style={
-                                                styles.approveButton
-                                            }
-                                        >
-                                            Approve Student
-                                        </button>
-                                    </>
-
-                                )}
-
-                            </div>
-
-                            {/* =================================================
-                                CONFIRMATION
-                            ================================================= */}
-
-                            {reviewAction &&
-                                reviewAction !==
-                                    "review" &&
-                                canReview && (
-
-                                    <div
-                                        style={
-                                            styles.confirmBox
-                                        }
-                                    >
-
-                                        <div>
-
-                                            <strong>
-                                                {reviewAction ===
-                                                "approve"
-                                                    ? "Approve this registration?"
-                                                    : reviewAction ===
-                                                      "reject"
-                                                    ? "Reject this registration?"
-                                                    : "Request correction?"}
-                                            </strong>
-
-                                            <p
-                                                style={
-                                                    styles.confirmText
-                                                }
-                                            >
-
-                                                {reviewAction ===
-                                                "approve"
-                                                    ? "The student will be allowed to continue to the account activation/login process."
-                                                    : reviewAction ===
-                                                      "reject"
-                                                    ? "The student registration will be marked as rejected."
-                                                    : "The student will be notified that corrections are required before the registration can be approved."}
-
-                                            </p>
-
-                                        </div>
-
-                                        <button
-                                            onClick={
-                                                submitReview
-                                            }
-                                            disabled={
-                                                actionLoading
-                                            }
-                                            style={{
-                                                ...styles.confirmButton,
-                                                background:
-                                                    reviewAction ===
-                                                    "approve"
-                                                        ? "#16804a"
-                                                        : reviewAction ===
-                                                          "reject"
-                                                        ? "#d64545"
-                                                        : "#266EFF",
-                                            }}
-                                        >
-                                            {actionLoading
-                                                ? "Processing..."
-                                                : reviewAction ===
-                                                  "approve"
-                                                ? "Confirm Approval"
-                                                : reviewAction ===
-                                                  "reject"
-                                                ? "Confirm Rejection"
-                                                : "Send Correction"}
-                                        </button>
-
-                                    </div>
-
-                                )}
-
                         </div>
 
+                        <div style={styles.detailSection}>
+                            <h3 style={styles.detailTitle}>Submitted Requirements</h3>
+                            <div style={styles.documentsGrid}>
+                                <DocumentCard application={selectedApplication} type="student_id_front" />
+                                <DocumentCard application={selectedApplication} type="student_id_back" />
+                                <DocumentCard application={selectedApplication} type="enrollment_proof" />
+                                <DocumentCard application={selectedApplication} type="supporting_document" />
+                            </div>
+                        </div>
+
+                        <div style={styles.detailSection}>
+                            <h3 style={styles.detailTitle}>Identity Verification</h3>
+                            {getSelfieUrl(selectedApplication) ? (
+                                <div style={styles.selfieContainer}>
+                                    <img
+                                        src={getSelfieUrl(selectedApplication)}
+                                        alt="Student real-time selfie"
+                                        style={styles.selfieImage}
+                                    />
+                                </div>
+                            ) : (
+                                <div style={styles.noFileBox}>No selfie preview URL was returned by the server.</div>
+                            )}
+                        </div>
+
+                        {canReview && (
+                            <div style={styles.messageSection}>
+                                <label style={styles.label}>
+                                    {reviewAction === "request_correction"
+                                        ? "Correction Message"
+                                        : "Review Message"}
+                                </label>
+                                <textarea
+                                    value={reviewMessage}
+                                    onChange={(event) => setReviewMessage(event.target.value)}
+                                    placeholder={
+                                        reviewAction === "reject"
+                                            ? "Enter the reason for rejection..."
+                                            : reviewAction === "request_correction"
+                                            ? "Tell the student what needs to be corrected..."
+                                            : "Optional note for this review..."
+                                    }
+                                    rows={4}
+                                    style={styles.textarea}
+                                />
+                            </div>
+                        )}
+
+                        <div style={styles.modalActions}>
+                            <button onClick={closeReview} disabled={actionLoading} style={styles.cancelButton}>
+                                Close
+                            </button>
+                            {canReview && (
+                                <>
+                                    <button
+                                        onClick={() => {
+                                            setReviewAction("request_correction");
+                                            setReviewMessage("");
+                                            setError("");
+                                        }}
+                                        disabled={actionLoading}
+                                        style={styles.correctionButton}
+                                    >
+                                        Request Correction
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setReviewAction("reject");
+                                            setReviewMessage("");
+                                            setError("");
+                                        }}
+                                        disabled={actionLoading}
+                                        style={styles.rejectButton}
+                                    >
+                                        Reject
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setReviewAction("approve");
+                                            setReviewMessage("");
+                                            setError("");
+                                        }}
+                                        disabled={actionLoading}
+                                        style={styles.approveButton}
+                                    >
+                                        Approve Student
+                                    </button>
+                                </>
+                            )}
+                        </div>
+
+                        {reviewAction && reviewAction !== "review" && canReview && (
+                            <div style={styles.confirmBox}>
+                                <div>
+                                    <strong>
+                                        {reviewAction === "approve"
+                                            ? "Approve this registration?"
+                                            : reviewAction === "reject"
+                                            ? "Reject this registration?"
+                                            : "Request correction?"}
+                                    </strong>
+                                    <p style={styles.confirmText}>
+                                        {reviewAction === "approve"
+                                            ? "The student will be allowed to continue to the account activation/login process."
+                                            : reviewAction === "reject"
+                                            ? "The student registration will be marked as rejected."
+                                            : "The student will be notified that corrections are required before the registration can be approved."}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={submitReview}
+                                    disabled={actionLoading}
+                                    style={{
+                                        ...styles.confirmButton,
+                                        background:
+                                            reviewAction === "approve"
+                                                ? "#16804a"
+                                                : reviewAction === "reject"
+                                                ? "#d64545"
+                                                : "#266EFF",
+                                    }}
+                                >
+                                    {actionLoading
+                                        ? "Processing..."
+                                        : reviewAction === "approve"
+                                        ? "Confirm Approval"
+                                        : reviewAction === "reject"
+                                        ? "Confirm Rejection"
+                                        : "Send Correction"}
+                                </button>
+                            </div>
+                        )}
                     </div>
-
-                )}
-
+                </div>
+            )}
         </div>
     );
 };

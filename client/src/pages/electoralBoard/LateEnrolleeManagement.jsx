@@ -6,6 +6,7 @@ import React, {
 } from "react";
 
 import api from "../../services/api";
+import "./LateEnrolleeManagement.css";
 
 // ============================================================
 // API
@@ -226,7 +227,7 @@ const getDocumentReviewStatus = (application) => {
 // COMPONENT
 // ============================================================
 
-function LateEnrolleeManagement() {
+function LateEnrolleeManagement({ onNavigate }) {
 
     const [
         applications,
@@ -712,7 +713,7 @@ function LateEnrolleeManagement() {
 
             if (!reason) {
                 setActionError(
-                    "A rejection reason is required."
+                    "A lrm-rejection reason is required."
                 );
                 return;
             }
@@ -823,7 +824,7 @@ function LateEnrolleeManagement() {
             value ===
             "needs_correction"
         ) {
-            return "correction";
+            return "lrm-correction";
         }
 
         return "pending";
@@ -833,2454 +834,603 @@ function LateEnrolleeManagement() {
     // RENDER
     // ========================================================
 
+
+    // ============================================================
+    // RENDER
+    // ============================================================
+
     return (
-
-        <div className="late-page">
-
-            <style>{`
-
-                * {
-                    box-sizing: border-box;
-                }
-
-                .late-page {
-                    width: 100%;
-                    color: #0f172a;
-                }
-
-                .late-container {
-                    max-width: 1250px;
-                    margin: 0 auto;
-                    padding: 28px 22px 50px;
-                }
-
-                .late-header {
-                    background: #ffffff;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 18px;
-                    padding: 25px 27px;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    gap: 20px;
-                    margin-bottom: 20px;
-                    box-shadow:
-                        0 8px 25px
-                        rgba(15, 23, 42, 0.05);
-                }
-
-                .late-header-left {
-                    display: flex;
-                    align-items: center;
-                    gap: 15px;
-                }
-
-                .late-icon {
-                    width: 55px;
-                    height: 55px;
-                    border-radius: 15px;
-                    background: #eff6ff;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 25px;
-                }
-
-                .eyebrow {
-                    color: #2563eb;
-                    font-size: 10px;
-                    font-weight: 800;
-                    letter-spacing: 1.1px;
-                    text-transform: uppercase;
-                    margin-bottom: 5px;
-                }
-
-                .late-title {
-                    margin: 0;
-                    font-size: 27px;
-                    font-weight: 800;
-                }
-
-                .late-subtitle {
-                    margin: 6px 0 0;
-                    color: #64748b;
-                    font-size: 13px;
-                }
-
-                .refresh-btn {
-                    height: 42px;
-                    padding: 0 17px;
-                    border: 1px solid #dbe3ef;
-                    background: #ffffff;
-                    color: #1e3a8a;
-                    border-radius: 10px;
-                    cursor: pointer;
-                    font-size: 12px;
-                    font-weight: 800;
-                }
-
-                .refresh-btn:hover {
-                    background: #eff6ff;
-                }
-
-                .error-banner {
-                    background: #fef2f2;
-                    border: 1px solid #fecaca;
-                    color: #b91c1c;
-                    border-radius: 11px;
-                    padding: 13px 15px;
-                    margin-bottom: 17px;
-                    font-size: 12px;
-                }
-
-                .success-banner {
-                    background: #ecfdf5;
-                    border: 1px solid #bbf7d0;
-                    color: #166534;
-                    border-radius: 11px;
-                    padding: 13px 15px;
-                    margin-top: 16px;
-                    font-size: 12px;
-                    line-height: 1.5;
-                }
-
-                .stats-grid {
-                    display: grid;
-                    grid-template-columns:
-                        repeat(4, minmax(0, 1fr));
-                    gap: 14px;
-                    margin-bottom: 20px;
-                }
-
-                .stat-card {
-                    background: #ffffff;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 15px;
-                    padding: 18px;
-                    display: flex;
-                    align-items: center;
-                    gap: 13px;
-                }
-
-                .stat-icon {
-                    width: 43px;
-                    height: 43px;
-                    border-radius: 12px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 18px;
-                }
-
-                .blue {
-                    background: #eff6ff;
-                }
-
-                .amber {
-                    background: #fff7ed;
-                }
-
-                .green {
-                    background: #ecfdf5;
-                }
-
-                .red {
-                    background: #fef2f2;
-                }
-
-                .stat-label {
-                    color: #64748b;
-                    font-size: 11px;
-                    font-weight: 700;
-                }
-
-                .stat-value {
-                    font-size: 24px;
-                    font-weight: 800;
-                }
-
-                .applications-card {
-                    background: #ffffff;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 18px;
-                    overflow: hidden;
-                }
-
-                .applications-top {
-                    padding: 22px;
-                    border-bottom: 1px solid #e2e8f0;
-                }
-
-                .title-row {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    gap: 15px;
-                    margin-bottom: 17px;
-                }
-
-                .applications-title {
-                    margin: 0;
-                    font-size: 18px;
-                    font-weight: 800;
-                }
-
-                .applications-description {
-                    margin: 4px 0 0;
-                    color: #64748b;
-                    font-size: 12px;
-                }
-
-                .filters {
-                    display: grid;
-                    grid-template-columns: 1fr 200px;
-                    gap: 11px;
-                }
-
-                .search-box,
-                .status-select {
-                    height: 44px;
-                    width: 100%;
-                    border: 1px solid #d7e0ec;
-                    border-radius: 10px;
-                    background: #ffffff;
-                    outline: none;
-                    font-size: 12px;
-                    padding: 0 14px;
-                }
-
-                .application-row {
-                    display: grid;
-                    grid-template-columns:
-                        minmax(250px, 1.7fr)
-                        1fr
-                        1fr
-                        145px
-                        105px;
-                    gap: 15px;
-                    align-items: center;
-                    padding: 17px 22px;
-                    border-bottom: 1px solid #edf1f6;
-                }
-
-                .application-row:last-child {
-                    border-bottom: 0;
-                }
-
-                .application-row:hover {
-                    background: #f8fbff;
-                }
-
-                .application-header {
-                    background: #f8fafc;
-                    color: #64748b;
-                    font-size: 10px;
-                    font-weight: 800;
-                    text-transform: uppercase;
-                    letter-spacing: .6px;
-                }
-
-                .student-cell {
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                    min-width: 0;
-                }
-
-                .student-avatar {
-                    width: 42px;
-                    height: 42px;
-                    border-radius: 12px;
-                    background: #eff6ff;
-                    color: #2563eb;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 13px;
-                    font-weight: 800;
-                    flex-shrink: 0;
-                }
-
-                .student-name {
-                    font-size: 13px;
-                    font-weight: 800;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                }
-
-                .student-id {
-                    margin-top: 3px;
-                    font-size: 10px;
-                    color: #94a3b8;
-                }
-
-                .cell-main {
-                    font-size: 12px;
-                    font-weight: 700;
-                }
-
-                .cell-sub {
-                    margin-top: 3px;
-                    font-size: 10px;
-                    color: #94a3b8;
-                }
-
-                .status-badge {
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 6px;
-                    border-radius: 999px;
-                    padding: 6px 10px;
-                    font-size: 10px;
-                    font-weight: 800;
-                    white-space: nowrap;
-                }
-
-                .status-badge .dot {
-                    width: 6px;
-                    height: 6px;
-                    border-radius: 50%;
-                    background: currentColor;
-                }
-
-                .status-badge.pending {
-                    background: #fff7ed;
-                    color: #c2410c;
-                }
-
-                .status-badge.approved {
-                    background: #ecfdf5;
-                    color: #15803d;
-                }
-
-                .status-badge.rejected {
-                    background: #fef2f2;
-                    color: #dc2626;
-                }
-
-                .status-badge.correction {
-                    background: #fff7ed;
-                    color: #b45309;
-                }
-
-                .row-action {
-                    display: flex;
-                    justify-content: flex-end;
-                }
-
-                .review-btn {
-                    height: 34px;
-                    padding: 0 13px;
-                    border-radius: 8px;
-                    border: 1px solid #2563eb;
-                    background: #2563eb;
-                    color: white;
-                    cursor: pointer;
-                    font-size: 10px;
-                    font-weight: 800;
-                }
-
-                .loading-state,
-                .empty-state {
-                    padding: 60px 25px;
-                    text-align: center;
-                    color: #64748b;
-                    font-size: 13px;
-                }
-
-                .spinner {
-                    width: 28px;
-                    height: 28px;
-                    border: 3px solid #dbeafe;
-                    border-top-color: #2563eb;
-                    border-radius: 50%;
-                    animation: spin .8s linear infinite;
-                    margin: 0 auto 12px;
-                }
-
-                @keyframes spin {
-                    to {
-                        transform: rotate(360deg);
-                    }
-                }
-
-                .modal-overlay {
-                    position: fixed;
-                    inset: 0;
-                    z-index: 1000;
-                    background: rgba(15, 23, 42, .60);
-                    backdrop-filter: blur(5px);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 20px;
-                }
-
-                .details-modal {
-                    width: min(960px, 100%);
-                    max-height: 92vh;
-                    background: #ffffff;
-                    border-radius: 18px;
-                    overflow: hidden;
-                    display: flex;
-                    flex-direction: column;
-                    box-shadow:
-                        0 25px 80px
-                        rgba(15, 23, 42, .25);
-                }
-
-                .modal-header {
-                    padding: 20px 24px;
-                    border-bottom: 1px solid #e2e8f0;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: flex-start;
-                }
-
-                .modal-title {
-                    margin: 0;
-                    font-size: 20px;
-                    font-weight: 800;
-                }
-
-                .modal-close {
-                    width: 35px;
-                    height: 35px;
-                    border: 0;
-                    border-radius: 9px;
-                    background: #f1f5f9;
-                    cursor: pointer;
-                    font-size: 18px;
-                }
-
-                .modal-content {
-                    overflow-y: auto;
-                    padding: 22px 24px 25px;
-                }
-
-                .student-profile {
-                    display: flex;
-                    align-items: center;
-                    gap: 14px;
-                    padding: 15px;
-                    border: 1px solid #dbeafe;
-                    background: #f8fbff;
-                    border-radius: 13px;
-                    margin-bottom: 20px;
-                }
-
-                .profile-avatar {
-                    width: 64px;
-                    height: 64px;
-                    border-radius: 15px;
-                    background: #2563eb;
-                    color: white;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 18px;
-                    font-weight: 800;
-                }
-
-                .profile-name {
-                    font-size: 17px;
-                    font-weight: 800;
-                }
-
-                .profile-meta {
-                    margin-top: 5px;
-                    font-size: 11px;
-                    color: #64748b;
-                }
-
-                .section-title {
-                    font-size: 14px;
-                    font-weight: 800;
-                    margin: 22px 0 10px;
-                }
-
-                .details-grid {
-                    display: grid;
-                    grid-template-columns:
-                        repeat(3, minmax(0, 1fr));
-                    gap: 11px;
-                }
-
-                .detail-box {
-                    border: 1px solid #e2e8f0;
-                    border-radius: 11px;
-                    padding: 13px;
-                }
-
-                .detail-label {
-                    font-size: 9px;
-                    color: #94a3b8;
-                    text-transform: uppercase;
-                    letter-spacing: .7px;
-                    font-weight: 800;
-                }
-
-                .detail-value {
-                    margin-top: 5px;
-                    font-size: 12px;
-                    font-weight: 700;
-                    word-break: break-word;
-                }
-
-                .selfie-card {
-                    border: 1px solid #e2e8f0;
-                    border-radius: 13px;
-                    padding: 14px;
-                    background: #f8fafc;
-                    display: flex;
-                    align-items: center;
-                    gap: 18px;
-                }
-
-                .selfie-preview {
-                    width: 130px;
-                    height: 160px;
-                    border-radius: 12px;
-                    overflow: hidden;
-                    background: #e2e8f0;
-                    flex-shrink: 0;
-                }
-
-                .selfie-preview img {
-                    width: 100%;
-                    height: 100%;
-                    object-fit: cover;
-                }
-
-                .selfie-title {
-                    font-size: 14px;
-                    font-weight: 800;
-                    margin-bottom: 5px;
-                }
-
-                .selfie-info {
-                    color: #475569;
-                    font-size: 12px;
-                    line-height: 1.6;
-                }
-
-                .open-link,
-                .document-open {
-                    display: inline-flex;
-                    margin-top: 9px;
-                    color: #2563eb;
-                    font-size: 10px;
-                    font-weight: 800;
-                    text-decoration: none;
-                    cursor: pointer;
-                }
-
-                .document-open:hover {
-                    text-decoration: underline;
-                }
-
-                .document-list {
-                    display: grid;
-                    gap: 9px;
-                }
-
-                .document-item {
-                    border: 1px solid #e2e8f0;
-                    border-radius: 11px;
-                    padding: 13px;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    gap: 15px;
-                }
-
-                .document-name {
-                    font-size: 12px;
-                    font-weight: 800;
-                }
-
-                .document-type {
-                    margin-top: 4px;
-                    color: #94a3b8;
-                    font-size: 10px;
-                }
-
-                .document-status {
-                    border-radius: 999px;
-                    padding: 5px 9px;
-                    font-size: 9px;
-                    font-weight: 800;
-                    white-space: nowrap;
-                }
-
-                .document-status.in-review {
-                    background: #fff7ed;
-                    color: #c2410c;
-                }
-
-                .document-status.submitted {
-                    background: #ecfdf5;
-                    color: #15803d;
-                }
-
-                .document-status.rejected {
-                    background: #fef2f2;
-                    color: #dc2626;
-                }
-
-                .document-preview {
-                    width: 74px;
-                    height: 54px;
-                    border-radius: 9px;
-                    overflow: hidden;
-                    border: 1px solid #dbe3ef;
-                    background: #f8fafc;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    flex-shrink: 0;
-                }
-
-                .document-preview img {
-                    width: 100%;
-                    height: 100%;
-                    object-fit: cover;
-                }
-
-                .document-file-icon {
-                    font-size: 23px;
-                }
-
-                .document-actions {
-                    display: flex;
-                    align-items: center;
-                    justify-content: flex-end;
-                    gap: 10px;
-                    flex-shrink: 0;
-                }
-
-                .document-view-btn {
-                    height: 32px;
-                    padding: 0 11px;
-                    border: 1px solid #2563eb;
-                    border-radius: 8px;
-                    background: #eff6ff;
-                    color: #2563eb;
-                    cursor: pointer;
-                    font-size: 10px;
-                    font-weight: 800;
-                }
-
-                .document-view-btn:hover {
-                    background: #dbeafe;
-                }
-
-                .document-view-btn:disabled {
-                    border-color: #e2e8f0;
-                    background: #f8fafc;
-                    color: #94a3b8;
-                    cursor: not-allowed;
-                }
-
-                .document-path-note {
-                    margin-top: 8px;
-                    color: #94a3b8;
-                    font-size: 9px;
-                }
-
-                .document-preview-modal {
-                    width: min(1050px, 100%);
-                    height: min(90vh, 850px);
-                    background: #0f172a;
-                    border-radius: 16px;
-                    overflow: hidden;
-                    display: flex;
-                    flex-direction: column;
-                    box-shadow:
-                        0 25px 80px
-                        rgba(15, 23, 42, .35);
-                }
-
-                .document-preview-header {
-                    min-height: 58px;
-                    padding: 12px 16px;
-                    background: #ffffff;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    gap: 12px;
-                }
-
-                .document-preview-title {
-                    min-width: 0;
-                }
-
-                .document-preview-name {
-                    font-size: 13px;
-                    font-weight: 800;
-                    color: #0f172a;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                }
-
-                .document-preview-type {
-                    margin-top: 3px;
-                    font-size: 9px;
-                    color: #64748b;
-                }
-
-                .document-preview-body {
-                    flex: 1;
-                    min-height: 0;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 16px;
-                    background: #0f172a;
-                }
-
-                .document-preview-body img {
-                    max-width: 100%;
-                    max-height: 100%;
-                    object-fit: contain;
-                    border-radius: 8px;
-                    background: #ffffff;
-                }
-
-                .document-preview-body iframe {
-                    width: 100%;
-                    height: 100%;
-                    border: 0;
-                    border-radius: 8px;
-                    background: #ffffff;
-                }
-
-                .document-preview-open {
-                    color: #2563eb;
-                    font-size: 10px;
-                    font-weight: 800;
-                    text-decoration: none;
-                    white-space: nowrap;
-                }
-
-                .document-preview-open:hover {
-                    text-decoration: underline;
-                }
-
-                .document-preview-fallback {
-                    color: #cbd5e1;
-                    text-align: center;
-                    font-size: 12px;
-                    line-height: 1.6;
-                    max-width: 420px;
-                }
-
-                .no-documents {
-                    border: 1px dashed #cbd5e1;
-                    border-radius: 10px;
-                    padding: 20px;
-                    text-align: center;
-                    color: #64748b;
-                    font-size: 11px;
-                }
-
-                .review-message {
-                    margin-top: 15px;
-                    border-radius: 11px;
-                    padding: 13px;
-                    font-size: 11px;
-                    line-height: 1.55;
-                }
-
-                .review-message.rejection {
-                    background: #fef2f2;
-                    border: 1px solid #fecaca;
-                    color: #991b1b;
-                }
-
-                .review-message.correction {
-                    background: #fff7ed;
-                    border: 1px solid #fed7aa;
-                    color: #9a3412;
-                }
-
-                .review-message-title {
-                    font-size: 10px;
-                    font-weight: 800;
-                    text-transform: uppercase;
-                    margin-bottom: 4px;
-                }
-
-                .modal-actions {
-                    display: flex;
-                    justify-content: flex-end;
-                    flex-wrap: wrap;
-                    gap: 9px;
-                    padding-top: 20px;
-                    margin-top: 22px;
-                    border-top: 1px solid #e2e8f0;
-                }
-
-                .modal-action {
-                    height: 41px;
-                    padding: 0 16px;
-                    border-radius: 9px;
-                    cursor: pointer;
-                    font-size: 11px;
-                    font-weight: 800;
-                }
-
-                .modal-action.approve {
-                    background: #16a34a;
-                    border: 1px solid #16a34a;
-                    color: white;
-                }
-
-                .modal-action.reject {
-                    background: white;
-                    border: 1px solid #fecaca;
-                    color: #dc2626;
-                }
-
-                .modal-action.correction {
-                    background: white;
-                    border: 1px solid #fed7aa;
-                    color: #c2410c;
-                }
-
-                .final-review-status {
-                    min-height: 41px;
-                    padding: 0 18px;
-                    border-radius: 9px;
-                    display: inline-flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 11px;
-                    font-weight: 800;
-                }
-
-                .final-review-status.approved {
-                    background: #ecfdf5;
-                    border: 1px solid #bbf7d0;
-                    color: #15803d;
-                }
-
-                .final-review-status.rejected {
-                    background: #fef2f2;
-                    border: 1px solid #fecaca;
-                    color: #dc2626;
-                }
-
-                .small-modal {
-                    width: min(480px, 100%);
-                    background: white;
-                    border-radius: 16px;
-                    padding: 24px;
-                    box-shadow:
-                        0 25px 70px
-                        rgba(15, 23, 42, .25);
-                }
-
-                .small-icon {
-                    width: 48px;
-                    height: 48px;
-                    border-radius: 13px;
-                    background: #eff6ff;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 20px;
-                    margin-bottom: 14px;
-                }
-
-                .small-icon.reject {
-                    background: #fef2f2;
-                }
-
-                .small-title {
-                    margin: 0;
-                    font-size: 18px;
-                    font-weight: 800;
-                }
-
-                .small-text {
-                    margin: 8px 0 0;
-                    color: #64748b;
-                    font-size: 12px;
-                    line-height: 1.6;
-                }
-
-                .reason-textarea {
-                    width: 100%;
-                    min-height: 125px;
-                    margin-top: 15px;
-                    padding: 12px;
-                    border: 1px solid #dbe3ef;
-                    border-radius: 10px;
-                    resize: vertical;
-                    outline: none;
-                    font-family: inherit;
-                    font-size: 12px;
-                }
-
-                .small-actions {
-                    display: flex;
-                    justify-content: flex-end;
-                    gap: 8px;
-                    margin-top: 20px;
-                }
-
-                .small-btn {
-                    height: 39px;
-                    padding: 0 15px;
-                    border-radius: 9px;
-                    border: 1px solid #dbe3ef;
-                    background: white;
-                    cursor: pointer;
-                    font-size: 11px;
-                    font-weight: 800;
-                }
-
-                .small-btn.approve {
-                    background: #16a34a;
-                    border-color: #16a34a;
-                    color: white;
-                }
-
-                .small-btn.reject {
-                    background: #dc2626;
-                    border-color: #dc2626;
-                    color: white;
-                }
-
-                @media (max-width: 900px) {
-
-                    .stats-grid {
-                        grid-template-columns:
-                            repeat(2, 1fr);
-                    }
-
-                    .application-row {
-                        grid-template-columns:
-                            1.5fr
-                            1fr
-                            1fr
-                            140px;
-                    }
-
-                    .application-row
-                        > :last-child {
-                        grid-column: 1 / -1;
-                        justify-content: flex-start;
-                    }
-                }
-
-                @media (max-width: 700px) {
-
-                    .late-header {
-                        flex-direction: column;
-                        align-items: flex-start;
-                    }
-
-                    .refresh-btn {
-                        width: 100%;
-                    }
-
-                    .filters {
-                        grid-template-columns: 1fr;
-                    }
-
-                    .application-header {
-                        display: none;
-                    }
-
-                    .application-row {
-                        grid-template-columns: 1fr;
-                        gap: 10px;
-                    }
-
-                    .details-grid {
-                        grid-template-columns: 1fr;
-                    }
-
-                    .selfie-card {
-                        flex-direction: column;
-                        align-items: flex-start;
-                    }
-
-                    .modal-actions,
-                    .small-actions {
-                        flex-direction: column;
-                    }
-
-                    .modal-action,
-                    .small-btn {
-                        width: 100%;
-                    }
-                }
-
-                @media (max-width: 500px) {
-
-                    .stats-grid {
-                        grid-template-columns: 1fr;
-                    }
-
-                    .late-container {
-                        padding: 18px 12px 35px;
-                    }
-
-                    .modal-overlay {
-                        padding: 10px;
-                    }
-
-                    .modal-content {
-                        padding: 18px;
-                    }
-                }
-
-            `}</style>
-
-            <div className="late-container">
-
-                {/* HEADER */}
-
-                <div className="late-header">
-
-                    <div className="late-header-left">
-
-                        <div className="late-icon">
-                            📝
-                        </div>
-
-                        <div>
-
-                            <div className="eyebrow">
-                                Electoral Board
-                            </div>
-
-                            <h1 className="late-title">
-                                Late Enrollee Management
-                            </h1>
-
-                            <p className="late-subtitle">
-                                Review and manage students who registered after the original enrollment roster.
-                            </p>
-
-                        </div>
-
+        <div className="lrm-page">
+
+
+            <div className="lrm-shell">
+                <div className="lrm-heading">
+                    <div className="lrm-heading-copy">
+                        <div className="lrm-eyebrow">Online Registration Management</div>
+                        <h1 className="lrm-title">Late Enrollee Management</h1>
+                        <p className="lrm-subtitle">
+                            Check submitted documents and selfie, then approve or reject the registration.
+                        </p>
                     </div>
 
-                    <button
-                        className="refresh-btn"
-                        onClick={() =>
-                            loadApplications(true)
-                        }
-                        disabled={
-                            loading ||
-                            refreshing
-                        }
-                    >
-                        {refreshing
-                            ? "Refreshing..."
-                            : "↻ Refresh"}
-                    </button>
+                    <select
+                        className="lrm-enrollment-select"
+                        value="late_enrolled"
+                        onChange={(event) => {
+                            const value = event.target.value;
 
+                            if (value === "enrolled") {
+                                if (typeof onNavigate === "function") {
+                                    onNavigate("registrations");
+                                }
+                            }
+                        }}
+                        aria-label="Enrollment type"
+                    >
+                        <option value="enrolled">Enrolled</option>
+                        <option value="late_enrolled">Late Enrolled</option>
+                    </select>
                 </div>
 
-                {/* ERROR */}
-
                 {error && (
-                    <div className="error-banner">
-                        <strong>!</strong>{" "}
-                        {error}
+                    <div className="lrm-error">
+                        <strong>!</strong>{" "}{error}
                     </div>
                 )}
 
-                {/* STATISTICS */}
-
-                <div className="stats-grid">
-
-                    <div className="stat-card">
-
-                        <div className="stat-icon blue">
-                            📋
+                <div className="lrm-layout">
+                    <div className="lrm-list-panel">
+                        <div className="lrm-list-heading">
+                            <h2 className="lrm-list-title">Applications</h2>
+                            <p className="lrm-list-caption">
+                                Submitted late enrollee registrations
+                            </p>
                         </div>
 
-                        <div>
-                            <div className="stat-label">
-                                Total Applications
-                            </div>
-
-                            <div className="stat-value">
-                                {
-                                    statistics.total
-                                }
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <div className="stat-card">
-
-                        <div className="stat-icon amber">
-                            ⏳
-                        </div>
-
-                        <div>
-                            <div className="stat-label">
-                                For Review
-                            </div>
-
-                            <div className="stat-value">
-                                {
-                                    statistics.pending
-                                }
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <div className="stat-card">
-
-                        <div className="stat-icon green">
-                            ✓
-                        </div>
-
-                        <div>
-                            <div className="stat-label">
-                                Approved
-                            </div>
-
-                            <div className="stat-value">
-                                {
-                                    statistics.approved
-                                }
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <div className="stat-card">
-
-                        <div className="stat-icon red">
-                            !
-                        </div>
-
-                        <div>
-                            <div className="stat-label">
-                                Rejected
-                            </div>
-
-                            <div className="stat-value">
-                                {
-                                    statistics.rejected
-                                }
-                            </div>
-                        </div>
-
-                    </div>
-
-                </div>
-
-                {/* APPLICATIONS */}
-
-                <div className="applications-card">
-
-                    <div className="applications-top">
-
-                        <div className="title-row">
-
-                            <div>
-
-                                <h2 className="applications-title">
-                                    Late Enrollee Applications
-                                </h2>
-
-                                <p className="applications-description">
-                                    Select Review to inspect the student's information, selfie, and submitted documents.
-                                </p>
-
-                            </div>
-
-                            <strong
-                                style={{
-                                    fontSize: 11,
-                                    color: "#64748b",
-                                }}
-                            >
-                                {
-                                    filteredApplications.length
-                                }{" "}
-                                shown
-                            </strong>
-
-                        </div>
-
-                        <div className="filters">
-
+                        <div className="lrm-controls">
                             <input
-                                className="search-box"
+                                className="lrm-search"
                                 value={search}
-                                onChange={(e) =>
-                                    setSearch(
-                                        e.target.value
-                                    )
-                                }
-                                placeholder="Search student name, Student ID, year level, or status..."
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Search name or student ID"
                             />
 
-                            <select
-                                className="status-select"
-                                value={
-                                    statusFilter
-                                }
-                                onChange={(e) =>
-                                    setStatusFilter(
-                                        e.target.value
-                                    )
-                                }
-                            >
-
-                                <option value="all">
-                                    All Status
-                                </option>
-
-                                <option value="pending">
+                            <div className="lrm-filter-tabs">
+                                <button
+                                    className={`lrm-filter-tab ${statusFilter === "pending" || statusFilter === "all" ? "lrm-active" : ""}`}
+                                    onClick={() => setStatusFilter("pending")}
+                                >
                                     Pending
-                                </option>
-
-                                <option value="submitted">
-                                    Submitted
-                                </option>
-
-                                <option value="under_review">
-                                    Under Review
-                                </option>
-
-                                <option value="needs_correction">
-                                    Correction Required
-                                </option>
-
-                                <option value="approved">
+                                </button>
+                                <button
+                                    className={`lrm-filter-tab ${statusFilter === "approved" ? "lrm-active" : ""}`}
+                                    onClick={() => setStatusFilter("approved")}
+                                >
                                     Approved
-                                </option>
-
-                                <option value="rejected">
+                                </button>
+                                <button
+                                    className={`lrm-filter-tab ${statusFilter === "rejected" ? "lrm-active" : ""}`}
+                                    onClick={() => setStatusFilter("rejected")}
+                                >
                                     Rejected
-                                </option>
-
-                            </select>
-
+                                </button>
+                            </div>
                         </div>
 
+                        {loading ? (
+                            <div className="lrm-list-loading">
+                                <div className="lrm-spinner" />
+                                Loading applications...
+                            </div>
+                        ) : filteredApplications.length === 0 ? (
+                            <div className="lrm-empty-list">
+                                <div style={{fontSize: 28, marginBottom: 8}}>📝</div>
+                                <strong style={{fontSize: 14}}>
+                                    No Late Enrollee Applications
+                                </strong>
+                                <div style={{marginTop: 6}}>
+                                    {search || statusFilter !== "all"
+                                        ? "No applications match your current lrm-controls."
+                                        : "There are currently no late enrollee applications."}
+                                </div>
+                            </div>
+                        ) : (
+                            filteredApplications.map((application) => {
+                                const id = getApplicationId(application);
+                                const name = getStudentName(application);
+                                const status = getStatus(application);
+
+                                return (
+                                    <div
+                                        className="lrm-row"
+                                        key={id}
+                                        onClick={() => openDetails(application)}
+                                    >
+                                        <div className="lrm-student">
+                                            <div className="lrm-avatar">
+                                                {getInitials(name)}
+                                            </div>
+                                            <div style={{minWidth: 0}}>
+                                                <div className="lrm-name">{name}</div>
+                                                <div className="lrm-id">
+                                                    ID {getStudentId(application) || "—"}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="lrm-row-action">
+                                            <span className={`lrm-status ${statusClass(status)}`}>
+                                                <span className="lrm-dot" />
+                                                {formatStatus(status)}
+                                            </span>
+                                        </div>
+
+                                        <div className="lrm-row-action">
+                                            <button
+                                                className="lrm-review"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    openDetails(application);
+                                                }}
+                                            >
+                                                Review
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
                     </div>
 
-                    {loading ? (
-
-                        <div className="loading-state">
-
-                            <div className="spinner" />
-
-                            Loading late enrollee applications...
-
+                    <div style={{
+                        gridColumn: 2,
+                        gridRow: 1,
+                        minWidth: 0,
+                        marginLeft: 16,
+                        minHeight: 500,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        border: "1px solid rgba(111,126,184,.25)",
+                        borderRadius: 15,
+                        background: "rgba(31,36,75,.72)",
+                        color: "#7f89aa",
+                        boxShadow: "0 14px 40px rgba(0,0,0,.12)",
+                        padding: 30,
+                        textAlign: "center",
+                    }}>
+                        <div>
+                            <div style={{
+                                width: 52,
+                                height: 52,
+                                margin: "0 auto 14px",
+                                borderRadius: 15,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                background: "rgba(37,99,235,.14)",
+                                border: "1px solid rgba(74,126,255,.3)",
+                                color: "#70a2ff",
+                                fontSize: 22,
+                            }}>✓</div>
+                            <div style={{color:"#eef1ff", fontSize:15, fontWeight:800}}>
+                                Select an application to review
+                            </div>
+                            <div style={{marginTop:6, fontSize:11}}>
+                                Choose a late enrollee from the list to inspect submitted documents.
+                            </div>
                         </div>
-
-                    ) : filteredApplications.length ===
-                      0 ? (
-
-                        <div className="empty-state">
-
-                            <div
-                                style={{
-                                    fontSize: 30,
-                                    marginBottom: 10,
-                                }}
-                            >
-                                📝
-                            </div>
-
-                            <strong
-                                style={{
-                                    color: "#0f172a",
-                                    fontSize: 16,
-                                }}
-                            >
-                                No Late Enrollee Applications
-                            </strong>
-
-                            <div
-                                style={{
-                                    marginTop: 7,
-                                    fontSize: 12,
-                                }}
-                            >
-                                {search ||
-                                statusFilter !==
-                                    "all"
-                                    ? "No applications match your current filters."
-                                    : "There are currently no late enrollee applications."}
-                            </div>
-
-                        </div>
-
-                    ) : (
-
-                        <>
-
-                            <div className="application-row application-header">
-
-                                <div>
-                                    Student
-                                </div>
-
-                                <div>
-                                    Year Level
-                                </div>
-
-                                <div>
-                                    Enrollment
-                                </div>
-
-                                <div>
-                                    Status
-                                </div>
-
-                                <div>
-                                    Action
-                                </div>
-
-                            </div>
-
-                            {filteredApplications.map(
-                                (application) => {
-
-                                    const id =
-                                        getApplicationId(
-                                            application
-                                        );
-
-                                    const name =
-                                        getStudentName(
-                                            application
-                                        );
-
-                                    const status =
-                                        getStatus(
-                                            application
-                                        );
-
-                                    return (
-
-                                        <div
-                                            className="application-row"
-                                            key={id}
-                                        >
-
-                                            <div className="student-cell">
-
-                                                <div className="student-avatar">
-                                                    {getInitials(
-                                                        name
-                                                    )}
-                                                </div>
-
-                                                <div
-                                                    style={{
-                                                        minWidth: 0,
-                                                    }}
-                                                >
-
-                                                    <div className="student-name">
-                                                        {
-                                                            name
-                                                        }
-                                                    </div>
-
-                                                    <div className="student-id">
-                                                        Student ID:{" "}
-                                                        {
-                                                            getStudentId(
-                                                                application
-                                                            ) ||
-                                                            "—"
-                                                        }
-                                                    </div>
-
-                                                </div>
-
-                                            </div>
-
-                                            <div>
-
-                                                <div className="cell-main">
-                                                    {
-                                                        getYearLevel(
-                                                            application
-                                                        )
-                                                    }
-                                                </div>
-
-                                                <div className="cell-sub">
-                                                    Year Level
-                                                </div>
-
-                                            </div>
-
-                                            <div>
-
-                                                <div className="cell-main">
-                                                    {
-                                                        getEnrollmentStatus(
-                                                            application
-                                                        )
-                                                    }
-                                                </div>
-
-                                                <div className="cell-sub">
-                                                    Enrollment
-                                                </div>
-
-                                            </div>
-
-                                            <div>
-
-                                                <span
-                                                    className={`status-badge ${statusClass(
-                                                        status
-                                                    )}`}
-                                                >
-
-                                                    <span className="dot" />
-
-                                                    {
-                                                        formatStatus(
-                                                            status
-                                                        )
-                                                    }
-
-                                                </span>
-
-                                            </div>
-
-                                            <div className="row-action">
-
-                                                <button
-                                                    className="review-btn"
-                                                    onClick={() =>
-                                                        openDetails(
-                                                            application
-                                                        )
-                                                    }
-                                                >
-                                                    Review
-                                                </button>
-
-                                            </div>
-
-                                        </div>
-
-                                    );
-                                }
-                            )}
-
-                        </>
-
-                    )}
-
+                    </div>
                 </div>
-
             </div>
 
-            {/* ====================================================
-                REVIEW MODAL
-            ===================================================== */}
-
-            {detailsOpen &&
-                selectedApplication && (
-
-                    <div
-                        className="modal-overlay"
-                        onMouseDown={(e) => {
-
-                            if (
-                                e.target ===
-                                e.currentTarget
-                            ) {
-                                closeDetails();
-                            }
-
-                        }}
-                    >
-
-                        <div className="details-modal">
-
-                            <div className="modal-header">
-
-                                <div>
-
-                                    <div className="eyebrow">
-                                        Electoral Board
-                                    </div>
-
-                                    <h2 className="modal-title">
-                                        Late Enrollee Review
-                                    </h2>
-
+            {detailsOpen && selectedApplication && (
+                <div
+                    className="lrm-overlay"
+                    onMouseDown={(e) => {
+                        if (e.target === e.currentTarget) closeDetails();
+                    }}
+                >
+                    <div className="lrm-review-modal">
+                        <div className="lrm-modal-head">
+                            <div style={{display:"flex", alignItems:"center", gap:13}}>
+                                <div className="lrm-profile-avatar">
+                                    {getInitials(getStudentName(selectedApplication))}
                                 </div>
-
-                                <button
-                                    className="modal-close"
-                                    onClick={
-                                        closeDetails
-                                    }
-                                >
-                                    ×
-                                </button>
-
+                                <div>
+                                    <div className="lrm-profile-name">
+                                        {getStudentName(selectedApplication)}
+                                    </div>
+                                    <div className="lrm-profile-meta">
+                                        Late enrollee · Student ID {getStudentId(selectedApplication) || "—"} · {getYearLevel(selectedApplication)}
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="modal-content">
+                            <button className="lrm-close" onClick={closeDetails}>×</button>
+                        </div>
 
-                                {/* PROFILE */}
-
-                                <div className="student-profile">
-
-                                    <div className="profile-avatar">
-                                        {getInitials(
-                                            getStudentName(
-                                                selectedApplication
-                                            )
-                                        )}
-                                    </div>
-
-                                    <div>
-
-                                        <div className="profile-name">
-                                            {
-                                                getStudentName(
-                                                    selectedApplication
-                                                )
-                                            }
-                                        </div>
-
-                                        <div className="profile-meta">
-
-                                            Student ID:{" "}
-                                            {
-                                                getStudentId(
-                                                    selectedApplication
-                                                )
-                                            }
-
-                                            {" • "}
-
-                                            {
-                                                getYearLevel(
-                                                    selectedApplication
-                                                )
-                                            }
-
-                                            {" • Late Enrollee"}
-
-                                        </div>
-
-                                    </div>
-
+                        <div className="lrm-modal-body">
+                            <div className="lrm-info-grid">
+                                <div className="lrm-info-box">
+                                    <div className="lrm-info-label">Student ID</div>
+                                    <div className="lrm-info-value">{getStudentId(selectedApplication) || "—"}</div>
                                 </div>
 
-                                {/* STUDENT INFORMATION */}
-
-                                <div className="section-title">
-                                    Student Information
+                                <div className="lrm-info-box">
+                                    <div className="lrm-info-label">Year & Section</div>
+                                    <div className="lrm-info-value">{getYearLevel(selectedApplication)}</div>
                                 </div>
 
-                                <div className="details-grid">
-
-                                    <div className="detail-box">
-
-                                        <div className="detail-label">
-                                            Full Name
-                                        </div>
-
-                                        <div className="detail-value">
-                                            {
-                                                getStudentName(
-                                                    selectedApplication
-                                                )
-                                            }
-                                        </div>
-
+                                <div className="lrm-info-box">
+                                    <div className="lrm-info-label">School Email</div>
+                                    <div className="lrm-info-value">
+                                        {hasEmail(selectedApplication)
+                                            ? getEmail(selectedApplication)
+                                            : "No email provided"}
                                     </div>
-
-                                    <div className="detail-box">
-
-                                        <div className="detail-label">
-                                            Student ID
-                                        </div>
-
-                                        <div className="detail-value">
-                                            {
-                                                getStudentId(
-                                                    selectedApplication
-                                                ) ||
-                                                "—"
-                                            }
-                                        </div>
-
-                                    </div>
-
-                                    <div className="detail-box">
-
-                                        <div className="detail-label">
-                                            Year Level
-                                        </div>
-
-                                        <div className="detail-value">
-                                            {
-                                                getYearLevel(
-                                                    selectedApplication
-                                                )
-                                            }
-                                        </div>
-
-                                    </div>
-
-                                    <div className="detail-box">
-
-                                        <div className="detail-label">
-                                            Email
-                                        </div>
-
-                                        <div className="detail-value">
-                                            {
-                                                hasEmail(
-                                                    selectedApplication
-                                                )
-                                                    ? getEmail(
-                                                          selectedApplication
-                                                      )
-                                                    : "No email provided"
-                                            }
-                                        </div>
-
-                                    </div>
-
-                                    <div className="detail-box">
-
-                                        <div className="detail-label">
-                                            Application Status
-                                        </div>
-
-                                        <div className="detail-value">
-
-                                            <span
-                                                className={`status-badge ${statusClass(
-                                                    getStatus(
-                                                        selectedApplication
-                                                    )
-                                                )}`}
-                                            >
-
-                                                <span className="dot" />
-
-                                                {
-                                                    formatStatus(
-                                                        getStatus(
-                                                            selectedApplication
-                                                        )
-                                                    )
-                                                }
-
-                                            </span>
-
-                                        </div>
-
-                                    </div>
-
-                                    <div className="detail-box">
-
-                                        <div className="detail-label">
-                                            Enrollment Status
-                                        </div>
-
-                                        <div className="detail-value">
-                                            {
-                                                getEnrollmentStatus(
-                                                    selectedApplication
-                                                )
-                                            }
-                                        </div>
-
-                                    </div>
-
-                                    <div className="detail-box">
-
-                                        <div className="detail-label">
-                                            Submitted
-                                        </div>
-
-                                        <div className="detail-value">
-                                            {
-                                                formatDate(
-                                                    selectedApplication?.submitted_at ||
-                                                    selectedApplication?.created_at
-                                                )
-                                            }
-                                        </div>
-
-                                    </div>
-
                                 </div>
 
-                                {/* SELFIE */}
-
-                                <div className="section-title">
-                                    Registration Selfie
+                                <div className="lrm-info-box">
+                                    <div className="lrm-info-label">Enrollment Status</div>
+                                    <div className="lrm-info-value">{getEnrollmentStatus(selectedApplication)}</div>
                                 </div>
 
-                                {selfieUrl ? (
-
-                                    <div className="selfie-card">
-
-                                        <div className="selfie-preview">
-
-                                            <img
-                                                src={
-                                                    selfieUrl
-                                                }
-                                                alt="Student registration selfie"
-                                            />
-
-                                        </div>
-
-                                        <div className="selfie-info">
-
-                                            <div className="selfie-title">
-                                                Selfie captured during registration
-                                            </div>
-
-                                            <div>
-                                                This image was submitted during the late enrollee registration process.
-                                            </div>
-
-                                            <a
-                                                href={
-                                                    selfieUrl
-                                                }
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="open-link"
-                                            >
-                                                Open Selfie ↗
-                                            </a>
-
-                                        </div>
-
+                                <div className="lrm-info-box">
+                                    <div className="lrm-info-label">Application Status</div>
+                                    <div className="lrm-info-value">
+                                        <span className={`lrm-status ${statusClass(getStatus(selectedApplication))}`}>
+                                            <span className="lrm-dot" />
+                                            {formatStatus(getStatus(selectedApplication))}
+                                        </span>
                                     </div>
-
-                                ) : (
-
-                                    <div className="no-documents">
-                                        Registration selfie is not available.
-                                    </div>
-
-                                )}
-
-                                {/* DOCUMENTS */}
-
-                                <div className="section-title">
-                                    Submitted Documents
                                 </div>
+                            </div>
 
-                                {documentsLoading ? (
+                            <div className="lrm-section-heading">
+                                <span>Submitted documents</span>
+                                <span style={{fontSize:10, color:"#7f89aa", fontWeight:600}}>
+                                    {documents.length + (selfieUrl ? 1 : 0)} files
+                                </span>
+                            </div>
 
-                                    <div className="loading-state">
+                            {documentsLoading ? (
+                                <div className="lrm-list-loading">
+                                    <div className="lrm-spinner" />
+                                    Loading submitted documents...
+                                </div>
+                            ) : documentsError ? (
+                                <div className="lrm-error">{documentsError}</div>
+                            ) : (
+                                <div className="lrm-documents">
+                                    {documents.slice(0, 2).map((document, index) => {
+                                        const url = getDocumentUrl(document);
+                                        const mimeType = getDocumentMimeType(document);
+                                        const name = getDocumentName(document, index);
+                                        const isImage =
+                                            mimeType.startsWith("image/") ||
+                                            /\.(jpg|jpeg|png|webp|gif|bmp)$/i.test(name);
+                                        const isPdf =
+                                            mimeType === "application/pdf" ||
+                                            /\.pdf$/i.test(name);
 
-                                        <div className="spinner" />
-
-                                        Loading submitted documents...
-
-                                    </div>
-
-                                ) : documentsError ? (
-
-                                    <div className="error-banner">
-                                        {documentsError}
-                                    </div>
-
-                                ) : documents.length ===
-                                  0 ? (
-
-                                    <div className="no-documents">
-                                        No submitted documents were found.
-                                    </div>
-
-                                ) : (
-
-                                    <div className="document-list">
-
-                                        {documents.map(
-                                            (
-                                                document,
-                                                index
-                                            ) => {
-
-                                                const url =
-                                                    getDocumentUrl(
-                                                        document
-                                                    );
-
-                                                const mimeType =
-                                                    getDocumentMimeType(
-                                                        document
-                                                    );
-
-                                                const documentStatus =
-                                                    getDocumentReviewStatus(
-                                                        selectedApplication
-                                                    );
-
-                                                const isImage =
-                                                    mimeType.startsWith(
-                                                        "image/"
-                                                    ) ||
-                                                    /\.(jpg|jpeg|png|webp|gif|bmp)$/i.test(
-                                                        getDocumentName(
-                                                            document,
-                                                            index
-                                                        )
-                                                    );
-
-                                                const isPdf =
-                                                    mimeType ===
-                                                        "application/pdf" ||
-                                                    /\.pdf$/i.test(
-                                                        getDocumentName(
-                                                            document,
-                                                            index
-                                                        )
-                                                    );
-
-                                                return (
-
-                                                    <div
-                                                        className="document-item"
-                                                        key={
-                                                            document?.id ||
-                                                            index
-                                                        }
-                                                    >
-
-                                                        <div
-                                                            style={{
-                                                                display: "flex",
-                                                                alignItems: "center",
-                                                                gap: 12,
-                                                                minWidth: 0,
-                                                            }}
-                                                        >
-
-                                                            <div className="document-preview">
-
-                                                                {url &&
-                                                                isImage ? (
-
-                                                                    <img
-                                                                        src={
-                                                                            url
-                                                                        }
-                                                                        alt={
-                                                                            getDocumentName(
-                                                                                document,
-                                                                                index
-                                                                            )
-                                                                        }
-                                                                    />
-
-                                                                ) : (
-
-                                                                    <div className="document-file-icon">
-                                                                        {isPdf
-                                                                            ? "📑"
-                                                                            : "📄"}
-                                                                    </div>
-
-                                                                )}
-
+                                        return (
+                                            <div className="lrm-document" key={document?.id || index}>
+                                                <div>
+                                                    <div className="lrm-document-preview">
+                                                        {url && isImage ? (
+                                                            <img src={url} alt={name} />
+                                                        ) : (
+                                                            <div className="lrm-file-icon">
+                                                                {isPdf ? "📑" : "📄"}
                                                             </div>
-
-                                                            <div
-                                                                style={{
-                                                                    minWidth: 0,
-                                                                }}
-                                                            >
-
-                                                                <div className="document-name">
-                                                                    📄{" "}
-                                                                    {
-                                                                        getDocumentName(
-                                                                            document,
-                                                                            index
-                                                                        )
-                                                                    }
-                                                                </div>
-
-                                                                <div className="document-type">
-                                                                    Type:{" "}
-                                                                    {
-                                                                        getDocumentType(
-                                                                            document
-                                                                        )
-                                                                    }
-                                                                </div>
-
-                                                                <div className="document-path-note">
-                                                                    {url
-                                                                        ? "Available for EB review."
-                                                                        : "The secure document URL was not returned by the server."}
-                                                                </div>
-
-                                                            </div>
-
-                                                        </div>
-
-                                                        <div className="document-actions">
-
-                                                            {url ? (
-
-                                                                <button
-                                                                    type="button"
-                                                                    className="document-view-btn"
-                                                                    onClick={() =>
-                                                                        setDocumentPreview(
-                                                                            {
-                                                                                url,
-                                                                                name:
-                                                                                    getDocumentName(
-                                                                                        document,
-                                                                                        index
-                                                                                    ),
-                                                                                type:
-                                                                                    getDocumentType(
-                                                                                        document
-                                                                                    ),
-                                                                                mimeType,
-                                                                                isImage,
-                                                                                isPdf,
-                                                                            }
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    View & Review ↗
-                                                                </button>
-
-                                                            ) : (
-
-                                                                <button
-                                                                    type="button"
-                                                                    className="document-view-btn"
-                                                                    disabled
-                                                                >
-                                                                    Loading unavailable
-                                                                </button>
-
-                                                            )}
-
-                                                            <span
-                                                                className={`document-status ${documentStatus.className}`}
-                                                            >
-                                                                {
-                                                                    documentStatus.label
-                                                                }
-                                                            </span>
-
-                                                        </div>
-
+                                                        )}
                                                     </div>
+                                                    <div className="lrm-document-name">{name}</div>
+                                                    <div className="lrm-document-type">
+                                                        {getDocumentType(document)}
+                                                    </div>
+                                                </div>
 
-                                                );
-                                            }
-                                        )}
+                                                <div className="lrm-document-actions">
+                                                    <button
+                                                        type="button"
+                                                        className="lrm-document-view"
+                                                        disabled={!url}
+                                                        onClick={() => {
+                                                            if (!url) return;
+                                                            setDocumentPreview({
+                                                                url,
+                                                                name,
+                                                                type: getDocumentType(document),
+                                                                mimeType,
+                                                                isImage,
+                                                                isPdf,
+                                                            });
+                                                        }}
+                                                    >
+                                                        ◉ View
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
 
-                                    </div>
-
-                                )}
-
-                                {/* REJECTION */}
-
-                                {getRejectionReason(
-                                    selectedApplication
-                                ) && (
-
-                                    <div className="review-message rejection">
-
-                                        <div className="review-message-title">
-                                            Rejection Reason
-                                        </div>
-
+                                    <div className="lrm-document">
                                         <div>
-                                            {
-                                                getRejectionReason(
-                                                    selectedApplication
-                                                )
-                                            }
+                                            <div className="lrm-document-preview">
+                                                {selfieUrl ? (
+                                                    <img src={selfieUrl} alt="Student registration selfie" />
+                                                ) : (
+                                                    <div className="lrm-file-icon">◯</div>
+                                                )}
+                                            </div>
+                                            <div className="lrm-document-name">Real-time selfie</div>
+                                            <div className="lrm-document-type">
+                                                {selfieUrl ? "selfie_live.jpg" : "Not available"}
+                                            </div>
                                         </div>
 
-                                    </div>
-
-                                )}
-
-                                {/* CORRECTION */}
-
-                                {selectedApplication?.correction_message && (
-
-                                    <div className="review-message correction">
-
-                                        <div className="review-message-title">
-                                            Correction Required
+                                        <div className="lrm-document-actions">
+                                            {selfieUrl ? (
+                                                <button
+                                                    type="button"
+                                                    className="lrm-document-view"
+                                                    onClick={() => setDocumentPreview({
+                                                        url: selfieUrl,
+                                                        name: "Real-time selfie",
+                                                        type: "Registration Selfie",
+                                                        mimeType: "image/jpeg",
+                                                        isImage: true,
+                                                        isPdf: false,
+                                                    })}
+                                                >
+                                                    ◉ View
+                                                </button>
+                                            ) : (
+                                                <button type="button" className="lrm-document-view" disabled>
+                                                    Unavailable
+                                                </button>
+                                            )}
                                         </div>
-
-                                        {
-                                            selectedApplication.correction_message
-                                        }
-
                                     </div>
+                                </div>
+                            )}
 
-                                )}
+                            <div className="lrm-section-heading">
+                                <span>Verification checklist</span>
+                                <span style={{fontSize:10, color:"#7f89aa", fontWeight:600}}>
+                                    Review before decision
+                                </span>
+                            </div>
 
-                                {actionError && (
-
-                                    <div className="error-banner">
-                                        {actionError}
-                                    </div>
-
-                                )}
-
-                                {actionSuccess && (
-
-                                    <div className="success-banner">
-                                        ✓{" "}
-                                        {
-                                            actionSuccess
-                                        }
-                                    </div>
-
-                                )}
-
-                                {/* ====================================================
-                                    REVIEW ACTIONS / FINAL STATUS
-                                ===================================================== */}
-
-                                {getStatus(
-                                    selectedApplication
-                                ) === "approved" ? (
-
-                                    <div className="modal-actions">
-
-                                        <div className="final-review-status approved">
-                                            ✓ Approved
+                            <div style={{
+                                borderTop:"1px solid rgba(111,124,184,.14)",
+                                borderBottom:"1px solid rgba(111,124,184,.14)"
+                            }}>
+                                {[
+                                    "Name matches the submitted student ID",
+                                    "Student ID information is available",
+                                    "Submitted documents are clear and readable",
+                                    "Selfie is available for comparison",
+                                ].map((item, index) => {
+                                    const done = index < 3 ? true : Boolean(selfieUrl);
+                                    return (
+                                        <div key={item} style={{
+                                            display:"flex",
+                                            alignItems:"center",
+                                            gap:12,
+                                            minHeight:42,
+                                            borderBottom:index === 3 ? "0" : "1px solid rgba(111,124,184,.12)",
+                                            color:"#eef1fb",
+                                            fontSize:11,
+                                        }}>
+                                            <span style={{
+                                                width:21,
+                                                height:21,
+                                                flexShrink:0,
+                                                display:"flex",
+                                                alignItems:"center",
+                                                justifyContent:"center",
+                                                borderRadius:6,
+                                                border: done ? "0" : "1px solid #6d789e",
+                                                background: done ? "#22c55e" : "transparent",
+                                                color: done ? "#fff" : "transparent",
+                                                fontWeight:900,
+                                            }}>✓</span>
+                                            <span>{item}</span>
                                         </div>
+                                    );
+                                })}
+                            </div>
 
-                                    </div>
+                            {getRejectionReason(selectedApplication) && (
+                                <div className="lrm-message lrm-rejection">
+                                    <div className="lrm-message-title">Rejection Reason</div>
+                                    <div>{getRejectionReason(selectedApplication)}</div>
+                                </div>
+                            )}
 
-                                ) : getStatus(
-                                    selectedApplication
-                                ) === "rejected" ? (
+                            {selectedApplication?.correction_message && (
+                                <div className="lrm-message lrm-correction">
+                                    <div className="lrm-message-title">Correction Required</div>
+                                    {selectedApplication.correction_message}
+                                </div>
+                            )}
 
-                                    <div className="modal-actions">
+                            {actionError && <div className="lrm-error">{actionError}</div>}
+                            {actionSuccess && <div className="lrm-success">✓ {actionSuccess}</div>}
 
-                                        <div className="final-review-status rejected">
-                                            ✕ Rejected
-                                        </div>
-
-                                    </div>
-
+                            <div className="lrm-decision">
+                                {getStatus(selectedApplication) === "approved" ? (
+                                    <div className="lrm-final-state approved">✓ Approved</div>
+                                ) : getStatus(selectedApplication) === "rejected" ? (
+                                    <div className="lrm-final-state rejected">✕ Rejected</div>
                                 ) : (
-
-                                    <div className="modal-actions">
-
+                                    <>
                                         <button
-                                            className="modal-action approve"
-                                            disabled={
-                                                actionLoading
-                                            }
+                                            className="lrm-decision-btn reject"
+                                            disabled={actionLoading}
                                             onClick={() => {
-
                                                 setActionError("");
-
-                                                setApproveModalOpen(
-                                                    true
-                                                );
-
-                                            }}
-                                        >
-                                            ✓ Approve
-                                        </button>
-
-                                        <button
-                                            className="modal-action reject"
-                                            disabled={
-                                                actionLoading
-                                            }
-                                            onClick={() => {
-
-                                                setActionError("");
-
                                                 setRejectReason("");
-
-                                                setRejectModalOpen(
-                                                    true
-                                                );
-
+                                                setRejectModalOpen(true);
                                             }}
                                         >
                                             ✕ Reject
                                         </button>
 
-                                    </div>
-
+                                        <button
+                                            className="lrm-decision-btn approve"
+                                            disabled={actionLoading}
+                                            onClick={() => {
+                                                setActionError("");
+                                                setApproveModalOpen(true);
+                                            }}
+                                        >
+                                            ✓ Approve
+                                        </button>
+                                    </>
                                 )}
-
                             </div>
-
                         </div>
-
                     </div>
-
-                )}
-
-            {/* ====================================================
-                DOCUMENT PREVIEW
-            ===================================================== */}
+                </div>
+            )}
 
             {documentPreview && (
-
                 <div
-                    className="modal-overlay"
+                    className="lrm-overlay"
                     onMouseDown={(e) => {
-
-                        if (
-                            e.target ===
-                            e.currentTarget
-                        ) {
-                            setDocumentPreview(null);
-                        }
-
+                        if (e.target === e.currentTarget) setDocumentPreview(null);
                     }}
                 >
-
-                    <div className="document-preview-modal">
-
-                        <div className="document-preview-header">
-
-                            <div className="document-preview-title">
-
-                                <div className="document-preview-name">
-                                    {documentPreview.name}
-                                </div>
-
-                                <div className="document-preview-type">
-                                    {documentPreview.type}
-                                </div>
-
+                    <div className="lrm-file-modal">
+                        <div className="lrm-file-head">
+                            <div className="lrm-file-title">
+                                <div className="lrm-file-name">{documentPreview.name}</div>
+                                <div className="lrm-file-type">{documentPreview.type}</div>
                             </div>
-
-                            <div
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 14,
-                                }}
-                            >
-
+                            <div style={{display:"flex", alignItems:"center", gap:14}}>
                                 <a
-                                    href={
-                                        documentPreview.url
-                                    }
+                                    href={documentPreview.url}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="document-preview-open"
+                                    className="lrm-open-link"
                                 >
                                     Open in New Tab ↗
                                 </a>
-
                                 <button
                                     type="button"
-                                    className="modal-close"
-                                    onClick={() =>
-                                        setDocumentPreview(
-                                            null
-                                        )
-                                    }
+                                    className="lrm-close"
+                                    onClick={() => setDocumentPreview(null)}
                                 >
                                     ×
                                 </button>
-
                             </div>
-
                         </div>
 
-                        <div className="document-preview-body">
-
+                        <div className="lrm-file-body">
                             {documentPreview.isImage ? (
-
-                                <img
-                                    src={
-                                        documentPreview.url
-                                    }
-                                    alt={
-                                        documentPreview.name
-                                    }
-                                />
-
+                                <img src={documentPreview.url} alt={documentPreview.name} />
                             ) : documentPreview.isPdf ? (
-
-                                <iframe
-                                    src={
-                                        documentPreview.url
-                                    }
-                                    title={
-                                        documentPreview.name
-                                    }
-                                />
-
+                                <iframe src={documentPreview.url} title={documentPreview.name} />
                             ) : (
-
-                                <div className="document-preview-fallback">
-
-                                    <div
-                                        style={{
-                                            fontSize: 38,
-                                            marginBottom: 10,
-                                        }}
-                                    >
-                                        📄
-                                    </div>
-
-                                    This document format cannot be
-                                    previewed directly here.
-
+                                <div className="lrm-file-fallback">
+                                    This document format cannot be previewed directly here.
                                     <br />
-
-                                    Use <strong>Open in New Tab</strong>
-                                    to review the submitted file.
-
+                                    Use <strong>Open in New Tab</strong> to review the submitted file.
                                 </div>
-
                             )}
-
                         </div>
-
                     </div>
-
                 </div>
-
             )}
 
-            {/* ====================================================
-                APPROVE CONFIRMATION
-            ===================================================== */}
-
             {approveModalOpen && (
-
-                <div className="modal-overlay">
-
-                    <div className="small-modal">
-
-                        <div className="small-icon">
-                            ✓
-                        </div>
-
-                        <h3 className="small-title">
-                            Approve Late Enrollee?
-                        </h3>
-
-                        <p className="small-text">
-
-                            Approving{" "}
-
-                            <strong>
-                                {
-                                    getStudentName(
-                                        selectedApplication
-                                    )
-                                }
-                            </strong>
-
-                            {" "}will create or activate
-                            the student's VOTARA account.
-
-                            <br />
-                            <br />
-
-                            {hasEmail(
-                                selectedApplication
-                            ) ? (
+                <div className="lrm-overlay">
+                    <div className="lrm-confirm">
+                        <div className="lrm-confirm-icon">✓</div>
+                        <h3 className="lrm-confirm-title">Approve Late Enrollee?</h3>
+                        <p className="lrm-confirm-text">
+                            Approving <strong>{getStudentName(selectedApplication)}</strong> will create or activate the student's VOTARA account.
+                            <br /><br />
+                            {hasEmail(selectedApplication) ? (
                                 <>
-                                    A temporary password will be
-                                    generated and sent directly to:
-
-                                    <br />
-
-                                    <strong>
-                                        {
-                                            getEmail(
-                                                selectedApplication
-                                            )
-                                        }
-                                    </strong>
-
-                                    <br />
-                                    <br />
-
-                                    The student will be required to
-                                    create a personal password and
-                                    complete their profile photo before
-                                    accessing the dashboard.
+                                    A temporary password will be generated and sent directly to:
+                                    <br /><br />
+                                    <strong>{getEmail(selectedApplication)}</strong>
+                                    <br /><br />
+                                    The student will be required to create a personal password and complete their profile photo before accessing the dashboard.
                                 </>
                             ) : (
                                 <>
-                                    No email address was provided.
-                                    The account will be activated
-                                    without sending an email, and
-                                    activation will continue on the
-                                    current kiosk device.
-
-                                    <br />
-                                    <br />
-
-                                    The student will create their
-                                    personal 8-character password on
-                                    the kiosk before accessing the
-                                    dashboard.
+                                    No email address was provided. The account will be activated without sending an email, and activation will continue on the current kiosk device.
+                                    <br /><br />
+                                    The student will create their personal 8-character password on the kiosk before accessing the dashboard.
                                 </>
                             )}
-
                         </p>
 
-                        <div className="small-actions">
-
+                        <div className="lrm-confirm-actions">
                             <button
-                                className="small-btn"
-                                onClick={() =>
-                                    setApproveModalOpen(
-                                        false
-                                    )
-                                    }
-                                disabled={
-                                    actionLoading
-                                }
+                                className="lrm-confirm-btn"
+                                onClick={() => setApproveModalOpen(false)}
+                                disabled={actionLoading}
                             >
                                 Cancel
                             </button>
-
                             <button
-                                className="small-btn approve"
-                                onClick={
-                                    approveApplication
-                                }
-                                disabled={
-                                    actionLoading
-                                }
+                                className="lrm-confirm-btn approve"
+                                onClick={approveApplication}
+                                disabled={actionLoading}
                             >
-                                {actionLoading
-                                    ? "Approving..."
-                                    : "Confirm Approval"}
+                                {actionLoading ? "Approving..." : "Confirm Approval"}
                             </button>
-
                         </div>
-
                     </div>
-
                 </div>
-
             )}
 
-            {/* ====================================================
-                REJECT
-            ===================================================== */}
-
             {rejectModalOpen && (
-
-                <div className="modal-overlay">
-
-                    <div className="small-modal">
-
-                        <div className="small-icon reject">
-                            !
-                        </div>
-
-                        <h3 className="small-title">
-                            Reject Application
-                        </h3>
-
-                        <p className="small-text">
-                            Enter the reason that will be
-                            associated with this rejection.
+                <div className="lrm-overlay">
+                    <div className="lrm-confirm">
+                        <div className="lrm-confirm-icon reject">!</div>
+                        <h3 className="lrm-confirm-title">Reject Application</h3>
+                        <p className="lrm-confirm-text">
+                            Enter the reason that will be associated with this lrm-rejection.
                         </p>
 
                         <textarea
-                            className="reason-textarea"
-                            value={
-                                rejectReason
-                            }
-                            onChange={(e) =>
-                                setRejectReason(
-                                    e.target.value
-                                )
-                            }
-                            placeholder="Enter rejection reason..."
-                            disabled={
-                                actionLoading
-                            }
+                            className="lrm-reason"
+                            value={rejectReason}
+                            onChange={(e) => setRejectReason(e.target.value)}
+                            placeholder="Enter lrm-rejection reason..."
+                            disabled={actionLoading}
                         />
 
-                        <div className="small-actions">
-
+                        <div className="lrm-confirm-actions">
                             <button
-                                className="small-btn"
+                                className="lrm-confirm-btn"
                                 onClick={() => {
-
-                                    setRejectModalOpen(
-                                        false
-                                    );
-
-                                    setRejectReason(
-                                        ""
-                                    );
-
+                                    setRejectModalOpen(false);
+                                    setRejectReason("");
                                 }}
                             >
                                 Cancel
                             </button>
 
                             <button
-                                className="small-btn reject"
-                                onClick={
-                                    rejectApplication
-                                }
-                                disabled={
-                                    actionLoading ||
-                                    !rejectReason.trim()
-                                }
+                                className="lrm-confirm-btn reject"
+                                onClick={rejectApplication}
+                                disabled={actionLoading || !rejectReason.trim()}
                             >
-                                {actionLoading
-                                    ? "Rejecting..."
-                                    : "Reject Application"}
+                                {actionLoading ? "Rejecting..." : "Reject Application"}
                             </button>
-
                         </div>
-
                     </div>
-
                 </div>
-
             )}
-
-
-
         </div>
     );
 }

@@ -1012,25 +1012,22 @@
 }
 
 .eb-brand-mark {
-    width: 40px;
-    height: 40px;
-    display: grid;
-    place-items: center;
-    color: #0e52ff;
-    font-size: 26px;
-    font-weight: 900;
-    letter-spacing: -4px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #0b51ff 0%, #2c72ff 100%);
-    color: #fff;
-    box-shadow: 0 10px 24px rgba(22, 88, 255, .25);
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+
 }
 
 .eb-brand-name {
     color: #0b58ff;
     font-size: 30px;
     line-height: 1;
-    font-weight: 700;
+    font-family: "Poppins", sans-serif;
+    font-weight: 500;
     letter-spacing: -.7px;
 }
 
@@ -1103,11 +1100,11 @@
 .eb-icon-button {
     width: 34px;
     height: 34px;
-    border: 0;
-    background: transparent;
-    color: #f2f4ff;
     font-size: 20px;
     cursor: pointer;
+}
+.eb-icon-button img {
+    background: transparent;
 }
 
 .eb-profile-wrapper {
@@ -1951,4 +1948,86 @@
     .eb-readiness-list button { grid-template-columns: 34px minmax(0, 1fr); }
     .eb-readiness-bar { display: none; }
     .eb-status-text { display: none; }
+}
+/* Notification bell - always visible, no white background */
+.eb-top-actions > button[aria-label="Notifications"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    width: 40px !important;
+    height: 40px !important;
+    padding: 0 !important;
+
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+
+    opacity: 1 !important;
+    visibility: visible !important;
+    cursor: pointer;
+}
+
+/* Bell image */
+.eb-top-actions > button[aria-label="Notifications"] img {
+    width: 24px !important;
+    height: 24px !important;
+    object-fit: contain !important;
+
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Keep it visible on hover/focus */
+.eb-top-actions > button[aria-label="Notifications"]:hover,
+.eb-top-actions > button[aria-label="Notifications"]:focus {
+    background: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+/* Bell color — change this value */
+:root {
+    --bell-color: #ffffff;
+}
+
+.eb-top-actions > button[aria-label="Notifications"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    width: 40px !important;
+    height: 40px !important;
+    padding: 0 !important;
+
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Bell */
+.eb-top-actions > button[aria-label="Notifications"] img {
+    width: 24px !important;
+    height: 24px !important;
+    object-fit: contain !important;
+
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+
+    opacity: 1 !important;
+    visibility: visible !important;
+
+    /* Change the bell color here */
+    filter: brightness(0) saturate(100%)
+            invert(100%) sepia(0%)
+            saturate(0%) hue-rotate(0deg)
+            brightness(100%);
 }

@@ -1,0 +1,366 @@
+
+.registration-page {
+  min-height: calc(100vh - 88px);
+  background:
+    radial-gradient(circle, rgba(36, 121, 191, .42) 1.4px, transparent 1.5px);
+  color: #f7f8ff;
+  padding: 58px 38px 80px;
+  box-sizing: border-box;
+  font-family: 'Poppins','Inter',Arial,sans-serif;
+}
+
+.registration-shell {
+  max-width: 1290px;
+  margin: 0 auto;
+}
+
+
+.registration-heading {
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:24px;
+  margin-bottom:18px;
+}
+
+.registration-eyebrow {
+  color:#62a4ff;
+  font-size:12px;
+  font-weight:600;
+  margin-bottom:5px;
+}
+
+.registration-heading h1 {
+  margin:0;
+  font-size:28px;
+  line-height:1.15;
+  font-weight:800;
+  letter-spacing:-.5px;
+}
+
+.registration-heading p {
+  margin:7px 0 0;
+  color:#9a9db4;
+  font-size:13px;
+}
+
+.registration-enrollment-select {
+  width:158px;
+  height:42px;
+  padding:0 18px;
+  border:0;
+  border-radius:24px;
+  background:#fff;
+  color:#171827;
+  font-size:14px;
+  outline:none;
+  cursor:pointer;
+}
+
+.registration-alert {
+  margin:0 0 15px;
+  border-radius:10px;
+  padding:12px 15px;
+  font-size:12px;
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+.registration-alert-success{background:#102e24;border:1px solid #1f8a61;color:#65e1a7}
+.registration-alert-error{background:#351b22;border:1px solid #a94758;color:#ff8997}
+
+.registration-review-layout {
+  display:grid;
+  grid-template-columns:252px minmax(0,1fr);
+  gap:14px;
+  align-items:stretch;
+}
+
+.registration-applications,
+.registration-detail-card {
+  background:rgba(28,30,61,.94);
+  border:1px solid #3e436c;
+  border-radius:15px;
+  box-shadow:0 15px 45px rgba(0,0,0,.12);
+}
+
+.registration-applications {
+  overflow:hidden;
+  min-height:560px;
+}
+
+.applications-heading {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:21px 18px 16px;
+}
+
+.applications-icon {
+  width:36px;height:36px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  background:#0e50ff;color:#fff;font-size:17px;
+}
+
+.applications-heading h2 {
+  margin:0;
+  font-size:16px;
+  font-weight:700;
+}
+.applications-heading p {
+  margin:2px 0 0;
+  color:#9498b3;
+  font-size:11px;
+}
+
+.applications-search {
+  margin:0 18px 10px;
+  height:34px;
+  border:1px solid #42476d;
+  border-radius:7px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:0 10px;
+  background:#13152b;
+}
+.applications-search span{color:#9ca4c2;font-size:15px}
+.applications-search input{
+  width:100%;border:0;outline:0;background:transparent;
+  color:#e9ebf8;font-size:11px;
+}
+.applications-search input::placeholder{color:#737995}
+
+.application-tabs {
+  display:flex;
+  margin:0 18px 9px;
+  padding:2px;
+  background:#13152b;
+  border-radius:7px;
+}
+.application-tabs button {
+  flex:1;
+  min-width:0;
+  border:0;
+  background:transparent;
+  color:#9297b3;
+  padding:8px 3px;
+  border-radius:6px;
+  font-size:9px;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.application-tabs button.active {
+  background:#2764ff;
+  color:#fff;
+}
+
+.application-list {padding:0 8px 12px}
+.application-item {
+  width:100%;
+  border:1px solid transparent;
+  background:transparent;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:10px 9px;
+  border-radius:8px;
+  text-align:left;
+  cursor:pointer;
+  margin-bottom:2px;
+}
+.application-item:hover{background:#24274e}
+.application-item.selected {
+  background:#202b63;
+  border-color:#2867ff;
+}
+.application-avatar {
+  width:35px;height:35px;min-width:35px;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;
+  color:#fff;
+  background:#23468b;
+  border:1px solid #4477df;
+}
+.application-item-info {
+  min-width:0;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
+.application-item-info strong{
+  font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.application-item-info span{font-size:9px;color:#858ba8;margin-top:2px}
+.application-status {
+  flex-shrink:0;
+  padding:3px 8px;
+  border-radius:12px;
+  font-size:8px;
+  border:1px solid #b37a08;
+  color:#ffc52c;
+  background:rgba(184,130,8,.1);
+}
+.status-approved{color:#49dc96;border-color:#2a8f67;background:rgba(35,139,97,.12)}
+.status-rejected{color:#ff7684;border-color:#a84454;background:rgba(168,68,84,.12)}
+.status-needs_correction{color:#5eb4ff;border-color:#2679bb;background:rgba(38,121,187,.12)}
+.application-list-empty{padding:35px 15px;text-align:center;color:#7f85a1;font-size:11px}
+
+.registration-detail-card {
+  padding:20px 22px 22px;
+  min-width:0;
+}
+
+.student-detail-header {
+  padding-bottom:18px;
+  border-bottom:1px solid #303556;
+}
+.student-profile{display:flex;align-items:center;gap:14px}
+.student-detail-avatar{
+  width:52px;height:52px;min-width:52px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:#23468b;border:1px solid #4b7fff;color:#fff;font-size:16px;font-weight:700;
+}
+.student-name-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.student-name-row h2{margin:0;font-size:21px;font-weight:750}
+.student-profile p{margin:3px 0 0;color:#9298b6;font-size:11px}
+.detail-status{
+  padding:4px 10px;border-radius:13px;font-size:9px;
+  color:#ffc52c;border:1px solid #a97508;background:rgba(185,129,0,.12)
+}
+
+.student-meta-grid {
+  display:grid;
+  grid-template-columns:1fr 1.2fr 1.55fr .85fr;
+  gap:20px;
+  padding:17px 0;
+  border-bottom:1px solid #303556;
+}
+.student-meta-grid div{min-width:0}
+.student-meta-grid span{
+  display:block;color:#969cb8;font-size:9px;font-weight:600;margin-bottom:6px;
+}
+.student-meta-grid strong{
+  display:block;color:#f4f5fb;font-size:12px;font-weight:500;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.enrolled-text{color:#39db8a!important}
+
+.submitted-documents-section,.verification-section,.decision-section{padding-top:18px}
+.section-heading-row{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;
+}
+.section-heading-row h3,.decision-section h3{
+  margin:0;font-size:15px;font-weight:700;
+}
+.section-heading-row span{font-size:10px;color:#858ca9}
+
+.document-preview-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:15px;
+}
+.document-preview-card{
+  min-width:0;
+  border:1px solid #3a4066;
+  border-radius:10px;
+  background:#191b36;
+  padding:11px;
+}
+.document-preview-box{
+  height:138px;
+  border:1px dashed #3d456d;
+  border-radius:6px;
+  background:#0e1023;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+.document-preview-box img{width:100%;height:100%;object-fit:cover}
+.document-preview-icon{font-size:29px;color:#747b9f;margin-bottom:7px}
+.document-preview-box span{color:#747b9f;font-size:10px}
+.document-card-bottom{
+  display:flex;justify-content:space-between;gap:8px;align-items:flex-end;padding-top:9px;
+}
+.document-card-bottom>div{min-width:0;display:flex;flex-direction:column}
+.document-card-bottom strong{
+  color:#f1f2fa;font-size:11px;font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.document-card-bottom span{
+  color:#858ba8;font-size:9px;margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px;
+}
+.document-card-bottom a{
+  flex-shrink:0;color:#61a2ff;border:1px solid #394b78;
+  border-radius:6px;padding:5px 9px;text-decoration:none;font-size:9px;
+}
+
+.verification-section{border-top:1px solid #303556;margin-top:18px}
+.verification-list{border-top:1px solid #303556}
+.verification-row{
+  display:flex;align-items:center;gap:10px;
+  min-height:41px;border-bottom:1px solid #303556;
+  color:#f0f1f8;font-size:12px;
+}
+.verification-row small{display:block;color:#f0b91d;font-size:9px;margin-top:2px}
+.check{
+  width:19px;height:19px;min-width:19px;border:1px solid #68708f;border-radius:5px;
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;
+}
+.check.checked{background:#22c66b;border-color:#22c66b}
+
+.decision-section{
+  border-top:1px solid #303556;margin-top:17px;
+}
+.decision-section>label{
+  display:block;color:#8f95b0;font-size:9px;font-weight:600;margin:18px 0 6px;
+}
+.decision-section textarea{
+  width:100%;box-sizing:border-box;resize:none;
+  min-height:40px;border:1px solid #465071;border-radius:7px;
+  background:#101225;color:#eef0f8;padding:11px 13px;
+  outline:none;font-family:inherit;font-size:11px;
+}
+.decision-section textarea::placeholder{color:#737a98}
+.decision-actions{
+  display:flex;justify-content:space-between;gap:12px;margin-top:18px;
+}
+.decision-actions button{
+  height:40px;padding:0 20px;border-radius:8px;font-size:12px;font-weight:600;
+  cursor:pointer;background:transparent;
+}
+.decision-actions button:disabled{opacity:.45;cursor:not-allowed}
+.decision-reject{color:#ff6472;border:1px solid #bd4050}
+.decision-approve{color:#fff;background:#18ad5b!important;border:1px solid #18ad5b}
+.approval-notice{
+  margin-top:18px;padding:11px 14px;border-radius:9px;
+  border:1px solid #304c8f;background:#1a2a5b;
+  color:#a8b1ce;font-size:10px;display:flex;gap:10px;align-items:center;
+}
+.approval-notice span{color:#71a7ff;font-size:14px}
+
+.registration-empty-detail{
+  min-height:560px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#8e94af;
+}
+
+.empty-detail-icon{font-size:42px;color:#4b5280}
+.registration-empty-detail h2{font-size:18px;color:#e7e9f3;margin:10px 0 4px}
+.registration-empty-detail p{font-size:11px;margin:0}
+
+@media (max-width: 1050px){
+  .registration-review-layout{grid-template-columns:230px minmax(0,1fr)}
+  .student-meta-grid{grid-template-columns:repeat(2,1fr)}
+  .document-preview-grid{grid-template-columns:1fr}
+}
+@media (max-width: 760px){
+  .registration-page{padding:35px 16px 60px}
+  .registration-heading{align-items:flex-start;flex-direction:column}
+  .registration-enrollment-select{width:100%}
+  .registration-review-layout{grid-template-columns:1fr}
+  .registration-applications{min-height:auto}
+  .application-list{max-height:330px;overflow-y:auto}
+  .student-meta-grid{grid-template-columns:1fr}
+  .document-preview-grid{grid-template-columns:1fr}
+}
