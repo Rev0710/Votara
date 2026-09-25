@@ -25,7 +25,9 @@ import {
     FiSun,
 } from "react-icons/fi";
 import "./SystemSettings.css";
+import "./SystemSettings.connection.css";
 import PageLoader from "/src/components/transitionloader/PageLoader";
+import api from "../../services/api";
 
 const hexToRgba = (hex, alpha) => {
     if (!hex || !/^#([0-9a-f]{6})$/i.test(hex)) return `rgba(37, 99, 235, ${alpha})`;
@@ -136,6 +138,9 @@ const SystemSettings = () => {
     const [admin, setAdmin] = useState(null);
     const [settings, setSettings] = useState(defaultSettings);
     const [saved, setSaved] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [loadingSettings, setLoadingSettings] = useState(true);
+    const [saveError, setSaveError] = useState("");
     // Page transition loader used for navigation between admin pages.
     const [isPageTransitioning, setIsPageTransitioning] = useState(false);
 
@@ -143,16 +148,132 @@ const SystemSettings = () => {
     const navAdminInitial = navAdminName.charAt(0).toUpperCase() || "A";
 
     useEffect(() => {
-        try {
-            const storedSettings = localStorage.getItem("votaraSystemSettings");
-            const parsed = storedSettings ? JSON.parse(storedSettings) : {};
-            const merged = { ...defaultSettings, ...parsed };
-            setSettings(merged);
-            applyTheme(merged.theme);
-        } catch (error) {
-            console.error("Unable to load system settings:", error);
-            applyTheme(defaultSettings.theme);
-        }
+
+        let cancelled = false;
+
+        const loadSettings = async () => {
+
+            setLoadingSettings(true);
+            setSaveError("");
+
+            // -------------------------------------------------
+            // LOCAL CACHE - instant UI while the API loads
+            // -------------------------------------------------
+
+            try {
+
+                const storedSettings =
+                    localStorage.getItem(
+                        "votaraSystemSettings"
+                    );
+
+                const parsed =
+                    storedSettings
+                        ? JSON.parse(
+                            storedSettings
+                        )
+                        : {};
+
+                const cachedSettings = {
+                    ...defaultSettings,
+                    ...parsed,
+                };
+
+                if (!cancelled) {
+                    setSettings(
+                        cachedSettings
+                    );
+
+                    applyTheme(
+                        cachedSettings.theme
+                    );
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "Unable to load local settings cache:",
+                    error
+                );
+
+                applyTheme(
+                    defaultSettings.theme
+                );
+            }
+
+
+            // -------------------------------------------------
+            // AUTHORITATIVE SERVER SETTINGS
+            // -------------------------------------------------
+
+            try {
+
+                const response =
+                    await api.get(
+                        "/admin/settings"
+                    );
+
+                const data =
+                    response?.data || {};
+
+                if (
+                    data.success &&
+                    data.settings &&
+                    !cancelled
+                ) {
+
+                    const serverSettings = {
+                        ...defaultSettings,
+                        ...data.settings,
+                    };
+
+                    setSettings(
+                        serverSettings
+                    );
+
+                    localStorage.setItem(
+                        "votaraSystemSettings",
+                        JSON.stringify(
+                            serverSettings
+                        )
+                    );
+
+                    applyTheme(
+                        serverSettings.theme
+                    );
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "Unable to load Admin System Settings:",
+                    error
+                );
+
+                if (!cancelled) {
+
+                    setSaveError(
+                        error?.response?.data?.message ||
+                        "Using locally cached settings because the Admin Settings API is unavailable."
+                    );
+                }
+
+            } finally {
+
+                if (!cancelled) {
+                    setLoadingSettings(
+                        false
+                    );
+                }
+            }
+        };
+
+        loadSettings();
+
+        return () => {
+            cancelled = true;
+        };
+
     }, []);
 
     useEffect(() => {
@@ -185,24 +306,174 @@ const SystemSettings = () => {
     }, [settings.primaryColor]);
 
     const handleChange = (key, value) => {
-        setSettings((current) => ({ ...current, [key]: value }));
+        setSettings((current) => ({
+            ...current,
+            [key]: value,
+        }));
+
         setSaved(false);
+        setSaveError("");
     };
 
-    const handleSave = () => {
-        localStorage.setItem("votaraSystemSettings", JSON.stringify(settings));
-        applyTheme(settings.theme);
-        window.dispatchEvent(new Event("votaraSettingsChanged"));
-        setSaved(true);
-        window.setTimeout(() => setSaved(false), 2500);
+    const handleSave = async () => {
+
+        if (saving) {
+            return;
+        }
+
+        try {
+
+            setSaving(true);
+            setSaved(false);
+            setSaveError("");
+
+            const response =
+                await api.put(
+                    "/admin/settings",
+                    {
+                        settings,
+                    }
+                );
+
+            const data =
+                response?.data || {};
+
+            if (!data.success) {
+
+                throw new Error(
+                    data.message ||
+                    "Unable to save system settings."
+                );
+            }
+
+            const savedSettings = {
+                ...defaultSettings,
+                ...(data.settings || settings),
+            };
+
+            setSettings(
+                savedSettings
+            );
+
+            localStorage.setItem(
+                "votaraSystemSettings",
+                JSON.stringify(
+                    savedSettings
+                )
+            );
+
+            applyTheme(
+                savedSettings.theme
+            );
+
+            window.dispatchEvent(
+                new Event(
+                    "votaraSettingsChanged"
+                )
+            );
+
+            setSaved(true);
+
+            window.setTimeout(
+                () => setSaved(false),
+                2500
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Unable to save Admin System Settings:",
+                error
+            );
+
+            setSaveError(
+                error?.response?.data?.message ||
+                error?.message ||
+                "Unable to save system settings."
+            );
+
+        } finally {
+
+            setSaving(false);
+        }
     };
 
-    const handleReset = () => {
-        setSettings(defaultSettings);
-        localStorage.setItem("votaraSystemSettings", JSON.stringify(defaultSettings));
-        applyTheme(defaultSettings.theme);
-        window.dispatchEvent(new Event("votaraSettingsChanged"));
-        setSaved(false);
+
+    const handleReset = async () => {
+
+        if (saving) {
+            return;
+        }
+
+        try {
+
+            setSaving(true);
+            setSaved(false);
+            setSaveError("");
+
+            const response =
+                await api.put(
+                    "/admin/settings",
+                    {
+                        settings:
+                            defaultSettings,
+                    }
+                );
+
+            const data =
+                response?.data || {};
+
+            if (!data.success) {
+
+                throw new Error(
+                    data.message ||
+                    "Unable to reset system settings."
+                );
+            }
+
+            const resetSettings = {
+                ...defaultSettings,
+                ...(data.settings || defaultSettings),
+            };
+
+            setSettings(
+                resetSettings
+            );
+
+            localStorage.setItem(
+                "votaraSystemSettings",
+                JSON.stringify(
+                    resetSettings
+                )
+            );
+
+            applyTheme(
+                resetSettings.theme
+            );
+
+            window.dispatchEvent(
+                new Event(
+                    "votaraSettingsChanged"
+                )
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Unable to reset Admin System Settings:",
+                error
+            );
+
+            setSaveError(
+                error?.response?.data?.message ||
+                error?.message ||
+                "Unable to reset system settings."
+            );
+
+        } finally {
+
+            setSaving(false);
+        }
     };
 
     // =====================================================
@@ -320,10 +591,43 @@ const SystemSettings = () => {
                         <p>Control how the election website behaves. Every change is saved to the audit trail.</p>
                     </div>
                     <div className="system-config-actions">
-                        <button className="system-config-btn secondary" onClick={handleReset}><FiRefreshCw />Discard</button>
-                        <button className={`system-config-btn primary ${saved ? "saved" : ""}`} onClick={handleSave}>
-                            {saved ? <FiCheck /> : <FiSave />}{saved ? "Saved" : "Save Changes"}
+                        <button className="system-config-btn secondary" onClick={handleReset} disabled={saving || loadingSettings}><FiRefreshCw />{saving ? "Working..." : "Discard"}</button>
+                        <button
+                            className={`system-config-btn primary ${saved ? "saved" : ""}`}
+                            onClick={handleSave}
+                            disabled={saving || loadingSettings}
+                        >
+                            {saving
+                                ? <FiRefreshCw />
+                                : saved
+                                    ? <FiCheck />
+                                    : <FiSave />}
+                            {saving
+                                ? "Saving..."
+                                : saved
+                                    ? "Saved"
+                                    : "Save Changes"}
                         </button>
+                    </div>
+
+                    <div className="system-config-save-status">
+                        {loadingSettings && (
+                            <span className="system-config-status loading">
+                                <FiRefreshCw /> Loading saved settings...
+                            </span>
+                        )}
+
+                        {!loadingSettings && saveError && (
+                            <span className="system-config-status error">
+                                <FiAlertTriangle /> {saveError}
+                            </span>
+                        )}
+
+                        {!loadingSettings && !saveError && (
+                            <span className="system-config-status connected">
+                                <FiDatabase /> Settings connected to VOTARA server
+                            </span>
+                        )}
                     </div>
                 </div>
 

@@ -2,6 +2,18 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import "./Register.css";
 
+// =====================================================
+// API BASE URL
+// =====================================================
+
+const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL ||
+    (
+        import.meta.env.PROD
+            ? "https://votara-api-olij.onrender.com/api"
+            : "http://localhost:5000/api"
+    );
+
 const Register = () => {
     const navigate = useNavigate();
 
@@ -165,7 +177,7 @@ const Register = () => {
 
             try {
                 response = await fetch(
-                    "http://localhost:5000/api/registration/send-otp",
+                    `${API_BASE_URL}/registration/send-otp`,
                     {
                         method: "POST",
 

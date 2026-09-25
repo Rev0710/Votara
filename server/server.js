@@ -11,6 +11,9 @@ const path = require("path");
 const settingsRoutes =
     require("./src/routes/settingsRoutes");
 
+    const adminSettingsRoutes =
+    require("./src/routes/adminSettingsRoutes");
+
 const auditLogsRoutes =
     require("./src/routes/auditLogsRoutes");
 
@@ -529,6 +532,10 @@ app.use(
     adminAuthRoutes
 );
 
+app.use(
+    "/api/admin/settings",
+    adminSettingsRoutes
+);
 
 // =====================================================
 // REGISTRATION API

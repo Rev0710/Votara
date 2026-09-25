@@ -542,3 +542,51 @@ html[data-theme="light"] .system-config-logout:hover {
     color: #174fd8;
     background: rgba(36, 99, 255, 0.08);
 }
+
+/* =========================================================
+   ADMIN SYSTEM SETTINGS - API CONNECTION STATUS
+   ========================================================= */
+
+.system-config-save-status {
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-end;
+    min-height: 22px;
+}
+
+.system-config-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+
+    padding: 7px 10px;
+
+    border-radius: 999px;
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.system-config-status.connected {
+    color: #137a47;
+    background: #eaf8f0;
+    border: 1px solid #ccebdc;
+}
+
+.system-config-status.loading {
+    color: #49617b;
+    background: #f0f4f8;
+    border: 1px solid #dbe3ec;
+}
+
+.system-config-status.error {
+    color: #a23b32;
+    background: #fff1ef;
+    border: 1px solid #f2cbc6;
+}
+
+.system-config-btn:disabled {
+    opacity: 0.62;
+    cursor: not-allowed;
+    transform: none !important;
+}
