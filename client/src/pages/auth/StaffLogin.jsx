@@ -26,7 +26,7 @@ const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL ||
     (
         import.meta.env.PROD
-            ? "https://votara-api-oliq.onrender.com/api"
+            ? "https://votara-api-olij.onrender.com"
             : "http://localhost:5000/api"
     );
 
