@@ -11,9 +11,29 @@ import {
 import "./StaffLogin.css";
 
 
+// =====================================================
+// API BASE URL
+// =====================================================
+// Use the same environment variable as services/api.js.
+// This prevents production Vercel builds from falling
+// back to localhost when VITE_API_URL is not defined.
+//
+// Local:      http://localhost:5000/api
+// Production: Vercel VITE_API_BASE_URL, or the Render fallback
+// =====================================================
+
 const API_BASE_URL =
-    import.meta.env.VITE_API_URL ||
-    "http://localhost:5000/api";
+    import.meta.env.VITE_API_BASE_URL ||
+    (
+        import.meta.env.PROD
+            ? "https://votara-api-oliq.onrender.com/api"
+            : "http://localhost:5000/api"
+    );
+
+console.log(
+    "🌐 Staff Login API BASE URL:",
+    API_BASE_URL
+);
 
 
 // =====================================================
@@ -69,61 +89,61 @@ const StaffLogin = () => {
     const [lockSeconds, setLockSeconds] =
         useState(0);
 
-    const [lockUntil, setLockUntil] =
-        useState(null);
-
 
     // =================================================
     // COUNTDOWN TIMER
     // =================================================
     //
-    // The server supplies the exact lock-until timestamp.
-    // The browser calculates the remaining time from that
-    // timestamp instead of assuming a fresh 30 seconds.
+    // This is only the visual countdown.
+    //
+    // The server remains the real security authority.
     // =================================================
 
     useEffect(() => {
 
-        if (!lockUntil) {
+        if (
+            lockSeconds <= 0
+        ) {
+
             return;
         }
 
-        const updateCountdown = () => {
-
-            const remainingMilliseconds =
-                new Date(lockUntil).getTime() -
-                Date.now();
-
-            const remainingSeconds =
-                Math.max(
-                    0,
-                    Math.ceil(
-                        remainingMilliseconds / 1000
-                    )
-                );
-
-            setLockSeconds(
-                remainingSeconds
-            );
-
-            if (remainingSeconds <= 0) {
-                setLockUntil(null);
-            }
-        };
-
-        updateCountdown();
 
         const timer =
-            window.setInterval(
-                updateCountdown,
-                250
-            );
+            window.setInterval(() => {
+
+                setLockSeconds(
+                    previous => {
+
+                        if (
+                            previous <= 1
+                        ) {
+
+                            window.clearInterval(
+                                timer
+                            );
+
+                            return 0;
+                        }
+
+
+                        return previous - 1;
+                    }
+                );
+
+            }, 1000);
+
 
         return () => {
-            window.clearInterval(timer);
+
+            window.clearInterval(
+                timer
+            );
+
         };
 
-    }, [lockUntil]);
+    }, [lockSeconds]);
+
 
     // =================================================
     // WHEN TIMER REACHES ZERO
@@ -369,37 +389,12 @@ const StaffLogin = () => {
                 // USE SERVER'S ACTUAL REMAINING TIME
                 // -------------------------------------------------
 
-                const serverLockUntil =
-                    data.lockUntil || null;
-
-                const remainingFromTimestamp =
-                    serverLockUntil
-                        ? Math.max(
-                            0,
-                            Math.ceil(
-                                (new Date(serverLockUntil).getTime() -
-                                    Date.now()) /
-                                1000
-                            )
-                        )
-                        : serverRemaining;
-
-                if (serverLockUntil) {
-                    setLockUntil(
-                        serverLockUntil
-                    );
-
-                    setLockSeconds(
-                        remainingFromTimestamp
-                    );
-                } else {
-                    setLockSeconds(
-                        Math.max(
-                            0,
-                            remainingFromTimestamp
-                        )
-                    );
-                }
+                setLockSeconds(
+                    Math.max(
+                        0,
+                        serverRemaining
+                    )
+                );
 
 
                 setError(
@@ -407,7 +402,7 @@ const StaffLogin = () => {
                     `This account is temporarily locked. ` +
                     `Try again in ${Math.max(
                         0,
-                        remainingFromTimestamp
+                        serverRemaining
                     )} seconds.`
                 );
 
@@ -512,7 +507,6 @@ const StaffLogin = () => {
 
             // Reset frontend lock state.
             setLockSeconds(0);
-            setLockUntil(null);
 
             setError("");
 
