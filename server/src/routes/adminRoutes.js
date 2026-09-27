@@ -13,70 +13,15 @@ const {
 
 const router = express.Router();
 
-// =========================================================
-// ADMIN DASHBOARD
-// =========================================================
+router.get("/dashboard", getAdminDashboard);
 
-router.get(
-    "/dashboard",
-    getAdminDashboard
-);
+router.post("/admin", createAdminAccount);
+router.get("/admin", getAdminAccounts);
 
-// =========================================================
-// ADMIN ACCOUNT MANAGEMENT
-// =========================================================
-
-// Create additional Admin account
-router.post(
-    "/admin",
-    createAdminAccount
-);
-
-// =========================================================
-// ELECTORAL BOARD MANAGEMENT
-// =========================================================
-
-// Get Electoral Board accounts
-router.get(
-    "/electoral-board",
-    getElectoralBoardAccounts
-);
-
-// Create Electoral Board account
-router.post(
-    "/electoral-board",
-    createElectoralBoardAccount
-);
-
-// Activate Electoral Board account
-router.patch(
-    "/electoral-board/:id/activate",
-    activateElectoralBoardAccount
-);
-
-// Deactivate Electoral Board account
-router.patch(
-    "/electoral-board/:id/deactivate",
-    deactivateElectoralBoardAccount
-);
-
-// Reset Electoral Board password
-router.post(
-    "/electoral-board/:id/reset-password",
-    resetElectoralBoardPassword
-);
-
-// =====================================================
-// ADMIN ACCOUNT MANAGEMENT
-// =====================================================
-
-router.get(
-    "/admin",
-    getAdminAccounts
-);
-
-// =========================================================
-// EXPORT ROUTER
-// =========================================================
+router.get("/electoral-board", getElectoralBoardAccounts);
+router.post("/electoral-board", createElectoralBoardAccount);
+router.patch("/electoral-board/:id/activate", activateElectoralBoardAccount);
+router.patch("/electoral-board/:id/deactivate", deactivateElectoralBoardAccount);
+router.post("/electoral-board/:id/reset-password", resetElectoralBoardPassword);
 
 module.exports = router;

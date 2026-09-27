@@ -13,6 +13,28 @@ const EB_ROLE = "electoral_board";
 
 
 // =====================================================
+// LOGIN SECURITY SETTINGS
+// =====================================================
+//
+// 5 failed password attempts
+//      ↓
+// 30 second temporary lock
+//
+// IMPORTANT:
+// The lock is enforced SERVER-SIDE.
+// The frontend countdown is only a visual aid.
+// The database timestamp remains the source of truth.
+// =====================================================
+
+const MAX_FAILED_LOGIN_ATTEMPTS = 5;
+
+const LOGIN_LOCK_DURATION_SECONDS = 30;
+
+const LOGIN_LOCK_DURATION_MS =
+    LOGIN_LOCK_DURATION_SECONDS * 1000;
+
+
+// =====================================================
 // PASSWORD VALIDATION
 // =====================================================
 
@@ -22,8 +44,10 @@ const isValidPassword = (password) => {
         typeof password !== "string" ||
         password.length < 8
     ) {
+
         return false;
     }
+
 
     return (
         /[A-Z]/.test(password) &&
@@ -67,7 +91,142 @@ const createStaffToken = (user) => {
 
 
 // =====================================================
+// CALCULATE REMAINING LOCK SECONDS
+// =====================================================
+//
+// This always calculates from the DATABASE timestamp.
+//
+// Example:
+//
+// locked_until = 10:00:30
+// current time = 10:00:18
+//
+// remaining = 12 seconds
+// =====================================================
+
+const getRemainingLockSeconds = (
+    lockedUntil
+) => {
+
+    if (!lockedUntil) {
+        return 0;
+    }
+
+
+    const lockedUntilTime =
+        new Date(
+            lockedUntil
+        ).getTime();
+
+
+    if (
+        Number.isNaN(
+            lockedUntilTime
+        )
+    ) {
+
+        return 0;
+    }
+
+
+    const remainingMilliseconds =
+        lockedUntilTime -
+        Date.now();
+
+
+    if (
+        remainingMilliseconds <= 0
+    ) {
+
+        return 0;
+    }
+
+
+    return Math.ceil(
+        remainingMilliseconds / 1000
+    );
+};
+
+
+// =====================================================
+// CLEAR EXPIRED LOCK
+// =====================================================
+//
+// Once the 30-second period has passed:
+//
+// failed_login_attempts = 0
+// locked_until = null
+//
+// This means the user gets a completely fresh login
+// attempt after the lock expires.
+// =====================================================
+
+const clearExpiredLoginLock = async (
+    user
+) => {
+
+    if (
+        !user.locked_until
+    ) {
+
+        return false;
+    }
+
+
+    const remainingSeconds =
+        getRemainingLockSeconds(
+            user.locked_until
+        );
+
+
+    if (
+        remainingSeconds > 0
+    ) {
+
+        return false;
+    }
+
+
+    const {
+        error
+    } = await supabase
+        .from("staff_users")
+        .update({
+
+            failed_login_attempts:
+                0,
+
+            locked_until:
+                null,
+
+            updated_at:
+                new Date().toISOString(),
+
+        })
+        .eq(
+            "id",
+            user.id
+        );
+
+
+    if (error) {
+
+        console.error(
+            "⚠️ Unable to clear expired login lock:",
+            error.message
+        );
+
+        return false;
+    }
+
+
+    return true;
+};
+
+
+// =====================================================
 // SHARED ADMIN / EB LOGIN
+// =====================================================
 //
 // One login endpoint for:
 //
@@ -75,6 +234,10 @@ const createStaffToken = (user) => {
 // ELECTORAL BOARD
 //
 // The server identifies the role automatically.
+//
+// Route:
+// POST /api/staff-auth/login
+//
 // =====================================================
 
 const loginStaff = async (
@@ -121,6 +284,7 @@ const loginStaff = async (
                 .trim()
                 .toLowerCase();
 
+
         const providedSecurityCode =
             String(securityCode)
                 .trim();
@@ -160,6 +324,7 @@ const loginStaff = async (
                 "❌ Staff login lookup error:",
                 userError.message
             );
+
 
             return res.status(500).json({
 
@@ -229,24 +394,71 @@ const loginStaff = async (
 
 
         // =================================================
-        // ACCOUNT LOCK CHECK
+        // CHECK EXISTING LOCK
         // =================================================
 
         if (
-            user.locked_until &&
-            new Date(
-                user.locked_until
-            ) > new Date()
+            user.locked_until
         ) {
 
-            return res.status(423).json({
+            const remainingSeconds =
+                getRemainingLockSeconds(
+                    user.locked_until
+                );
 
-                success: false,
 
-                message:
-                    "This account is temporarily locked. Please try again later.",
+            // -------------------------------------------------
+            // LOCK IS STILL ACTIVE
+            // -------------------------------------------------
 
-            });
+            if (
+                remainingSeconds > 0
+            ) {
+
+                return res.status(423).json({
+
+                    success: false,
+
+                    message:
+                        `This account is temporarily locked. Please try again in ${remainingSeconds} second${remainingSeconds === 1 ? "" : "s"}.`,
+
+                    locked:
+                        true,
+
+                    lockRemainingSeconds:
+                        remainingSeconds,
+
+                    lockDurationSeconds:
+                        LOGIN_LOCK_DURATION_SECONDS,
+
+                    lockUntil:
+                        user.locked_until,
+
+                });
+            }
+
+
+            // -------------------------------------------------
+            // LOCK HAS EXPIRED
+            // -------------------------------------------------
+            //
+            // Reset everything BEFORE checking the password.
+            //
+            // This guarantees that after exactly 30 seconds
+            // the user receives a completely fresh attempt.
+            // -------------------------------------------------
+
+            await clearExpiredLoginLock(
+                user
+            );
+
+
+            // Keep local values synchronized.
+            user.failed_login_attempts =
+                0;
+
+            user.locked_until =
+                null;
         }
 
 
@@ -261,27 +473,67 @@ const loginStaff = async (
             );
 
 
+        // =================================================
+        // INVALID PASSWORD
+        // =================================================
+
         if (
             !passwordValid
         ) {
 
-            const failedAttempts =
-                (user.failed_login_attempts || 0) +
-                1;
+            // -------------------------------------------------
+            // CURRENT FAILED ATTEMPTS
+            // -------------------------------------------------
 
-            const shouldLock =
-                failedAttempts >= 5;
+            const currentFailedAttempts =
+                Number(
+                    user.failed_login_attempts || 0
+                );
+
+
+            // -------------------------------------------------
+            // INCREMENT FAILED ATTEMPT
+            // -------------------------------------------------
+
+            const failedAttempts =
+                currentFailedAttempts + 1;
+
+
+            // -------------------------------------------------
+            // DETERMINE WHETHER TO LOCK
+            // -------------------------------------------------
+            //
+            // This variable is intentionally declared inside
+            // this block so it can never be referenced outside
+            // its scope.
+            // -------------------------------------------------
+
+            const lockTriggered =
+                failedAttempts >=
+                MAX_FAILED_LOGIN_ATTEMPTS;
+
+
+            // -------------------------------------------------
+            // CREATE EXACT 30-SECOND LOCK
+            // -------------------------------------------------
 
             const lockedUntil =
-                shouldLock
+                lockTriggered
                     ? new Date(
                         Date.now() +
-                        15 * 60 * 1000
+                        LOGIN_LOCK_DURATION_MS
                     ).toISOString()
                     : null;
 
 
-            await supabase
+            // -------------------------------------------------
+            // SAVE FAILED ATTEMPT
+            // -------------------------------------------------
+
+            const {
+                error:
+                    loginAttemptUpdateError
+            } = await supabase
                 .from("staff_users")
                 .update({
 
@@ -301,14 +553,73 @@ const loginStaff = async (
                 );
 
 
+            if (
+                loginAttemptUpdateError
+            ) {
+
+                console.error(
+                    "⚠️ Unable to update failed login attempt:",
+                    loginAttemptUpdateError.message
+                );
+            }
+
+
+            // -------------------------------------------------
+            // LOCK RESPONSE
+            // -------------------------------------------------
+
+            if (
+                lockTriggered
+            ) {
+
+                return res.status(423).json({
+
+                    success: false,
+
+                    message:
+                        "Too many failed login attempts. This account is temporarily locked for 30 seconds.",
+
+                    locked:
+                        true,
+
+                    lockRemainingSeconds:
+                        LOGIN_LOCK_DURATION_SECONDS,
+
+                    lockDurationSeconds:
+                        LOGIN_LOCK_DURATION_SECONDS,
+
+                    lockUntil:
+                        lockedUntil,
+
+                    failedAttempts:
+                        failedAttempts,
+
+                });
+            }
+
+
+            // -------------------------------------------------
+            // NORMAL INVALID PASSWORD RESPONSE
+            // -------------------------------------------------
+
             return res.status(401).json({
 
                 success: false,
 
                 message:
-                    shouldLock
-                        ? "Too many failed login attempts. This account is temporarily locked for 15 minutes."
-                        : "Invalid email or password.",
+                    "Invalid email or password.",
+
+                locked:
+                    false,
+
+                lockRemainingSeconds:
+                    0,
+
+                lockDurationSeconds:
+                    LOGIN_LOCK_DURATION_SECONDS,
+
+                failedAttempts:
+                    failedAttempts,
 
             });
         }
@@ -345,7 +656,6 @@ const loginStaff = async (
                     process.env.EB_REGISTRATION_CODE ||
                     ""
                 ).trim();
-
         }
 
 
@@ -360,6 +670,7 @@ const loginStaff = async (
             console.error(
                 `❌ Security code is not configured for role: ${user.role}`
             );
+
 
             return res.status(500).json({
 
@@ -397,6 +708,19 @@ const loginStaff = async (
         // =================================================
         // RESET FAILED LOGIN ATTEMPTS
         // =================================================
+        //
+        // A successful login ALWAYS resets the counter.
+        //
+        // This is important because:
+        //
+        // 4 failed attempts
+        // ↓
+        // correct password
+        // ↓
+        // counter becomes 0
+        //
+        // The user starts fresh.
+        // =================================================
 
         const {
             error:
@@ -424,7 +748,9 @@ const loginStaff = async (
             );
 
 
-        if (updateError) {
+        if (
+            updateError
+        ) {
 
             console.error(
                 "⚠️ Unable to update staff login information:",
@@ -451,6 +777,7 @@ const loginStaff = async (
 
         const isAdmin =
             user.role === ADMIN_ROLE;
+
 
         const isEB =
             user.role === EB_ROLE;
@@ -507,6 +834,7 @@ const loginStaff = async (
             error
         );
 
+
         return res.status(500).json({
 
             success: false,
@@ -540,7 +868,10 @@ const authenticateStaff = (req) => {
                 "Staff authentication is required."
             );
 
-        error.statusCode = 401;
+
+        error.statusCode =
+            401;
+
 
         throw error;
     }
@@ -559,7 +890,10 @@ const authenticateStaff = (req) => {
                 "Staff authentication is required."
             );
 
-        error.statusCode = 401;
+
+        error.statusCode =
+            401;
+
 
         throw error;
     }
@@ -584,7 +918,10 @@ const authenticateStaff = (req) => {
                     "Staff access is required."
                 );
 
-            error.statusCode = 403;
+
+            error.statusCode =
+                403;
+
 
             throw error;
         }
@@ -607,7 +944,10 @@ const authenticateStaff = (req) => {
                 "Invalid or expired staff session."
             );
 
-        authError.statusCode = 401;
+
+        authError.statusCode =
+            401;
+
 
         throw authError;
     }
@@ -761,12 +1101,15 @@ const changeStaffPassword = async (
             .single();
 
 
-        if (updateError) {
+        if (
+            updateError
+        ) {
 
             console.error(
                 "❌ Staff password update error:",
                 updateError.message
             );
+
 
             return res.status(500).json({
 
@@ -839,6 +1182,7 @@ const changeStaffPassword = async (
             "❌ changeStaffPassword error:",
             error
         );
+
 
         return res.status(
             error.statusCode || 500

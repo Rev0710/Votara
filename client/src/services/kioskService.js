@@ -196,14 +196,16 @@ export const approveKioskRegistration = async ({
     sessionId,
     operationId,
 }) => {
-    const response = await api.post(
-        "/kiosk/registration/approve",
-        {
-            registrationId,
-            sessionId,
-            operationId,
-        }
-    );
+
+    const response =
+        await api.post(
+            "/kiosk/registration/approve",
+            {
+                registrationId,
+                sessionId,
+                operationId,
+            }
+        );
 
     return response.data;
 };

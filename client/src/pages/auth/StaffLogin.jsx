@@ -1,8 +1,19 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, {
+    useEffect,
+    useState,
+} from "react";
+
+import {
+    Link,
+    useNavigate,
+} from "react-router-dom";
+
 import "./StaffLogin.css";
 
-import api from "../../services/api";
+
+const API_BASE_URL =
+    import.meta.env.VITE_API_URL ||
+    "http://localhost:5000/api";
 
 
 // =====================================================
@@ -11,45 +22,29 @@ import api from "../../services/api";
 
 const StaffLogin = () => {
 
-    const navigate = useNavigate();
+    const navigate =
+        useNavigate();
 
 
     // =================================================
-    // NAVIGATION
-    // =================================================
-
-    const goToAdmin = () => {
-
-        const changePage = () =>
-            navigate("/account-selection");
-
-
-        if (document.startViewTransition) {
-
-            document.startViewTransition(
-                changePage
-            );
-
-        } else {
-
-            changePage();
-
-        }
-
-    };
-
-
-    // =================================================
-    // FORM STATE
+    // FORM
     // =================================================
 
     const [formData, setFormData] =
         useState({
+
             email: "",
+
             password: "",
+
             securityCode: "",
+
         });
 
+
+    // =================================================
+    // UI STATE
+    // =================================================
 
     const [showPassword, setShowPassword] =
         useState(false);
@@ -68,10 +63,142 @@ const StaffLogin = () => {
 
 
     // =================================================
+    // LOCK COUNTDOWN
+    // =================================================
+
+    const [lockSeconds, setLockSeconds] =
+        useState(0);
+
+    const [lockUntil, setLockUntil] =
+        useState(null);
+
+
+    // =================================================
+    // COUNTDOWN TIMER
+    // =================================================
+    //
+    // The server supplies the exact lock-until timestamp.
+    // The browser calculates the remaining time from that
+    // timestamp instead of assuming a fresh 30 seconds.
+    // =================================================
+
+    useEffect(() => {
+
+        if (!lockUntil) {
+            return;
+        }
+
+        const updateCountdown = () => {
+
+            const remainingMilliseconds =
+                new Date(lockUntil).getTime() -
+                Date.now();
+
+            const remainingSeconds =
+                Math.max(
+                    0,
+                    Math.ceil(
+                        remainingMilliseconds / 1000
+                    )
+                );
+
+            setLockSeconds(
+                remainingSeconds
+            );
+
+            if (remainingSeconds <= 0) {
+                setLockUntil(null);
+            }
+        };
+
+        updateCountdown();
+
+        const timer =
+            window.setInterval(
+                updateCountdown,
+                250
+            );
+
+        return () => {
+            window.clearInterval(timer);
+        };
+
+    }, [lockUntil]);
+
+    // =================================================
+    // WHEN TIMER REACHES ZERO
+    // =================================================
+
+    useEffect(() => {
+
+        if (
+            lockSeconds === 0
+        ) {
+
+            // Only clear the lock message if it was
+            // the temporary-lock message.
+            setError(
+                previous => {
+
+                    if (
+                        previous &&
+                        (
+                            previous.includes(
+                                "temporarily locked"
+                            ) ||
+                            previous.includes(
+                                "Try again in"
+                            )
+                        )
+                    ) {
+
+                        return "";
+                    }
+
+
+                    return previous;
+                }
+            );
+        }
+
+    }, [lockSeconds]);
+
+
+    // =================================================
+    // GO TO ADMIN
+    // =================================================
+
+    const goToAdmin = () => {
+
+        const changePage =
+            () => navigate(
+                "/account-selection"
+            );
+
+
+        if (
+            document.startViewTransition
+        ) {
+
+            document.startViewTransition(
+                changePage
+            );
+
+        } else {
+
+            changePage();
+
+        }
+    };
+
+
+    // =================================================
     // HANDLE INPUT
     // =================================================
 
-    const handleChange = (event) => {
+    const handleChange = (
+        event
+    ) => {
 
         const {
             name,
@@ -79,14 +206,49 @@ const StaffLogin = () => {
         } = event.target;
 
 
-        setFormData((previous) => ({
-            ...previous,
-            [name]: value,
-        }));
+        setFormData(
+            previous => ({
+
+                ...previous,
+
+                [name]:
+                    value,
+
+            })
+        );
 
 
-        setError("");
+        // Don't clear the lock message while
+        // the account is still locked.
+        if (
+            lockSeconds <= 0
+        ) {
 
+            setError("");
+        }
+    };
+
+
+    // =================================================
+    // FORMAT LOCK MESSAGE
+    // =================================================
+
+    const getLockMessage = () => {
+
+        if (
+            lockSeconds <= 0
+        ) {
+
+            return "";
+        }
+
+
+        return (
+            `Too many failed login attempts. ` +
+            `This account is temporarily locked. ` +
+            `Try again in ${lockSeconds} ` +
+            `second${lockSeconds === 1 ? "" : "s"}.`
+        );
     };
 
 
@@ -94,15 +256,34 @@ const StaffLogin = () => {
     // SUBMIT LOGIN
     // =================================================
 
-    const handleSubmit = async (event) => {
+    const handleSubmit = async (
+        event
+    ) => {
 
         event.preventDefault();
+
+
+        // -------------------------------------------------
+        // FRONTEND LOCK GUARD
+        // -------------------------------------------------
+
+        if (
+            lockSeconds > 0
+        ) {
+
+            setError(
+                getLockMessage()
+            );
+
+            return;
+        }
+
 
         setError("");
 
 
         // =================================================
-        // VALIDATE REQUIRED FIELDS
+        // REQUIRED FIELDS
         // =================================================
 
         if (
@@ -116,7 +297,6 @@ const StaffLogin = () => {
             );
 
             return;
-
         }
 
 
@@ -126,61 +306,155 @@ const StaffLogin = () => {
 
 
             // =================================================
-            // STAFF LOGIN
-            // =================================================
-            //
-            // IMPORTANT:
-            // Use the centralized api.js.
-            //
-            // Production:
-            // https://votara-api-olij.onrender.com/api
-            //
-            // Local:
-            // http://localhost:5000/api
-            //
-            // Final endpoint:
-            // /staff-auth/login
+            // LOGIN REQUEST
             // =================================================
 
             const response =
-                await api.post(
-                    "/staff-auth/login",
+                await fetch(
+                    `${API_BASE_URL}/staff-auth/login`,
                     {
-                        email:
-                            formData.email
-                                .trim()
-                                .toLowerCase(),
 
-                        password:
-                            formData.password,
+                        method:
+                            "POST",
 
-                        securityCode:
-                            formData.securityCode
-                                .trim(),
+                        headers: {
+
+                            "Content-Type":
+                                "application/json",
+
+                        },
+
+                        body:
+                            JSON.stringify({
+
+                                email:
+                                    formData.email
+                                        .trim()
+                                        .toLowerCase(),
+
+                                password:
+                                    formData.password,
+
+                                securityCode:
+                                    formData.securityCode
+                                        .trim(),
+
+                            }),
+
                     }
                 );
 
 
             const data =
-                response.data;
+                await response.json();
 
 
             // =================================================
-            // RESPONSE VALIDATION
+            // TEMPORARY LOCK
             // =================================================
 
             if (
-                !data ||
+                response.status === 423
+            ) {
+
+                const serverRemaining =
+                    Number(
+                        data.lockRemainingSeconds ||
+                        data.lockDurationSeconds ||
+                        30
+                    );
+
+
+                // -------------------------------------------------
+                // USE SERVER'S ACTUAL REMAINING TIME
+                // -------------------------------------------------
+
+                const serverLockUntil =
+                    data.lockUntil || null;
+
+                const remainingFromTimestamp =
+                    serverLockUntil
+                        ? Math.max(
+                            0,
+                            Math.ceil(
+                                (new Date(serverLockUntil).getTime() -
+                                    Date.now()) /
+                                1000
+                            )
+                        )
+                        : serverRemaining;
+
+                if (serverLockUntil) {
+                    setLockUntil(
+                        serverLockUntil
+                    );
+
+                    setLockSeconds(
+                        remainingFromTimestamp
+                    );
+                } else {
+                    setLockSeconds(
+                        Math.max(
+                            0,
+                            remainingFromTimestamp
+                        )
+                    );
+                }
+
+
+                setError(
+                    `Too many failed login attempts. ` +
+                    `This account is temporarily locked. ` +
+                    `Try again in ${Math.max(
+                        0,
+                        remainingFromTimestamp
+                    )} seconds.`
+                );
+
+
+                setLoading(false);
+
+                return;
+            }
+
+
+            // =================================================
+            // OTHER LOGIN ERRORS
+            // =================================================
+
+            if (
+                !response.ok
+            ) {
+
+                setError(
+                    data.message ||
+                    "Unable to login."
+                );
+
+
+                setLoading(false);
+
+                return;
+            }
+
+
+            // =================================================
+            // VERIFY RESPONSE
+            // =================================================
+
+            if (
                 !data.user ||
                 !data.token
             ) {
 
                 setError(
-                    "Invalid login response from the VOTARA server."
+                    "The server returned an invalid login response."
                 );
 
-                return;
 
+                setLoading(false);
+
+                return;
             }
 
 
@@ -188,9 +462,10 @@ const StaffLogin = () => {
             // ROLE CHECK
             // =================================================
             //
-            // This page is specifically for Electoral Board.
+            // This page is specifically the Electoral Board
+            // login page.
             //
-            // Do this BEFORE saving the session or navigating.
+            // Admin remains separate.
             // =================================================
 
             if (
@@ -202,13 +477,21 @@ const StaffLogin = () => {
                     "This account is not an Electoral Board account. Please use the Admin login page."
                 );
 
-                return;
 
+                setLoading(false);
+
+                return;
             }
 
 
             // =================================================
-            // SAVE UNIFIED STAFF SESSION
+            // SUCCESSFUL LOGIN
+            // =================================================
+            //
+            // Successful login means:
+            //
+            // failed attempts reset server-side
+            // lock removed server-side
             //
             // Password is NEVER stored.
             // =================================================
@@ -227,8 +510,15 @@ const StaffLogin = () => {
             );
 
 
+            // Reset frontend lock state.
+            setLockSeconds(0);
+            setLockUntil(null);
+
+            setError("");
+
+
             // =================================================
-            // PASSWORD CHANGE
+            // PASSWORD CHANGE REQUIRED
             // =================================================
 
             if (
@@ -242,9 +532,14 @@ const StaffLogin = () => {
                     }
                 );
 
+
                 return;
             }
 
+
+            // =================================================
+            // ELECTORAL BOARD DASHBOARD
+            // =================================================
 
             navigate(
                 "/electoral-board/dashboard",
@@ -252,6 +547,7 @@ const StaffLogin = () => {
                     replace: true,
                 }
             );
+
 
         } catch (error) {
 
@@ -261,39 +557,30 @@ const StaffLogin = () => {
             );
 
 
-            // =================================================
-            // SERVER ERROR
-            // =================================================
-
-            if (
-                error.response
-            ) {
-
-                setError(
-                    error.response.data?.message ||
-                    "Unable to login."
-                );
-
-            } else {
-
-                setError(
-                    "Unable to connect to the VOTARA server. Please check your internet connection or try again."
-                );
-
-            }
+            setError(
+                "Unable to connect to the VOTARA server. Please make sure the backend is running."
+            );
 
         } finally {
 
             setLoading(false);
-
         }
-
     };
 
 
-    // =====================================================
-    // UI
-    // =====================================================
+    // =================================================
+    // DISPLAYED ERROR
+    // =================================================
+
+    const displayedError =
+        lockSeconds > 0
+            ? getLockMessage()
+            : error;
+
+
+    // =================================================
+    // RENDER
+    // =================================================
 
     return (
 
@@ -316,7 +603,7 @@ const StaffLogin = () => {
                         ========================================= */}
 
                         <Link
-                            to="/register"
+                            to="/account-selection"
                             className="staff-login-back"
                         >
                             ← back
@@ -334,8 +621,8 @@ const StaffLogin = () => {
                             </h1>
 
                             <p>
-                                Login as Electoral Board
-                                on Western Institute of Technology
+                                Login as Electoral Board on
+                                Western Institute of Technology
                                 Votara platform.
                             </p>
 
@@ -343,13 +630,70 @@ const StaffLogin = () => {
 
 
                         {/* =========================================
-                            ERROR
+                            ERROR / LOCK MESSAGE
                         ========================================= */}
 
-                        {error && (
+                        {displayedError && (
 
-                            <div className="staff-login-error">
-                                {error}
+                            <div
+                                className="staff-login-error"
+                                style={{
+                                    position:
+                                        "relative",
+                                }}
+                            >
+
+                                {displayedError}
+
+
+                                {/* =================================
+                                    LIVE COUNTDOWN
+                                ================================= */}
+
+                                {lockSeconds > 0 && (
+
+                                    <div
+                                        style={{
+                                            marginTop:
+                                                "8px",
+
+                                            fontWeight:
+                                                700,
+
+                                            fontSize:
+                                                "13px",
+
+                                            color:
+                                                "#b42318",
+
+                                            textAlign:
+                                                "center",
+                                        }}
+                                    >
+
+                                        Try again in{" "}
+
+                                        <span
+                                            style={{
+                                                fontVariantNumeric:
+                                                    "tabular-nums",
+
+                                                fontWeight:
+                                                    800,
+                                            }}
+                                        >
+                                            {lockSeconds}
+                                        </span>{" "}
+
+                                        second
+                                        {lockSeconds === 1
+                                            ? ""
+                                            : "s"}
+
+                                    </div>
+
+                                )}
+
                             </div>
 
                         )}
@@ -360,7 +704,9 @@ const StaffLogin = () => {
                         ========================================= */}
 
                         <form
-                            onSubmit={handleSubmit}
+                            onSubmit={
+                                handleSubmit
+                            }
                             className="staff-login-form"
                             style={{
                                 viewTransitionName:
@@ -386,7 +732,10 @@ const StaffLogin = () => {
                                     }
                                     placeholder="Email"
                                     autoComplete="email"
-                                    disabled={loading}
+                                    disabled={
+                                        loading ||
+                                        lockSeconds > 0
+                                    }
                                 />
 
                             </div>
@@ -413,7 +762,10 @@ const StaffLogin = () => {
                                     }
                                     placeholder="Password"
                                     autoComplete="current-password"
-                                    disabled={loading}
+                                    disabled={
+                                        loading ||
+                                        lockSeconds > 0
+                                    }
                                 />
 
 
@@ -421,15 +773,20 @@ const StaffLogin = () => {
                                     type="button"
                                     onClick={() =>
                                         setShowPassword(
-                                            (previous) =>
+                                            previous =>
                                                 !previous
                                         )
                                     }
                                     className="staff-login-toggle"
+                                    disabled={
+                                        lockSeconds > 0
+                                    }
                                 >
+
                                     {showPassword
                                         ? "ꗃ"
                                         : "🔒︎"}
+
                                 </button>
 
                             </div>
@@ -456,7 +813,10 @@ const StaffLogin = () => {
                                     }
                                     placeholder="Login Code"
                                     autoComplete="off"
-                                    disabled={loading}
+                                    disabled={
+                                        loading ||
+                                        lockSeconds > 0
+                                    }
                                 />
 
 
@@ -464,15 +824,20 @@ const StaffLogin = () => {
                                     type="button"
                                     onClick={() =>
                                         setShowSecurityCode(
-                                            (previous) =>
+                                            previous =>
                                                 !previous
                                         )
                                     }
                                     className="staff-login-toggle"
+                                    disabled={
+                                        lockSeconds > 0
+                                    }
                                 >
+
                                     {showSecurityCode
                                         ? "ꗃ"
                                         : "🔒︎"}
+
                                 </button>
 
                             </div>
@@ -483,9 +848,11 @@ const StaffLogin = () => {
                             ================================== */}
 
                             <p className="staff-login-info">
-                                The system automatically identifies
-                                you are Electoral
-                                Board member.
+
+                                The system automatically
+                                identifies you as an
+                                Electoral Board member.
+
                             </p>
 
 
@@ -495,15 +862,91 @@ const StaffLogin = () => {
 
                             <button
                                 type="submit"
-                                disabled={loading}
+                                disabled={
+                                    loading ||
+                                    lockSeconds > 0
+                                }
                                 className="staff-login-button"
+                                style={{
+                                    opacity:
+                                        lockSeconds > 0
+                                            ? 0.55
+                                            : 1,
+
+                                    cursor:
+                                        lockSeconds > 0
+                                            ? "not-allowed"
+                                            : "pointer",
+                                }}
                             >
-                                {loading
-                                    ? "Signing In..."
-                                    : "Login"}
+
+                                {lockSeconds > 0
+
+                                    ? `Locked — ${lockSeconds}s`
+
+                                    : loading
+
+                                        ? "Signing In..."
+
+                                        : "Login"}
+
                             </button>
 
+
+                            {/* =================================
+                                LOCK STATUS
+                            ================================== */}
+
+                            {lockSeconds > 0 && (
+
+                                <div
+                                    style={{
+                                        marginTop:
+                                            "10px",
+
+                                        textAlign:
+                                            "center",
+
+                                        fontSize:
+                                            "11px",
+
+                                        color:
+                                            "#777",
+
+                                        lineHeight:
+                                            "1.5",
+                                    }}
+                                >
+
+                                    Login will be available
+                                    automatically when the
+                                    30-second security lock
+                                    expires.
+
+                                </div>
+
+                            )}
+
                         </form>
+
+
+                        {/* =========================================
+                            ADMIN REGISTRATION
+                        ========================================= */}
+
+                        <div className="staff-login-register">
+
+                            <span>
+                                Initial Admin?
+                            </span>
+
+                            <Link
+                                to="/admin/register"
+                            >
+                                Create Admin Account
+                            </Link>
+
+                        </div>
 
 
                     </div>
@@ -536,13 +979,21 @@ const StaffLogin = () => {
 
                         <span className="staff-login-logo-mark">
 
-                            <span className="logo-shape logo-one"></span>
+                            <span
+                                className="logo-shape logo-one"
+                            ></span>
 
-                            <span className="logo-shape logo-two"></span>
+                            <span
+                                className="logo-shape logo-two"
+                            ></span>
 
-                            <span className="logo-shape logo-three"></span>
+                            <span
+                                className="logo-shape logo-three"
+                            ></span>
 
-                            <span className="logo-shape logo-four"></span>
+                            <span
+                                className="logo-shape logo-four"
+                            ></span>
 
                         </span>
 
@@ -564,12 +1015,13 @@ const StaffLogin = () => {
                         </h2>
 
                         <p>
-                            for BSIT students at Western Institute
-                            of Technology.
+                            for BSIT students at Western
+                            Institute of Technology.
                         </p>
 
                         <span>
-                            Every vote verified, every result trusted.
+                            Every vote verified, every
+                            result trusted.
                         </span>
 
                     </div>
@@ -582,12 +1034,14 @@ const StaffLogin = () => {
                     <div className="staff-login-alternate">
 
                         <p>
-                            Not a Electoral Board member?
+                            Not a staff member?
                         </p>
 
                         <Link
                             to="/account-selection"
-                            onClick={goToAdmin}
+                            onClick={
+                                goToAdmin
+                            }
                         >
                             LOGIN AS ADMIN
                         </Link>
@@ -600,9 +1054,7 @@ const StaffLogin = () => {
             </div>
 
         </div>
-
     );
-
 };
 
 

@@ -220,10 +220,10 @@ const createAuditLog = async ({
 
     metadata = {},
 
-    ipAddress = null,
+    ipAddress = "0.0.0.0",
     userAgent = null
 } = {}) => {
-
+    
     // -------------------------------------------------
     // VALIDATION
     // -------------------------------------------------
@@ -296,7 +296,8 @@ const createAuditLog = async ({
                     safeMetadata,
 
                 ip_address:
-                    ipAddress,
+                    ipAddress ||
+                    "0.0.0.0",
 
                 user_agent:
                     userAgent

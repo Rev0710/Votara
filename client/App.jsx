@@ -28,6 +28,8 @@ import ElectoralBoardManagement from "./src/pages/admin/ElectoralBoardManagement
 import AdminAccountManagement from "./src/pages/admin/AdminAccountManagement";
 import RegistrationRequirements from "./src/pages/auth/RegistrationRequirements";
 import StudentManagement from "./src/pages/admin/StudentManagement";
+import AdminDataManagement from "./src/pages/admin/AdminDataManagement";
+import AdminUserAccessManagement from "./src/pages/admin/AdminUserAccessManagement";
 
 import CandidateManagement from "./src/pages/admin/CandidateManagement";
 import Election from "./src/pages/admin/Election";
@@ -37,7 +39,7 @@ import ElectionManagement from "./src/pages/electoralBoard/ElectionManagement";
 import CreateElection from "./src/pages/electoralBoard/CreateElection";
 
 import KioskVoting from "./src/pages/electoralBoard/KioskVoting";
-import AuditLogs from "./src/pages/admin/AuditLogs";
+import AdminAuditLogs from "./src/pages/admin/AdminAuditLogs";
 import Reports from "./src/pages/admin/Reports";
 import ElectionResults from "./src/pages/admin/ElectionResults";
 import SystemSettings from "./src/pages/admin/SystemSettings";
@@ -278,6 +280,15 @@ const App = () => {
                     }
                 />
                 <Route
+                    path="/admin/data-management"
+                    element={<AdminDataManagement />}
+                />
+
+                <Route
+                    path="/admin/users"
+                    element={<AdminUserAccessManagement />}
+                />
+                <Route
 
                     path="/admin/election"
                     element={
@@ -303,9 +314,10 @@ const App = () => {
                 <Route
                     path="/admin/audit-logs"
                     element={
-                        <AuditLogs />
+                        <AdminAuditLogs />
                     }
                 />
+
                 <Route
                     path="/admin/reports"
                     element={

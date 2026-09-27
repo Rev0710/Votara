@@ -58,7 +58,7 @@ const defaultSettings = {
     resendCooldown: "60 seconds",
     senderEmail: "noreply@school.edu",
     loginAttempts: "5 attempts",
-    lockoutDuration: "15 minutes",
+    lockoutDuration: "2 minutes",
     otpRequestLimit: "5 per hour",
     registrationSubmissions: "3 per day",
     ipRateLimit: "60 per minute",

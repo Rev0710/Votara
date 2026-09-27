@@ -1,0 +1,425 @@
+/* ============================================================
+   VOTARA ADMIN TOP NAVIGATION
+   ============================================================ */
+
+.votara-admin-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+
+    width: 100%;
+    min-height: 78px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 18px;
+
+    padding: 0 28px;
+
+    background:
+        rgba(17, 16, 42, 0.96);
+
+    border-bottom:
+        1px solid
+        rgba(255, 255, 255, 0.07);
+
+    backdrop-filter:
+        blur(18px);
+
+    -webkit-backdrop-filter:
+        blur(18px);
+
+    box-sizing: border-box;
+}
+
+
+/* ============================================================
+   BRAND
+   ============================================================ */
+
+.votara-admin-brand {
+    width: 150px;
+    min-width: 150px;
+
+    height: 48px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 7px;
+
+    padding: 0;
+
+    border: 0;
+
+    background: transparent;
+
+    color: #286bff;
+
+    cursor: pointer;
+
+    flex-shrink: 0;
+}
+
+.votara-admin-brand-mark {
+    width: 36px;
+    height: 36px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+}
+
+.votara-admin-brand-logo {
+    width: 40px;
+    height: 40px;
+
+    object-fit: contain;
+
+    display: block;
+}
+
+.votara-admin-brand-name {
+    font-family:
+        "Poppins",
+        sans-serif;
+
+    font-size: 25px;
+
+    font-weight: 700;
+
+    letter-spacing: -0.5px;
+}
+
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+
+.votara-admin-topnav {
+    flex: 1 1 auto;
+
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 4px;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    white-space: nowrap;
+
+    scrollbar-width: none;
+}
+
+.votara-admin-topnav::-webkit-scrollbar {
+    display: none;
+}
+
+
+/* ============================================================
+   NAV BUTTON
+   ============================================================ */
+
+.votara-admin-topnav-link {
+    flex: 0 0 auto;
+
+    border: 0;
+
+    background: transparent;
+
+    color:
+        rgba(255, 255, 255, 0.72);
+
+    padding:
+        10px 11px;
+
+    border-radius: 10px;
+
+    font-family:
+        "Poppins",
+        sans-serif;
+
+    font-size: 10px;
+
+    font-weight: 600;
+
+    white-space: nowrap;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.votara-admin-topnav-link:hover {
+    background:
+        rgba(255, 255, 255, 0.07);
+
+    color: #ffffff;
+}
+
+.votara-admin-topnav-link.active {
+    background:
+        #1e3a8a;
+
+    color: #ffffff;
+
+    box-shadow:
+        0 4px 14px
+        rgba(30, 58, 138, 0.30);
+}
+
+
+/* ============================================================
+   RIGHT SIDE
+   ============================================================ */
+
+.votara-admin-topbar-actions {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    flex-shrink: 0;
+}
+
+
+/* ============================================================
+   PRODUCTION
+   ============================================================ */
+
+.votara-topbar-environment {
+    display: flex;
+    align-items: center;
+
+    gap: 6px;
+
+    padding:
+        7px 11px;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.08);
+
+    border-radius: 999px;
+
+    background:
+        rgba(255, 255, 255, 0.03);
+
+    color:
+        #2ed171;
+
+    font-size: 10px;
+
+    font-weight: 600;
+
+    white-space: nowrap;
+
+    cursor: default;
+}
+
+.votara-env-dot {
+    width: 6px;
+    height: 6px;
+
+    border-radius: 50%;
+
+    background: #2ed171;
+
+    box-shadow:
+        0 0 8px
+        rgba(46, 209, 113, 0.75);
+}
+
+
+/* ============================================================
+   NOTIFICATION
+   ============================================================ */
+
+.votara-notification-button {
+    position: relative;
+
+    width: 36px;
+    height: 36px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 0;
+
+    border-radius: 10px;
+
+    background:
+        transparent;
+
+    color:
+        rgba(255, 255, 255, 0.80);
+
+    cursor: pointer;
+}
+
+.votara-notification-button:hover {
+    background:
+        rgba(255, 255, 255, 0.07);
+
+    color: #ffffff;
+}
+
+.notification-dot {
+    position: absolute;
+
+    top: 7px;
+    right: 8px;
+
+    width: 5px;
+    height: 5px;
+
+    border-radius: 50%;
+
+    background: #286bff;
+}
+
+
+/* ============================================================
+   ADMIN USER
+   ============================================================ */
+
+.votara-admin-user {
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    white-space: nowrap;
+}
+
+.votara-admin-user-avatar {
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f6d365,
+            #fda085
+        );
+
+    color:
+        #202020;
+
+    font-size: 13px;
+
+    font-weight: 700;
+}
+
+.votara-admin-user-name {
+    color: #ffffff;
+
+    font-size: 11px;
+
+    font-weight: 600;
+}
+
+
+/* ============================================================
+   LOGOUT
+   ============================================================ */
+
+.votara-admin-logout {
+    width: 36px;
+    height: 36px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.08);
+
+    border-radius: 9px;
+
+    background:
+        rgba(255, 255, 255, 0.02);
+
+    color:
+        rgba(255, 255, 255, 0.80);
+
+    cursor: pointer;
+}
+
+.votara-admin-logout:hover {
+    background:
+        rgba(220, 38, 38, 0.15);
+
+    color: #ffffff;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 1250px) {
+
+    .votara-admin-topbar {
+        gap: 10px;
+        padding: 0 16px;
+    }
+
+    .votara-admin-brand {
+        width: 125px;
+        min-width: 125px;
+    }
+
+    .votara-admin-topnav-link {
+        font-size: 9px;
+        padding: 9px 8px;
+    }
+
+    .votara-admin-user-name {
+        display: none;
+    }
+
+}
+
+
+@media (max-width: 900px) {
+
+    .votara-admin-topbar {
+        min-height: 70px;
+    }
+
+    .votara-admin-brand-name {
+        display: none;
+    }
+
+    .votara-admin-brand {
+        width: 45px;
+        min-width: 45px;
+    }
+
+    .votara-topbar-environment {
+        display: none;
+    }
+
+}

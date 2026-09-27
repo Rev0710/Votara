@@ -4,19 +4,138 @@ const crypto = require("crypto");
 const supabase = require("../config/supabase");
 const auditLogsService = require("../services/auditLogsService");
 
-const STORAGE_BUCKET = "student-verification";
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+// =========================================================
+// KIOSK AUDIT LOG HELPERS
+// =========================================================
 
-const DOCUMENT_TYPES = [
-    "image/jpeg",
-    "image/png",
-    "application/pdf",
-];
+const getKioskAuditActor = async (req) => {
+    const user = req.user || {};
 
-const IMAGE_TYPES = [
-    "image/jpeg",
-    "image/png",
-];
+    const userId =
+        user.userId ||
+        user.id ||
+        user._id ||
+        user.user_id ||
+        null;
+
+    let staff = null;
+
+    try {
+        if (userId) {
+            const {
+                data,
+            } = await supabase
+                .from("staff_users")
+                .select(`
+                    id,
+                    full_name,
+                    email,
+                    role
+                `)
+                .eq(
+                    "id",
+                    userId
+                )
+                .maybeSingle();
+
+            staff = data || null;
+        }
+    } catch (error) {
+        console.error(
+            "⚠️ Kiosk audit actor lookup failed:",
+            error?.message || error
+        );
+    }
+
+    return {
+        actorId:
+            staff?.id ||
+            userId ||
+            null,
+
+        actorName:
+            staff?.full_name ||
+            user.full_name ||
+            user.fullName ||
+            user.name ||
+            "Electoral Board Member",
+
+        actorEmail:
+            staff?.email ||
+            user.email ||
+            null,
+
+        actorRole:
+            staff?.role ||
+            user.role ||
+            "electoral_board",
+
+        ipAddress:
+            req.ip ||
+            req.headers?.[
+                "x-forwarded-for"
+            ]
+                ?.split(",")[0]
+                ?.trim() ||
+            null,
+
+        userAgent:
+            typeof req.get === "function"
+                ? req.get("user-agent")
+                : null,
+    };
+};
+
+
+const writeKioskAuditLog = async (
+    req,
+    {
+        action,
+        description,
+        electionId = null,
+        targetId = null,
+        targetType = "kiosk_session",
+        metadata = {},
+    }
+) => {
+    try {
+        const actor =
+            await getKioskAuditActor(
+                req
+            );
+
+        await auditLogsService.createAuditLog({
+            ...actor,
+
+            action,
+
+            module:
+                "Kiosk Management",
+
+            description,
+
+            electionId,
+
+            targetId,
+
+            targetType,
+
+            metadata,
+        });
+    } catch (auditError) {
+        // Audit failure must never stop the
+        // actual kiosk operation.
+        console.error(
+            "⚠️ Kiosk audit log write failed:",
+            auditError?.message ||
+                auditError
+        );
+    }
+};
+
+
+const STORAGE_BUCKET =
+    "student-verification";
 
 // =========================================================
 // KIOSK SESSION / OPERATION TIMING
@@ -3057,22 +3176,35 @@ const approveKioskRegistration =
                 operationId,
             } = req.body;
 
+            // -------------------------------------------------
+            // BASIC VALIDATION
+            // -------------------------------------------------
+
             if (
                 !registrationId ||
-                !sessionId
+                !sessionId ||
+                !operationId
             ) {
                 return res.status(400).json({
                     success: false,
                     message:
-                        "Registration and kiosk session are required.",
+                        "Registration, kiosk session, and operation are required.",
                 });
             }
+
+            // -------------------------------------------------
+            // VALIDATE ACTIVE KIOSK SESSION
+            // -------------------------------------------------
 
             const session =
                 await validateSessionElection(
                     req.user.userId,
                     sessionId
                 );
+
+            // -------------------------------------------------
+            // LOAD REGISTRATION APPLICATION
+            // -------------------------------------------------
 
             const {
                 data: application,
@@ -3101,6 +3233,10 @@ const approveKioskRegistration =
                 });
             }
 
+            // -------------------------------------------------
+            // REGISTRATION MUST STILL BE PENDING
+            // -------------------------------------------------
+
             if (
                 application
                     .application_status !==
@@ -3113,11 +3249,132 @@ const approveKioskRegistration =
                 });
             }
 
+            // -------------------------------------------------
+            // IMPORTANT SECURITY CHECK
+            //
+            // The EB who assisted/submitted the registration
+            // MUST NOT be the EB who approves it.
+            //
+            // The operation records the EB member who performed
+            // the assisted registration.
+            // -------------------------------------------------
+
+            const operation =
+                await getKioskOperation(
+                    operationId
+                );
+
+            if (!operation) {
+                return res.status(404).json({
+                    success: false,
+                    code:
+                        "KIOSK_OPERATION_NOT_FOUND",
+                    message:
+                        "The assisted registration operation could not be found.",
+                });
+            }
+
+            // Operation must belong to this kiosk session.
+            if (
+                operation.kiosk_session_id !==
+                session.id
+            ) {
+                return res.status(403).json({
+                    success: false,
+                    code:
+                        "INVALID_KIOSK_OPERATION",
+                    message:
+                        "The assisted registration operation does not belong to this kiosk session.",
+                });
+            }
+
+            // Only registration operations can be used
+            // for assisted registration approval.
+            if (
+                operation.operation_type !==
+                "registration"
+            ) {
+                return res.status(403).json({
+                    success: false,
+                    code:
+                        "INVALID_OPERATION_TYPE",
+                    message:
+                        "This kiosk operation is not an assisted registration operation.",
+                });
+            }
+
+            // The operation must still be active.
+            if (
+                operation.operation_status !==
+                "active"
+            ) {
+                return res.status(409).json({
+                    success: false,
+                    code:
+                        "KIOSK_OPERATION_NOT_ACTIVE",
+                    message:
+                        "The assisted registration operation is no longer active.",
+                });
+            }
+
+            // -------------------------------------------------
+            // SEPARATION OF DUTIES
+            //
+            // The EB who assisted the student cannot approve
+            // that same student's registration.
+            // -------------------------------------------------
+
+            if (
+                String(
+                    operation.eb_member_id
+                ) ===
+                String(
+                    req.user.userId
+                )
+            ) {
+                return res.status(403).json({
+                    success: false,
+                    code:
+                        "SAME_EB_CANNOT_APPROVE",
+                    message:
+                        "The Electoral Board member who assisted this student cannot approve the same registration. A different Electoral Board member must review and approve it.",
+                });
+            }
+
+            // -------------------------------------------------
+            // VERIFY THE OPERATION SESSION AGAINST THE CURRENT
+            // ELECTION
+            // -------------------------------------------------
+
+            if (
+                operation.kiosk_sessions
+                    ?.election_id &&
+                operation.kiosk_sessions
+                    .election_id !==
+                    session.election_id
+            ) {
+                return res.status(403).json({
+                    success: false,
+                    code:
+                        "INVALID_ELECTION_OPERATION",
+                    message:
+                        "The assisted registration operation does not belong to the active election.",
+                });
+            }
+
+            // -------------------------------------------------
+            // VERIFY YEAR ELIGIBILITY
+            // -------------------------------------------------
+
             const normalizedYear =
                 await ensureYearEligibility(
                     session.election_id,
                     application.year_level
                 );
+
+            // -------------------------------------------------
+            // FIND OR CREATE STUDENT
+            // -------------------------------------------------
 
             let student;
 
@@ -3180,6 +3437,10 @@ const approveKioskRegistration =
                     createdStudent;
             }
 
+            // -------------------------------------------------
+            // MAKE SURE STUDENT DOES NOT ALREADY HAVE ACCOUNT
+            // -------------------------------------------------
+
             const existingAccount =
                 await getStudentAccount(
                     student.student_id
@@ -3192,6 +3453,10 @@ const approveKioskRegistration =
                         "A student account already exists for this Student ID.",
                 });
             }
+
+            // -------------------------------------------------
+            // GENERATE TEMPORARY PASSWORD
+            // -------------------------------------------------
 
             const temporaryPassword =
                 crypto
@@ -3206,6 +3471,10 @@ const approveKioskRegistration =
                     temporaryPassword,
                     12
                 );
+
+            // -------------------------------------------------
+            // CREATE STUDENT ACCOUNT
+            // -------------------------------------------------
 
             const {
                 data: account,
@@ -3244,6 +3513,13 @@ const approveKioskRegistration =
             if (accountError) {
                 throw accountError;
             }
+
+            // -------------------------------------------------
+            // APPROVE REGISTRATION
+            //
+            // reviewed_by records the DIFFERENT EB member
+            // who approved the application.
+            // -------------------------------------------------
 
             const {
                 data:
@@ -3284,6 +3560,10 @@ const approveKioskRegistration =
                 .select()
                 .maybeSingle();
 
+            // -------------------------------------------------
+            // ROLLBACK IF APPLICATION CHANGED
+            // -------------------------------------------------
+
             if (
                 applicationUpdateError ||
                 !updatedApplication
@@ -3318,58 +3598,9 @@ const approveKioskRegistration =
                 );
             }
 
-            let operation = null;
-
-            if (operationId) {
-                operation =
-                    await getKioskOperation(
-                        operationId
-                    );
-
-                if (
-                    !operation ||
-                    operation.kiosk_session_id !==
-                        session.id ||
-                    operation.operation_status !==
-                        "active"
-                ) {
-                    return res.status(409).json({
-                        success: false,
-                        message:
-                            "The assisted registration operation is no longer active.",
-                    });
-                }
-            } else {
-                const activeOperations =
-                    await getActiveOperationCount(
-                        session.id
-                    );
-
-                if (
-                    activeOperations > 0
-                ) {
-                    return res.status(409).json({
-                        success: false,
-                        code:
-                            "SESSION_IN_USE",
-
-                        message:
-                            "Please wait until the other finishes. A student is currently being assisted or is voting.",
-                    });
-                }
-
-                operation =
-                    await createKioskOperation({
-                        sessionId:
-                            session.id,
-
-                        ebMemberId:
-                            req.user.userId,
-
-                        operationType:
-                            "registration",
-                    });
-            }
+            // -------------------------------------------------
+            // CREATE STUDENT KIOSK TOKEN
+            // -------------------------------------------------
 
             const token =
                 createKioskStudentToken({
@@ -3382,6 +3613,10 @@ const approveKioskRegistration =
                             operation.id,
                     },
                 });
+
+            // -------------------------------------------------
+            // CREATE ACTIVATION TOKEN
+            // -------------------------------------------------
 
             const activationToken =
                 jwt.sign(
@@ -3415,6 +3650,10 @@ const approveKioskRegistration =
                             "15m",
                     }
                 );
+
+            // -------------------------------------------------
+            // RESPONSE
+            // -------------------------------------------------
 
             return res.json({
                 success: true,

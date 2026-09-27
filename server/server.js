@@ -53,6 +53,9 @@ const staffAuthRoutes =
 const adminRoutes =
     require("./src/routes/adminRoutes");
 
+const adminDataManagementRoutes =
+    require("./src/routes/adminDataManagementRoutes");
+
 const ebRegistrationRoutes =
     require("./src/routes/ebRegistrationRoutes");
 
@@ -74,6 +77,8 @@ const resultsReportsRoutes =
 const studentRoutes =
     require("./src/routes/studentRoutes");
 
+const adminAuditLogsRoutes =
+    require("./src/routes/adminAuditLogsRoutes");
 
 // =====================================================
 // EXPRESS APP
@@ -201,6 +206,16 @@ app.use(
 app.use(
     "/api/admin",
     adminRoutes
+);
+
+app.use(
+    "/api/admin/data-management",
+    adminDataManagementRoutes
+);
+
+app.use(
+    "/api/admin/audit-logs",
+    adminAuditLogsRoutes
 );
 
 
@@ -535,6 +550,11 @@ app.use(
 app.use(
     "/api/admin/settings",
     adminSettingsRoutes
+);
+
+app.use(
+    "/api/electoral-board/audit-logs",
+    auditLogsRoutes
 );
 
 // =====================================================

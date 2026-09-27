@@ -942,17 +942,6 @@ const Registrations = () => {
 
                 <div>
 
-                    <button
-                        onClick={() =>
-                            navigate(
-                                "/electoral-board/dashboard"
-                            )
-                        }
-                        style={styles.backButton}
-                    >
-                        ← Back to Dashboard
-                    </button>
-
                     <div
                         style={
                             styles.eyebrow

@@ -12,43 +12,58 @@ const supabase = require("../config/supabase");
 // AUTHENTICATE ELECTORAL BOARD
 // =========================================================
 
-const authenticateEB = async (req) => {
-    const authHeader = req.headers.authorization;
+const authenticateStaff = async (req) => {
+    const authHeader =
+        req.headers.authorization || "";
 
-    if (
-        !authHeader ||
-        !authHeader.startsWith("Bearer ")
-    ) {
-        throw new Error(
+    if (!authHeader.startsWith("Bearer ")) {
+        const error = new Error(
             "Authentication token is required."
         );
+        error.statusCode = 401;
+        throw error;
     }
 
-    const token = authHeader.split(" ")[1];
+    const token =
+        authHeader.split(" ")[1];
 
-    const decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET
-    );
+    let decoded;
+
+    try {
+        decoded = jwt.verify(
+            token,
+            process.env.JWT_SECRET
+        );
+    } catch (error) {
+        const authError = new Error(
+            "Invalid or expired authentication token."
+        );
+        authError.statusCode = 401;
+        throw authError;
+    }
 
     if (
         !decoded ||
         decoded.role !== "electoral_board"
     ) {
-        throw new Error(
+        const error = new Error(
             "Electoral Board access is required."
         );
+        error.statusCode = 403;
+        throw error;
     }
 
     if (!decoded.userId) {
-        throw new Error(
-            "Invalid Electoral Board account."
+        const error = new Error(
+            "Invalid staff account."
         );
+        error.statusCode = 401;
+        throw error;
     }
 
     const {
         data: staff,
-        error
+        error,
     } = await supabase
         .from("staff_users")
         .select(`
@@ -58,14 +73,7 @@ const authenticateEB = async (req) => {
             role,
             is_active
         `)
-        .eq(
-            "id",
-            decoded.userId
-        )
-        .eq(
-            "role",
-            "electoral_board"
-        )
+        .eq("id", decoded.userId)
         .maybeSingle();
 
     if (error) {
@@ -73,396 +81,22 @@ const authenticateEB = async (req) => {
     }
 
     if (!staff) {
-        throw new Error(
-            "Electoral Board account not found."
+        const error = new Error(
+            "Staff account not found."
         );
+        error.statusCode = 401;
+        throw error;
     }
 
     if (!staff.is_active) {
-        throw new Error(
-            "Electoral Board account is inactive."
+        const error = new Error(
+            "Staff account is inactive."
         );
+        error.statusCode = 403;
+        throw error;
     }
 
     return staff;
-};
-
-
-// =========================================================
-// RESOLVE AUDIT LOG RELATED RECORDS
-// =========================================================
-// This keeps UUIDs in the audit database while returning
-// human-readable names to the Activity Details modal.
-//
-// Example:
-//
-// election_id
-//     -> Election title
-//
-// target_id + target_type = candidate
-//     -> Candidate name
-//     -> Position name
-//     -> Party list name
-//
-// target_id + target_type = party_list
-//     -> Party list name
-//
-// target_id + target_type = election
-//     -> Election title
-//
-// target_id + target_type = position
-//     -> Position name
-// =========================================================
-
-const resolveAuditLogRelations = async (log) => {
-
-    const related = {
-        electionName: null,
-        targetName: null,
-        positionName: null,
-        partyListName: null,
-    };
-
-    try {
-
-        // -------------------------------------------------
-        // RELATED ELECTION
-        // -------------------------------------------------
-
-        if (log?.election_id) {
-
-            const {
-                data: election,
-                error: electionError,
-            } = await supabase
-                .from("elections")
-                .select(
-                    "id, title"
-                )
-                .eq(
-                    "id",
-                    log.election_id
-                )
-                .maybeSingle();
-
-            if (
-                !electionError &&
-                election
-            ) {
-                related.electionName =
-                    election.title ||
-                    null;
-            }
-        }
-
-
-        // -------------------------------------------------
-        // TARGET
-        // -------------------------------------------------
-
-        const targetType =
-            String(
-                log?.target_type ||
-                ""
-            ).toLowerCase();
-
-
-        if (log?.target_id) {
-
-            // =================================================
-            // CANDIDATE
-            // =================================================
-
-            if (
-                targetType === "candidate" ||
-                String(
-                    log?.module ||
-                    ""
-                )
-                    .toLowerCase()
-                    .includes(
-                        "candidate"
-                    )
-            ) {
-
-                const {
-                    data: candidate,
-                    error: candidateError,
-                } = await supabase
-                    .from("candidates")
-                    .select(`
-                        id,
-                        full_name,
-                        position_id,
-                        party_list_id
-                    `)
-                    .eq(
-                        "id",
-                        log.target_id
-                    )
-                    .maybeSingle();
-
-
-                if (
-                    !candidateError &&
-                    candidate
-                ) {
-
-                    // Candidate name
-                    related.targetName =
-                        candidate.full_name ||
-                        null;
-
-
-                    // -------------------------------------------------
-                    // POSITION
-                    // -------------------------------------------------
-
-                    if (
-                        candidate.position_id
-                    ) {
-
-                        const {
-                            data: position,
-                            error: positionError,
-                        } = await supabase
-                            .from("positions")
-                            .select(
-                                "id, name"
-                            )
-                            .eq(
-                                "id",
-                                candidate.position_id
-                            )
-                            .maybeSingle();
-
-
-                        if (
-                            !positionError &&
-                            position
-                        ) {
-
-                            related.positionName =
-                                position.name ||
-                                null;
-                        }
-                    }
-
-
-                    // -------------------------------------------------
-                    // PARTY LIST
-                    // -------------------------------------------------
-
-                    if (
-                        candidate.party_list_id
-                    ) {
-
-                        const {
-                            data: partyList,
-                            error: partyListError,
-                        } = await supabase
-                            .from("party_lists")
-                            .select(
-                                "id, name"
-                            )
-                            .eq(
-                                "id",
-                                candidate.party_list_id
-                            )
-                            .maybeSingle();
-
-
-                        if (
-                            !partyListError &&
-                            partyList
-                        ) {
-
-                            related.partyListName =
-                                partyList.name ||
-                                null;
-                        }
-                    }
-                }
-            }
-
-
-            // =================================================
-            // PARTY LIST
-            // =================================================
-
-            else if (
-                targetType === "party_list" ||
-                targetType === "partylist"
-            ) {
-
-                const {
-                    data: partyList,
-                    error: partyListError,
-                } = await supabase
-                    .from("party_lists")
-                    .select(
-                        "id, name"
-                    )
-                    .eq(
-                        "id",
-                        log.target_id
-                    )
-                    .maybeSingle();
-
-
-                if (
-                    !partyListError &&
-                    partyList
-                ) {
-
-                    related.targetName =
-                        partyList.name ||
-                        null;
-
-                    related.partyListName =
-                        partyList.name ||
-                        null;
-                }
-            }
-
-
-            // =================================================
-            // ELECTION
-            // =================================================
-
-            else if (
-                targetType === "election"
-            ) {
-
-                const {
-                    data: election,
-                    error: electionError,
-                } = await supabase
-                    .from("elections")
-                    .select(
-                        "id, title"
-                    )
-                    .eq(
-                        "id",
-                        log.target_id
-                    )
-                    .maybeSingle();
-
-
-                if (
-                    !electionError &&
-                    election
-                ) {
-
-                    related.targetName =
-                        election.title ||
-                        null;
-                }
-            }
-
-
-            // =================================================
-            // POSITION
-            // =================================================
-
-            else if (
-                targetType === "position"
-            ) {
-
-                const {
-                    data: position,
-                    error: positionError,
-                } = await supabase
-                    .from("positions")
-                    .select(
-                        "id, name"
-                    )
-                    .eq(
-                        "id",
-                        log.target_id
-                    )
-                    .maybeSingle();
-
-
-                if (
-                    !positionError &&
-                    position
-                ) {
-
-                    related.targetName =
-                        position.name ||
-                        null;
-
-                    related.positionName =
-                        position.name ||
-                        null;
-                }
-            }
-        }
-
-
-        // =================================================
-        // FALLBACK TO METADATA
-        // =================================================
-        //
-        // Some older audit records may already contain
-        // candidateName in metadata. Use it if the
-        // candidate table lookup did not resolve the name.
-        // =================================================
-
-        if (
-            !related.targetName &&
-            log?.metadata?.candidateName
-        ) {
-
-            related.targetName =
-                log.metadata.candidateName;
-        }
-
-
-        // -------------------------------------------------
-        // FALLBACK: PARTY LIST FROM METADATA
-        // -------------------------------------------------
-
-        if (
-            !related.partyListName &&
-            log?.metadata?.partyListName
-        ) {
-
-            related.partyListName =
-                log.metadata.partyListName;
-        }
-
-
-        // -------------------------------------------------
-        // FALLBACK: POSITION FROM METADATA
-        // -------------------------------------------------
-
-        if (
-            !related.positionName &&
-            log?.metadata?.positionName
-        ) {
-
-            related.positionName =
-                log.metadata.positionName;
-        }
-
-
-        return related;
-
-    } catch (error) {
-
-        console.error(
-            "⚠️ Audit log relation lookup failed:",
-            error?.message ||
-                error
-        );
-
-        // Important:
-        // Do NOT fail the Activity Details request just
-        // because a related record could not be resolved.
-        return related;
-    }
 };
 
 
@@ -475,7 +109,7 @@ const getAuditLogs = async (req, res) => {
     try {
 
         const staff =
-            await authenticateEB(req);
+            await authenticateStaff(req);
 
 
         // -------------------------------------------------
@@ -619,6 +253,21 @@ const getAuditLogs = async (req, res) => {
                             false
                     }
                 );
+
+
+        // -------------------------------------------------
+        // SECURITY SCOPE: EB LOGS ONLY
+        // -------------------------------------------------
+        //
+        // This route belongs exclusively to the Electoral
+        // Board. Admin monitoring uses /api/admin/audit-logs.
+        // Therefore an EB account can never retrieve Admin
+        // activity from this endpoint.
+        //
+        query = query.eq(
+            "actor_role",
+            "electoral_board"
+        );
 
 
         // -------------------------------------------------
@@ -772,6 +421,133 @@ const getAuditLogs = async (req, res) => {
 
 
         // -------------------------------------------------
+        // GLOBAL ACTIVITY SUMMARY
+        // -------------------------------------------------
+        //
+        // The current page is paginated, but the summary is
+        // calculated from the complete audit_logs table so
+        // the Admin dashboard shows the real totals.
+        //
+
+        const {
+            data: summaryLogs,
+            error: summaryError,
+        } = await supabase
+            .from("audit_logs")
+            .select(`
+                action,
+                module,
+                actor_role
+            `)
+            .eq(
+                "actor_role",
+                "electoral_board"
+            );
+
+        if (summaryError) {
+            throw summaryError;
+        }
+
+        const summary = {
+            total: total || 0,
+
+            categories: {
+                all: total || 0,
+                authentication: 0,
+                elections: 0,
+                candidates: 0,
+                accounts: 0,
+                system: 0,
+                security: 0,
+                kiosk: 0,
+            },
+
+            severity: {
+                info: 0,
+                success: 0,
+                warning: 0,
+                critical: 0,
+            },
+        };
+
+        (summaryLogs || []).forEach((log) => {
+            const moduleName = String(
+                log?.module || ""
+            ).toLowerCase();
+
+            const actionName = String(
+                log?.action || ""
+            ).toLowerCase();
+
+            let category = "system";
+
+            if (
+                actionName.includes("login") ||
+                actionName.includes("logout") ||
+                actionName.includes("password") ||
+                actionName.includes("otp") ||
+                actionName.includes("pin") ||
+                moduleName.includes("auth") ||
+                moduleName.includes("security")
+            ) {
+                category = "authentication";
+            } else if (
+                moduleName.includes("election") ||
+                moduleName.includes("result") ||
+                moduleName.includes("voting")
+            ) {
+                category = "elections";
+            } else if (
+                moduleName.includes("candidate") ||
+                moduleName.includes("party")
+            ) {
+                category = "candidates";
+            } else if (
+                moduleName.includes("account") ||
+                moduleName.includes("admin")
+            ) {
+                category = "accounts";
+            } else if (
+                moduleName.includes("kiosk")
+            ) {
+                category = "kiosk";
+            } else if (
+                actionName.includes("failed") ||
+                actionName.includes("reject") ||
+                actionName.includes("suspicious") ||
+                actionName.includes("lock")
+            ) {
+                category = "security";
+            }
+
+            summary.categories[category] += 1;
+
+            if (
+                actionName.includes("failed") ||
+                actionName.includes("reject") ||
+                actionName.includes("suspicious") ||
+                actionName.includes("lock")
+            ) {
+                summary.severity.critical += 1;
+            } else if (
+                actionName.includes("warning") ||
+                actionName.includes("correction") ||
+                actionName.includes("deactivate")
+            ) {
+                summary.severity.warning += 1;
+            } else if (
+                actionName.includes("login") ||
+                actionName.includes("logout") ||
+                actionName.includes("view") ||
+                actionName.includes("search")
+            ) {
+                summary.severity.info += 1;
+            } else {
+                summary.severity.success += 1;
+            }
+        });
+
+        // -------------------------------------------------
         // RESPONSE
         // -------------------------------------------------
 
@@ -782,6 +558,7 @@ const getAuditLogs = async (req, res) => {
             logs:
                 data || [],
 
+            summary,
 
             pagination: {
 
@@ -856,13 +633,13 @@ const getAuditLogs = async (req, res) => {
 
             "Authentication token is required.",
 
-            "Electoral Board access is required.",
+            "Administrator or Electoral Board access is required.",
 
-            "Invalid Electoral Board account.",
+            "Invalid staff account.",
 
-            "Electoral Board account not found.",
+            "Staff account not found.",
 
-            "Electoral Board account is inactive."
+            "Staff account is inactive."
         ];
 
 
@@ -934,7 +711,7 @@ const getAuditLogById = async (
     try {
 
         const staff =
-            await authenticateEB(req);
+            await authenticateStaff(req);
 
 
         const logId =
@@ -985,6 +762,10 @@ const getAuditLogById = async (
             .eq(
                 "id",
                 logId
+            )
+            .eq(
+                "actor_role",
+                "electoral_board"
             )
             .maybeSingle();
 
@@ -1100,16 +881,16 @@ const getAuditLogById = async (
                 "Authentication token is required." ||
 
             error.message ===
-                "Electoral Board access is required." ||
+                "Administrator or Electoral Board access is required." ||
 
             error.message ===
-                "Invalid Electoral Board account." ||
+                "Invalid staff account." ||
 
             error.message ===
-                "Electoral Board account not found." ||
+                "Staff account not found." ||
 
             error.message ===
-                "Electoral Board account is inactive."
+                "Staff account is inactive."
         ) {
 
             return res.status(401).json({

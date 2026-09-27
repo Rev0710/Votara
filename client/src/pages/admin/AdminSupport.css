@@ -1,0 +1,187 @@
+.admin-support-page {
+    min-height: 100vh;
+    background: var(--admin-bg, #f6f8fc);
+    color: var(--admin-text, #101828);
+}
+
+.admin-support-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 22px 28px;
+    background: var(--admin-card, #fff);
+    border-bottom: 1px solid var(--admin-border, #e4e7ec);
+}
+
+.admin-support-back {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--admin-border, #e4e7ec);
+    border-radius: 10px;
+    background: var(--admin-card, #fff);
+    color: var(--admin-text, #101828);
+    cursor: pointer;
+}
+
+.admin-support-header span {
+    color: var(--votara-primary, #266eff);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .12em;
+}
+
+.admin-support-header h1 {
+    margin: 3px 0;
+    font-size: 25px;
+}
+
+.admin-support-header p {
+    margin: 0;
+    color: var(--admin-text-secondary, #475467);
+    font-size: 13px;
+}
+
+.admin-support-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 28px;
+}
+
+.admin-support-hero,
+.admin-support-contact,
+.admin-support-help {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 18px;
+    border: 1px solid var(--admin-border, #e4e7ec);
+    border-radius: 15px;
+    background: var(--admin-card, #fff);
+}
+
+.admin-support-hero {
+    margin-bottom: 14px;
+}
+
+.admin-support-hero-icon {
+    width: 52px;
+    height: 52px;
+    flex: 0 0 52px;
+    display: grid;
+    place-items: center;
+    border-radius: 13px;
+    background: rgba(38, 110, 255, .10);
+    color: var(--votara-primary, #266eff);
+}
+
+.admin-support-hero h2 {
+    margin: 0 0 5px;
+    font-size: 18px;
+}
+
+.admin-support-hero p,
+.admin-support-contact p,
+.admin-support-help p {
+    margin: 0;
+    color: var(--admin-text-secondary, #475467);
+    line-height: 1.55;
+    font-size: 12px;
+}
+
+.admin-support-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.admin-support-card {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 18px;
+    border: 1px solid var(--admin-border, #e4e7ec);
+    border-radius: 15px;
+    background: var(--admin-card, #fff);
+    color: var(--admin-text, #101828);
+    text-align: left;
+    cursor: pointer;
+}
+
+.admin-support-card:hover {
+    border-color: rgba(38,110,255,.35);
+    transform: translateY(-1px);
+}
+
+.admin-support-card-icon {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 42px;
+    border-radius: 11px;
+    background: var(--votara-primary-light, rgba(38,110,255,.1));
+    color: var(--votara-primary, #266eff);
+}
+
+.admin-support-card-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.admin-support-card-copy strong {
+    font-size: 14px;
+}
+
+.admin-support-card-copy small {
+    color: var(--admin-text-secondary, #475467);
+    line-height: 1.5;
+}
+
+.admin-support-card-copy em {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--votara-primary, #266eff);
+    font-style: normal;
+    font-size: 11px;
+    font-weight: 750;
+}
+
+.admin-support-contact,
+.admin-support-help {
+    margin-top: 12px;
+}
+
+.admin-support-contact > svg,
+.admin-support-help > svg {
+    color: var(--votara-primary, #266eff);
+    margin-top: 2px;
+}
+
+.admin-support-contact strong,
+.admin-support-help strong {
+    display: block;
+    margin-bottom: 3px;
+}
+
+.admin-support-help ol {
+    margin: 8px 0 0;
+    padding-left: 18px;
+    color: var(--admin-text-secondary, #475467);
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+@media (max-width: 720px) {
+    .admin-support-content {
+        padding: 18px 14px;
+    }
+
+    .admin-support-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -216,6 +216,39 @@ useEffect(() => {
         totalStaff: null,
         pendingRegistrations: null,
         activeUsers: null,
+        totalUsers: null,
+    });
+
+    // =====================================================
+    // SYSTEM DASHBOARD DATA
+    // =====================================================
+
+    const [systemDashboard, setSystemDashboard] = useState({
+        systemHealth: {
+            status: "Checking",
+            api: "Checking",
+            database: "Checking",
+        },
+
+        totalUsers: 0,
+
+        electionStatus: {
+            status: "No Election",
+            election: null,
+        },
+
+        serverUsage: {
+            memoryPercent: 0,
+            heapUsedMB: 0,
+            heapTotalMB: 0,
+            uptimeSeconds: 0,
+            nodeVersion: "",
+        },
+
+        activityLogs: {
+            total: 0,
+            recent: [],
+        },
     });
 
     const [systemStatus, setSystemStatus] =
@@ -376,21 +409,67 @@ const checkSystem = async () => {
                 response.data.statistics || {};
 
             setStats({
-                totalStudents:
-                    statistics.totalStudents ??
+    totalStudents:
+        statistics.totalStudents ??
+        0,
+
+    totalStaff:
+        statistics.totalStaff ??
+        0,
+
+    pendingRegistrations:
+        statistics.pendingRegistrations ??
+        0,
+
+    activeUsers:
+        statistics.activeStaff ??
+        0,
+
+    totalUsers:
+        statistics.totalUsers ??
+        0,
+});
+
+            // =====================================================
+            // LOAD SYSTEM DASHBOARD
+            // =====================================================
+
+            const dashboardSystem =
+                response.data.systemDashboard || {};
+
+            setSystemDashboard({
+                systemHealth:
+                    dashboardSystem.systemHealth || {
+                        status: "Unknown",
+                        api: "Unknown",
+                        database: "Unknown",
+                    },
+
+                totalUsers:
+                    dashboardSystem.totalUsers ??
+                    statistics.totalUsers ??
                     0,
 
-                totalStaff:
-                    statistics.totalStaff ??
-                    0,
+                electionStatus:
+                    dashboardSystem.electionStatus || {
+                        status: "No Election",
+                        election: null,
+                    },
 
-                pendingRegistrations:
-                    statistics.pendingRegistrations ??
-                    0,
+                serverUsage:
+                    dashboardSystem.serverUsage || {
+                        memoryPercent: 0,
+                        heapUsedMB: 0,
+                        heapTotalMB: 0,
+                        uptimeSeconds: 0,
+                        nodeVersion: "",
+                    },
 
-                activeUsers:
-                    statistics.activeStaff ??
-                    0,
+                activityLogs:
+                    dashboardSystem.activityLogs || {
+                        total: 0,
+                        recent: [],
+                    },
             });
 
             setLastUpdated(
@@ -646,70 +725,67 @@ const checkSystem = async () => {
 />
             {/* =================================================
                 TOP NAVIGATION
-                Design-only replacement for the old sidebar.
+                Shared VOTARA Admin navigation.
             ================================================= */}
 
             <header className="votara-admin-topbar">
-                <div className="votara-admin-brand" onClick={() => goTo("/admin-dashboard")}>
+                <button
+                    type="button"
+                    className="votara-admin-brand"
+                    onClick={() => goTo("/admin-dashboard")}
+                    aria-label="Votara System Dashboard"
+                >
                     <span className="votara-admin-brand-mark" aria-hidden="true">
                         <img
-            src="/src/images/Votara.png"
-            alt="Votara Logo"
-            className="votara-admin-brand-logo"
-        />
+                            src="/src/images/Votara.png"
+                            alt=""
+                            className="votara-admin-brand-logo"
+                        />
                     </span>
                     <span className="votara-admin-brand-name">Votara</span>
-                </div>
+                </button>
 
                 <nav className="votara-admin-topnav" aria-label="Admin navigation">
-                    <button
-                        className="votara-admin-topnav-link active"
-                        onClick={() => goTo("/admin-dashboard")}
-                    >
-                        Overview
+                    <button type="button" className="votara-admin-topnav-link active" onClick={() => goTo("/admin-dashboard")}>
+                        System Dashboard
                     </button>
-
-                    <button
-                        className="votara-admin-topnav-link"
-                        onClick={() => goTo("/admin/students")}
-                    >
-                        User
+                    <button type="button" className="votara-admin-topnav-link" onClick={() => goTo("/admin/users")}>
+                        User &amp; Access Management
                     </button>
-
-                    <button
-                        className="votara-admin-topnav-link"
-                        onClick={() => goTo("/admin/election")}
-                    >
-                        Elections
+                    <button type="button" className="votara-admin-topnav-link" onClick={() => goTo("/admin/data-management")}>
+                        Data Management
                     </button>
-
-                    <button
-                        className="votara-admin-topnav-link"
-                        onClick={() => goTo("/admin/candidates")}
-                    >
-                        Candidates
+                    <button type="button" className="votara-admin-topnav-link" onClick={() => goTo("/admin/settings")}>
+                        System Configuration
                     </button>
-
-                    <button
-                        className="votara-admin-topnav-link"
-                        onClick={() => goTo("/admin/audit-logs")}
-                    >
-                        Logs
+                    <button type="button" className="votara-admin-topnav-link" onClick={() => goTo("/admin/audit-logs")}>
+                        Monitoring &amp; Logs
                     </button>
-
-                    <button
-                        className="votara-admin-topnav-link"
-                        onClick={() => goTo("/admin/settings")}
-                    >
-                        Config &amp; Support
+                    <button type="button" className="votara-admin-topnav-link" onClick={() => goTo("/admin/settings")}>
+                        Support &amp; Troubleshooting
+                    </button>
+                    <button type="button" className="votara-admin-topnav-link" onClick={() => goTo("/admin/reports")}>
+                        Reports &amp; Analytics
                     </button>
                 </nav>
 
                 <div className="votara-admin-topbar-actions">
-                    <button className="votara-topbar-environment" onClick={() => setShowEnvironmentMenu((value) => !value)}>
-                        <span className="votara-env-dot"></span>{environment}
+                    <button
+                        type="button"
+                        className="votara-topbar-environment"
+                        onClick={() => setShowEnvironmentMenu((value) => !value)}
+                        aria-label="Environment"
+                    >
+                        <span className="votara-env-dot"></span>
+                        {environment}
                     </button>
-                    <button className="votara-notification-button" onClick={() => goTo("/admin/audit-logs")} title="Notifications" aria-label="Notifications">
+                    <button
+                        type="button"
+                        className="votara-notification-button"
+                        onClick={() => goTo("/admin/audit-logs")}
+                        title="Notifications"
+                        aria-label="Notifications"
+                    >
                         <span className="notification-dot"></span>
                         <FiBell size={16} />
                     </button>
@@ -721,8 +797,8 @@ const checkSystem = async () => {
                             {admin.full_name || "Administrator"}
                         </span>
                     </div>
-
                     <button
+                        type="button"
                         className="votara-admin-logout"
                         onClick={handleLogout}
                         title="Logout"
@@ -785,13 +861,647 @@ const checkSystem = async () => {
 
                         <button
                         className="votara-primary-action"
-                        onClick={openInviteModal}
-                        >
+                        onClick={() => goTo("/admin/users")}
+                    >
                         <FiUserPlus size={16} />
-                        Invite Team
-                        </button>
+                        Invite User
+                    </button>
                     </div>
                 </section>
+
+                {/* =========================================================
+    STEP 2 — SYSTEM DASHBOARD
+========================================================= */}
+
+<section
+    style={{
+        marginBottom: "24px",
+    }}
+>
+
+    <div
+        style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "16px",
+            marginBottom: "14px",
+        }}
+    >
+
+        <div>
+
+            <span
+                style={{
+                    display: "block",
+                    fontSize: "11px",
+                    fontWeight: 800,
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    color:
+                        "var(--votara-primary)",
+                    marginBottom: "4px",
+                }}
+            >
+                ADMIN SYSTEM MANAGEMENT
+            </span>
+
+            <h2
+                style={{
+                    margin: 0,
+                    fontSize: "21px",
+                    fontWeight: 800,
+                    color:
+                        "var(--admin-text, #172033)",
+                }}
+            >
+                System Dashboard
+            </h2>
+
+            <p
+                style={{
+                    margin:
+                        "5px 0 0",
+                    fontSize: "13px",
+                    color:
+                        "var(--admin-text-secondary, #64748B)",
+                }}
+            >
+                Live overview of VOTARA system operations.
+            </p>
+
+        </div>
+
+
+        <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={dashboardLoading}
+            style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "7px",
+                padding:
+                    "9px 13px",
+                borderRadius: "9px",
+                border:
+                    "1px solid var(--admin-border, #E2E8F0)",
+                background:
+                    "var(--admin-card, #FFFFFF)",
+                color:
+                    "var(--admin-text, #172033)",
+                cursor:
+                    dashboardLoading
+                        ? "wait"
+                        : "pointer",
+                fontSize: "12px",
+                fontWeight: 700,
+            }}
+        >
+
+            <FiRefreshCw
+                size={14}
+                style={{
+                    animation:
+                        dashboardLoading
+                            ? "spin 1s linear infinite"
+                            : "none",
+                }}
+            />
+
+            Refresh
+
+        </button>
+
+    </div>
+
+
+    <div
+      className="admin-system-dashboard-grid"
+        style={{
+            display: "grid",
+            gridTemplateColumns:
+                "repeat(5, minmax(0, 1fr))",
+            gap: "12px",
+        }}
+    >
+
+        {/* =================================================
+            SYSTEM HEALTH
+        ================================================= */}
+
+        <button
+            type="button"
+            onClick={() =>
+                goTo("/admin/settings")
+            }
+            style={{
+                textAlign: "left",
+                border:
+                    "1px solid var(--admin-border, #E2E8F0)",
+                background:
+                    "var(--admin-card, #FFFFFF)",
+                borderRadius: "14px",
+                padding: "17px",
+                minHeight: "142px",
+                cursor: "pointer",
+                boxShadow:
+                    "0 5px 18px rgba(15, 23, 42, 0.05)",
+            }}
+        >
+
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent:
+                        "space-between",
+                    alignItems: "center",
+                    marginBottom: "18px",
+                }}
+            >
+
+                <span
+                    style={{
+                        width: "36px",
+                        height: "36px",
+                        display: "grid",
+                        placeItems: "center",
+                        borderRadius: "10px",
+                        background:
+                            "rgba(34, 197, 94, 0.10)",
+                        color: "#16A34A",
+                    }}
+                >
+                    <FiActivity
+                        size={18}
+                    />
+                </span>
+
+                <span
+                    style={{
+                        width: "8px",
+                        height: "8px",
+                        borderRadius: "50%",
+                        background:
+                            systemDashboard.systemHealth.status ===
+                            "Online"
+                                ? "#16A34A"
+                                : "#F59E0B",
+                    }}
+                />
+
+            </div>
+
+            <strong
+                style={{
+                    display: "block",
+                    fontSize: "13px",
+                    color:
+                        "var(--admin-text, #172033)",
+                }}
+            >
+                System Health
+            </strong>
+
+            <strong
+                style={{
+                    display: "block",
+                    marginTop: "5px",
+                    fontSize: "19px",
+                    color: "#16A34A",
+                }}
+            >
+                {systemDashboard.systemHealth.status}
+            </strong>
+
+            <span
+                style={{
+                    display: "block",
+                    marginTop: "5px",
+                    fontSize: "11px",
+                    color:
+                        "var(--admin-text-muted, #94A3B8)",
+                }}
+            >
+                API:{" "}
+                {systemDashboard.systemHealth.api}
+                {" · "}
+                DB:{" "}
+                {systemDashboard.systemHealth.database}
+            </span>
+
+        </button>
+
+
+        {/* =================================================
+            TOTAL USERS
+        ================================================= */}
+
+        <button
+            type="button"
+            className="admin-total-users-card"
+            onClick={() =>
+                goTo("/admin/students")
+            }
+            style={{
+                textAlign: "left",
+                border:
+                    "1px solid var(--admin-border, #E2E8F0)",
+                background:
+                    "var(--admin-card, #FFFFFF)",
+                borderRadius: "14px",
+                padding: "17px",
+                minHeight: "142px",
+                cursor: "pointer",
+                boxShadow:
+                    "0 5px 18px rgba(15, 23, 42, 0.05)",
+            }}
+        >
+
+            <div
+                style={{
+                    width: "36px",
+                    height: "36px",
+                    display: "grid",
+                    placeItems: "center",
+                    borderRadius: "10px",
+                    background:
+                        "rgba(38, 110, 255, 0.10)",
+                    color:
+                        "var(--votara-primary)",
+                    marginBottom: "18px",
+                }}
+            >
+                <FiUsers
+                    size={18}
+                />
+            </div>
+
+            <strong
+                style={{
+                    display: "block",
+                    fontSize: "13px",
+                    color:
+                        "var(--admin-text, #172033)",
+                }}
+            >
+                Total Users
+            </strong>
+
+            <div className="admin-total-users-split">
+                <div className="admin-total-users-stat">
+                    <strong>
+                        {dashboardLoading
+                            ? "..."
+                            : (
+                                stats.totalStudents ??
+                                0
+                            ).toLocaleString()}
+                    </strong>
+                    <span>Students</span>
+                </div>
+
+                <div
+                    className="admin-total-users-divider"
+                    aria-hidden="true"
+                />
+
+                <div className="admin-total-users-stat">
+                    <strong>
+                        {dashboardLoading
+                            ? "..."
+                            : (
+                                stats.totalStaff ??
+                                0
+                            ).toLocaleString()}
+                    </strong>
+                    <span>Staff</span>
+                </div>
+            </div>
+
+            <span
+                style={{
+                    display: "block",
+                    marginTop: "8px",
+                    fontSize: "11px",
+                    color:
+                        "var(--admin-text-muted, #94A3B8)",
+                }}
+            >
+                Combined total:{" "}
+                {dashboardLoading
+                    ? "..."
+                    : (
+                        systemDashboard.totalUsers ??
+                        0
+                    ).toLocaleString()}
+            </span>
+
+        </button>
+
+
+        {/* =================================================
+            ELECTION STATUS
+        ================================================= */}
+
+        <button
+            type="button"
+            onClick={() =>
+                goTo("/admin/election")
+            }
+            style={{
+                textAlign: "left",
+                border:
+                    "1px solid var(--admin-border, #E2E8F0)",
+                background:
+                    "var(--admin-card, #FFFFFF)",
+                borderRadius: "14px",
+                padding: "17px",
+                minHeight: "142px",
+                cursor: "pointer",
+                boxShadow:
+                    "0 5px 18px rgba(15, 23, 42, 0.05)",
+            }}
+        >
+
+            <div
+                style={{
+                    width: "36px",
+                    height: "36px",
+                    display: "grid",
+                    placeItems: "center",
+                    borderRadius: "10px",
+                    background:
+                        "rgba(124, 58, 237, 0.10)",
+                    color: "#7C3AED",
+                    marginBottom: "18px",
+                }}
+            >
+                <FiCalendar
+                    size={18}
+                />
+            </div>
+
+            <strong
+                style={{
+                    display: "block",
+                    fontSize: "13px",
+                    color:
+                        "var(--admin-text, #172033)",
+                }}
+            >
+                Election Status
+            </strong>
+
+            <strong
+                style={{
+                    display: "block",
+                    marginTop: "5px",
+                    fontSize: "19px",
+                    color: "#7C3AED",
+                    textTransform:
+                        "capitalize",
+                }}
+            >
+                {
+                    systemDashboard
+                        .electionStatus
+                        .status
+                }
+            </strong>
+
+            <span
+                style={{
+                    display: "block",
+                    marginTop: "4px",
+                    fontSize: "11px",
+                    color:
+                        "var(--admin-text-muted, #94A3B8)",
+                    whiteSpace:
+                        "nowrap",
+                    overflow: "hidden",
+                    textOverflow:
+                        "ellipsis",
+                }}
+            >
+                {
+                    systemDashboard
+                        .electionStatus
+                        .election
+                        ?.title ||
+                    "No current election"
+                }
+            </span>
+
+        </button>
+
+
+        {/* =================================================
+            SERVER USAGE
+        ================================================= */}
+
+        <button
+            type="button"
+            onClick={() =>
+                goTo("/admin/settings")
+            }
+            style={{
+                textAlign: "left",
+                border:
+                    "1px solid var(--admin-border, #E2E8F0)",
+                background:
+                    "var(--admin-card, #FFFFFF)",
+                borderRadius: "14px",
+                padding: "17px",
+                minHeight: "142px",
+                cursor: "pointer",
+                boxShadow:
+                    "0 5px 18px rgba(15, 23, 42, 0.05)",
+            }}
+        >
+
+            <div
+                style={{
+                    width: "36px",
+                    height: "36px",
+                    display: "grid",
+                    placeItems: "center",
+                    borderRadius: "10px",
+                    background:
+                        "rgba(245, 158, 11, 0.10)",
+                    color: "#D97706",
+                    marginBottom: "18px",
+                }}
+            >
+                <FiActivity
+                    size={18}
+                />
+            </div>
+
+            <strong
+                style={{
+                    display: "block",
+                    fontSize: "13px",
+                    color:
+                        "var(--admin-text, #172033)",
+                }}
+            >
+                Server Usage
+            </strong>
+
+            <strong
+                style={{
+                    display: "block",
+                    marginTop: "5px",
+                    fontSize: "24px",
+                    color:
+                        "var(--admin-text, #172033)",
+                }}
+            >
+                {
+                    systemDashboard
+                        .serverUsage
+                        .memoryPercent
+                }%
+            </strong>
+
+            <div
+                style={{
+                    height: "6px",
+                    marginTop: "8px",
+                    borderRadius: "99px",
+                    background:
+                        "#E2E8F0",
+                    overflow: "hidden",
+                }}
+            >
+
+                <span
+                    style={{
+                        display: "block",
+                        width:
+                            `${Math.min(
+                                100,
+                                Math.max(
+                                    0,
+                                    systemDashboard
+                                        .serverUsage
+                                        .memoryPercent
+                                )
+                            )}%`,
+                        height: "100%",
+                        borderRadius: "99px",
+                        background:
+                            "var(--votara-primary)",
+                    }}
+                />
+
+            </div>
+
+            <span
+                style={{
+                    display: "block",
+                    marginTop: "6px",
+                    fontSize: "10px",
+                    color:
+                        "var(--admin-text-muted, #94A3B8)",
+                }}
+            >
+                Node.js memory usage
+            </span>
+
+        </button>
+
+
+        {/* =================================================
+            ACTIVITY LOGS
+        ================================================= */}
+
+        <button
+            type="button"
+            onClick={() =>
+                goTo("/admin/audit-logs")
+            }
+            style={{
+                textAlign: "left",
+                border:
+                    "1px solid var(--admin-border, #E2E8F0)",
+                background:
+                    "var(--admin-card, #FFFFFF)",
+                borderRadius: "14px",
+                padding: "17px",
+                minHeight: "142px",
+                cursor: "pointer",
+                boxShadow:
+                    "0 5px 18px rgba(15, 23, 42, 0.05)",
+            }}
+        >
+
+            <div
+                style={{
+                    width: "36px",
+                    height: "36px",
+                    display: "grid",
+                    placeItems: "center",
+                    borderRadius: "10px",
+                    background:
+                        "rgba(6, 182, 212, 0.10)",
+                    color: "#0891B2",
+                    marginBottom: "18px",
+                }}
+            >
+                <FiFileText
+                    size={18}
+                />
+            </div>
+
+            <strong
+                style={{
+                    display: "block",
+                    fontSize: "13px",
+                    color:
+                        "var(--admin-text, #172033)",
+                }}
+            >
+                Activity Logs
+            </strong>
+
+            <strong
+                style={{
+                    display: "block",
+                    marginTop: "5px",
+                    fontSize: "24px",
+                    color:
+                        "var(--admin-text, #172033)",
+                }}
+            >
+                {
+                    (
+                        systemDashboard
+                            .activityLogs
+                            .total ??
+                        0
+                    ).toLocaleString()
+                }
+            </strong>
+
+            <span
+                style={{
+                    display: "block",
+                    marginTop: "4px",
+                    fontSize: "11px",
+                    color:
+                        "var(--admin-text-muted, #94A3B8)",
+                }}
+            >
+                Recorded audit activities
+            </span>
+
+        </button>
+
+    </div>
+
+</section>
 
                 {/* =================================================
                     ERROR MESSAGE
@@ -1043,12 +1753,39 @@ const checkSystem = async () => {
                         .votara-admin-management {
                             grid-template-columns: 1fr !important;
                         }
+                            @media (max-width: 1200px) {
+
+                            .admin-system-dashboard-grid {
+                                grid-template-columns:
+                                    repeat(3, minmax(0, 1fr)) !important;
+                            }
+
+                        }
+
+                        @media (max-width: 750px) {
+
+                            .admin-system-dashboard-grid {
+                                grid-template-columns:
+                                    repeat(2, minmax(0, 1fr)) !important;
+                            }
+
+                        }
+
+                        @media (max-width: 520px) {
+
+                            .admin-system-dashboard-grid {
+                                grid-template-columns:
+                                    1fr !important;
+                            }
+
+                        }
                     }
                 `}
             </style>
         </div>
     );
 }
+
 
 // =========================================================
 // STAT CARD
@@ -1462,7 +2199,7 @@ border: "1px solid var(--admin-border)",
     statsGrid: {
         display: "grid",
         gridTemplateColumns:
-            "repeat(4, minmax(0, 1fr))",
+        "repeat(5, minmax(0, 1fr))",
         gap: "15px",
     },
 
@@ -1664,4 +2401,7 @@ border: "1px solid var(--admin-border)",
     },
 };
 
+
+
 export default AdminDashboard;
+

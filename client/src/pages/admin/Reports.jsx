@@ -1,208 +1,272 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, {
+    useCallback,
+    useEffect,
+    useMemo,
+    useState,
+} from "react";
+
 import {
+    FiActivity,
     FiArrowLeft,
     FiBarChart2,
     FiCalendar,
-    FiCheckCircle,
+    FiDatabase,
     FiDownload,
-    FiPrinter,
+    FiFileText,
     FiRefreshCw,
-    FiTrendingUp,
+    FiShield,
     FiUsers,
-    FiUserCheck,
-    FiAward,
 } from "react-icons/fi";
+
+import {
+    useLocation,
+    useNavigate,
+} from "react-router-dom";
+
+import api from "../../services/api";
+
 import "./Reports.css";
 
-const Reports = () => {
+// =========================================================
+// ADMIN REPORTS & ANALYTICS
+// =========================================================
+//
+// Administrator-only reporting page.
+//
+// The backend gathers:
+// - student and staff counts
+// - Admin / EB accounts
+// - registration activity
+// - elections / candidates / party lists / positions
+// - voting participation and aggregate results
+// - kiosk sessions and operations
+// - Electoral Board audit activity
+//
+// Individual student vote selections are NOT displayed here.
+// =========================================================
+
+const AdminReports = () => {
+
     const navigate = useNavigate();
+    const location = useLocation();
 
-    const [admin, setAdmin] = useState(null);
-    const [selectedPeriod, setSelectedPeriod] = useState("This Election");
-    const [selectedPosition, setSelectedPosition] = useState("All Positions");
+    const [data, setData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [error, setError] = useState("");
 
-    const [reportData, setReportData] = useState({
-        registeredStudents: 1250,
-        votesCast: 1038,
-        candidates: 24,
-        positions: 8,
-    });
+    const selectedReport = useMemo(() => {
+        const params = new URLSearchParams(location.search);
+        return params.get("report") || "system";
+    }, [location.search]);
 
-    const [activityData] = useState([
-        { time: "8:00 AM", votes: 82 },
-        { time: "9:00 AM", votes: 126 },
-        { time: "10:00 AM", votes: 174 },
-        { time: "11:00 AM", votes: 218 },
-        { time: "12:00 PM", votes: 145 },
-        { time: "1:00 PM", votes: 112 },
-        { time: "2:00 PM", votes: 96 },
-        { time: "3:00 PM", votes: 85 },
-    ]);
+    const selectedElectionId = useMemo(() => {
+        const params = new URLSearchParams(location.search);
+        return params.get("election_id") || "";
+    }, [location.search]);
 
-    const [positionData] = useState([
-        {
-            position: "President",
-            candidates: [
-                { name: "Candidate A", votes: 342 },
-                { name: "Candidate B", votes: 298 },
-                { name: "Candidate C", votes: 201 },
-            ],
-        },
-        {
-            position: "Vice President",
-            candidates: [
-                { name: "Candidate D", votes: 386 },
-                { name: "Candidate E", votes: 311 },
-                { name: "Candidate F", votes: 144 },
-            ],
-        },
-        {
-            position: "Secretary",
-            candidates: [
-                { name: "Candidate G", votes: 421 },
-                { name: "Candidate H", votes: 287 },
-                { name: "Candidate I", votes: 133 },
-            ],
-        },
-        {
-            position: "Treasurer",
-            candidates: [
-                { name: "Candidate J", votes: 354 },
-                { name: "Candidate K", votes: 329 },
-                { name: "Candidate L", votes: 156 },
-            ],
-        },
-    ]);
-
-    const [departmentData] = useState([
-        { department: "BSIT", voters: 312, total: 350 },
-        { department: "BSCS", voters: 241, total: 280 },
-        { department: "BSBA", voters: 198, total: 240 },
-        { department: "BSED", voters: 164, total: 210 },
-        { department: "BEED", voters: 123, total: 170 },
-    ]);
-
-    const [recentActivities] = useState([
-        {
-            action: "Election report generated",
-            user: "Admin",
-            time: "Today, 3:42 PM",
-            status: "Completed",
-        },
-        {
-            action: "Election results updated",
-            user: "Electoral Board",
-            time: "Today, 2:18 PM",
-            status: "Completed",
-        },
-        {
-            action: "Candidate results verified",
-            user: "Electoral Board",
-            time: "Today, 1:45 PM",
-            status: "Completed",
-        },
-        {
-            action: "Voting statistics refreshed",
-            user: "Admin",
-            time: "Today, 12:30 PM",
-            status: "Completed",
-        },
-    ]);
-
-    useEffect(() => {
-        const token = localStorage.getItem("votaraStaffToken");
-        const storedUser = localStorage.getItem("votaraStaffUser");
-
-        if (!token || !storedUser) {
-            navigate("/admin-login", { replace: true });
-            return;
-        }
-
+    const loadReports = useCallback(async (isRefresh = false, electionId = selectedElectionId) => {
         try {
-            const user = JSON.parse(storedUser);
+            if (isRefresh) {
+                setRefreshing(true);
+            } else {
+                setLoading(true);
+            }
 
-            if (user.role !== "admin") {
-                navigate("/reports/dashboard", { replace: true });
+            setError("");
+
+            const token = localStorage.getItem("votaraStaffToken");
+
+            if (!token) {
+                navigate("/admin-login", { replace: true });
                 return;
             }
 
-            setAdmin(user);
-        } catch (error) {
-            console.error("Invalid admin session:", error);
+            const query = electionId
+                ? `?election_id=${encodeURIComponent(electionId)}`
+                : "";
 
-            localStorage.removeItem("votaraStaffToken");
-            localStorage.removeItem("votaraStaffUser");
+            const response = await api.get(
+                `/admin/reports${query}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
 
-            navigate("/admin-login", { replace: true });
+            if (!response.data?.success) {
+                throw new Error(
+                    response.data?.message ||
+                    "Unable to load Admin Reports."
+                );
+            }
+
+            setData(response.data);
+        } catch (requestError) {
+            console.error("Admin Reports error:", requestError);
+
+            if (requestError?.response?.status === 401) {
+                localStorage.removeItem("votaraStaffToken");
+                localStorage.removeItem("votaraStaffUser");
+                navigate("/admin-login", { replace: true });
+                return;
+            }
+
+            setError(
+                requestError?.response?.data?.message ||
+                requestError?.message ||
+                "Unable to load Admin Reports."
+            );
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
         }
-    }, [navigate]);
+    }, [navigate, selectedElectionId]);
 
-    const turnout = useMemo(() => {
-        if (!reportData.registeredStudents) return 0;
+    useEffect(() => {
+        loadReports();
+    }, [loadReports]);
 
-        return Math.round(
-            (reportData.votesCast / reportData.registeredStudents) * 100
-        );
-    }, [reportData]);
+    const overview = data?.overview || {};
+    const users = overview.users || {};
+    const registrations = overview.registrations || {};
+    const electionsSummary = overview.elections || {};
+    const candidates = overview.candidates || {};
+    const voting = overview.voting || {};
+    const kiosk = overview.kiosk || {};
+    const audit = overview.audit || {};
 
-    const highestActivity = useMemo(() => {
-        return Math.max(...activityData.map((item) => item.votes));
-    }, [activityData]);
+    const electionResults = data?.electionResults || null;
 
-    const filteredPositions = useMemo(() => {
-        if (selectedPosition === "All Positions") {
-            return positionData;
-        }
+    const selectedElection = electionResults?.election || null;
 
-        return positionData.filter(
-            (item) => item.position === selectedPosition
-        );
-    }, [selectedPosition, positionData]);
+    const goToReport = (report) => {
+        const suffix = selectedElectionId
+            ? `&election_id=${encodeURIComponent(selectedElectionId)}`
+            : "";
 
-    const handleRefresh = () => {
-        setReportData((current) => ({
-            ...current,
-        }));
+        navigate(`/admin/reports?report=${report}${suffix}`);
     };
 
-    const handleExport = () => {
+    const handleElectionChange = (event) => {
+        const electionId = event.target.value;
+        const report = selectedReport || "election";
+
+        const query = electionId
+            ? `?report=${report}&election_id=${encodeURIComponent(electionId)}`
+            : `?report=${report}`;
+
+        navigate(`/admin/reports${query}`);
+    };
+
+    const formatDateTime = (value) => {
+        if (!value) return "—";
+
+        const date = new Date(value);
+
+        if (Number.isNaN(date.getTime())) {
+            return String(value);
+        }
+
+        return date.toLocaleString("en-US", {
+            dateStyle: "medium",
+            timeStyle: "short",
+        });
+    };
+
+    const formatNumber = (value) =>
+        Number(value || 0).toLocaleString();
+
+    const exportReport = () => {
+        if (!data) return;
+
         const rows = [
-            ["VOTARA Election Report"],
+            ["VOTARA ADMIN REPORT"],
+            ["Generated At", data.generatedAt || ""],
+            ["Selected Election", selectedElection?.title || "Latest election"],
             [],
-            ["Election Period", selectedPeriod],
-            ["Generated By", admin?.name || "Admin"],
+            ["SYSTEM SUMMARY"],
+            ["Students", users.totalStudents || 0],
+            ["Staff", users.totalStaff || 0],
+            ["Administrators", users.totalAdmins || 0],
+            ["Electoral Board", users.totalEB || 0],
+            ["Active Staff", users.activeStaff || 0],
             [],
-            ["Election Overview"],
-            ["Registered Students", reportData.registeredStudents],
-            ["Votes Cast", reportData.votesCast],
-            ["Voter Turnout", `${turnout}%`],
-            ["Candidates", reportData.candidates],
-            ["Positions", reportData.positions],
+            ["REGISTRATION SUMMARY"],
+            ["Total Applications", registrations.total || 0],
+            ["Pending Applications", registrations.pending || 0],
             [],
-            ["Candidate Results"],
-            ["Position", "Candidate", "Votes"],
+            ["ELECTION SUMMARY"],
+            ["Total Elections", electionsSummary.total || 0],
+            ["Open Elections", electionsSummary.open || 0],
+            ["Scheduled Elections", electionsSummary.scheduled || 0],
+            ["Closed Elections", electionsSummary.closed || 0],
+            ["Candidates", candidates.total || 0],
+            ["Active Candidates", candidates.active || 0],
+            ["Party Lists", overview.partyLists || 0],
+            ["Positions", overview.positions || 0],
+            [],
+            ["VOTING SUMMARY"],
+            ["Eligible Voters", voting.eligibleVoters || 0],
+            ["Voters Who Voted", voting.votersWhoVoted || 0],
+            ["Remaining Voters", voting.remainingVoters || 0],
+            ["Turnout", `${Number(voting.turnoutPercentage || 0).toFixed(2)}%`],
+            ["Submitted Ballots", voting.submittedBallots || 0],
+            [],
+            ["KIOSK SUMMARY"],
+            ["Total Kiosk Sessions", kiosk.totalSessions || 0],
+            ["Active Kiosk Sessions", kiosk.activeSessions || 0],
+            ["Total Kiosk Operations", kiosk.totalOperations || 0],
+            ["Active Kiosk Operations", kiosk.activeOperations || 0],
+            [],
+            ["AUDIT SUMMARY"],
+            ["Total Audit Logs", audit.total || 0],
+            ["Electoral Board Actions", audit.electoralBoard || 0],
+            ["Administrator Actions", audit.administrators || 0],
+            [],
+            ["RECENT EB ACTIVITY"],
+            ["Date", "EB Member", "Action", "Module", "Description"],
         ];
 
-        positionData.forEach((position) => {
-            position.candidates.forEach((candidate) => {
+        (data.recentAuditLogs || [])
+            .filter((log) => log.actor_role === "electoral_board")
+            .forEach((log) => {
                 rows.push([
-                    position.position,
-                    candidate.name,
-                    candidate.votes,
+                    formatDateTime(log.created_at),
+                    log.actor_name || "Electoral Board",
+                    log.action || "",
+                    log.module || "",
+                    log.description || "",
                 ]);
             });
+
+        rows.push([]);
+        rows.push(["KIOSK ACTIVITY"]);
+        rows.push(["Started", "EB Member", "Election", "Status", "Students Served"]);
+
+        (data.recentKioskSessions || []).forEach((session) => {
+            rows.push([
+                formatDateTime(session.started_at),
+                session.staff_users?.full_name || "Electoral Board",
+                session.elections?.title || "—",
+                session.session_status || "—",
+                session.students_served || 0,
+            ]);
         });
 
-        const csvContent = rows
+        const csv = rows
             .map((row) =>
                 row
-                    .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
+                    .map((cell) => {
+                        const value = String(cell ?? "");
+                        return `"${value.replace(/"/g, '""')}"`;
+                    })
                     .join(",")
             )
             .join("\n");
 
-        const blob = new Blob([csvContent], {
+        const blob = new Blob([csv], {
             type: "text/csv;charset=utf-8;",
         });
 
@@ -210,543 +274,404 @@ const Reports = () => {
         const link = document.createElement("a");
 
         link.href = url;
-        link.download = "VOTARA-Election-Report.csv";
-        link.click();
+        link.download = `VOTARA_Admin_Report_${new Date()
+            .toISOString()
+            .slice(0, 10)}.csv`;
 
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
         URL.revokeObjectURL(url);
     };
 
-    const handlePrint = () => {
-        window.print();
-    };
+    if (loading) {
+        return (
+            <div className="admin-reports-page admin-reports-centered">
+                <FiRefreshCw className="admin-reports-spin" size={30} />
+                <p>Gathering VOTARA administrative reports...</p>
+            </div>
+        );
+    }
 
-    if (!admin) {
-        return null;
+    if (error) {
+        return (
+            <div className="admin-reports-page admin-reports-centered">
+                <FiShield size={30} />
+                <h2>Unable to load reports</h2>
+                <p>{error}</p>
+                <button onClick={() => loadReports(true)}>
+                    <FiRefreshCw size={15} />
+                    Try Again
+                </button>
+            </div>
+        );
     }
 
     return (
-        <div className="reports-page">
-
-            {/* HEADER */}
-            <header className="reports-header">
-                <div className="reports-header-left">
+        <div className="admin-reports-page">
+            <header className="admin-reports-header">
+                <div className="admin-reports-title-block">
                     <button
-                        className="reports-back-button"
+                        className="admin-reports-back"
                         onClick={() => navigate("/admin-dashboard")}
                     >
-                        <FiArrowLeft />
-                        <span>Back to Dashboard</span>
+                        <FiArrowLeft size={15} />
+                        Dashboard
                     </button>
 
-                    <div className="reports-title-section">
-                        <div className="reports-title-icon">
-                            <FiBarChart2 />
-                        </div>
-
-                        <div>
-                            <h1>Reports</h1>
-                            <p>
-                                View election statistics, voter turnout, and
-                                election results.
-                            </p>
-                        </div>
-                    </div>
+                    <span>VOTARA ADMINISTRATION</span>
+                    <h1>Reports &amp; Analytics</h1>
+                    <p>
+                        Centralized administrative information gathered from
+                        students, Electoral Board operations, elections,
+                        kiosks, voting participation, and audit records.
+                    </p>
                 </div>
 
-                <div className="reports-header-actions">
+                <div className="admin-reports-actions">
                     <button
-                        className="reports-secondary-button"
-                        onClick={handleRefresh}
+                        onClick={() => loadReports(true)}
+                        disabled={refreshing}
                     >
-                        <FiRefreshCw />
-                        Refresh
+                        <FiRefreshCw size={15} />
+                        {refreshing ? "Refreshing" : "Refresh"}
                     </button>
 
-                    <button
-                        className="reports-secondary-button"
-                        onClick={handlePrint}
-                    >
-                        <FiPrinter />
-                        Print
-                    </button>
-
-                    <button
-                        className="reports-primary-button"
-                        onClick={handleExport}
-                    >
-                        <FiDownload />
-                        Export Report
+                    <button onClick={exportReport}>
+                        <FiDownload size={15} />
+                        Export Data
                     </button>
                 </div>
             </header>
 
-            <main className="reports-content">
+            <div className="admin-report-tabs">
+                <button
+                    className={selectedReport === "system" ? "active" : ""}
+                    onClick={() => goToReport("system")}
+                >
+                    <FiBarChart2 size={15} />
+                    System Usage
+                </button>
 
-                {/* FILTER BAR */}
-                <section className="reports-filter-bar">
-                    <div className="reports-filter-group">
-                        <label>Report Period</label>
+                <button
+                    className={selectedReport === "users" ? "active" : ""}
+                    onClick={() => goToReport("users")}
+                >
+                    <FiUsers size={15} />
+                    User Activity
+                </button>
 
-                        <div className="reports-select-wrapper">
-                            <FiCalendar />
+                <button
+                    className={selectedReport === "election" ? "active" : ""}
+                    onClick={() => goToReport("election")}
+                >
+                    <FiCalendar size={15} />
+                    Election Summary
+                </button>
 
-                            <select
-                                value={selectedPeriod}
-                                onChange={(e) =>
-                                    setSelectedPeriod(e.target.value)
-                                }
-                            >
-                                <option>This Election</option>
-                                <option>Today</option>
-                                <option>This Week</option>
-                                <option>This Month</option>
-                                <option>All Time</option>
-                            </select>
-                        </div>
+                <button
+                    className={selectedReport === "security" ? "active" : ""}
+                    onClick={() => goToReport("security")}
+                >
+                    <FiShield size={15} />
+                    Security &amp; Audit
+                </button>
+
+                <button
+                    className={selectedReport === "export" ? "active" : ""}
+                    onClick={() => goToReport("export")}
+                >
+                    <FiDownload size={15} />
+                    Export Data
+                </button>
+            </div>
+
+            <section className="admin-report-metrics">
+                <ReportMetric icon={FiUsers} label="Students" value={users.totalStudents} />
+                <ReportMetric icon={FiShield} label="EB Members" value={users.totalEB} />
+                <ReportMetric icon={FiCalendar} label="Elections" value={electionsSummary.total} />
+                <ReportMetric icon={FiActivity} label="Voters Who Voted" value={voting.votersWhoVoted} />
+                <ReportMetric icon={FiDatabase} label="Kiosk Sessions" value={kiosk.totalSessions} />
+                <ReportMetric icon={FiFileText} label="Audit Logs" value={audit.total} />
+            </section>
+
+            {selectedReport === "system" && (
+                <ReportPanel
+                    title="System Usage Report"
+                    description="Live counts from the VOTARA database and operational modules."
+                >
+                    <div className="admin-report-grid">
+                        <ReportRow label="Students" value={users.totalStudents} />
+                        <ReportRow label="Staff Accounts" value={users.totalStaff} />
+                        <ReportRow label="Administrator Accounts" value={users.totalAdmins} />
+                        <ReportRow label="Electoral Board Accounts" value={users.totalEB} />
+                        <ReportRow label="Active Staff" value={users.activeStaff} />
+                        <ReportRow label="Registration Applications" value={registrations.total} />
+                        <ReportRow label="Pending Registrations" value={registrations.pending} />
+                        <ReportRow label="Candidates" value={candidates.total} />
+                        <ReportRow label="Active Candidates" value={candidates.active} />
+                        <ReportRow label="Party Lists" value={overview.partyLists} />
+                        <ReportRow label="Positions" value={overview.positions} />
+                        <ReportRow label="Audit Logs" value={audit.total} />
                     </div>
+                </ReportPanel>
+            )}
 
-                    <div className="reports-filter-group">
-                        <label>Position</label>
+            {selectedReport === "users" && (
+                <>
+                    <ReportPanel
+                        title="User & Registration Activity"
+                        description="Account and registration activity gathered from the Admin and EB workflows."
+                    >
+                        <div className="admin-report-grid">
+                            <ReportRow label="Students" value={users.totalStudents} />
+                            <ReportRow label="Staff" value={users.totalStaff} />
+                            <ReportRow label="Administrators" value={users.totalAdmins} />
+                            <ReportRow label="Electoral Board" value={users.totalEB} />
+                            <ReportRow label="Active Staff" value={users.activeStaff} />
+                            <ReportRow label="Total Applications" value={registrations.total} />
+                            <ReportRow label="Pending Applications" value={registrations.pending} />
+                        </div>
+                    </ReportPanel>
 
-                        <div className="reports-select-wrapper">
-                            <FiAward />
+                    <AuditActivityPanel logs={data.recentAuditLogs || []} />
+                </>
+            )}
 
+            {selectedReport === "election" && (
+                <>
+                    <ReportPanel
+                        title="Election Summary"
+                        description="Election configuration, turnout, candidates, and aggregate results."
+                    >
+                        <div className="admin-report-election-selector">
+                            <label htmlFor="admin-report-election">
+                                Election
+                            </label>
                             <select
-                                value={selectedPosition}
-                                onChange={(e) =>
-                                    setSelectedPosition(e.target.value)
-                                }
+                                id="admin-report-election"
+                                value={selectedElectionId}
+                                onChange={handleElectionChange}
                             >
-                                <option>All Positions</option>
-                                {positionData.map((item) => (
+                                <option value="">
+                                    Latest available election
+                                </option>
+                                {(data.elections || []).map((election) => (
                                     <option
-                                        key={item.position}
-                                        value={item.position}
+                                        key={election.id}
+                                        value={election.id}
                                     >
-                                        {item.position}
+                                        {election.title} — {election.status}
                                     </option>
                                 ))}
                             </select>
                         </div>
-                    </div>
 
-                    <div className="reports-filter-info">
-                        <span>Current Election</span>
-                        <strong>Student Council Election 2026</strong>
-                    </div>
-                </section>
-
-                {/* STATISTICS */}
-                <section className="reports-stat-grid">
-
-                    <div className="report-stat-card">
-                        <div className="report-stat-icon">
-                            <FiUsers />
+                        <div className="admin-report-grid">
+                            <ReportRow label="Total Elections" value={electionsSummary.total} />
+                            <ReportRow label="Open Elections" value={electionsSummary.open} />
+                            <ReportRow label="Scheduled Elections" value={electionsSummary.scheduled} />
+                            <ReportRow label="Closed Elections" value={electionsSummary.closed} />
+                            <ReportRow label="Eligible Voters" value={voting.eligibleVoters} />
+                            <ReportRow label="Voters Who Voted" value={voting.votersWhoVoted} />
+                            <ReportRow label="Remaining Voters" value={voting.remainingVoters} />
+                            <ReportRow label="Turnout" value={`${Number(voting.turnoutPercentage || 0).toFixed(2)}%`} />
+                            <ReportRow label="Submitted Ballots" value={voting.submittedBallots} />
                         </div>
+                    </ReportPanel>
 
-                        <div className="report-stat-content">
-                            <span>Registered Students</span>
-                            <strong>
-                                {reportData.registeredStudents.toLocaleString()}
-                            </strong>
-                            <small>Eligible voters</small>
-                        </div>
-                    </div>
-
-                    <div className="report-stat-card">
-                        <div className="report-stat-icon">
-                            <FiCheckCircle />
-                        </div>
-
-                        <div className="report-stat-content">
-                            <span>Total Votes Cast</span>
-                            <strong>
-                                {reportData.votesCast.toLocaleString()}
-                            </strong>
-                            <small>Votes recorded</small>
-                        </div>
-                    </div>
-
-                    <div className="report-stat-card">
-                        <div className="report-stat-icon">
-                            <FiTrendingUp />
-                        </div>
-
-                        <div className="report-stat-content">
-                            <span>Voter Turnout</span>
-                            <strong>{turnout}%</strong>
-                            <small>
-                                {turnout >= 75
-                                    ? "Excellent participation"
-                                    : "Participation rate"}
-                            </small>
-                        </div>
-                    </div>
-
-                    <div className="report-stat-card">
-                        <div className="report-stat-icon">
-                            <FiUserCheck />
-                        </div>
-
-                        <div className="report-stat-content">
-                            <span>Candidates</span>
-                            <strong>{reportData.candidates}</strong>
-                            <small>
-                                Across {reportData.positions} positions
-                            </small>
-                        </div>
-                    </div>
-
-                </section>
-
-                {/* MAIN REPORT GRID */}
-                <section className="reports-main-grid">
-
-                    {/* VOTING ACTIVITY */}
-                    <div className="reports-card voting-activity-card">
-                        <div className="reports-card-header">
-                            <div>
-                                <h2>Voting Activity</h2>
-                                <p>
-                                    Number of votes recorded throughout the
-                                    election day.
-                                </p>
-                            </div>
-
-                            <div className="reports-card-badge">
-                                <FiTrendingUp />
-                                Live Statistics
-                            </div>
-                        </div>
-
-                        <div className="activity-chart">
-
-                            <div className="chart-y-axis">
-                                <span>250</span>
-                                <span>200</span>
-                                <span>150</span>
-                                <span>100</span>
-                                <span>50</span>
-                                <span>0</span>
-                            </div>
-
-                            <div className="chart-area">
-                                <div className="chart-grid-lines">
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
-                                </div>
-
-                                <div className="chart-bars">
-                                    {activityData.map((item) => {
-                                        const height =
-                                            (item.votes / highestActivity) *
-                                            100;
-
-                                        return (
-                                            <div
-                                                className="chart-column"
-                                                key={item.time}
-                                            >
-                                                <div className="chart-value">
-                                                    {item.votes}
-                                                </div>
-
-                                                <div
-                                                    className="chart-bar"
-                                                    style={{
-                                                        height: `${height}%`,
-                                                    }}
-                                                ></div>
-
-                                                <span>{item.time}</span>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* TURNOUT */}
-                    <div className="reports-card turnout-card">
-                        <div className="reports-card-header">
-                            <div>
-                                <h2>Voter Turnout</h2>
-                                <p>Overall participation rate</p>
-                            </div>
-                        </div>
-
-                        <div className="turnout-circle-container">
-                            <div
-                                className="turnout-circle"
-                                style={{
-                                    background: `conic-gradient(
-                                        #32129f ${turnout * 3.6}deg,
-                                        #ececf3 ${turnout * 3.6}deg
-                                    )`,
-                                }}
-                            >
-                                <div className="turnout-circle-inner">
-                                    <strong>{turnout}%</strong>
-                                    <span>Turnout</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="turnout-details">
-                            <div>
-                                <span className="turnout-dot registered"></span>
-                                <p>Registered</p>
-                                <strong>
-                                    {reportData.registeredStudents.toLocaleString()}
-                                </strong>
-                            </div>
-
-                            <div>
-                                <span className="turnout-dot voted"></span>
-                                <p>Voted</p>
-                                <strong>
-                                    {reportData.votesCast.toLocaleString()}
-                                </strong>
-                            </div>
-
-                            <div>
-                                <span className="turnout-dot remaining"></span>
-                                <p>Did Not Vote</p>
-                                <strong>
-                                    {(
-                                        reportData.registeredStudents -
-                                        reportData.votesCast
-                                    ).toLocaleString()}
-                                </strong>
-                            </div>
-                        </div>
-                    </div>
-
-                </section>
-
-                {/* RESULTS */}
-                <section className="reports-card results-card">
-
-                    <div className="reports-card-header">
-                        <div>
-                            <h2>Election Results</h2>
-                            <p>
-                                Candidate vote totals based on the selected
-                                position.
-                            </p>
-                        </div>
-
-                        <div className="results-total">
-                            {filteredPositions.length} Position
-                            {filteredPositions.length !== 1 ? "s" : ""}
-                        </div>
-                    </div>
-
-                    <div className="results-grid">
-
-                        {filteredPositions.map((position) => {
-                            const totalVotes = position.candidates.reduce(
-                                (sum, candidate) => sum + candidate.votes,
-                                0
-                            );
-
-                            return (
-                                <div
-                                    className="position-result-card"
-                                    key={position.position}
-                                >
-                                    <div className="position-result-header">
-                                        <div className="position-icon">
-                                            <FiAward />
-                                        </div>
-
-                                        <div>
-                                            <h3>{position.position}</h3>
-                                            <span>
-                                                {totalVotes.toLocaleString()}{" "}
-                                                total votes
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div className="candidate-results">
-                                        {position.candidates.map(
-                                            (candidate, index) => {
-                                                const percentage =
-                                                    totalVotes > 0
-                                                        ? Math.round(
-                                                              (candidate.votes /
-                                                                  totalVotes) *
-                                                                  100
-                                                          )
-                                                        : 0;
-
-                                                return (
-                                                    <div
-                                                        className="candidate-result"
-                                                        key={candidate.name}
-                                                    >
-                                                        <div className="candidate-result-info">
-                                                            <div>
-                                                                <span className="candidate-rank">
-                                                                    {index + 1}
-                                                                </span>
-
-                                                                <strong>
-                                                                    {
-                                                                        candidate.name
-                                                                    }
-                                                                </strong>
-                                                            </div>
-
-                                                            <span>
-                                                                {candidate.votes.toLocaleString()}{" "}
-                                                                votes
-                                                            </span>
-                                                        </div>
-
-                                                        <div className="result-progress">
-                                                            <div
-                                                                className="result-progress-fill"
-                                                                style={{
-                                                                    width: `${percentage}%`,
-                                                                }}
-                                                            ></div>
-                                                        </div>
-
-                                                        <small>
-                                                            {percentage}%
-                                                        </small>
-                                                    </div>
-                                                );
-                                            }
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
-
-                    </div>
-                </section>
-
-                {/* DEPARTMENT + ACTIVITY */}
-                <section className="reports-bottom-grid">
-
-                    {/* DEPARTMENT */}
-                    <div className="reports-card department-card">
-
-                        <div className="reports-card-header">
-                            <div>
-                                <h2>Turnout by Department</h2>
-                                <p>
-                                    Participation rate across departments.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="department-list">
-                            {departmentData.map((item) => {
-                                const percentage = Math.round(
-                                    (item.voters / item.total) * 100
-                                );
-
-                                return (
+                    {selectedElection && (
+                        <ReportPanel
+                            title={selectedElection.title || "Election Results"}
+                            description={`Status: ${selectedElection.status || "—"} · Date: ${selectedElection.electionDate || selectedElection.election_date || "—"}`}
+                        >
+                            <div className="admin-result-list">
+                                {(electionResults?.positions || []).map((position) => (
                                     <div
-                                        className="department-row"
-                                        key={item.department}
+                                        className="admin-result-position"
+                                        key={position.id}
                                     >
-                                        <div className="department-info">
-                                            <strong>{item.department}</strong>
-
-                                            <span>
-                                                {item.voters} / {item.total}
-                                            </span>
+                                        <div className="admin-result-position-header">
+                                            <strong>{position.name}</strong>
+                                            <span>{position.resultStatus || "Pending"}</span>
                                         </div>
 
-                                        <div className="department-progress">
-                                            <div
-                                                style={{
-                                                    width: `${percentage}%`,
-                                                }}
-                                            ></div>
+                                        <div className="admin-result-table-wrap">
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th>Candidate</th>
+                                                        <th>Party List</th>
+                                                        <th>Votes</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {(position.candidates || []).map((candidate) => (
+                                                        <tr key={candidate.id}>
+                                                            <td>{candidate.fullName}</td>
+                                                            <td>{candidate.partyListName || "Independent"}</td>
+                                                            <td>{formatNumber(candidate.voteCount)}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
                                         </div>
-
-                                        <strong className="department-percentage">
-                                            {percentage}%
-                                        </strong>
                                     </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    {/* RECENT ACTIVITY */}
-                    <div className="reports-card recent-activity-card">
-
-                        <div className="reports-card-header">
-                            <div>
-                                <h2>Recent Activity</h2>
-                                <p>Latest reporting activities.</p>
+                                ))}
                             </div>
+                        </ReportPanel>
+                    )}
+                </>
+            )}
+
+            {selectedReport === "security" && (
+                <>
+                    <ReportPanel
+                        title="Security & Audit Report"
+                        description="Administrative and Electoral Board actions recorded by VOTARA."
+                    >
+                        <div className="admin-report-grid">
+                            <ReportRow label="Total Audit Logs" value={audit.total} />
+                            <ReportRow label="Electoral Board Actions" value={audit.electoralBoard} />
+                            <ReportRow label="Administrator Actions" value={audit.administrators} />
+                            <ReportRow label="Kiosk Sessions" value={kiosk.totalSessions} />
+                            <ReportRow label="Active Kiosk Sessions" value={kiosk.activeSessions} />
+                            <ReportRow label="Kiosk Operations" value={kiosk.totalOperations} />
+                            <ReportRow label="Active Kiosk Operations" value={kiosk.activeOperations} />
                         </div>
+                    </ReportPanel>
 
-                        <div className="recent-activity-list">
-                            {recentActivities.map((activity, index) => (
+                    <AuditActivityPanel
+                        logs={data.recentAuditLogs || []}
+                        ebOnly
+                    />
+
+                    <ReportPanel
+                        title="Recent Kiosk Sessions"
+                        description="Temporary kiosk sessions operated by Electoral Board members."
+                    >
+                        <div className="admin-kiosk-list">
+                            {(data.recentKioskSessions || []).map((session) => (
                                 <div
-                                    className="recent-activity-item"
-                                    key={`${activity.action}-${index}`}
+                                    className="admin-kiosk-item"
+                                    key={session.id}
                                 >
-                                    <div className="activity-status-icon">
-                                        <FiCheckCircle />
-                                    </div>
-
-                                    <div className="recent-activity-info">
-                                        <strong>{activity.action}</strong>
-
+                                    <div>
+                                        <strong>
+                                            {session.elections?.title || "Election"}
+                                        </strong>
                                         <span>
-                                            {activity.user} • {activity.time}
+                                            EB: {session.staff_users?.full_name || "Electoral Board"}
                                         </span>
                                     </div>
-
-                                    <span className="activity-completed">
-                                        {activity.status}
-                                    </span>
+                                    <div className="admin-kiosk-meta">
+                                        <b>{session.session_status || "—"}</b>
+                                        <small>
+                                            {formatDateTime(session.started_at)}
+                                        </small>
+                                        <small>
+                                            Students served: {session.students_served || 0}
+                                        </small>
+                                    </div>
                                 </div>
                             ))}
                         </div>
-                    </div>
+                    </ReportPanel>
+                </>
+            )}
 
-                </section>
-
-                {/* FOOTER INFO */}
-                <section className="reports-footer-card">
-                    <div className="reports-footer-icon">
-                        <FiBarChart2 />
-                    </div>
-
-                    <div>
-                        <strong>Report information</strong>
+            {selectedReport === "export" && (
+                <ReportPanel
+                    title="Export Administrative Data"
+                    description="Export the currently loaded aggregate administrative and Electoral Board activity report as CSV."
+                >
+                    <div className="admin-report-export">
+                        <FiDownload size={34} />
+                        <h2>VOTARA Administrative Export</h2>
                         <p>
-                            This report provides an overview of voter
-                            participation and election activity for the
-                            selected election period.
+                            The export includes system totals, election participation,
+                            aggregate results, recent EB audit activity, and kiosk session data.
+                            Individual student vote selections are not exported.
                         </p>
+                        <button onClick={exportReport}>
+                            <FiDownload size={15} />
+                            Export CSV Report
+                        </button>
                     </div>
-
-                    <div className="reports-generated">
-                        <span>Generated by</span>
-                        <strong>{admin.name || "Administrator"}</strong>
-                    </div>
-                </section>
-
-            </main>
+                </ReportPanel>
+            )}
         </div>
     );
 };
 
-export default Reports;
+const ReportMetric = ({ icon: Icon, label, value }) => (
+    <div className="admin-report-metric">
+        <div className="admin-report-metric-icon">
+            <Icon size={18} />
+        </div>
+        <span>{label}</span>
+        <strong>{Number(value || 0).toLocaleString()}</strong>
+    </div>
+);
+
+const ReportRow = ({ label, value }) => (
+    <div className="admin-report-row">
+        <span>{label}</span>
+        <strong>
+            {typeof value === "number"
+                ? value.toLocaleString()
+                : value ?? "0"}
+        </strong>
+    </div>
+);
+
+const ReportPanel = ({ title, description, children }) => (
+    <section className="admin-report-panel">
+        <div className="admin-report-panel-header">
+            <div>
+                <h2>{title}</h2>
+                <p>{description}</p>
+            </div>
+        </div>
+        {children}
+    </section>
+);
+
+const AuditActivityPanel = ({ logs, ebOnly = false }) => {
+    const filteredLogs = (logs || []).filter((log) =>
+        ebOnly ? log.actor_role === "electoral_board" : true
+    );
+
+    return (
+        <ReportPanel
+            title={ebOnly ? "Recent Electoral Board Activity" : "Recent User Activity"}
+            description="Latest actions recorded in the VOTARA audit trail."
+        >
+            <div className="admin-audit-list">
+                {filteredLogs.length === 0 && (
+                    <div className="admin-empty-state">
+                        No audit activity has been recorded yet.
+                    </div>
+                )}
+
+                {filteredLogs.map((log) => (
+                    <div className="admin-audit-item" key={log.id}>
+                        <div>
+                            <strong>{log.action || "Activity"}</strong>
+                            <span>
+                                {log.actor_name || "Unknown actor"}
+                                {log.actor_role ? ` · ${log.actor_role}` : ""}
+                            </span>
+                            <small>
+                                {log.description || log.module || "System activity"}
+                            </small>
+                        </div>
+                        <time>{new Date(log.created_at).toLocaleString()}</time>
+                    </div>
+                ))}
+            </div>
+        </ReportPanel>
+    );
+};
+
+export default AdminReports;

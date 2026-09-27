@@ -363,11 +363,9 @@ const loginEB = async (req, res) => {
 
             if (failedAttempts >= 5) {
 
-                const lockedUntil =
-                    new Date(
-                        Date.now() +
-                        15 * 60 * 1000
-                    );
+                lockedUntil = new Date(
+                Date.now() + 2 * 60 * 1000
+            );
 
                 await supabase
                     .from("staff_users")

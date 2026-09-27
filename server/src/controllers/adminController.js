@@ -2,6 +2,9 @@ const supabase = require("../config/supabase");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
+const os = require("os");
+const { google } = require("googleapis");
+const auditLogsService = require("../services/auditLogsService");
 
 // =========================================================
 // CONSTANTS
@@ -382,21 +385,412 @@ const handleAdminError = (
 // ADMIN DASHBOARD STATISTICS
 // =========================================================
 
+const writeAdminAuditLog = async (
+    req,
+    {
+        action,
+        description,
+        targetId = null,
+        targetType = null,
+        metadata = {},
+        electionId = null,
+    } = {}
+) => {
+    try {
+        const requestUser =
+            req.user ||
+            req.admin ||
+            {};
+
+        let actorId =
+            requestUser.userId ||
+            requestUser.id ||
+            null;
+
+        let actorName =
+            requestUser.fullName ||
+            requestUser.full_name ||
+            "Administrator";
+
+        let actorEmail =
+            requestUser.email ||
+            null;
+
+        let actorRole =
+            requestUser.role ||
+            ADMIN_ROLE;
+
+        // The current admin middleware may only place userId/role
+        // in req.user. Decode the already-authenticated JWT so the
+        // audit record can still resolve the administrator email.
+        if (!actorId) {
+            const authHeader =
+                req.headers?.authorization || "";
+
+            if (authHeader.startsWith("Bearer ")) {
+                try {
+                    const token =
+                        authHeader.substring(7).trim();
+
+                    const decoded =
+                        jwt.verify(
+                            token,
+                            process.env.JWT_SECRET
+                        );
+
+                    actorId =
+                        decoded.userId ||
+                        decoded.id ||
+                        null;
+
+                    actorRole =
+                        decoded.role ||
+                        actorRole;
+                } catch (tokenError) {
+                    // Do not fail the main request because audit
+                    // enrichment could not decode the token.
+                }
+            }
+        }
+
+        if (actorId) {
+            const { data: staff } =
+                await supabase
+                    .from("staff_users")
+                    .select(
+                        "id, full_name, email, role"
+                    )
+                    .eq("id", actorId)
+                    .maybeSingle();
+
+            if (staff) {
+                actorName =
+                    staff.full_name ||
+                    actorName;
+
+                actorEmail =
+                    staff.email ||
+                    actorEmail;
+
+                actorRole =
+                    staff.role ||
+                    actorRole;
+            }
+        }
+
+        // audit_logs.actor_email is NOT NULL in the current schema.
+        // Never send null for this required field.
+        actorEmail =
+            actorEmail ||
+            process.env.EMAIL_USER ||
+            "votara.election@gmail.com";
+
+        await auditLogsService.createAuditLog({
+            actorId,
+            actorName,
+            actorEmail,
+            actorRole,
+            action,
+            module: "Admin Management",
+            description,
+            electionId,
+            targetId,
+            targetType,
+            metadata,
+            ipAddress:
+            req.headers?.["x-forwarded-for"]
+                ?.split(",")[0]
+                ?.trim() ||
+            req.ip ||
+            req.socket?.remoteAddress ||
+            req.connection?.remoteAddress ||
+            "0.0.0.0",
+            
+            userAgent:
+                typeof req.get === "function"
+                    ? req.get("user-agent")
+                    : null,
+        });
+    } catch (auditError) {
+        console.error(
+            "⚠️ Admin audit log write failed:",
+            auditError?.message || auditError
+        );
+    }
+};
+
+// =========================================================
+// STAFF PROFILE PHOTO UPLOAD
+// =========================================================
+
+const uploadStaffProfilePhoto = async (
+    profilePhotoData,
+    profilePhotoName,
+    profilePhotoType,
+    staffId
+) => {
+    if (!profilePhotoData) {
+        return null;
+    }
+
+    if (
+        typeof profilePhotoData !== "string" ||
+        !profilePhotoData.startsWith("data:image/")
+    ) {
+        throw new Error(
+            "Invalid profile picture format. Please upload a PNG, JPG, or WEBP image."
+        );
+    }
+
+    const match =
+        profilePhotoData.match(
+            /^data:(image\/(?:png|jpeg|jpg|webp));base64,(.+)$/i
+        );
+
+    if (!match) {
+        throw new Error(
+            "Invalid profile picture data."
+        );
+    }
+
+    const contentType =
+        match[1].toLowerCase() === "image/jpg"
+            ? "image/jpeg"
+            : match[1].toLowerCase();
+
+    const buffer =
+        Buffer.from(
+            match[2],
+            "base64"
+        );
+
+    if (buffer.length > 2 * 1024 * 1024) {
+        throw new Error(
+            "Profile picture must be 2 MB or smaller."
+        );
+    }
+
+    const extensionMap = {
+        "image/png": "png",
+        "image/jpeg": "jpg",
+        "image/webp": "webp",
+    };
+
+    const extension =
+        extensionMap[contentType] ||
+        "jpg";
+
+    const safeOriginalName =
+        String(profilePhotoName || "profile")
+            .replace(/[^a-zA-Z0-9._-]/g, "_")
+            .replace(/\.[^.]+$/, "");
+
+    const filePath =
+        `staff/${staffId}/${Date.now()}-${safeOriginalName}.${extension}`;
+
+    const bucketName =
+        "staff-profiles";
+
+    // Create the bucket once if it does not exist.
+    const { data: bucket } =
+        await supabase.storage
+            .getBucket(bucketName);
+
+    if (!bucket) {
+        await supabase.storage.createBucket(
+            bucketName,
+            {
+                public: true,
+                fileSizeLimit: "2MB",
+                allowedMimeTypes: [
+                    "image/png",
+                    "image/jpeg",
+                    "image/webp",
+                ],
+            }
+        );
+    }
+
+    const {
+        error: uploadError,
+    } = await supabase.storage
+        .from(bucketName)
+        .upload(
+            filePath,
+            buffer,
+            {
+                contentType,
+                cacheControl: "3600",
+                upsert: false,
+            }
+        );
+
+    if (uploadError) {
+        throw new Error(
+            `Unable to upload profile picture: ${uploadError.message}`
+        );
+    }
+
+    const {
+        data: publicData,
+    } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(filePath);
+
+    return publicData?.publicUrl || null;
+};
+
+// =========================================================
+// SEND ELECTORAL BOARD CREDENTIALS EMAIL
+// =========================================================
+
+const sendEBAccountCredentialsEmail = async ({
+    email,
+    fullName,
+    temporaryPassword,
+}) => {
+    const clientId =
+        process.env.GOOGLE_CLIENT_ID;
+
+    const clientSecret =
+        process.env.GOOGLE_CLIENT_SECRET;
+
+    const refreshToken =
+        process.env.GOOGLE_REFRESH_TOKEN;
+
+    const fromEmail =
+        process.env.EMAIL_USER ||
+        "votara.election@gmail.com";
+
+    if (
+        !clientId ||
+        !clientSecret ||
+        !refreshToken
+    ) {
+        throw new Error(
+            "Google Gmail OAuth configuration is incomplete."
+        );
+    }
+
+    const oauth2Client =
+        new google.auth.OAuth2(
+            clientId,
+            clientSecret
+        );
+
+    oauth2Client.setCredentials({
+        refresh_token: refreshToken,
+    });
+
+    const gmail = google.gmail({
+        version: "v1",
+        auth: oauth2Client,
+    });
+
+    const escapeHtml = (value) =>
+        String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+
+    const safeName =
+        escapeHtml(fullName);
+
+    const safeEmail =
+        escapeHtml(email);
+
+    const safePassword =
+        escapeHtml(temporaryPassword);
+
+    const loginUrl =
+        process.env.VOTARA_CLIENT_URL ||
+        process.env.CLIENT_URL ||
+        "http://localhost:5173/admin-login";
+
+    const safeLoginUrl =
+        escapeHtml(loginUrl);
+
+    const html = `
+        <div style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;padding:30px;background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;">
+            <h2 style="color:#266eff;margin:0 0 8px;">VOTARA Electoral Board Account</h2>
+            <p style="color:#667085;margin-top:0;">Your Electoral Board account has been created by a VOTARA Administrator.</p>
+
+            <p>Hello <strong>${safeName}</strong>,</p>
+
+            <p>Your VOTARA Electoral Board account is ready. Use the credentials below to sign in.</p>
+
+            <div style="margin:24px 0;padding:20px;background:#f4f7ff;border:1px solid #dbe5ff;border-radius:12px;">
+                <p style="margin:0 0 10px;"><strong>Email:</strong> ${safeEmail}</p>
+                <p style="margin:0 0 8px;"><strong>Temporary Password:</strong></p>
+                <div style="padding:14px;text-align:center;background:#ffffff;border:1px solid #dbe5ff;border-radius:9px;font-size:22px;font-weight:700;letter-spacing:1px;color:#266eff;">
+                    ${safePassword}
+                </div>
+            </div>
+
+            <p style="color:#92400e;background:#fff7ed;border-left:4px solid #f59e0b;padding:14px;border-radius:7px;">
+                This is a temporary password. After your first successful login, you must change it to your personal password.
+            </p>
+
+            <p style="margin-top:24px;">
+                <a href="${safeLoginUrl}" style="display:inline-block;padding:12px 18px;background:#266eff;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:700;">
+                    Open VOTARA Login
+                </a>
+            </p>
+
+            <p style="font-size:12px;color:#667085;line-height:1.6;margin-top:28px;">
+                VOTARA Electoral Board<br>
+                Western Institute of Technology
+            </p>
+        </div>
+    `;
+
+    const message = [
+        `From: "VOTARA Electoral Board" <${fromEmail}>`,
+        `To: ${email}`,
+        "Subject: VOTARA Electoral Board Account Created",
+        "MIME-Version: 1.0",
+        'Content-Type: text/html; charset="UTF-8"',
+        "Content-Transfer-Encoding: 8bit",
+        "",
+        html,
+    ].join("\r\n");
+
+    const raw =
+        Buffer.from(
+            message,
+            "utf8"
+        )
+            .toString("base64")
+            .replace(/\+/g, "-")
+            .replace(/\//g, "_")
+            .replace(/=+$/, "");
+
+    const response =
+        await gmail.users.messages.send({
+            userId: "me",
+            requestBody: {
+                raw,
+            },
+        });
+
+    return {
+        success: true,
+        messageId: response.data?.id || null,
+    };
+};
+
+// =========================================================
+// ADMIN DASHBOARD STATISTICS
+// =========================================================
+
 const getAdminDashboard = async (
     req,
     res
 ) => {
     try {
-        // -------------------------------------------------
-        // VERIFY ADMIN
-        // -------------------------------------------------
-
-        const admin =
-            await authenticateAdmin(req);
-
-        // -------------------------------------------------
-        // STUDENT COUNT
-        // -------------------------------------------------
+        const admin = await authenticateAdmin(req);
 
         const {
             count: totalStudents,
@@ -414,10 +808,6 @@ const getAdminDashboard = async (
             );
         }
 
-        // -------------------------------------------------
-        // STAFF COUNT
-        // -------------------------------------------------
-
         const {
             count: totalStaff,
             error: staffError,
@@ -434,10 +824,6 @@ const getAdminDashboard = async (
             );
         }
 
-        // -------------------------------------------------
-        // PENDING REGISTRATIONS
-        // -------------------------------------------------
-
         const {
             count: pendingRegistrations,
             error: registrationError,
@@ -447,20 +833,16 @@ const getAdminDashboard = async (
                 count: "exact",
                 head: true,
             })
-            .eq(
-                "application_status",
-                "pending"
-            );
+            .in("application_status", [
+                "pending",
+                "pending_review",
+            ]);
 
         if (registrationError) {
             throw new Error(
                 `Unable to count pending registrations: ${registrationError.message}`
             );
         }
-
-        // -------------------------------------------------
-        // ACTIVE STAFF
-        // -------------------------------------------------
 
         const {
             count: activeStaff,
@@ -471,20 +853,13 @@ const getAdminDashboard = async (
                 count: "exact",
                 head: true,
             })
-            .eq(
-                "is_active",
-                true
-            );
+            .eq("is_active", true);
 
         if (activeStaffError) {
             throw new Error(
                 `Unable to count active staff: ${activeStaffError.message}`
             );
         }
-
-        // -------------------------------------------------
-        // ELECTION COUNT
-        // -------------------------------------------------
 
         const {
             count: totalElections,
@@ -502,10 +877,6 @@ const getAdminDashboard = async (
             );
         }
 
-        // -------------------------------------------------
-        // ACTIVE ELECTION
-        // -------------------------------------------------
-
         const {
             data: activeElection,
             error: activeElectionError,
@@ -520,19 +891,14 @@ const getAdminDashboard = async (
                 status,
                 is_published
             `)
-            .in(
-                "status",
-                [
-                    "active",
-                    "scheduled",
-                ]
-            )
-            .order(
-                "created_at",
-                {
-                    ascending: false,
-                }
-            )
+            .in("status", [
+                "open",
+                "active",
+                "scheduled",
+            ])
+            .order("created_at", {
+                ascending: false,
+            })
             .limit(1)
             .maybeSingle();
 
@@ -543,34 +909,168 @@ const getAdminDashboard = async (
         }
 
         // -------------------------------------------------
-        // RESPONSE
+        // SERVER USAGE
         // -------------------------------------------------
+
+        const memoryUsage = process.memoryUsage();
+        const totalSystemMemory = os.totalmem();
+
+        const serverUsagePercent =
+            totalSystemMemory > 0
+                ? Number(
+                    (
+                        (memoryUsage.rss / totalSystemMemory) *
+                        100
+                    ).toFixed(2)
+                )
+                : 0;
+
+        // -------------------------------------------------
+        // AUDIT LOG COUNT
+        // -------------------------------------------------
+
+        const {
+            count: auditLogCount,
+            error: auditCountError,
+        } = await supabase
+            .from("audit_logs")
+            .select("id", {
+                count: "exact",
+                head: true,
+            });
+
+        if (auditCountError) {
+            throw new Error(
+                `Unable to count audit logs: ${auditCountError.message}`
+            );
+        }
+
+        // -------------------------------------------------
+        // RECENT AUDIT LOGS
+        // -------------------------------------------------
+
+        const {
+            data: recentAuditLogs,
+            error: recentAuditError,
+        } = await supabase
+            .from("audit_logs")
+            .select(`
+                id,
+                actor_id,
+                actor_name,
+                actor_email,
+                actor_role,
+                action,
+                module,
+                description,
+                election_id,
+                target_id,
+                target_type,
+                metadata,
+                created_at
+            `)
+            .order("created_at", {
+                ascending: false,
+            })
+            .limit(5);
+
+        if (recentAuditError) {
+            throw new Error(
+                `Unable to load recent audit logs: ${recentAuditError.message}`
+            );
+        }
+
+        const totalUsers =
+            (totalStudents || 0) +
+            (totalStaff || 0);
+
+        const systemDashboard = {
+            systemHealth: {
+                status: "Online",
+                api: "Online",
+                database: "Connected",
+            },
+
+            totalUsers,
+
+            electionStatus: {
+                status:
+                    activeElection?.status ||
+                    "No Election",
+                election:
+                    activeElection ||
+                    null,
+            },
+
+            serverUsage: {
+                memoryPercent:
+                    serverUsagePercent,
+                rssMB:
+                    Number(
+                        (
+                            memoryUsage.rss /
+                            1024 /
+                            1024
+                        ).toFixed(2)
+                    ),
+                heapUsedMB:
+                    Number(
+                        (
+                            memoryUsage.heapUsed /
+                            1024 /
+                            1024
+                        ).toFixed(2)
+                    ),
+                heapTotalMB:
+                    Number(
+                        (
+                            memoryUsage.heapTotal /
+                            1024 /
+                            1024
+                        ).toFixed(2)
+                    ),
+                uptimeSeconds:
+                    Math.floor(
+                        process.uptime()
+                    ),
+                nodeVersion:
+                    process.version,
+            },
+
+            activityLogs: {
+                total:
+                    auditLogCount || 0,
+                recent:
+                    recentAuditLogs || [],
+            },
+        };
+
+        // -------------------------------------------------
+        // LOG ADMIN DASHBOARD ACCESS
+        // -------------------------------------------------
+
+        await writeAdminAuditLog(req, {
+            action: "view_dashboard",
+            description:
+                "Administrator viewed the Admin Dashboard.",
+            targetType: "admin_dashboard",
+            metadata: {
+                source: "Admin Dashboard",
+            },
+        });
 
         return res.status(200).json({
             success: true,
 
             admin: {
-                id:
-                    admin.id,
-
-                userId:
-                    admin.userId,
-
-                fullName:
-                    admin.fullName,
-
-                email:
-                    admin.email,
-
-                role:
-                    admin.role,
-
-                isActive:
-                    admin.isActive,
-
+                id: admin.id,
+                userId: admin.userId,
+                fullName: admin.fullName,
+                email: admin.email,
+                role: admin.role,
+                isActive: admin.isActive,
                 mustChangePassword:
                     admin.mustChangePassword,
-
                 profilePhotoUrl:
                     admin.profilePhotoUrl,
             },
@@ -578,16 +1078,12 @@ const getAdminDashboard = async (
             statistics: {
                 totalStudents:
                     totalStudents || 0,
-
                 totalStaff:
                     totalStaff || 0,
-
                 pendingRegistrations:
                     pendingRegistrations || 0,
-
                 activeStaff:
                     activeStaff || 0,
-
                 totalElections:
                     totalElections || 0,
             },
@@ -595,10 +1091,11 @@ const getAdminDashboard = async (
             activeElection:
                 activeElection || null,
 
+            systemDashboard,
+
             generatedAt:
                 new Date().toISOString(),
         });
-
     } catch (error) {
         return handleAdminError(
             error,
@@ -765,25 +1262,16 @@ const createElectoralBoardAccount = async (
     res
 ) => {
     try {
-        // -------------------------------------------------
-        // VERIFY ADMIN
-        // -------------------------------------------------
-
         const admin =
             await authenticateAdmin(req);
-
-        // -------------------------------------------------
-        // REQUEST DATA
-        // -------------------------------------------------
 
         const {
             fullName,
             email,
-        } = req.body;
-
-        // -------------------------------------------------
-        // VALIDATE NAME
-        // -------------------------------------------------
+            profilePhotoData,
+            profilePhotoName,
+            profilePhotoType,
+        } = req.body || {};
 
         if (
             !fullName ||
@@ -796,10 +1284,6 @@ const createElectoralBoardAccount = async (
             });
         }
 
-        // -------------------------------------------------
-        // VALIDATE EMAIL
-        // -------------------------------------------------
-
         if (
             !email ||
             !String(email).trim()
@@ -808,6 +1292,14 @@ const createElectoralBoardAccount = async (
                 success: false,
                 message:
                     "Email address is required.",
+            });
+        }
+
+        if (!profilePhotoData) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Profile picture is required for an Electoral Board account.",
             });
         }
 
@@ -831,20 +1323,12 @@ const createElectoralBoardAccount = async (
             });
         }
 
-        // -------------------------------------------------
-        // CHECK DUPLICATE
-        // -------------------------------------------------
-
         const {
             data: existingUser,
             error: existingUserError,
         } = await supabase
             .from("staff_users")
-            .select(`
-                id,
-                email,
-                role
-            `)
+            .select("id, email, role")
             .eq(
                 "email",
                 normalizedEmail
@@ -865,10 +1349,6 @@ const createElectoralBoardAccount = async (
             });
         }
 
-        // -------------------------------------------------
-        // GENERATE TEMPORARY PASSWORD
-        // -------------------------------------------------
-
         const temporaryPassword =
             generateTemporaryPassword();
 
@@ -878,10 +1358,8 @@ const createElectoralBoardAccount = async (
                 12
             );
 
-        // -------------------------------------------------
-        // CREATE EB ACCOUNT
-        // -------------------------------------------------
-
+        // Create the staff record first so the profile image path
+        // can be tied to the permanent staff ID.
         const {
             data: createdUser,
             error: createError,
@@ -891,31 +1369,22 @@ const createElectoralBoardAccount = async (
                 {
                     full_name:
                         String(fullName).trim(),
-
                     email:
                         normalizedEmail,
-
                     password_hash:
                         passwordHash,
-
                     role:
                         EB_ROLE,
-
                     is_active:
                         true,
-
                     failed_login_attempts:
                         0,
-
                     locked_until:
                         null,
-
                     last_login_at:
                         null,
-
                     created_by:
                         admin.userId,
-
                     must_change_password:
                         true,
                 },
@@ -927,6 +1396,7 @@ const createElectoralBoardAccount = async (
                 role,
                 is_active,
                 must_change_password,
+                profile_photo_url,
                 created_at
             `)
             .single();
@@ -937,17 +1407,125 @@ const createElectoralBoardAccount = async (
             );
         }
 
+        let profilePhotoUrl =
+            createdUser.profile_photo_url ||
+            null;
+
+        try {
+            profilePhotoUrl =
+                await uploadStaffProfilePhoto(
+                    profilePhotoData,
+                    profilePhotoName,
+                    profilePhotoType,
+                    createdUser.id
+                );
+
+            if (profilePhotoUrl) {
+                const {
+                    data: updatedUser,
+                    error: profileUpdateError,
+                } = await supabase
+                    .from("staff_users")
+                    .update({
+                        profile_photo_url:
+                            profilePhotoUrl,
+                        updated_at:
+                            new Date().toISOString(),
+                    })
+                    .eq(
+                        "id",
+                        createdUser.id
+                    )
+                    .select(`
+                        id,
+                        full_name,
+                        email,
+                        role,
+                        is_active,
+                        must_change_password,
+                        profile_photo_url,
+                        created_at
+                    `)
+                    .single();
+
+                if (profileUpdateError) {
+                    throw new Error(
+                        `Unable to save profile picture URL: ${profileUpdateError.message}`
+                    );
+                }
+
+                Object.assign(
+                    createdUser,
+                    updatedUser
+                );
+            }
+        } catch (profileError) {
+            // Remove the account if the required profile picture
+            // cannot be stored. This keeps account creation atomic
+            // from the Admin user's perspective.
+            await supabase
+                .from("staff_users")
+                .delete()
+                .eq("id", createdUser.id);
+
+            throw profileError;
+        }
+
+        let emailSent = false;
+        let emailMessageId = null;
+
+        try {
+            const emailResult =
+                await sendEBAccountCredentialsEmail({
+                    email: normalizedEmail,
+                    fullName:
+                        String(fullName).trim(),
+                    temporaryPassword,
+                });
+
+            emailSent =
+                emailResult.success === true;
+
+            emailMessageId =
+                emailResult.messageId ||
+                null;
+        } catch (emailError) {
+            console.error(
+                "⚠️ EB credentials email failed:",
+                emailError?.message ||
+                emailError
+            );
+        }
+
+        await writeAdminAuditLog(req, {
+            action:
+                "create_eb_account",
+            description:
+                `Administrator created an Electoral Board account for "${createdUser.full_name}".`,
+            targetId:
+                createdUser.id,
+            targetType:
+                "staff_user",
+            metadata: {
+                role:
+                    EB_ROLE,
+                emailSent,
+                profilePictureUploaded:
+                    Boolean(profilePhotoUrl),
+            },
+        });
+
         return res.status(201).json({
             success: true,
-
             message:
                 "Electoral Board account created successfully.",
-
             user:
                 createdUser,
-
-            temporaryPassword:
-                temporaryPassword,
+            temporaryPassword,
+            emailSent,
+            emailMessageId,
+            passwordNote:
+                "The password is intentionally not stored in plaintext. Use Reset Password to generate a new temporary password later.",
         });
 
     } catch (error) {
@@ -1567,6 +2145,37 @@ const resetElectoralBoardPassword = async (
             );
         }
 
+        let emailSent = false;
+
+        try {
+            const emailResult =
+                await sendEBAccountCredentialsEmail({
+                    email: updatedUser.email,
+                    fullName: updatedUser.full_name,
+                    temporaryPassword,
+                });
+
+            emailSent =
+                emailResult.success === true;
+        } catch (emailError) {
+            console.error(
+                "⚠️ Reset EB credentials email failed:",
+                emailError?.message || emailError
+            );
+        }
+
+        await writeAdminAuditLog(req, {
+            action: "reset_eb_password",
+            description:
+                `Administrator generated a new temporary password for Electoral Board account "${updatedUser.full_name}".`,
+            targetId: updatedUser.id,
+            targetType: "staff_user",
+            metadata: {
+                role: EB_ROLE,
+                emailSent,
+            },
+        });
+
         return res.status(200).json({
             success: true,
 
@@ -1578,6 +2187,8 @@ const resetElectoralBoardPassword = async (
 
             temporaryPassword:
                 temporaryPassword,
+
+            emailSent,
 
             securityNote:
                 "The temporary password is returned only in this response and is not stored in plaintext.",

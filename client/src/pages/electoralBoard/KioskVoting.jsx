@@ -1462,79 +1462,116 @@ function KioskVoting() {
 
 
     // =====================================================
-    // APPROVE REGISTRATION
-    // =====================================================
+// APPROVE REGISTRATION
+// =====================================================
 
-    const approveRegistration =
-        async () => {
+const approveRegistration =
+    async () => {
 
-            if (
-                !registrationReview
-                    ?.registration
-                    ?.id
-            ) {
+        if (
+            !registrationReview
+                ?.registration
+                ?.id
+        ) {
 
-                return;
-            }
+            setError(
+                "Registration information is missing."
+            );
 
+            return;
+        }
 
-            try {
+        if (
+            !registrationReview
+                ?.operationId
+        ) {
 
-                setActionLoading(
-                    true
-                );
+            setError(
+                "The kiosk registration operation could not be identified. Please submit the registration again."
+            );
 
-                setError("");
+            return;
+        }
 
+        if (!session?.id) {
 
-                const response =
-                    await approveKioskRegistration({
+            setError(
+                "The active kiosk session could not be identified."
+            );
 
-                        registrationId:
-                            registrationReview
-                                .registration
-                                .id,
-
-                        sessionId:
-                            session.id,
-                    });
-
-
-                setActivationToken(
-                    response.activationToken
-                );
+            return;
+        }
 
 
-                setStudent(
-                    response.student
-                );
+        try {
+
+            setActionLoading(
+                true
+            );
+
+            setError("");
+
+            setSuccess("");
 
 
-                setSuccess(
-                    "Registration approved. The student must create a personal 8-character password before voting."
-                );
+            const response =
+                await approveKioskRegistration({
+
+                    registrationId:
+                        registrationReview
+                            .registration
+                            .id,
+
+                    sessionId:
+                        session.id,
+
+                    operationId:
+                        registrationReview
+                            .operationId,
+                });
 
 
-                setStep(
-                    "set-password"
-                );
+            setActivationToken(
+                response.activationToken
+            );
 
-            } catch (err) {
 
-                console.error(err);
+            setStudent(
+                response.student
+            );
 
-                setError(
-                    err?.response?.data?.message ||
-                    "Unable to approve assisted registration."
-                );
 
-            } finally {
+            setSuccess(
+                "Registration approved. The student must create a personal 8-character password before voting."
+            );
 
-                setActionLoading(
-                    false
-                );
-            }
-        };
+
+            setStep(
+                "set-password"
+            );
+
+
+        } catch (err) {
+
+            console.error(
+                "Kiosk registration approval error:",
+                err
+            );
+
+
+            setError(
+                err?.response?.data?.message ||
+                "Unable to approve assisted registration."
+            );
+
+
+        } finally {
+
+            setActionLoading(
+                false
+            );
+        }
+    };
 
 
     // =====================================================

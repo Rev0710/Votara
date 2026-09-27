@@ -83,12 +83,12 @@ body,
 }
 
 html {
-    overflow-x: hidden;
+    overflow-x: clip;
 }
 
 body {
     min-height: 100vh;
-    overflow-x: hidden;
+    overflow-x: clip;
 }
 
 #root {
@@ -126,7 +126,7 @@ body {
     margin: 0;
     padding: 0 34px;
     box-sizing: border-box;
-    overflow: hidden;
+    overflow: visible;
     background: rgba(17, 16, 42, 0.94);
     border-bottom: 1px solid rgba(255, 255, 255, 0.07);
     backdrop-filter: blur(18px);
@@ -459,7 +459,13 @@ body {
 
     padding: 30px 46px 45px;
 
-    overflow: hidden;
+    /*
+     * IMPORTANT:
+     * Use clip instead of hidden so the main content
+     * does not create an overflow container that can
+     * interfere with the sticky top navigation.
+     */
+    overflow: clip;
 
     background-color: var(--admin-bg);
     color: var(--admin-text);
@@ -1929,5 +1935,443 @@ body {
 
     .votara-page-transition-dots span {
         opacity: 0.8;
+    }
+}
+
+
+/* =========================================================
+   ADMIN FLOW DASHBOARD — REFINED CONTROL CENTER
+   ---------------------------------------------------------
+   Matches the Admin Flow reference:
+   1. System Dashboard
+   2. User & Access Management
+   3. Data Management
+   4. System Configuration
+   5. Monitoring & Logs
+   6. Support & Troubleshooting
+   7. Reports & Analytics
+   8. Election module shortcuts
+   ========================================================= */
+
+.admin-flow-section {
+    width: 100%;
+    max-width: 1240px;
+    margin: 0 auto 22px;
+}
+
+.admin-flow-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 12px;
+}
+
+.admin-flow-section-header > div:first-child {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 0;
+}
+
+.admin-flow-section-header h2 {
+    margin: 0;
+    color: var(--admin-text);
+    font-size: 16px;
+    font-weight: 750;
+    letter-spacing: -0.2px;
+}
+
+.admin-flow-section-header p {
+    margin: 3px 0 0;
+    color: var(--admin-text-muted);
+    font-size: 10px;
+    line-height: 1.45;
+}
+
+.admin-flow-number {
+    width: 31px;
+    height: 31px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 31px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, #1e3a8a, #286bff);
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 800;
+    box-shadow: 0 7px 18px rgba(38, 110, 255, 0.20);
+}
+
+.admin-flow-refresh {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 11px;
+    border: 1px solid var(--admin-border);
+    border-radius: 9px;
+    background: var(--admin-card);
+    color: var(--admin-text);
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.admin-flow-refresh:hover:not(:disabled) {
+    transform: translateY(-1px);
+    border-color: rgba(38, 110, 255, 0.30);
+    background: var(--admin-hover);
+}
+
+.admin-flow-refresh:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
+.admin-flow-grid {
+    display: grid;
+    gap: 11px;
+}
+
+.admin-flow-grid-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.admin-flow-grid-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.admin-flow-card {
+    position: relative;
+    min-width: 0;
+    min-height: 112px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid var(--admin-border);
+    border-radius: 13px;
+    background: var(--admin-card);
+    color: var(--admin-text);
+    text-align: left;
+    cursor: pointer;
+    box-shadow: 0 5px 18px rgba(15, 23, 42, 0.055);
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.admin-flow-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(38, 110, 255, 0.34);
+    background: var(--admin-card-soft);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.11);
+}
+
+.admin-flow-card-icon {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 34px;
+    border-radius: 9px;
+    background: rgba(38, 110, 255, 0.10);
+    color: var(--admin-primary);
+}
+
+.admin-flow-card-success .admin-flow-card-icon {
+    background: rgba(22, 163, 74, 0.10);
+    color: #16a34a;
+}
+
+.admin-flow-card-warning .admin-flow-card-icon {
+    background: rgba(245, 158, 11, 0.11);
+    color: #d97706;
+}
+
+.admin-flow-card-purple .admin-flow-card-icon {
+    background: rgba(124, 58, 237, 0.10);
+    color: #7c3aed;
+}
+
+.admin-flow-card-body {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-flow-card-body strong {
+    color: var(--admin-text);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.admin-flow-card-body b {
+    display: block;
+    margin-top: 5px;
+    color: var(--admin-text);
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.admin-flow-card-body small {
+    display: block;
+    margin-top: 6px;
+    color: var(--admin-text-muted);
+    font-size: 8px;
+    line-height: 1.35;
+}
+
+.admin-flow-card-arrow {
+    flex: 0 0 auto;
+    margin-top: 1px;
+    color: var(--admin-text-muted);
+}
+
+.admin-flow-progress {
+    width: 100%;
+    height: 5px;
+    margin-top: 8px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.16);
+}
+
+.admin-flow-progress i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #1458ff, #286bff);
+}
+
+.admin-flow-summary {
+    width: 100%;
+    max-width: 1240px;
+    margin: 2px auto 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 11px;
+}
+
+.admin-flow-summary-card {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 0;
+    padding: 13px 14px;
+    border: 1px solid var(--admin-border);
+    border-radius: 13px;
+    background: var(--admin-card);
+    box-shadow: 0 5px 18px rgba(15, 23, 42, 0.045);
+}
+
+.admin-flow-summary-icon {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 34px;
+    border-radius: 9px;
+    background: rgba(38, 110, 255, 0.10);
+    color: var(--admin-primary);
+}
+
+.admin-flow-summary-card > div:nth-child(2) {
+    min-width: 0;
+    flex: 1;
+}
+
+.admin-flow-summary-card strong,
+.admin-flow-summary-card span {
+    display: block;
+}
+
+.admin-flow-summary-card strong {
+    color: var(--admin-text);
+    font-size: 10px;
+}
+
+.admin-flow-summary-card span {
+    margin-top: 3px;
+    color: var(--admin-text-muted);
+    font-size: 8px;
+    line-height: 1.35;
+}
+
+.admin-flow-summary-card button {
+    flex: 0 0 auto;
+    border: 0;
+    background: transparent;
+    color: var(--admin-primary);
+    font-size: 9px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+[data-theme="light"] .admin-flow-card,
+[data-theme="light"] .admin-flow-summary-card,
+[data-theme="light"] .admin-flow-refresh {
+    box-shadow: 0 6px 20px rgba(20, 25, 45, 0.055);
+}
+
+[data-theme="light"] .admin-flow-card:hover {
+    background: #fbfcff;
+    box-shadow: 0 12px 28px rgba(20, 25, 45, 0.09);
+}
+
+@media (max-width: 1100px) {
+    .admin-flow-grid-5 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .admin-flow-grid-4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-flow-summary {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 800px) {
+    .admin-flow-section-header {
+        align-items: flex-start;
+    }
+
+    .admin-flow-grid-5,
+    .admin-flow-grid-4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 520px) {
+    .admin-flow-section-header {
+        flex-direction: column;
+    }
+
+    .admin-flow-grid-5,
+    .admin-flow-grid-4,
+    .admin-flow-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-flow-card {
+        min-height: 96px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .admin-flow-card,
+    .admin-flow-refresh {
+        transition: none;
+    }
+
+    .admin-flow-card:hover,
+    .admin-flow-refresh:hover:not(:disabled) {
+        transform: none;
+    }
+}
+
+
+
+/* =========================================================
+   SYSTEM DASHBOARD — TOTAL USERS STUDENT / STAFF SPLIT
+   ---------------------------------------------------------
+   Scoped only to the Total Users card.
+   Existing dashboard logic, API calls, routes, and other
+   cards are intentionally untouched.
+   ========================================================= */
+
+.admin-total-users-card {
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.admin-total-users-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 9px 24px rgba(15, 23, 42, 0.10) !important;
+}
+
+.admin-total-users-split {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+    align-items: stretch;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.admin-total-users-stat {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.admin-total-users-stat strong {
+    display: block;
+    margin: 0;
+    font-size: 24px;
+    line-height: 1.05;
+    font-weight: 800;
+    color: var(--admin-text, #172033);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.admin-total-users-stat span {
+    display: block;
+    margin: 0;
+    font-size: 10px;
+    line-height: 1.2;
+    font-weight: 600;
+    color: var(--admin-text-muted, #94A3B8);
+}
+
+.admin-total-users-divider {
+    width: 1px;
+    min-height: 38px;
+    align-self: center;
+    background: var(--admin-border, #E2E8F0);
+}
+
+/* Responsive System Dashboard grid */
+@media (max-width: 1100px) {
+    .admin-system-dashboard-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 760px) {
+    .admin-system-dashboard-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .admin-total-users-stat strong {
+        font-size: 22px;
+    }
+}
+
+@media (max-width: 520px) {
+    .admin-system-dashboard-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .admin-total-users-split {
+        gap: 16px;
+    }
+
+    .admin-total-users-stat strong {
+        font-size: 24px;
     }
 }
