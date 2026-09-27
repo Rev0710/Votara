@@ -1,0 +1,770 @@
+/* ============================================================
+   VOTARA — CANDIDATE MANAGEMENT
+   REFERENCE-MATCH DESIGN
+   Visual changes only. Existing handlers/API/state are preserved.
+   ============================================================ */
+
+:root {
+  --eb-bg: #101123;
+  --eb-panel: #202138;
+  --eb-panel-2: #25263f;
+  --eb-line: rgba(149, 156, 190, .30);
+  --eb-text: #f7f7fb;
+  --eb-muted: #8e92aa;
+  --eb-blue: #0b4dff;
+  --eb-blue-2: #266eff;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--eb-bg);
+  color: var(--eb-text);
+  font-family: "Poppins", "Inter", Arial, sans-serif;
+}
+
+/* ---------------- DOTTED CANVAS ---------------- */
+
+.eb-back-row {
+  height: 31px;
+  display: flex;
+  align-items: center;
+}
+
+.eb-back-button {
+  border: 0;
+  background: transparent;
+  color: #e8e9ef;
+  font: inherit;
+  font-size: 11px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
+.eb-manage-pill {
+  width: max-content;
+  margin: 8px 0 36px -7px;
+  padding: 7px 16px;
+  border-radius: 18px;
+  background: rgba(30, 76, 190, .56);
+  color: #9cb9ff;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.eb-pill-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #0b55ff;
+}
+
+/* ---------------- HERO ---------------- */
+
+.eb-election-hero {
+  min-height: 150px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 0 4px;
+  margin-bottom: 32px;
+}
+
+.eb-election-identity {
+  display: flex;
+  align-items: center;
+  gap: 39px;
+  min-width: 0;
+}
+
+.eb-party-logo {
+  width: 125px;
+  height: 110px;
+  flex: 0 0 125px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 1px solid #d5d6dc;
+  overflow: hidden;
+}
+
+/* Real image logo: change PARTY_LOGO_URL in JSX to your own image path/URL. */
+.eb-party-logo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.eb-election-title-wrap {
+  min-width: 0;
+}
+
+.eb-election-title-wrap h1 {
+  margin: 0;
+  color: #f8f8fb;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -.3px;
+  line-height: 1.15;
+}
+
+.eb-election-title-wrap p {
+  margin: 3px 0 0;
+  color: #878ca1;
+  font-size: 11px;
+}
+
+.eb-hero-controls {
+  position: absolute;
+  left: 160px;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: nowrap;
+}
+
+/* =========================================
+   TOP FOUR ACTION BUTTONS
+   ALWAYS VISIBLE
+   ========================================= */
+
+.eb-icon-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 160px;
+  height: 40px;
+
+  background: #ffffff;
+  border: 1px solid #e2e2e5;
+  border-radius: 22px;
+
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.10);
+
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Each button */
+.eb-icon-button {
+  width: 40px;
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #ffffff;
+  color: #242631;
+  border: none;
+  outline: none;
+  box-shadow: none;
+
+  cursor: pointer;
+  font-size: 15px;
+
+  opacity: 1;
+  visibility: visible;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+/* Remove separator from last button */
+
+/* Individual button hover only changes its color/background */
+.eb-icon-button:hover {
+  background: #eef2ff;
+  color: #0b4dff;
+}
+
+/* Keep the whole pill visible when hovering */
+.eb-icon-actions:hover {
+  background: #ffffff;
+  opacity: 1;
+  visibility: visible;
+}
+
+.eb-edit-button {
+  height: 40px;
+  min-width: 68px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 21px;
+  background: #fff;
+  color: #242631;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  box-shadow: 0 5px 15px rgba(0,0,0,.10);
+  flex: 0 0 auto;
+}
+
+.eb-edit-button span {
+  margin-right: 7px;
+}
+
+.eb-top-list-tools {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-left: auto;
+}
+
+.eb-top-list-tools .eb-search {
+  width: 278px;
+}
+
+.eb-top-list-tools .eb-add-button {
+  min-width: 195px;
+}
+
+/* Keep the election selector available to the component without
+   taking visual space in the reference layout. */
+.eb-election-selector {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.eb-election-selector select,
+.eb-election-selector button {
+  position: absolute;
+}
+
+/* ---------------- CANDIDATE CARD ---------------- */
+
+.eb-candidates-card {
+  width: 100%;
+  min-height: 237px;
+  padding: 25px 29px 0;
+  border: 1px solid rgba(145, 151, 182, .42);
+  border-radius: 19px;
+  background: rgba(33, 34, 57, .93);
+  box-shadow:
+    0 18px 50px rgba(0,0,0,.16),
+    inset 0 1px 0 rgba(255,255,255,.025);
+}
+
+.eb-card-heading {
+  display: flex;
+  align-items: center;
+  margin-bottom: 23px;
+}
+
+.eb-card-heading h2 {
+  margin: 0;
+  color: #f4f4f7;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.eb-list-tools {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.eb-search {
+  width: 278px;
+  height: 35px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 19px;
+  box-shadow: 0 4px 13px rgba(0,0,0,.12);
+}
+
+.eb-search > span {
+  position: absolute;
+  left: 16px;
+  color: #252833;
+  font-size: 16px;
+}
+
+.eb-search input {
+  width: 100%;
+  height: 100%;
+  padding: 0 38px 0 39px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #252833;
+  font: inherit;
+  font-size: 12px;
+}
+
+.eb-search input::placeholder {
+  color: #9a9ca6;
+}
+
+.eb-clear-search {
+  position: absolute;
+  right: 10px;
+  border: 0;
+  background: transparent;
+  color: #777b89;
+  cursor: pointer;
+}
+
+.eb-add-button {
+  height: 37px;
+  min-width: 195px;
+  padding: 0 25px;
+  border: 0;
+  border-radius: 20px;
+  background: #0b4dff;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 7px 23px rgba(11,77,255,.34);
+}
+
+.eb-add-button:hover {
+  background: #155aff;
+  transform: translateY(-1px);
+}
+
+/* The reference places the candidate search/actions in the hero row. */
+.eb-top-list-tools .eb-search {
+  height: 35px;
+}
+
+.eb-top-list-tools .eb-add-button {
+  height: 37px;
+}
+
+/* ---------------- TABLE ---------------- */
+
+.eb-table {
+  width: 100%;
+}
+
+.eb-table-header {
+  min-height: 37px;
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr) 220px 110px;
+  align-items: center;
+  padding: 0 12px;
+  background: rgba(154, 154, 169, .76);
+  color: #f6f6f8;
+  font-size: 12px;
+}
+
+.eb-check-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eb-check-cell input {
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  border: 1px solid #c4c8d3;
+  background: transparent;
+  cursor: pointer;
+}
+
+.eb-check-cell input:checked {
+  background: #0b4dff;
+  border-color: #0b4dff;
+  box-shadow: inset 0 0 0 3px #fff;
+}
+
+.eb-candidate-row {
+  min-height: 72px;
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr) 220px 110px;
+  align-items: center;
+  padding: 0 12px;
+  border-bottom: 1px solid rgba(135, 141, 167, .36);
+  color: #f3f3f8;
+  transition: background .18s ease;
+}
+
+.eb-candidate-row:hover {
+  background: rgba(255,255,255,.025);
+}
+
+.eb-candidate-person {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.eb-candidate-avatar {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #0b4dff;
+}
+
+.eb-candidate-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.eb-default-avatar {
+  width: 30px;
+  height: 30px;
+  position: relative;
+}
+
+.eb-default-avatar span:nth-child(1) {
+  width: 13px;
+  height: 8px;
+  left: 2px;
+  top: 3px;
+}
+
+.eb-default-avatar span:nth-child(2) {
+  width: 13px;
+  height: 13px;
+  right: 2px;
+  top: 2px;
+}
+
+.eb-default-avatar span:nth-child(3) {
+  width: 13px;
+  height: 8px;
+  left: 8px;
+  bottom: 3px;
+}
+
+.eb-candidate-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.eb-candidate-info strong {
+  color: #f4f4f7;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.eb-position-tag {
+  width: max-content;
+  margin-top: 4px;
+  padding: 2px 10px;
+  border-radius: 4px;
+  background: rgba(91, 91, 111, .78);
+  color: #dddde4;
+  font-size: 7px;
+}
+
+.eb-candidate-info small {
+  margin-top: 3px;
+  color: #777d96;
+  font-size: 8px;
+}
+
+.eb-added-date {
+  color: #9296aa;
+  font-size: 13px;
+}
+
+.eb-row-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 5px;
+}
+
+.eb-row-actions button {
+  min-height: 27px;
+  padding: 0 7px;
+  border: 1px solid rgba(151,157,184,.30);
+  border-radius: 5px;
+  background: transparent;
+  color: #aeb2c4;
+  font: inherit;
+  font-size: 8px;
+  cursor: pointer;
+}
+
+.eb-row-actions button:hover {
+  color: #fff;
+  border-color: #5d73ba;
+  background: rgba(52,69,128,.30);
+}
+
+.eb-empty-state {
+  min-height: 170px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  color: #8b91aa;
+  font-size: 11px;
+}
+
+.eb-empty-state strong {
+  color: #e8e9f0;
+}
+
+.eb-spinner {
+  width: 22px;
+  height: 22px;
+  border: 2px solid rgba(255,255,255,.18);
+  border-top-color: #0b4dff;
+  border-radius: 50%;
+  animation: eb-spin .7s linear infinite;
+}
+
+@keyframes eb-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---------------- ALERTS ---------------- */
+
+.eb-candidate-page [role="alert"] {
+  margin-bottom: 14px;
+  border-radius: 10px;
+}
+
+/* ---------------- MODAL VISUALS ---------------- */
+
+.eb-candidate-page + * {
+  font-family: "Poppins", "Inter", Arial, sans-serif;
+}
+
+/* Existing modal class/style objects are retained. */
+body:has(.eb-candidate-page) input,
+body:has(.eb-candidate-page) select,
+body:has(.eb-candidate-page) textarea {
+  font-family: inherit;
+}
+
+/* ---------------- RESPONSIVE ---------------- */
+
+@media (max-width: 1100px) {
+  .eb-nav { gap: 8px; }
+  .eb-nav span { padding: 0 8px; }
+  .eb-top-actions { min-width: auto; }
+  .eb-production { min-width: 110px; }
+  .eb-table-header,
+  .eb-candidate-row {
+    grid-template-columns: 50px minmax(0, 1fr) 150px 105px;
+  }
+}
+
+@media (max-width: 820px) {
+  .eb-topbar {
+    padding: 0 18px;
+  }
+
+  .eb-nav {
+    display: none;
+  }
+
+  .eb-brand {
+    min-width: auto;
+  }
+
+  .eb-top-actions {
+    min-width: auto;
+  }
+
+  .eb-notification {
+    display: none;
+  }
+
+  .eb-production {
+    display: none;
+  }
+
+  .eb-main {
+    padding: 22px 18px 50px;
+  }
+
+  .eb-top-list-tools {
+    margin-left: 0;
+  }
+
+  .eb-election-hero {
+    padding: 0 8px;
+  }
+
+  .eb-hero-controls {
+    position: static;
+    transform: none;
+    margin-left: auto;
+  }
+
+  .eb-election-identity {
+    gap: 20px;
+  }
+
+  .eb-party-logo {
+    width: 100px;
+    height: 90px;
+    flex-basis: 100px;
+  }
+
+  .eb-top-list-tools {
+    width: 100%;
+  }
+
+  .eb-top-list-tools .eb-search {
+    flex: 1;
+  }
+
+  .eb-card-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .eb-candidates-card {
+    padding: 22px 18px 0;
+  }
+}
+
+@media (max-width: 620px) {
+  .eb-topbar {
+    height: 68px;
+  }
+
+  .eb-brand-name {
+    font-size: 24px;
+  }
+
+  .eb-main {
+    min-height: calc(100vh - 68px);
+  }
+
+  .eb-election-hero {
+    align-items: flex-start;
+    flex-direction: column;
+    margin-bottom: 25px;
+  }
+
+  .eb-hero-controls {
+    position: static;
+    width: 100%;
+    margin-left: 0;
+    transform: none;
+    flex-wrap: wrap;
+  }
+
+  .eb-icon-actions {
+    flex: 1;
+  }
+
+  .eb-icon-button {
+    flex: 1;
+  }
+
+  .eb-edit-button {
+    width: 75px;
+  }
+
+  .eb-top-list-tools {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    margin-left: 0;
+  }
+
+  .eb-top-list-tools .eb-search,
+  .eb-top-list-tools .eb-add-button {
+    width: 100%;
+  }
+
+  .eb-table-header {
+    grid-template-columns: 32px minmax(0,1fr) 85px;
+  }
+
+  .eb-table-header > div:nth-child(3) {
+    display: none;
+  }
+
+  .eb-table-header > div:nth-child(4) {
+    text-align: right;
+  }
+
+  .eb-candidate-row {
+    grid-template-columns: 32px minmax(0,1fr);
+    gap: 9px;
+    padding: 12px 4px;
+  }
+
+  .eb-added-date {
+    grid-column: 2;
+    font-size: 10px;
+    margin-top: -7px;
+  }
+
+  .eb-row-actions {
+    grid-column: 2;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 430px) {
+  .eb-election-title-wrap h1 {
+    font-size: 17px;
+  }
+
+  .eb-party-logo {
+    width: 82px;
+    height: 74px;
+    flex-basis: 82px;
+  }
+
+  .eb-candidate-info strong {
+    font-size: 12px;
+  }
+
+  .eb-candidates-card {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
+/* Remove default focus outlines only where our controls already provide focus behavior. */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid rgba(38,110,255,.65);
+  outline-offset: 2px;
+}
+
+/* Prevent individual hero action buttons from showing focus borders */
+.eb-icon-button:focus,
+.eb-icon-button:focus-visible {
+  outline: none;
+  box-shadow: none;
+}

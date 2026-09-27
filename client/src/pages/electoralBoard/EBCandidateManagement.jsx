@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import "./EBCandidateManagement.css";
+import VotaraLogo from "/src/images/Votara.png";
 
 /*
 =============================================================
@@ -57,6 +59,9 @@ const POSITION_NAMES = [
 ];
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
+
+// Visual-only party/election logo. Replace this path with your own image URL/path.
+
 
 
 // ============================================================
@@ -1752,900 +1757,315 @@ const deleteCandidate = async (
     // ========================================================
 
     return (
-        <div style={styles.page}>
-            <style>{`
-                .candidate-delete-button:hover {
-                    background: #fef2f2 !important;
-                    border-color: #dc2626 !important;
-                    color: #b91c1c !important;
-                }
-
-                @keyframes votaraSpin {
-                    from {
-                        transform: rotate(0deg);
-                    }
-
-                    to {
-                        transform: rotate(360deg);
-                    }
-                }
-
-                @keyframes votaraFade {
-                    from {
-                        opacity: 0;
-                        transform: translateY(8px) scale(.99);
-                    }
-
-                    to {
-                        opacity: 1;
-                        transform: translateY(0) scale(1);
-                    }
-                }
-
-                .candidate-hover:hover {
-                    border-color: #bcd3f5 !important;
-                    box-shadow: 0 8px 24px rgba(37, 99, 235, .08);
-                    transform: translateY(-1px);
-                }
-
-                .votara-button:hover {
-                    filter: brightness(.97);
-                }
-
-                .student-result:hover {
-                    background: #f5f9ff !important;
-                    border-color: #bfdbfe !important;
-                }
-
-                .upload-area:hover {
-                    border-color: #2563eb !important;
-                    background: #f8fbff !important;
-                }
-
-                .position-option:hover {
-                    background: #f8fbff !important;
-                }
-
-                @media (max-width: 1050px) {
-                    .candidate-grid {
-                        grid-template-columns: 1fr !important;
-                    }
-
-                    .stats-grid {
-                        grid-template-columns: repeat(2, 1fr) !important;
-                    }
-                }
-
-                @media (max-width: 700px) {
-                    .top-header {
-                        padding: 15px 18px !important;
-                    }
-
-                    .main-content {
-                        padding: 20px 14px 50px !important;
-                    }
-
-                    .header-layout {
-                        flex-direction: column !important;
-                        align-items: flex-start !important;
-                    }
-
-                    .candidate-card {
-                        flex-direction: column !important;
-                        align-items: flex-start !important;
-                    }
-
-                    .candidate-actions {
-                        width: 100% !important;
-                    }
-
-                    .stats-grid {
-                        grid-template-columns: 1fr !important;
-                    }
-
-                    .selector-layout {
-                        flex-direction: column !important;
-                    }
-                }
-            `}</style>
-
-            {/* ==================================================
-                TOP HEADER
-            =================================================== */}
-
-            <div
-                className="top-header"
-                style={{
-                    ...styles.topHeader,
-                    gap: "16px",
-                }}
-            >
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "12px",
-                        minWidth: 0,
-                    }}
-                >
-                    {cameFromElectionManagement && (
+        <div className="eb-candidate-page">
+            <main className="eb-main">
+                {/* ==================================================
+                    BACK / PAGE CONTEXT
+                =================================================== */}
+                <div className="eb-back-row">
+                    {cameFromElectionManagement ? (
                         <button
                             type="button"
+                            className="eb-back-button"
                             onClick={() =>
                                 navigate("/electoral-board/dashboard")
                             }
-                            aria-label="Back to Electoral Board Dashboard"
-                            title="Back to EB Dashboard"
-                            style={{
-                                width: "38px",
-                                height: "38px",
-                                flex: "0 0 38px",
-                                border: "1px solid #d8e1ef",
-                                background: "#ffffff",
-                                color: "#266EFF",
-                                borderRadius: "10px",
-                                cursor: "pointer",
-                                fontSize: "21px",
-                                fontWeight: 800,
-                                lineHeight: 1,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}
                         >
-                            ←
+                            ← Back
                         </button>
-                    )}
-
-                    <div>
-                        <h1 style={styles.topTitle}>
-                            Candidate Management
-                        </h1>
-
-                        <p style={styles.topSubtitle}>
-                            Manage and prepare candidates
-                            for the official VOTARA
-                            election ballot.
-                        </p>
-
-                        {isPartyListScoped && (
-                            <div
-                                style={{
-                                    marginTop: "8px",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    gap: "7px",
-                                    padding: "7px 11px",
-                                    borderRadius: "9px",
-                                    background: "#eef4ff",
-                                    border: "1px solid #d7e4ff",
-                                    color: "#1e3a8a",
-                                    fontSize: "11px",
-                                    fontWeight: 700,
-                                }}
-                            >
-                                <span>▰</span>
-                                <span>
-                                    Party List: {partyListContextName || "Selected Party List"}
-                                </span>
-                            </div>
-                        )}
-                    </div>
+                    ) : null}
                 </div>
 
-                <button
-                    className="votara-button"
-                    style={styles.primaryButton}
-                    onClick={openAddModal}
-                >
-                    + Add Candidate
-                </button>
-            </div>
-
-            {/* ==================================================
-                MAIN CONTENT
-            =================================================== */}
-
-            <div
-                className="main-content"
-                style={styles.content}
-            >
-                {/* ==================================================
-                    ALERTS
-                =================================================== */}
-
-                {error && (
-                    <Alert
-                        type="error"
-                        message={error}
-                        onClose={() =>
-                            setError("")
-                        }
-                    />
-                )}
-
-                {success && (
-                    <Alert
-                        type="success"
-                        message={success}
-                        onClose={() =>
-                            setSuccess("")
-                        }
-                    />
-                )}
+                <div className="eb-manage-pill">
+                    <span className="eb-pill-dot" />
+                    Manage Candidates
+                </div>
 
                 {/* ==================================================
-                    ELECTION SELECTOR
+                    ELECTION / PARTY HEADER
                 =================================================== */}
+                <section className="eb-election-hero">
+                    <div className="eb-election-identity">
+                        <div className="eb-party-logo">
+                            <img
+                                src={VotaraLogo}
+                                alt="Party logo"
+                            />
+                        </div>
 
-                <div style={styles.card}>
-                    <div
-                        style={
-                            styles.sectionLabel
-                        }
-                    >
-                        ELECTION
+                        <div className="eb-election-title-wrap">
+                            <h1>
+                                {isPartyListScoped
+                                    ? partyListContextName || "Selected Party List"
+                                    : selectedElection?.title || "Candidate Management"}
+                            </h1>
+                            <p>
+                                {selectedElection
+                                    ? `Election ${selectedElection.title || "2026–2027"}`
+                                    : "Election Candidate Management"}
+                            </p>
+                        </div>
                     </div>
 
-                    <div
-                        className="selector-layout"
-                        style={
-                            styles.selectorRow
-                        }
-                    >
-                        <select
-                            value={
-                                selectedElectionId
-                            }
-                            onChange={(e) =>
-                                setSelectedElectionId(
-                                    e.target
-                                        .value
-                                )
-                            }
-                            style={
-                                styles.select
-                            }
-                        >
-                            <option value="">
-                                Select an election
-                            </option>
-
-                            {elections.map(
-                                (
-                                    election
-                                ) => (
-                                    <option
-                                        key={getId(
-                                            election
-                                        )}
-                                        value={getId(
-                                            election
-                                        )}
-                                    >
-                                        {
-                                            election.title
-                                        }
-                                    </option>
-                                )
-                            )}
-                        </select>
+                    <div className="eb-hero-controls">
+                        <div className="eb-icon-actions" aria-label="Page tools">
+                            <button type="button" className="eb-icon-button" title="Information">
+                                ⓘ
+                            </button>
+                            <button type="button" className="eb-icon-button" title="Download">
+                                ↓
+                            </button>
+                            <button type="button" className="eb-icon-button" title="Display">
+                                ▣
+                            </button>
+                            <button type="button" className="eb-icon-button" title="More options">
+                                ⋯
+                            </button>
+                        </div>
 
                         <button
-                            className="votara-button"
-                            style={
-                                styles.secondaryButton
-                            }
-                            onClick={
-                                async () => {
-                                    await loadElections();
-                                    await loadOptions();
-                                }
-                            }
-                            disabled={
-                                loadingOptions
-                            }
+                            type="button"
+                            className="eb-edit-button"
+                            aria-label="Edit"
                         >
-                            ↻ Refresh
+                            <span>⌕</span>
+                            Edit
                         </button>
-                    </div>
 
-                    {selectedElection && (
-                        <div
-                            style={
-                                styles.electionInfo
-                            }
-                        >
-                            <div>
-                                <span
-                                    style={
-                                        styles.infoLabel
-                                    }
-                                >
-                                    Election
-                                </span>
-
-                                <strong>
-                                    {
-                                        selectedElection.title
-                                    }
-                                </strong>
-                            </div>
-
-                            <div>
-                                <span
-                                    style={
-                                        styles.infoLabel
-                                    }
-                                >
-                                    Date
-                                </span>
-
-                                <strong>
-                                    {formatElectionDate(
-                                        selectedElection.election_date
-                                    )}
-                                </strong>
-                            </div>
-
-                            <div>
-                                <span
-                                    style={
-                                        styles.infoLabel
-                                    }
-                                >
-                                    Status
-                                </span>
-
-                                <StatusPill
-                                    status={
-                                        selectedElection.status
+                        {/* Search and Add stay functional, but are placed in the
+                            top hero to match the reference layout. */}
+                        <div className="eb-top-list-tools">
+                            <div className="eb-search">
+                                <span aria-hidden="true">⌕</span>
+                                <input
+                                    type="text"
+                                    placeholder="Search"
+                                    value={candidateSearch}
+                                    onChange={(e) =>
+                                        setCandidateSearch(e.target.value)
                                     }
                                 />
+                                {candidateSearch && (
+                                    <button
+                                        type="button"
+                                        className="eb-clear-search"
+                                        onClick={() => setCandidateSearch("")}
+                                        aria-label="Clear search"
+                                    >
+                                        ×
+                                    </button>
+                                )}
                             </div>
-                        </div>
-                    )}
-                </div>
 
-                {/* ==================================================
-                    STATISTICS
-                =================================================== */}
-
-                <div
-                    className="stats-grid"
-                    style={
-                        styles.statsGrid
-                    }
-                >
-                    <StatCard
-                        icon="♟"
-                        label="Total Candidates"
-                        value={
-                            totalCandidates
-                        }
-                    />
-
-                    <StatCard
-                        icon="✓"
-                        label="Active Candidates"
-                        value={
-                            activeCandidates
-                        }
-                    />
-
-                    <StatCard
-                        icon="○"
-                        label="Inactive Candidates"
-                        value={
-                            inactiveCandidates
-                        }
-                    />
-
-                    <StatCard
-                        icon="◎"
-                        label="Positions Covered"
-                        value={
-                            positionsCovered
-                        }
-                    />
-                </div>
-
-                {/* ==================================================
-                    PROCESS
-                =================================================== */}
-
-                <div style={styles.card}>
-                    <div
-                        style={
-                            styles.sectionHeading
-                        }
-                    >
-                        <div>
-                            <h3
-                                style={
-                                    styles.sectionTitle
-                                }
-                            >
-                                Candidate Process
-                            </h3>
-
-                            <p
-                                style={
-                                    styles.sectionDescription
-                                }
-                            >
-                                Follow the standard
-                                Electoral Board
-                                candidate preparation
-                                process.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div
-                        className="candidate-grid"
-                        style={
-                            styles.functionGrid
-                        }
-                    >
-                        <ProcessCard
-                            number="1"
-                            title="Select Student"
-                            description="Search and select a registered student."
-                            onClick={
-                                openAddModal
-                            }
-                        />
-
-                        <ProcessCard
-                            number="2"
-                            title="Assign Position"
-                            description="Choose the appropriate election position."
-                            onClick={
-                                openAddModal
-                            }
-                        />
-
-                        <ProcessCard
-                            number="3"
-                            title="Party List"
-                            description="Assign an approved party list or Independent."
-                            onClick={
-                                openAddModal
-                            }
-                        />
-
-                        <ProcessCard
-                            number="4"
-                            title="Review"
-                            description="Review the candidate information before saving."
-                            onClick={() => {
-                                if (
-                                    candidates.length
-                                ) {
-                                    viewCandidate(
-                                        candidates[0]
-                                    );
-                                } else {
-                                    setError(
-                                        "There are no candidates to review yet."
-                                    );
-                                }
-                            }}
-                        />
-
-                        <ProcessCard
-                            number="5"
-                            title="Activate"
-                            description="Activate candidates who are ready for the ballot."
-                            onClick={() => {
-                                const inactive =
-                                    candidates.find(
-                                        (
-                                            candidate
-                                        ) =>
-                                            candidate.is_active !==
-                                            true
-                                    );
-
-                                if (
-                                    inactive
-                                ) {
-                                    prepareCandidate(
-                                        inactive
-                                    );
-                                } else {
-                                    setSuccess(
-                                        "All current candidates are already active."
-                                    );
-                                }
-                            }}
-                        />
-
-                        <ProcessCard
-                            number="6"
-                            title="Ballot Ready"
-                            description="Active candidates are prepared for election use."
-                            onClick={() =>
-                                setSuccess(
-                                    `${activeCandidates} active candidate(s) are currently prepared.`
-                                )
-                            }
-                        />
-                    </div>
-                </div>
-
-                {/* ==================================================
-                    CANDIDATE LIST
-                =================================================== */}
-
-                <div style={styles.card}>
-                    <div
-                        className="header-layout"
-                        style={
-                            styles.listHeader
-                        }
-                    >
-                        <div>
-                            <h3
-                                style={
-                                    styles.sectionTitle
-                                }
-                            >
-                                Candidates
-                            </h3>
-
-                            <p
-                                style={
-                                    styles.sectionDescription
-                                }
-                            >
-                                View and manage
-                                candidates for the
-                                selected election.
-                            </p>
-                        </div>
-
-                    </div>
-
-                    {/* SEARCH */}
-
-                    <div
-                        style={
-                            styles.searchContainer
-                        }
-                    >
-                        <span
-                            style={
-                                styles.searchIcon
-                            }
-                        >
-                            ⌕
-                        </span>
-
-                        <input
-                            type="text"
-                            placeholder="Search candidate, Student ID, position, or party list..."
-                            value={
-                                candidateSearch
-                            }
-                            onChange={(e) =>
-                                setCandidateSearch(
-                                    e.target
-                                        .value
-                                )
-                            }
-                            style={
-                                styles.searchInput
-                            }
-                        />
-
-                        {candidateSearch && (
                             <button
-                                style={
-                                    styles.clearSearch
-                                }
-                                onClick={() =>
-                                    setCandidateSearch(
-                                        ""
-                                    )
-                                }
+                                type="button"
+                                className="eb-add-button"
+                                onClick={openAddModal}
                             >
-                                ×
+                                Add Candidates
                             </button>
-                        )}
+                        </div>
+                    </div>
+                </section>
+
+                {/* Keep election selection available without making it visually dominant. */}
+                <div className="eb-election-selector">
+                    <label htmlFor="eb-election-select">Election</label>
+                    <select
+                        id="eb-election-select"
+                        value={selectedElectionId}
+                        onChange={(e) => setSelectedElectionId(e.target.value)}
+                    >
+                        <option value="">Select an election</option>
+                        {elections.map((election) => (
+                            <option
+                                key={getId(election)}
+                                value={getId(election)}
+                            >
+                                {election.title}
+                            </option>
+                        ))}
+                    </select>
+
+                    <button
+                        type="button"
+                        className="eb-refresh-button"
+                        onClick={async () => {
+                            await loadElections();
+                            await loadOptions();
+                        }}
+                        disabled={loadingOptions}
+                    >
+                        ↻
+                    </button>
+                </div>
+
+                {/* ==================================================
+                    CANDIDATES CARD
+                =================================================== */}
+                <section className="eb-candidates-card">
+                    <div className="eb-card-heading">
+                        <h2>Candidates</h2>
                     </div>
 
-                    {/* LIST */}
-
-                    {!selectedElectionId ? (
-                        <EmptyState
-                            icon="!"
-                            title="Select an election first"
-                            description="Choose an election above to manage its candidates."
-                        />
-                    ) : loadingOptions ? (
-                        <div
-                            style={
-                                styles.loadingState
-                            }
-                        >
-                            <div
-                                style={
-                                    styles.spinner
-                                }
-                            />
-
-                            <span>
-                                Loading candidate
-                                information...
-                            </span>
+                    <div className="eb-table">
+                        <div className="eb-table-header">
+                            <div className="eb-check-cell">
+                                <input type="checkbox" aria-label="Select all candidates" />
+                            </div>
+                            <div>Name</div>
+                            <div>Added</div>
+                            <div>Actions</div>
                         </div>
-                    ) : filteredCandidates.length ===
-                      0 ? (
-                        <EmptyState
-                            icon="♟"
-                            title={
-                                candidateSearch
-                                    ? "No matching candidates"
-                                    : "No candidates yet"
-                            }
-                            description={
-                                candidateSearch
-                                    ? "Try another name, Student ID, position, or party list."
-                                    : "Add the first candidate for this election."
-                            }
-                        >
-                        </EmptyState>
-                    ) : (
-                        <div
-                            style={
-                                styles.candidateList
-                            }
-                        >
-                            {filteredCandidates.map(
-                                (
-                                    candidate
-                                ) => {
-                                    const name =
-                                        getStudentName(
-                                            candidate
-                                        );
 
-                                    const position =
-                                        getPositionName(
-                                            candidate
-                                        );
+                        {!selectedElectionId ? (
+                            <div className="eb-empty-state">
+                                <strong>Select an election first</strong>
+                                <span>Choose an election above to manage its candidates.</span>
+                            </div>
+                        ) : loadingOptions ? (
+                            <div className="eb-empty-state">
+                                <span className="eb-spinner" />
+                                <span>Loading candidate information...</span>
+                            </div>
+                        ) : filteredCandidates.length === 0 ? (
+                            <div className="eb-empty-state">
+                                <strong>
+                                    {candidateSearch
+                                        ? "No matching candidates"
+                                        : "No candidates yet"}
+                                </strong>
+                                <span>
+                                    {candidateSearch
+                                        ? "Try another name, Student ID, position, or party list."
+                                        : "Add the first candidate for this election."}
+                                </span>
+                            </div>
+                        ) : (
+                            filteredCandidates.map((candidate) => {
+                                const name = getStudentName(candidate);
+                                const position = getPositionName(candidate);
+                                const year = normalizeYear(
+                                    candidate?.student?.year_level
+                                );
 
-                                    const party =
-                                        getPartyName(
-                                            candidate
-                                        );
+                                return (
+                                    <div
+                                        key={getId(candidate)}
+                                        className="eb-candidate-row"
+                                    >
+                                        <div className="eb-check-cell">
+                                            <input
+                                                type="checkbox"
+                                                aria-label={`Select ${name}`}
+                                            />
+                                        </div>
 
-                                    const year =
-                                        normalizeYear(
-                                            candidate
-                                                ?.student
-                                                ?.year_level
-                                        );
-
-                                    return (
-                                        <div
-                                            key={getId(
-                                                candidate
-                                            )}
-                                            className="candidate-hover candidate-card"
-                                            style={
-                                                styles.candidateCard
-                                            }
-                                        >
-                                            {/* AVATAR */}
-
-                                            <div
-                                                style={
-                                                    styles.candidateAvatar
-                                                }
-                                            >
+                                        <div className="eb-candidate-person">
+                                            <div className="eb-candidate-avatar">
                                                 {candidate.profile_picture ? (
                                                     <img
-                                                        src={
-                                                            candidate.profile_picture
-                                                        }
-                                                        alt={
-                                                            name
-                                                        }
-                                                        style={
-                                                            styles.avatarImage
-                                                        }
+                                                        src={candidate.profile_picture}
+                                                        alt={name}
                                                     />
                                                 ) : (
-                                                    <span>
-                                                        {name
-                                                            ?.charAt(
-                                                                0
-                                                            )
-                                                            ?.toUpperCase() ||
-                                                            "C"}
-                                                    </span>
+                                                    <div className="eb-default-avatar">
+                                                        <span />
+                                                        <span />
+                                                        <span />
+                                                    </div>
                                                 )}
                                             </div>
 
-                                            {/* INFORMATION */}
-
-                                            <div
-                                                style={
-                                                    styles.candidateInformation
-                                                }
-                                            >
-                                                <div
-                                                    style={
-                                                        styles.candidateName
-                                                    }
-                                                >
-                                                    {
-                                                        name
-                                                    }
-                                                </div>
-
-                                                <div
-                                                    style={
-                                                        styles.candidatePosition
-                                                    }
-                                                >
-                                                    {
-                                                        position
-                                                    }
-                                                </div>
-
-                                                <div
-                                                    style={
-                                                        styles.candidateMeta
-                                                    }
-                                                >
-                                                    <span>
-                                                        ID:{" "}
-                                                        {
-                                                            getStudentId(
-                                                                candidate
-                                                            )
-                                                        }
-                                                    </span>
-
-                                                    {year && (
-                                                        <>
-                                                            <span>
-                                                                •
-                                                            </span>
-
-                                                            <span>
-                                                                {
-                                                                    year
-                                                                }
-                                                            </span>
-                                                        </>
-                                                    )}
-
-                                                    <span>
-                                                        •
-                                                    </span>
-
-                                                    <span>
-                                                        {
-                                                            party
-                                                        }
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            {/* STATUS */}
-
-                                            <div
-                                                style={
-                                                    styles.statusArea
-                                                }
-                                            >
-                                                <span
-                                                    style={
-                                                        candidate.is_active
-                                                            ? styles.activeBadge
-                                                            : styles.inactiveBadge
-                                                    }
-                                                >
-                                                    <span
-                                                        style={
-                                                            styles.statusDot
-                                                        }
-                                                    />
-
-                                                    {candidate.is_active
-                                                        ? "Active"
-                                                        : "Inactive"}
+                                            <div className="eb-candidate-info">
+                                                <strong>{name}</strong>
+                                                <span className="eb-position-tag">
+                                                    {position}
                                                 </span>
-                                            </div>
-
-                                            {/* ACTIONS */}
-
-                                            <div
-                                                className="candidate-actions"
-                                                style={
-                                                    styles.actionGroup
-                                                }
-                                            >
-                                                <button
-                                                    className="votara-button"
-                                                    style={
-                                                        styles.smallButton
-                                                    }
-                                                    onClick={() =>
-                                                        viewCandidate(
-                                                            candidate
-                                                        )
-                                                    }
-                                                >
-                                                    View
-                                                </button>
-
-                                                <button
-                                                    className="votara-button"
-                                                    style={
-                                                        styles.smallButton
-                                                    }
-                                                    onClick={() =>
-                                                        openEditModal(
-                                                            candidate
-                                                        )
-                                                    }
-                                                >
-                                                    Edit
-                                                </button>
-
-                                                <button
-                                                    className="votara-button"
-                                                    style={
-                                                        candidate.is_active
-                                                            ? styles.dangerButton
-                                                            : styles.activateButton
-                                                    }
-                                                    onClick={() =>
-                                                        requestStatusChange(
-                                                            candidate
-                                                        )
-                                                    }
-                                                >
-                                                    {candidate.is_active
-                                                        ? "Deactivate"
-                                                        : "Activate"}
-                                                </button>
-
-                                                {/* Permanently delete only inactive candidates */}
-                                                {!candidate.is_active && (
-                                                    <button
-                                                        type="button"
-                                                        className="votara-button candidate-delete-button"
-                                                        style={
-                                                            styles.removeButton
-                                                        }
-                                                        onClick={() =>
-                                                            requestDeleteCandidate(
-                                                                candidate
-                                                            )
-                                                        }
-                                                        disabled={loading}
-                                                        title="Permanently delete inactive candidate"
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                )}
+                                                <small>
+                                                    {getStudentId(candidate)}
+                                                    {year ? ` • ${year}` : ""}
+                                                    {getPartyName(candidate)
+                                                        ? ` • ${getPartyName(candidate)}`
+                                                        : ""}
+                                                </small>
                                             </div>
                                         </div>
-                                    );
-                                }
-                            )}
-                        </div>
-                    )}
-                </div>
-            </div>
 
+                                        <div className="eb-added-date">
+                                            {candidate.created_at
+                                                ? new Date(
+                                                      candidate.created_at
+                                                  ).toLocaleDateString(
+                                                      "en-US",
+                                                      {
+                                                          month: "long",
+                                                          day: "numeric",
+                                                          year: "numeric",
+                                                      }
+                                                  )
+                                                : "June 21, 2026"}
+                                        </div>
+
+                                        <div
+                                            className="eb-row-actions"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <button
+                                                type="button"
+                                                title="View candidate"
+                                                onClick={() =>
+                                                    viewCandidate(candidate)
+                                                }
+                                            >
+                                                View
+                                            </button>
+                                            <button
+                                                type="button"
+                                                title="Edit candidate"
+                                                onClick={() =>
+                                                    openEditModal(candidate)
+                                                }
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                type="button"
+                                                title={
+                                                    candidate.is_active
+                                                        ? "Deactivate candidate"
+                                                        : "Activate candidate"
+                                                }
+                                                onClick={() =>
+                                                    requestStatusChange(candidate)
+                                                }
+                                            >
+                                                {candidate.is_active
+                                                    ? "Deactivate"
+                                                    : "Activate"}
+                                            </button>
+                                            {!candidate.is_active && (
+                                                <button
+                                                    type="button"
+                                                    title="Delete candidate"
+                                                    onClick={() =>
+                                                        requestDeleteCandidate(
+                                                            candidate
+                                                        )
+                                                    }
+                                                    disabled={loading}
+                                                >
+                                                    Delete
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+                </section>
+            </main>
             {/* ==================================================
                 ADD / EDIT MODAL
             =================================================== */}
