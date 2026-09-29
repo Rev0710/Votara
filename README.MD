@@ -1129,3 +1129,38 @@ Behavior:
 - Existing old plaintext passwords cannot be recovered from the database; only a newly generated temporary password can be displayed after creation/reset.
 - Admin audit logging now guarantees actor_email is populated, preventing the NOT NULL audit_logs error.
 - Admin Dashboard top User navigation now points to /admin/electoral-board.
+
+
+# VOTARA Admin — Data Management Patch
+
+## Module
+03 — Data Management
+
+## Features
+- Student registry dashboard
+- CSV template download
+- CSV import/synchronization
+- Upsert by unique student_id
+- Search
+- Year-level filter
+- Enrollment-status filter
+- Pagination
+- Current-view CSV export
+- Activate student
+- Deactivate student
+- Soft-remove/archive student
+- Data-management summary cards
+- Audit log events for import/status/removal operations
+
+## CSV behavior
+Import is intentionally non-destructive:
+- New student_id -> inserted.
+- Existing student_id -> updated.
+- Student missing from the CSV -> NOT deleted or deactivated automatically.
+
+This avoids accidentally disabling voters because a CSV was incomplete.
+
+## Account behavior
+CSV import does not automatically create student login accounts.
+If a student already has a student_accounts record, the UI displays its
+account status.
