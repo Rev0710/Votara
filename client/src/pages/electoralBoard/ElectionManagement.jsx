@@ -308,7 +308,221 @@ const normalizeElection = (
 // COMPONENT
 // =========================================================
 
-function ElectionManagement() {
+const clampPercent = (value) => Math.min(100, Math.max(0, Number(value) || 0));
+
+const getElectionChartLabel = (election) => {
+    if (!election?.electionDate) {
+        return election?.name || "Election";
+    }
+
+    const parsed = new Date(`${election.electionDate}T00:00:00`);
+
+    if (Number.isNaN(parsed.getTime())) {
+        return election?.name || election.electionDate;
+    }
+
+    return parsed.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+    });
+};
+
+const ElectionTurnoutDonut = ({ election }) => {
+    const voters = Math.max(0, Number(election?.voters) || 0);
+    const votes = Math.min(voters, Math.max(0, Number(election?.votes) || 0));
+    const turnout = voters > 0 ? clampPercent((votes / voters) * 100) : 0;
+    const notVoted = Math.max(0, voters - votes);
+
+    return (
+        <div className="em-chart-card em-turnout-card">
+            <div className="em-chart-heading">
+                <div className="em-chart-icon">◔</div>
+                <div>
+                    <h3>Voter turnout</h3>
+                    <p>{election ? election.name : "No election data available"}</p>
+                </div>
+            </div>
+
+            <div className="em-turnout-visual">
+                <div
+                    className="em-turnout-donut"
+                    style={{
+                        background: `conic-gradient(#2f6dff ${turnout}%, #2b3047 ${turnout}% 100%)`,
+                    }}
+                >
+                    <div className="em-turnout-hole">
+                        <strong>{turnout.toFixed(1)}%</strong>
+                        <span>Turnout rate</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="em-turnout-legend">
+                <div>
+                    <span><i className="em-dot blue" /> Voted</span>
+                    <strong>{votes.toLocaleString()}</strong>
+                    <small>{turnout.toFixed(1)}%</small>
+                </div>
+                <div>
+                    <span><i className="em-dot muted" /> Did not vote</span>
+                    <strong>{notVoted.toLocaleString()}</strong>
+                    <small>{(100 - turnout).toFixed(1)}%</small>
+                </div>
+                <div className="em-turnout-total-row">
+                    <span>Registered voters</span>
+                    <strong>{voters.toLocaleString()}</strong>
+                    <small>100%</small>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const ElectionTurnoutLine = ({ elections }) => {
+    const data = elections
+        .filter((election) => election?.electionDate)
+        .map((election) => {
+            const voters = Math.max(0, Number(election?.voters) || 0);
+            const votes = Math.min(voters, Math.max(0, Number(election?.votes) || 0));
+            return {
+                label: getElectionChartLabel(election),
+                turnout: voters > 0 ? clampPercent((votes / voters) * 100) : 0,
+            };
+        });
+
+    const width = 760;
+    const height = 250;
+    const left = 52;
+    const right = 18;
+    const top = 20;
+    const bottom = 42;
+    const chartWidth = width - left - right;
+    const chartHeight = height - top - bottom;
+
+    const points = data.map((item, index) => {
+        const x = data.length === 1
+            ? left + chartWidth / 2
+            : left + (index / (data.length - 1)) * chartWidth;
+        const y = top + (1 - item.turnout / 100) * chartHeight;
+        return { ...item, x, y };
+    });
+
+    const linePath = points.length > 0
+        ? points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ")
+        : "";
+
+    const areaPath = points.length > 0
+        ? `${linePath} L ${points[points.length - 1].x} ${top + chartHeight} L ${points[0].x} ${top + chartHeight} Z`
+        : "";
+
+    return (
+        <div className="em-chart-card em-line-card">
+            <div className="em-chart-heading">
+                <div className="em-chart-icon line">⌁</div>
+                <div>
+                    <h3>Turnout over time</h3>
+                    <p>Voter participation across recorded elections</p>
+                </div>
+            </div>
+
+            {data.length === 0 ? (
+                <div className="em-chart-empty">No dated election data is available yet.</div>
+            ) : (
+                <div className="em-line-chart-wrap">
+                    <svg className="em-line-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Voter turnout over time">
+                        {[0, 25, 50, 75, 100].map((value) => {
+                            const y = top + (1 - value / 100) * chartHeight;
+                            return (
+                                <g key={value}>
+                                    <line x1={left} x2={width - right} y1={y} y2={y} className="em-grid-line" />
+                                    <text x={left - 10} y={y + 4} textAnchor="end" className="em-axis-label">{value}%</text>
+                                </g>
+                            );
+                        })}
+
+                        {areaPath && <path d={areaPath} className="em-area-path" />}
+                        {linePath && <path d={linePath} className="em-line-path" />}
+
+                        {points.map((point, index) => (
+                            <g key={`${point.label}-${index}`}>
+                                <circle cx={point.x} cy={point.y} r="4.5" className="em-point" />
+                                <text
+                                    x={point.x}
+                                    y={height - 16}
+                                    textAnchor="middle"
+                                    className="em-axis-label em-x-label"
+                                >
+                                    {point.label}
+                                </text>
+                            </g>
+                        ))}
+                    </svg>
+
+                    <div className="em-line-summary">
+                        <span><i className="em-dot blue" /> Voter turnout</span>
+                        <strong>{data[data.length - 1].turnout.toFixed(1)}%</strong>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const ElectionVotesBars = ({ elections }) => {
+    const data = elections
+        .filter((election) => election?.name)
+        .map((election) => ({
+            label: election.name,
+            votes: Math.max(0, Number(election?.votes) || 0),
+        }));
+
+    const maxVotes = Math.max(...data.map((item) => item.votes), 1);
+
+    return (
+        <div className="em-chart-card em-bars-card">
+            <div className="em-chart-heading em-bars-heading">
+                <div>
+                    <h3>Votes by election</h3>
+                    <p>Recorded votes for each VOTARA election</p>
+                </div>
+                <div className="em-chart-legend"><span /> Votes</div>
+            </div>
+
+            {data.length === 0 ? (
+                <div className="em-chart-empty">No vote totals are available yet.</div>
+            ) : (
+                <div className="em-bars-scroll">
+                    <div className="em-bars-chart">
+                        {[0, 25, 50, 75, 100].map((value) => (
+                            <div
+                                key={value}
+                                className="em-bar-grid"
+                                style={{ bottom: `${value}%` }}
+                            >
+                                <span>{Math.round((maxVotes * value) / 100)}</span>
+                            </div>
+                        ))}
+
+                        {data.map((item, index) => (
+                            <div className="em-bar-group" key={`${item.label}-${index}`}>
+                                <div className="em-bar-value">{item.votes.toLocaleString()}</div>
+                                <div
+                                    className="em-bar"
+                                    style={{ height: `${Math.max(2, (item.votes / maxVotes) * 100)}%` }}
+                                    title={`${item.label}: ${item.votes.toLocaleString()} votes`}
+                                />
+                                <div className="em-bar-label" title={item.label}>{item.label}</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+function ElectionManagement({ onCreateElection }) {
 
     const navigate =
         useNavigate();
@@ -2172,6 +2386,7 @@ function ElectionManagement() {
 
             return (
                 <span
+                    className={`election-status-badge election-status-${status}`}
                     style={{
                         ...style,
                         display:
@@ -2290,20 +2505,17 @@ function ElectionManagement() {
                 <button
                     className="election-create-button"
                     type="button"
-                    onClick={openCreateModal}
-                    style={{
-                        border: "none",
-                        background: "#266EFF",
-                        color: "#ffffff",
-                        padding: "12px 19px",
-                        borderRadius: "10px",
-                        fontWeight: 800,
-                        cursor: "pointer",
-                        boxShadow: "0 7px 18px rgba(38,110,255,.20)",
+                    onClick={() => {
+                        if (onCreateElection) {
+                            onCreateElection();
+                            return;
+                        }
+                        openCreateModal();
                     }}
                 >
                     + Create Election
                 </button>
+
             </div>
 
             {/* =================================================
@@ -2484,6 +2696,42 @@ function ElectionManagement() {
                 )}
 
             </div>
+
+
+            {/* =================================================
+                CHART STATISTICS
+            ================================================= */}
+
+            {(() => {
+                const chartElections = [...elections]
+                    .filter((election) => election?.name)
+                    .sort((a, b) => {
+                        const aTime = a?.electionDate ? new Date(`${a.electionDate}T00:00:00`).getTime() : 0;
+                        const bTime = b?.electionDate ? new Date(`${b.electionDate}T00:00:00`).getTime() : 0;
+                        return aTime - bTime;
+                    });
+
+                const latestElection = chartElections[chartElections.length - 1] || null;
+
+                return (
+                    <div className="em-charts-section">
+                        <div className="em-charts-header">
+                            <div>
+                                <span>STATISTICS</span>
+                                <h2>Election analytics</h2>
+                                <p>Turnout and vote totals from the election records currently available in VOTARA.</p>
+                            </div>
+                        </div>
+
+                        <div className="em-charts-top-grid">
+                            <ElectionTurnoutDonut election={latestElection} />
+                            <ElectionTurnoutLine elections={chartElections} />
+                        </div>
+
+                        <ElectionVotesBars elections={chartElections} />
+                    </div>
+                );
+            })()}
 
 
             {/* =================================================
@@ -5196,6 +5444,7 @@ const ModalOverlay = ({
 
     return (
         <div
+            className="election-modal-overlay"
             onClick={(event) => {
                 if (
                     event.target ===
@@ -5243,6 +5492,7 @@ const ModalCard = ({
 
     return (
         <div
+            className="election-modal-card"
             onClick={(event) =>
                 event.stopPropagation()
             }
@@ -5265,6 +5515,7 @@ const ModalCard = ({
         >
 
             <div
+                className="election-modal-header"
                 style={{
                     padding:
                         "21px 24px",
@@ -5360,6 +5611,7 @@ const ModalCard = ({
 
 
             <div
+                className="election-modal-body"
                 style={{
                     padding:
                         "22px 24px 24px",
@@ -5381,6 +5633,7 @@ const FormField = ({
 
     return (
         <div
+            className="election-form-field"
             style={{
                 marginBottom:
                     "15px",
@@ -5428,6 +5681,7 @@ const InfoBox = ({
 
     return (
         <div
+            className="election-info-box"
             style={{
                 background:
                     "#f8fafc",
@@ -5473,6 +5727,7 @@ const ModalActions = ({
 
     return (
         <div
+            className="election-modal-actions"
             style={{
                 display:
                     "flex",

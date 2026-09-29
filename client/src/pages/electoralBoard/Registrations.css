@@ -364,3 +364,8 @@
   .student-meta-grid{grid-template-columns:1fr}
   .document-preview-grid{grid-template-columns:1fr}
 }
+
+
+/* Transparent page background override */
+.registration-page { background: transparent !important; }
+.registration-shell { background: transparent !important; }
