@@ -1164,3 +1164,6 @@ This avoids accidentally disabling voters because a CSV was incomplete.
 CSV import does not automatically create student login accounts.
 If a student already has a student_accounts record, the UI displays its
 account status.
+
+
+![alt text](<data management.png>)
