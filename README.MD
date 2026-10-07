@@ -1099,5 +1099,71 @@ React • Vite • Node.js • Express • Supabase • PostgreSQL • JWT • b
 Developed by
 Team VOTARA
 
+VOTARA ADMIN - ELECTORAL BOARD ACCOUNT CREATION UPDATE
+
+Files:
+1. adminController.js
+   Replace: server/src/controllers/adminController.js
+
+2. adminRoutes.js
+   Replace: server/src/routes/adminRoutes.js
+
+3. AdminDashboard.jsx
+   Replace: client/src/pages/admin/AdminDashboard.jsx
+
+4. InviteTeamPopUp.jsx
+   Replace/create: client/src/pages/admin/InviteTeamPopUp.jsx
+
+Behavior:
+- Removes invitation/code-expiration flow from the account creation UI.
+- Admin creates an account directly.
+- Admin enters full name and email.
+- Admin uploads a profile picture.
+- Server generates a temporary password.
+- Password is hashed in staff_users; plaintext is never stored.
+- Credentials are emailed to the account email through the configured Gmail API OAuth2.
+- Electoral Board account uses email + generated password at staff login.
+- must_change_password remains true, so the EB must change the password after first login.
+- Recently added EB accounts are loaded from staff_users.
+- Password reset generates a new temporary password and emails it again.
+- Existing old plaintext passwords cannot be recovered from the database; only a newly generated temporary password can be displayed after creation/reset.
+- Admin audit logging now guarantees actor_email is populated, preventing the NOT NULL audit_logs error.
+- Admin Dashboard top User navigation now points to /admin/electoral-board.
 
 
+# VOTARA Admin — Data Management Patch
+
+## Module
+03 — Data Management
+
+## Features
+- Student registry dashboard
+- CSV template download
+- CSV import/synchronization
+- Upsert by unique student_id
+- Search
+- Year-level filter
+- Enrollment-status filter
+- Pagination
+- Current-view CSV export
+- Activate student
+- Deactivate student
+- Soft-remove/archive student
+- Data-management summary cards
+- Audit log events for import/status/removal operations
+
+## CSV behavior
+Import is intentionally non-destructive:
+- New student_id -> inserted.
+- Existing student_id -> updated.
+- Student missing from the CSV -> NOT deleted or deactivated automatically.
+
+This avoids accidentally disabling voters because a CSV was incomplete.
+
+## Account behavior
+CSV import does not automatically create student login accounts.
+If a student already has a student_accounts record, the UI displays its
+account status.
+
+
+![alt text](<data management.png>)

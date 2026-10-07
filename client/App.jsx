@@ -35,6 +35,7 @@ import CandidateManagement from "./src/pages/admin/CandidateManagement";
 import Election from "./src/pages/admin/Election";
 
 import EBCandidateManagement from "./src/pages/electoralBoard/EBCandidateManagement";
+import ManagePartyList from "./src/pages/electoralBoard/ManagePartyList";
 import ElectionManagement from "./src/pages/electoralBoard/ElectionManagement";
 import CreateElection from "./src/pages/electoralBoard/CreateElection";
 
@@ -315,6 +316,11 @@ const App = () => {
                     element={
                         <EBCandidateManagement />
                     }
+                />
+
+                <Route
+                    path="/electoral-board/manage-party-list"
+                    element={<ManagePartyList />}
                 />
 
                 <Route
