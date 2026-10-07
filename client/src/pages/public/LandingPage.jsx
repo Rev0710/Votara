@@ -1,895 +1,375 @@
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FiArrowRight, FiCheck, FiChevronDown, FiLock, FiMenu, FiShield, FiX } from "react-icons/fi";
+import votaraLogo from "../../assets/images/votara-logo.png";
 import "./LandingPage.css";
 
-const LandingPage = () => {
+const STEPS = [
+    {
+        number: "01",
+        title: "Sign up",
+        text: "Create your Votara account and verify your student ID.",
+        tone: "blue",
+    },
+    {
+        number: "02",
+        title: "Vote",
+        text: "Review candidates, choose your preferred options and submit securely.",
+        tone: "navy",
+    },
+    {
+        number: "03",
+        title: "View result",
+        text: "Track election outcomes and candidate scores as results become available.",
+        tone: "blue",
+    },
+];
+
+const FAQS = [
+    {
+        question: "Who can vote in VOTARA?",
+        answer: "Eligible students in the IT Department can vote when an election is open and their account is verified and eligible for that election.",
+    },
+    {
+        question: "How do I register?",
+        answer: "Start from the VOTARA registration page, provide the required student information, verify the registration OTP, and complete the account setup steps required by the system.",
+    },
+    {
+        question: "Is my vote private?",
+        answer: "VOTARA is designed to verify voter eligibility while keeping the selected ballot separate from the student's identity in the voting record.",
+    },
+    {
+        question: "What happens if I am a late enrollee?",
+        answer: "Late-enrollee requests can be reviewed by the Electoral Board. Approved students can continue through the applicable VOTARA registration and voting flow.",
+    },
+];
+
+function WordReveal({ children, className = "" }) {
+    const ref = useRef(null);
+
+    useEffect(() => {
+        const element = ref.current;
+        if (!element) return undefined;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                element.classList.toggle("is-visible", entry.isIntersecting);
+            },
+            { threshold: 0.14, rootMargin: "-6% 0px -6% 0px" }
+        );
+
+        observer.observe(element);
+        return () => observer.disconnect();
+    }, []);
+
+    const words = String(children).trim().split(/\s+/);
+
+    return (
+        <span ref={ref} className={`word-reveal ${className}`} aria-label={String(children)}>
+            {words.map((word, index) => (
+                <span className="word-reveal-word" key={`${word}-${index}`}>
+                    <span>{word}</span>
+                </span>
+            ))}
+        </span>
+    );
+}
+
+function DashboardMockup({ variant = "vote" }) {
+    if (variant === "result") {
+        return (
+            <div className="mock-window mock-result-window" aria-hidden="true">
+                <div className="mock-topbar">
+                    <span className="mock-brand"><span className="mock-brand-mark">✦</span> Votara</span>
+                    <span className="mock-search" />
+                    <span className="mock-dots">•••</span>
+                </div>
+                <div className="mock-body result-body">
+                    <aside className="mock-sidebar">
+                        <div className="mock-avatar">A</div>
+                        <strong>Arthur Morgan</strong>
+                        <span>Student</span>
+                        <div className="mock-side-active">Results</div>
+                        <div>Dashboard</div>
+                        <div>My Vote</div>
+                        <div>Settings</div>
+                    </aside>
+                    <main className="mock-main">
+                        <div className="mock-kicker">ELECTION RESULTS</div>
+                        <h4>Student Council Election</h4>
+                        <div className="result-grid">
+                            <div className="result-card">
+                                <div className="result-card-head"><span>President</span><b>Live</b></div>
+                                <div className="result-row"><span>Felisha</span><i><em style={{ width: "78%" }} /></i><strong>78%</strong></div>
+                                <div className="result-row"><span>Roberto</span><i><em style={{ width: "54%" }} /></i><strong>54%</strong></div>
+                                <div className="result-row"><span>Mary</span><i><em style={{ width: "38%" }} /></i><strong>38%</strong></div>
+                            </div>
+                            <div className="result-stat-card"><span>Total votes</span><strong>1,207</strong><small>+12.8% turnout</small></div>
+                        </div>
+                        <div className="mock-result-chart">
+                            <span style={{ height: "42%" }} /><span style={{ height: "68%" }} /><span style={{ height: "54%" }} /><span style={{ height: "82%" }} /><span style={{ height: "62%" }} /><span style={{ height: "92%" }} />
+                        </div>
+                    </main>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="mock-window" aria-hidden="true">
+            <div className="mock-topbar">
+                <span className="mock-brand"><span className="mock-brand-mark">✦</span> Votara</span>
+                <span className="mock-search" />
+                <span className="mock-dots">◌ ◌ ●</span>
+            </div>
+            <div className="mock-body">
+                <aside className="mock-sidebar">
+                    <div className="mock-avatar">A</div>
+                    <strong>Arthur Morgan</strong>
+                    <span>Student</span>
+                    <div className="mock-side-active">Vote</div>
+                    <div>Dashboard</div>
+                    <div>Votes</div>
+                    <div>Settings</div>
+                    <div className="mock-logout">Log out</div>
+                </aside>
+                <main className="mock-main">
+                    <div className="mock-kicker">YOU MAY NOW CAST YOUR VOTES!</div>
+                    <h4>President Student Council</h4>
+                    <p className="mock-subtitle">You can only vote once for each position.</p>
+                    <div className="candidate-grid">
+                        {["Felisha", "Roberto", "Mary"].map((name) => (
+                            <div className="candidate-card" key={name}>
+                                <strong>{name}</strong>
+                                <div className="candidate-photo">{name.charAt(0)}</div>
+                                <div className="candidate-actions"><button>VOTE</button><span>View details</span></div>
+                            </div>
+                        ))}
+                    </div>
+                    <h4 className="second-position">Vice President Student Council</h4>
+                    <div className="candidate-grid">
+                        {["Felisha", "Roberto", "Mary"].map((name) => (
+                            <div className="candidate-card" key={`vp-${name}`}>
+                                <strong>{name}</strong>
+                                <div className="candidate-photo">{name.charAt(0)}</div>
+                                <div className="candidate-actions"><button>VOTE</button><span>View details</span></div>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="mock-submit">SUBMIT VOTE</div>
+                </main>
+            </div>
+        </div>
+    );
+}
+
+function LandingPage() {
     const navigate = useNavigate();
+    const howRef = useRef(null);
+    const [mobileOpen, setMobileOpen] = useState(false);
+    const [faqOpen, setFaqOpen] = useState(null);
+    const [howProgress, setHowProgress] = useState(0);
+    const [heroDrag, setHeroDrag] = useState({ x: 0, y: 0 });
+    const heroDragRef = useRef({ active: false, startX: 0, startY: 0, originX: 0, originY: 0 });
 
-    const scrollToSection = (id) => {
-        const section = document.getElementById(id);
-
-        if (section) {
-            section.scrollIntoView({
-                behavior: "smooth",
-                block: "start",
-            });
-        }
+    const handleHeroPointerDown = (event) => {
+        event.currentTarget.setPointerCapture?.(event.pointerId);
+        heroDragRef.current = {
+            active: true,
+            startX: event.clientX,
+            startY: event.clientY,
+            originX: heroDrag.x,
+            originY: heroDrag.y,
+        };
+        event.currentTarget.classList.add("is-dragging");
     };
 
-    // =========================
-    // NAVIGATION
-    // =========================
+    const handleHeroPointerMove = (event) => {
+        if (!heroDragRef.current.active) return;
 
-    const handleLogin = () => {
-        navigate("/student-login");
-    };
+        const nextX = heroDragRef.current.originX + (event.clientX - heroDragRef.current.startX);
+        const nextY = heroDragRef.current.originY + (event.clientY - heroDragRef.current.startY);
 
-    const handleRegister = () => {
-        navigate("/register");
-    };
-
-    const handleLogoClick = () => {
-        window.scrollTo({
-            top: 0,
-            behavior: "smooth",
+        setHeroDrag({
+            x: Math.max(-190, Math.min(190, nextX)),
+            y: Math.max(-55, Math.min(85, nextY)),
         });
     };
 
+    const handleHeroPointerUp = (event) => {
+        heroDragRef.current.active = false;
+        event.currentTarget.releasePointerCapture?.(event.pointerId);
+        event.currentTarget.classList.remove("is-dragging");
+    };
+
+    const scrollTo = (id) => {
+        setMobileOpen(false);
+        document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+
+    useEffect(() => {
+        let frame = 0;
+        const update = () => {
+            if (!howRef.current) return;
+            const rect = howRef.current.getBoundingClientRect();
+            const travel = Math.max(howRef.current.offsetHeight - window.innerHeight, 1);
+            const progress = Math.min(Math.max(-rect.top / travel, 0), 1);
+            setHowProgress(progress);
+            frame = requestAnimationFrame(update);
+        };
+        frame = requestAnimationFrame(update);
+        return () => cancelAnimationFrame(frame);
+    }, []);
+
+    const translateX = useMemo(() => `-${howProgress * 66.666667}%`, [howProgress]);
+
     return (
-        <div className="votara-page">
-
-            {/* =========================
-                NAVIGATION
-            ========================= */}
-            <header className="votara-navbar">
-                <div className="votara-container navbar-inner">
-
-                    {/* LOGO */}
-                    <button
-                        className="votara-logo"
-                        onClick={handleLogoClick}
-                        type="button"
-                    >
-                        <span className="logo-mark">
-                            ✓
-                        </span>
-
-                        <span>Votara</span>
+        <div className="votara-landing">
+            <header className="landing-nav-wrap">
+                <nav className="landing-nav" aria-label="Primary navigation">
+                    <button className="landing-logo" type="button" onClick={() => scrollTo("home")} aria-label="VOTARA home">
+                        <img src={votaraLogo} alt="Votara" />
                     </button>
 
-                    {/* DESKTOP NAVIGATION */}
-                    <nav
-                        className="desktop-nav"
-                        aria-label="Main navigation"
-                    >
-                        <button
-                            type="button"
-                            onClick={() => scrollToSection("home")}
-                        >
-                            Home
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={() => scrollToSection("about")}
-                        >
-                            About
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={() => scrollToSection("election")}
-                        >
-                            Election
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={() => scrollToSection("faq")}
-                        >
-                            FAQ
-                        </button>
-                    </nav>
-
-                    {/* ACCOUNT NAVIGATION */}
-                    <div className="navbar-actions">
-
-                        <button
-                            className="nav-login"
-                            onClick={handleLogin}
-                            type="button"
-                        >
-                            Login
-                        </button>
-
-                        <button
-                            className="nav-register"
-                            onClick={handleRegister}
-                            type="button"
-                        >
-                            Register Now
-                        </button>
-
+                    <div className={`landing-nav-links ${mobileOpen ? "is-open" : ""}`}>
+                        <button type="button" onClick={() => scrollTo("home")}>Home</button>
+                        <button type="button" onClick={() => scrollTo("about")}>About</button>
+                        <button type="button" onClick={() => scrollTo("contact")}>Contact Us</button>
+                        <button type="button" onClick={() => scrollTo("faq")}>FAQs</button>
+                        <div className="mobile-nav-actions">
+                            <button className="nav-login" type="button" onClick={() => navigate("/login")}>Login</button>
+                            <button className="nav-register" type="button" onClick={() => navigate("/register")}>Register as a Voter</button>
+                        </div>
                     </div>
 
-                </div>
+                    <div className="landing-nav-actions">
+                        <button className="nav-login" type="button" onClick={() => navigate("/login")}>Login</button>
+                        <button className="nav-register" type="button" onClick={() => navigate("/register")}>Register as a Voter</button>
+                    </div>
+
+                    <button className="mobile-menu" type="button" onClick={() => setMobileOpen((v) => !v)} aria-label="Toggle menu">
+                        {mobileOpen ? <FiX /> : <FiMenu />}
+                    </button>
+                </nav>
             </header>
 
-
-            {/* =========================
-                HERO
-            ========================= */}
             <main>
-
-                <section
-                    id="home"
-                    className="hero-section"
-                >
-
-                    <div className="hero-decoration hero-circle-one"></div>
-                    <div className="hero-decoration hero-circle-two"></div>
-
-                    <div className="votara-container hero-grid">
-
-                        <div className="hero-content">
-
-                            <div className="hero-badge">
-                                <span>●</span>
-                                Secure digital voting for students
-                            </div>
-
-                            <h1>
-                                Transparent,
-                                <br />
-                                secure and
-                                <br />
-                                <span>accessible voting.</span>
-                            </h1>
-
-                            <p>
-                                VOTARA helps students participate in
-                                department elections quickly, securely,
-                                and conveniently without the long lines
-                                and paper-based voting process.
-                            </p>
-
-                            <div className="hero-buttons">
-
-                                <button
-                                    className="primary-button"
-                                    onClick={handleRegister}
-                                    type="button"
-                                >
-                                    Register Now
-                                    <span>→</span>
-                                </button>
-
-                                <button
-                                    className="secondary-button"
-                                    onClick={handleLogin}
-                                    type="button"
-                                >
-                                    Login
-                                </button>
-
-                            </div>
-
-                            <div className="hero-trust">
-                                <span>✓</span>
-                                Student-focused
-
-                                <span>✓</span>
-                                Secure process
-
-                                <span>✓</span>
-                                Faster verification
-                            </div>
-
-                        </div>
-
-
-                        {/* =========================
-                            DASHBOARD ILLUSTRATION
-                        ========================= */}
-                        <div className="hero-dashboard-wrapper">
-
-                            <div className="hero-floating-circle circle-a"></div>
-                            <div className="hero-floating-circle circle-b"></div>
-                            <div className="hero-floating-circle circle-c"></div>
-
-                            <div className="dashboard-card">
-
-                                <div className="dashboard-header">
-
-                                    <div>
-                                        <span className="small-label">
-                                            Election overview
-                                        </span>
-
-                                        <h3>
-                                            IT Department Election
-                                        </h3>
-                                    </div>
-
-                                    <span className="live-badge">
-                                        ● Live
-                                    </span>
-
-                                </div>
-
-                                <div className="dashboard-stats">
-
-                                    <div>
-                                        <strong>600</strong>
-                                        <span>Registered</span>
-                                    </div>
-
-                                    <div>
-                                        <strong>267</strong>
-                                        <span>Voted</span>
-                                    </div>
-
-                                    <div>
-                                        <strong>15</strong>
-                                        <span>Hours left</span>
-                                    </div>
-
-                                </div>
-
-                                <div className="chart-card">
-
-                                    <div className="chart-title">
-                                        <span>
-                                            Election Statistics
-                                        </span>
-
-                                        <span>
-                                            Today
-                                        </span>
-                                    </div>
-
-                                    <div className="bar-chart">
-
-                                        <div className="bar bar-1"></div>
-                                        <div className="bar bar-2"></div>
-                                        <div className="bar bar-3"></div>
-                                        <div className="bar bar-4"></div>
-                                        <div className="bar bar-5"></div>
-                                        <div className="bar bar-6"></div>
-
-                                    </div>
-
-                                    <div className="chart-labels">
-                                        <span>8AM</span>
-                                        <span>10AM</span>
-                                        <span>12PM</span>
-                                        <span>2PM</span>
-                                        <span>4PM</span>
-                                        <span>5PM</span>
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
+                <section id="home" className="landing-hero">
+                    <div className="hero-grid" />
+                    <div className="hero-content">
+                        <div className="eyebrow reveal-up"><WordReveal>SECURE DIGITAL ELECTIONS FOR EVERY COMMUNITY</WordReveal></div>
+                        <h1 className="reveal-up delay-1"><WordReveal>Transparent, secure and</WordReveal><br /><span><WordReveal>accessible voting.</WordReveal></span></h1>
+                        <p className="hero-copy reveal-up delay-2"><WordReveal>Votara is a platform designed to help student communities exercise their right to — choose, together and without friction.</WordReveal></p>
+                        <button className="hero-cta reveal-up delay-3" type="button" onClick={() => navigate("/register")}> <WordReveal>Register as a Voter</WordReveal> <FiArrowRight /></button>
                     </div>
 
-
-                    {/* =========================
-                        QUICK ACTIONS
-                    ========================= */}
-                    <div className="votara-container quick-actions">
-
-                        <button
-                            className="quick-card"
-                            onClick={handleRegister}
-                            type="button"
-                        >
-
-                            <span className="quick-number">
-                                01
-                            </span>
-
-                            <div>
-                                <h3>
-                                    Sign up
-                                </h3>
-
-                                <p>
-                                    Register your student account
-                                    before election day.
-                                </p>
-
-                                <span className="quick-link">
-                                    Register now →
-                                </span>
-                            </div>
-
-                        </button>
-
-
-                        <button
-                            className="quick-card"
-                            onClick={handleLogin}
-                            type="button"
-                        >
-
-                            <span className="quick-number">
-                                02
-                            </span>
-
-                            <div>
-                                <h3>
-                                    Vote
-                                </h3>
-
-                                <p>
-                                    Cast your vote securely
-                                    through your account.
-                                </p>
-
-                                <span className="quick-link">
-                                    Login to vote →
-                                </span>
-                            </div>
-
-                        </button>
-
-
-                        <button
-                            className="quick-card"
-                            onClick={() => scrollToSection("election")}
-                            type="button"
-                        >
-
-                            <span className="quick-number">
-                                03
-                            </span>
-
-                            <div>
-                                <h3>
-                                    View results
-                                </h3>
-
-                                <p>
-                                    Follow election progress and
-                                    official results.
-                                </p>
-
-                                <span className="quick-link">
-                                    View results →
-                                </span>
-                            </div>
-
-                        </button>
-
+                    <div className="hero-visual" aria-hidden="true">
+                        <div
+                            className="hero-glow"
+                            onPointerDown={handleHeroPointerDown}
+                            onPointerMove={handleHeroPointerMove}
+                            onPointerUp={handleHeroPointerUp}
+                            onPointerCancel={handleHeroPointerUp}
+                            style={{ transform: `translate3d(calc(-50% + ${heroDrag.x}px), ${heroDrag.y}px, 0)` }}
+                            role="img"
+                            aria-label="Draggable VOTARA election visual"
+                        />
+                        <div className="hero-orbit-ring hero-orbit-ring-1" />
+                        <div className="hero-orbit-ring hero-orbit-ring-2" />
+                        <div className="hero-stat hero-stat-left"><span>Cast votes</span><strong>1,207</strong><i><b /></i></div>
+                        <div className="hero-stat hero-stat-right"><span>Verified voters</span><strong>96%</strong><i><b /></i></div>
                     </div>
-
                 </section>
 
-
-                {/* =========================
-                    FEATURES
-                ========================= */}
-                <section
-                    id="about"
-                    className="features-section"
-                >
-
-                    <div className="votara-container">
-
-                        <div className="section-heading">
-
-                            <span className="section-label">
-                                OUR FEATURES
-                            </span>
-
-                            <h2>
-                                Everything you need
-                                <br />
-                                for a better election.
-                            </h2>
-
-                            <p>
-                                VOTARA provides a simpler and more
-                                organized way for students and the
-                                Electoral Board to manage elections.
-                            </p>
-
+                <section id="about" className="about-section landing-container">
+                    <div className="section-intro">
+                        <span className="section-number">01</span>
+                        <div>
+                            <p className="section-label"><WordReveal>WHY VOTARA</WordReveal></p>
+                            <h2><WordReveal>Everything your campus election needs.</WordReveal></h2>
+                            <p><WordReveal>From verified registration to secure voting and clear results, Votara keeps the election experience understandable for students and manageable for the Electoral Board.</WordReveal></p>
                         </div>
-
-
-                        <div className="feature-grid">
-
-                            <article className="feature-card">
-
-                                <div className="feature-icon">
-                                    🔒
-                                </div>
-
-                                <h3>
-                                    Secured platform
-                                </h3>
-
-                                <p>
-                                    Student accounts are protected
-                                    through authentication and
-                                    controlled access.
-                                </p>
-
-                            </article>
-
-
-                            <article className="feature-card">
-
-                                <div className="feature-icon">
-                                    ✓
-                                </div>
-
-                                <h3>
-                                    Vote online
-                                </h3>
-
-                                <p>
-                                    Students can vote through their
-                                    account without relying on paper
-                                    ballots.
-                                </p>
-
-                            </article>
-
-
-                            <article className="feature-card">
-
-                                <div className="feature-icon">
-                                    ▥
-                                </div>
-
-                                <h3>
-                                    Real-time results
-                                </h3>
-
-                                <p>
-                                    Election progress and authorized
-                                    results can be monitored through
-                                    the system.
-                                </p>
-
-                            </article>
-
-                        </div>
-
                     </div>
-
+                    <div className="feature-grid">
+                        <article className="feature-card feature-card-blue"><span className="feature-icon"><FiShield /></span><small>01</small><h3><WordReveal>Secure</WordReveal></h3><p><WordReveal>Identity is verified before access while the ballot is protected from unnecessary exposure.</WordReveal></p></article>
+                        <article className="feature-card"><span className="feature-icon"><FiCheck /></span><small>02</small><h3><WordReveal>Student voting</WordReveal></h3><p><WordReveal>A focused voting flow makes it easy to review candidates and submit the required choices.</WordReveal></p></article>
+                        <article className="feature-card"><span className="feature-icon"><FiLock /></span><small>03</small><h3><WordReveal>Election management</WordReveal></h3><p><WordReveal>Election staff can manage registration, candidates, schedules, monitoring and results from one system.</WordReveal></p></article>
+                        <article className="feature-card feature-card-wide"><div><span className="feature-icon"><FiArrowRight /></span><small>04</small><h3><WordReveal>Results & reporting</WordReveal></h3><p><WordReveal>Follow election outcomes with clear summaries and reporting designed for accountable decision-making.</WordReveal></p></div><div className="mini-bars"><i /><i /><i /><i /><i /></div></article>
+                    </div>
                 </section>
 
-
-                {/* =========================
-                    RESULTS SECTION
-                ========================= */}
-                <section
-                    id="election"
-                    className="results-section"
-                >
-
-                    <div className="votara-container results-grid">
-
-                        <div className="results-chart">
-
-                            <div className="result-chart-header">
-                                <span>
-                                    Live election
-                                </span>
-
-                                <span>
-                                    Overview
-                                </span>
-                            </div>
-
-                            <div className="large-bars">
-
-                                <div className="large-bar height-1"></div>
-                                <div className="large-bar height-2"></div>
-                                <div className="large-bar height-3"></div>
-                                <div className="large-bar height-4"></div>
-                                <div className="large-bar height-5"></div>
-                                <div className="large-bar height-6"></div>
-
-                            </div>
-
-                        </div>
-
-
-                        <div className="results-content">
-
-                            <span className="section-label">
-                                ELECTION RESULTS
-                            </span>
-
-                            <h2>
-                                View live results with
-                                confidence.
-                            </h2>
-
-                            <p>
-                                Monitor authorized election information
-                                and voting progress through a clear and
-                                organized interface.
-                            </p>
-
-                            <ul className="check-list">
-
-                                <li>
-                                    <span>✓</span>
-                                    Organized election data
-                                </li>
-
-                                <li>
-                                    <span>✓</span>
-                                    Faster vote verification
-                                </li>
-
-                                <li>
-                                    <span>✓</span>
-                                    Transparent reporting
-                                </li>
-
-                            </ul>
-
-                            <button
-                                className="primary-button"
-                                onClick={() => scrollToSection("election")}
-                                type="button"
-                            >
-                                Learn more
-                                <span>→</span>
-                            </button>
-
-                        </div>
-
+                <section className="quote-section landing-container">
+                    <div className="quote-card">
+                        <span className="quote-mark">“</span>
+                        <p><WordReveal>Votara is built around a simple idea: verify who is allowed to vote, while protecting what that voter selected.</WordReveal></p>
+                        <span className="quote-caption"><WordReveal>A clearer way to vote.</WordReveal></span>
                     </div>
-
                 </section>
 
-
-                {/* =========================
-                    MONITORING SECTION
-                ========================= */}
-                <section className="monitor-section">
-
-                    <div className="votara-container monitor-grid">
-
-                        <div className="donut-wrapper">
-
-                            <div className="donut-chart">
-
-                                <div className="donut-center">
-                                    <strong>68%</strong>
-                                    <span>Turnout</span>
-                                </div>
-
-                            </div>
-
-                            <div className="donut-legend">
-
-                                <div>
-                                    <span className="legend-dot blue"></span>
-                                    Voted
-                                </div>
-
-                                <div>
-                                    <span className="legend-dot purple"></span>
-                                    Not yet voted
-                                </div>
-
-                                <div>
-                                    <span className="legend-dot gray"></span>
-                                    Pending
-                                </div>
-
-                            </div>
-
+                <section ref={howRef} id="how-it-works" className="how-section">
+                    <div className="how-sticky">
+                        <div className="how-heading">
+                            <h2><WordReveal>How it works</WordReveal></h2>
+                            <p><WordReveal>It’s simple and easy to use with these 3 steps</WordReveal></p>
                         </div>
-
-
-                        <div className="monitor-content">
-
-                            <span className="section-label">
-                                MONITOR THE VOTING PROCESS
-                            </span>
-
-                            <h2>
-                                Track election progress
-                                <br />
-                                with clarity.
-                            </h2>
-
-                            <p>
-                                The system can provide authorized users
-                                with important election statistics while
-                                keeping student voting information
-                                protected.
-                            </p>
-
-                            <div className="mini-stat-grid">
-
-                                <div>
-                                    <strong>68%</strong>
-                                    <span>Turnout</span>
-                                </div>
-
-                                <div>
-                                    <strong>267</strong>
-                                    <span>Votes</span>
-                                </div>
-
-                                <div>
-                                    <strong>15</strong>
-                                    <span>Hours</span>
-                                </div>
-
+                        <div className="how-viewport">
+                            <div className="how-track" style={{ transform: `translate3d(${translateX},0,0)` }}>
+                                {STEPS.map((step, index) => (
+                                    <article className={`how-slide how-slide-${index + 1}`} key={step.number}>
+                                        <div className="how-copy">
+                                            <div className="step-line" />
+                                            <span className="step-number"><WordReveal>{step.number}</WordReveal></span>
+                                            <h3><WordReveal>{step.title}</WordReveal></h3>
+                                            <p><WordReveal>{step.text}</WordReveal></p>
+                                            <button type="button" onClick={() => index === 0 ? navigate("/register") : scrollTo("contact")}>Learn more <FiArrowRight /></button>
+                                        </div>
+                                        <div className="how-art">
+                                            {index === 0 && <div className="signup-art"><div className="signup-card"><span>Votara</span><strong>Welcome!</strong><small>Create your account and verify your student ID.</small><div className="fake-input" /><div className="fake-input" /><div className="fake-button">SIGN UP</div></div><div className="signup-orb">01</div></div>}
+                                            {index === 1 && <DashboardMockup />}
+                                            {index === 2 && <DashboardMockup variant="result" />}
+                                        </div>
+                                    </article>
+                                ))}
                             </div>
-
                         </div>
-
+                        <div className="how-progress"><span style={{ width: `${Math.max(12, howProgress * 100)}%` }} /></div>
                     </div>
-
                 </section>
 
-
-                {/* =========================
-                    FAQ
-                ========================= */}
-                <section
-                    id="faq"
-                    className="faq-section"
-                >
-
-                    <div className="votara-container">
-
-                        <div className="section-heading">
-
-                            <span className="section-label">
-                                FAQ
-                            </span>
-
-                            <h2>
-                                Frequently asked questions
-                            </h2>
-
-                            <p>
-                                Learn more about the VOTARA voting
-                                process.
-                            </p>
-
-                        </div>
-
-
-                        <div className="faq-list">
-
-                            <details>
-
-                                <summary>
-                                    How does VOTARA work?
-                                    <span>+</span>
-                                </summary>
-
-                                <p>
-                                    Students register using their official
-                                    student information, verify their
-                                    account, receive approval from the
-                                    Electoral Board, and use their account
-                                    to participate in the election.
-                                </p>
-
-                            </details>
-
-
-                            <details>
-
-                                <summary>
-                                    Who can use VOTARA?
-                                    <span>+</span>
-                                </summary>
-
-                                <p>
-                                    VOTARA is designed for authorized
-                                    students and election personnel within
-                                    the department.
-                                </p>
-
-                            </details>
-
-
-                            <details>
-
-                                <summary>
-                                    Is the voting process secure?
-                                    <span>+</span>
-                                </summary>
-
-                                <p>
-                                    The system will use authenticated
-                                    student accounts and controlled
-                                    Electoral Board verification.
-                                </p>
-
-                            </details>
-
-
-                            <details>
-
-                                <summary>
-                                    How does registration work?
-                                    <span>+</span>
-                                </summary>
-
-                                <p>
-                                    Students submit their Student ID and
-                                    email address, verify the OTP sent to
-                                    them, and wait for Electoral Board
-                                    approval and temporary password
-                                    generation.
-                                </p>
-
-                            </details>
-
-
-                            <details>
-
-                                <summary>
-                                    Can students vote more than once?
-                                    <span>+</span>
-                                </summary>
-
-                                <p>
-                                    The system is designed to record the
-                                    student's voting status and prevent
-                                    another voting attempt after the
-                                    election process has been completed.
-                                </p>
-
-                            </details>
-
-                        </div>
-
-                    </div>
-
+                <section className="privacy-section">
+                    <div className="privacy-rings" aria-hidden="true"><span /><span /><span /><div><FiShield /></div></div>
+                    <div><span className="privacy-label"><WordReveal>YOUR VOTE STAYS PRIVATE.</WordReveal></span><h2><WordReveal>Your election stays transparent.</WordReveal></h2><p><WordReveal>Ballots should be confidential. Organization-level results and activity can still be reviewed without exposing individual choices.</WordReveal></p></div>
                 </section>
 
+                <section id="faq" className="faq-section landing-container">
+                    <div className="faq-heading"><span className="section-number">04</span><div><p className="section-label"><WordReveal>QUESTIONS</WordReveal></p><h2><WordReveal>Frequently asked questions.</WordReveal></h2><p><WordReveal>Everything you need to know before using Votara.</WordReveal></p></div></div>
+                    <div className="faq-list">
+                        {FAQS.map((item, index) => (
+                            <div className={`faq-item ${faqOpen === index ? "open" : ""}`} key={item.question}>
+                                <button type="button" onClick={() => setFaqOpen(faqOpen === index ? null : index)}><span><WordReveal>{item.question}</WordReveal></span><FiChevronDown /></button>
+                                <div className="faq-answer"><p><WordReveal>{item.answer}</WordReveal></p></div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                <section id="contact" className="contact-section landing-container">
+                    <div className="contact-card">
+                        <div><span className="section-label"><WordReveal>READY WHEN YOU ARE</WordReveal></span><h2><WordReveal>Start with your vote.</WordReveal></h2><p><WordReveal>Create your Votara account and take the first step toward a more accessible student election.</WordReveal></p></div>
+                        <button type="button" onClick={() => navigate("/register")}>Register as a Voter <FiArrowRight /></button>
+                    </div>
+                </section>
             </main>
 
-
-            {/* =========================
-                FOOTER
-            ========================= */}
-            <footer className="votara-footer">
-
-                <div className="votara-container footer-grid">
-
-                    <div className="footer-brand">
-
-                        <div className="votara-logo footer-logo">
-
-                            <span className="logo-mark">
-                                ✓
-                            </span>
-
-                            <span>
-                                Votara
-                            </span>
-
-                        </div>
-
-                        <p>
-                            A student-focused voting platform
-                            designed to make department elections
-                            simpler, faster, and more organized.
-                        </p>
-
-                    </div>
-
-
-                    <div className="footer-column">
-
-                        <h4>
-                            Product
-                        </h4>
-
-                        <button
-                            type="button"
-                            onClick={() => scrollToSection("home")}
-                        >
-                            Home
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={() => scrollToSection("about")}
-                        >
-                            Features
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={() => scrollToSection("election")}
-                        >
-                            Election
-                        </button>
-
-                    </div>
-
-
-                    <div className="footer-column">
-
-                        <h4>
-                            Resources
-                        </h4>
-
-                        <button
-                            type="button"
-                            onClick={() => scrollToSection("faq")}
-                        >
-                            FAQ
-                        </button>
-
-                        <button
-                            type="button"
-                        >
-                            Privacy
-                        </button>
-
-                        <button
-                            type="button"
-                        >
-                            Terms
-                        </button>
-
-                    </div>
-
-
-                    <div className="footer-column">
-
-                        <h4>
-                            Account
-                        </h4>
-
-                        <button
-                            onClick={handleLogin}
-                            type="button"
-                        >
-                            Login
-                        </button>
-
-                        <button
-                            onClick={handleRegister}
-                            type="button"
-                        >
-                            Register
-                        </button>
-
-                    </div>
-
+            <footer className="landing-footer">
+                <div className="landing-container footer-inner">
+                    <button className="footer-logo" type="button" onClick={() => scrollTo("home")}><img src={votaraLogo} alt="Votara" /></button>
+                    <span>Secure • Transparent • Accessible • Accountable</span>
+                    <span>© {new Date().getFullYear()} VOTARA</span>
                 </div>
-
-
-                <div className="votara-container footer-bottom">
-
-                    <span>
-                        © 2026 VOTARA. Department Student Election System.
-                    </span>
-
-                    <span>
-                        Built for a better voting experience.
-                    </span>
-
-                </div>
-
             </footer>
-
         </div>
     );
-};
+}
 
 export default LandingPage;
