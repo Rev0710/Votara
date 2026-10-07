@@ -136,8 +136,8 @@ function CandidateManagement() {
     const [isPageTransitioning, setIsPageTransitioning] = useState(false);
 
     useEffect(() => {
-        const token = localStorage.getItem("votaraStaffToken");
-        const storedUser = localStorage.getItem("votaraStaffUser");
+        const token = localStorage.getItem("votaraAdminToken");
+        const storedUser = localStorage.getItem("votaraAdminUser");
 
         if (!token || !storedUser) {
             navigate("/admin-login", { replace: true });
@@ -155,8 +155,8 @@ function CandidateManagement() {
             setAdmin(user);
         } catch (error) {
             console.error("Invalid admin session:", error);
-            localStorage.removeItem("votaraStaffToken");
-            localStorage.removeItem("votaraStaffUser");
+            localStorage.removeItem("votaraAdminToken");
+            localStorage.removeItem("votaraAdminUser");
             navigate("/admin-login", { replace: true });
         }
     }, [navigate]);
@@ -185,8 +185,8 @@ function CandidateManagement() {
             return;
         }
 
-        localStorage.removeItem("votaraStaffToken");
-        localStorage.removeItem("votaraStaffUser");
+        localStorage.removeItem("votaraAdminToken");
+        localStorage.removeItem("votaraAdminUser");
 
         setIsPageTransitioning(true);
 

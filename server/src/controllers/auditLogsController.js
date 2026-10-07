@@ -700,6 +700,15 @@ const getAuditLogs = async (req, res) => {
 
 
 // =========================================================
+// RELATED RECORD RESOLUTION
+// =========================================================
+// Safe fallback for the current audit-log detail endpoint.
+// The audit log itself remains unchanged; no extra records are fabricated.
+const resolveAuditLogRelations = async () => {
+    return {};
+};
+
+// =========================================================
 // GET SINGLE AUDIT LOG
 // =========================================================
 

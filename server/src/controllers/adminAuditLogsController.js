@@ -7,8 +7,9 @@ const supabase = require("../config/supabase");
 //
 // This endpoint is ADMIN-ONLY.
 //
-// The Admin side is the central monitoring area. It can view
-// both ADMIN and ELECTORAL BOARD activity from audit_logs.
+// The Admin audit page exposes ADMIN activity only.
+// Electoral Board activity is served exclusively by the
+// Electoral Board audit endpoint.
 //
 // The Electoral Board audit endpoint remains separate and is
 // restricted to ELECTORAL BOARD records only.
@@ -260,12 +261,6 @@ const getAdminAuditLogs = async (req, res) => {
             req.query.action || ""
         ).trim();
 
-        const actorRole = String(
-            req.query.actor_role ||
-            req.query.actorRole ||
-            ""
-        ).trim();
-
         const electionId = String(
             req.query.election_id ||
             req.query.electionId ||
@@ -318,13 +313,12 @@ const getAdminAuditLogs = async (req, res) => {
                 ascending: false,
             });
 
-        // Admin monitoring can see both ADMIN and EB activity.
-        if (actorRole) {
-            query = query.eq(
-                "actor_role",
-                actorRole
-            );
-        }
+        // SECURITY SCOPE: ADMIN LOGS ONLY.
+        // Never allow the Admin endpoint to return EB records.
+        query = query.eq(
+            "actor_role",
+            ADMIN_ROLE
+        );
 
         if (module) {
             query = query.eq(
@@ -398,12 +392,11 @@ const getAdminAuditLogs = async (req, res) => {
                 actor_role
             `);
 
-        if (actorRole) {
-            summaryQuery = summaryQuery.eq(
-                "actor_role",
-                actorRole
-            );
-        }
+        // Keep the summary restricted to Admin records as well.
+        summaryQuery = summaryQuery.eq(
+            "actor_role",
+            ADMIN_ROLE
+        );
 
         if (module) {
             summaryQuery = summaryQuery.eq(
@@ -479,7 +472,6 @@ const getAdminAuditLogs = async (req, res) => {
                 viewer: "admin",
                 includes: [
                     "admin",
-                    "electoral_board",
                 ],
             },
             generatedAt:
@@ -540,6 +532,7 @@ const getAdminAuditLogById = async (req, res) => {
             .from("audit_logs")
             .select(AUDIT_LOG_FIELDS)
             .eq("id", logId)
+            .eq("actor_role", ADMIN_ROLE)
             .maybeSingle();
 
         if (error) {

@@ -1,5 +1,6 @@
 /* ============================================================
    VOTARA ADMIN TOP NAVIGATION
+   Responsive version
    ============================================================ */
 
 .votara-admin-topbar {
@@ -8,27 +9,19 @@
     z-index: 1000;
 
     width: 100%;
-    min-height: 78px;
+    min-height: 72px;
 
     display: flex;
     align-items: center;
+    gap: 12px;
 
-    gap: 18px;
+    padding: 0 24px;
 
-    padding: 0 28px;
+    background: rgba(17, 16, 42, 0.98);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 
-    background:
-        rgba(17, 16, 42, 0.96);
-
-    border-bottom:
-        1px solid
-        rgba(255, 255, 255, 0.07);
-
-    backdrop-filter:
-        blur(18px);
-
-    -webkit-backdrop-filter:
-        blur(18px);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
 
     box-sizing: border-box;
 }
@@ -39,32 +32,26 @@
    ============================================================ */
 
 .votara-admin-brand {
-    width: 150px;
-    min-width: 150px;
-
-    height: 48px;
+    width: 132px;
+    min-width: 132px;
+    height: 46px;
 
     display: flex;
     align-items: center;
-
     gap: 7px;
 
     padding: 0;
-
     border: 0;
-
     background: transparent;
 
     color: #286bff;
-
     cursor: pointer;
-
     flex-shrink: 0;
 }
 
 .votara-admin-brand-mark {
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
 
     display: flex;
     align-items: center;
@@ -74,85 +61,55 @@
 }
 
 .votara-admin-brand-logo {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
 
     object-fit: contain;
-
     display: block;
 }
 
 .votara-admin-brand-name {
-    font-family:
-        "Poppins",
-        sans-serif;
-
-    font-size: 25px;
-
+    font-family: "Poppins", sans-serif;
+    font-size: 24px;
     font-weight: 700;
-
     letter-spacing: -0.5px;
 }
 
 
 /* ============================================================
-   NAVIGATION
+   DESKTOP NAVIGATION
    ============================================================ */
 
 .votara-admin-topnav {
     flex: 1 1 auto;
-
     min-width: 0;
 
     display: flex;
     align-items: center;
-
     justify-content: center;
 
-    gap: 4px;
+    gap: 2px;
 
-    overflow-x: auto;
-    overflow-y: hidden;
-
-    white-space: nowrap;
-
-    scrollbar-width: none;
+    overflow: hidden;
 }
-
-.votara-admin-topnav::-webkit-scrollbar {
-    display: none;
-}
-
-
-/* ============================================================
-   NAV BUTTON
-   ============================================================ */
 
 .votara-admin-topnav-link {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
+    min-width: 0;
 
     border: 0;
-
     background: transparent;
 
-    color:
-        rgba(255, 255, 255, 0.72);
+    color: rgba(255, 255, 255, 0.72);
 
-    padding:
-        10px 11px;
+    padding: 9px 8px;
+    border-radius: 9px;
 
-    border-radius: 10px;
-
-    font-family:
-        "Poppins",
-        sans-serif;
-
-    font-size: 10px;
-
+    font-family: "Poppins", sans-serif;
+    font-size: 9px;
     font-weight: 600;
 
     white-space: nowrap;
-
     cursor: pointer;
 
     transition:
@@ -162,21 +119,16 @@
 }
 
 .votara-admin-topnav-link:hover {
-    background:
-        rgba(255, 255, 255, 0.07);
-
+    background: rgba(255, 255, 255, 0.07);
     color: #ffffff;
 }
 
 .votara-admin-topnav-link.active {
-    background:
-        #1e3a8a;
-
+    background: #1e3a8a;
     color: #ffffff;
 
     box-shadow:
-        0 4px 14px
-        rgba(30, 58, 138, 0.30);
+        0 4px 14px rgba(30, 58, 138, 0.30);
 }
 
 
@@ -186,46 +138,34 @@
 
 .votara-admin-topbar-actions {
     display: flex;
-
     align-items: center;
-
-    gap: 10px;
+    gap: 7px;
 
     flex-shrink: 0;
 }
 
 
 /* ============================================================
-   PRODUCTION
+   ENVIRONMENT
    ============================================================ */
 
 .votara-topbar-environment {
     display: flex;
     align-items: center;
+    gap: 5px;
 
-    gap: 6px;
+    padding: 6px 9px;
 
-    padding:
-        7px 11px;
-
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.08);
-
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 999px;
 
-    background:
-        rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.03);
+    color: #2ed171;
 
-    color:
-        #2ed171;
-
-    font-size: 10px;
-
+    font-size: 9px;
     font-weight: 600;
 
     white-space: nowrap;
-
     cursor: default;
 }
 
@@ -234,12 +174,10 @@
     height: 6px;
 
     border-radius: 50%;
-
     background: #2ed171;
 
     box-shadow:
-        0 0 8px
-        rgba(46, 209, 113, 0.75);
+        0 0 8px rgba(46, 209, 113, 0.75);
 }
 
 
@@ -250,44 +188,36 @@
 .votara-notification-button {
     position: relative;
 
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
     border: 0;
+    border-radius: 9px;
 
-    border-radius: 10px;
-
-    background:
-        transparent;
-
-    color:
-        rgba(255, 255, 255, 0.80);
+    background: transparent;
+    color: rgba(255, 255, 255, 0.80);
 
     cursor: pointer;
 }
 
 .votara-notification-button:hover {
-    background:
-        rgba(255, 255, 255, 0.07);
-
+    background: rgba(255, 255, 255, 0.07);
     color: #ffffff;
 }
 
 .notification-dot {
     position: absolute;
-
-    top: 7px;
-    right: 8px;
+    top: 6px;
+    right: 7px;
 
     width: 5px;
     height: 5px;
 
     border-radius: 50%;
-
     background: #286bff;
 }
 
@@ -298,17 +228,15 @@
 
 .votara-admin-user {
     display: flex;
-
     align-items: center;
-
-    gap: 8px;
+    gap: 7px;
 
     white-space: nowrap;
 }
 
 .votara-admin-user-avatar {
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
 
     display: flex;
     align-items: center;
@@ -316,26 +244,23 @@
 
     border-radius: 50%;
 
-    background:
-        linear-gradient(
-            135deg,
-            #f6d365,
-            #fda085
-        );
+    background: linear-gradient(
+        135deg,
+        #f6d365,
+        #fda085
+    );
 
-    color:
-        #202020;
+    color: #202020;
 
-    font-size: 13px;
-
+    font-size: 12px;
     font-weight: 700;
+
+    flex-shrink: 0;
 }
 
 .votara-admin-user-name {
     color: #ffffff;
-
-    font-size: 11px;
-
+    font-size: 10px;
     font-weight: 600;
 }
 
@@ -345,45 +270,177 @@
    ============================================================ */
 
 .votara-admin-logout {
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.08);
-
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 9px;
 
-    background:
-        rgba(255, 255, 255, 0.02);
-
-    color:
-        rgba(255, 255, 255, 0.80);
+    background: rgba(255, 255, 255, 0.02);
+    color: rgba(255, 255, 255, 0.80);
 
     cursor: pointer;
 }
 
 .votara-admin-logout:hover {
-    background:
-        rgba(220, 38, 38, 0.15);
-
+    background: rgba(220, 38, 38, 0.15);
     color: #ffffff;
 }
 
 
 /* ============================================================
-   RESPONSIVE
+   COMPACT / MOBILE MENU BUTTON
+   Hidden on large screens
    ============================================================ */
 
-@media (max-width: 1250px) {
+.votara-admin-menu-button {
+    display: none;
 
+    width: 36px;
+    height: 36px;
+
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 9px;
+
+    background: rgba(255, 255, 255, 0.04);
+    color: #ffffff;
+
+    cursor: pointer;
+}
+
+.votara-admin-menu-button:hover {
+    background: rgba(255, 255, 255, 0.09);
+}
+
+
+/* ============================================================
+   MOBILE / COMPACT DROPDOWN
+   ============================================================ */
+
+.votara-admin-mobile-menu {
+    display: none;
+
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 16px;
+
+    width: min(360px, calc(100vw - 32px));
+
+    padding: 12px;
+
+    border: 1px solid rgba(30, 58, 138, 0.35);
+    border-radius: 16px;
+
+    background: rgba(17, 16, 42, 0.99);
+
+    box-shadow:
+        0 18px 45px rgba(0, 0, 0, 0.35);
+
+    box-sizing: border-box;
+}
+
+.votara-admin-mobile-menu.open {
+    display: block;
+}
+
+.votara-admin-mobile-current {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 10px 11px;
+    margin-bottom: 8px;
+
+    border-radius: 10px;
+
+    background: rgba(30, 58, 138, 0.18);
+}
+
+.votara-mobile-current-label {
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 9px;
+    font-weight: 600;
+}
+
+.votara-mobile-current-value {
+    flex: 1;
+
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.votara-admin-mobile-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.votara-admin-mobile-link {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 11px 12px;
+
+    border: 0;
+    border-radius: 9px;
+
+    background: transparent;
+    color: rgba(255, 255, 255, 0.76);
+
+    font-family: "Poppins", sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+
+    text-align: left;
+    cursor: pointer;
+}
+
+.votara-admin-mobile-link:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: #ffffff;
+}
+
+.votara-admin-mobile-link.active {
+    background: #1e3a8a;
+    color: #ffffff;
+}
+
+.votara-mobile-active-dot {
+    width: 6px;
+    height: 6px;
+
+    border-radius: 50%;
+    background: #2ed171;
+
+    flex-shrink: 0;
+}
+
+
+/* ============================================================
+   RESPONSIVE BREAKPOINTS
+   ============================================================ */
+
+/*
+   At this width the seven navigation items no longer compete
+   with the logo + environment + notification + user controls.
+   We replace them with one Menu button.
+*/
+
+@media (max-width: 1450px) {
     .votara-admin-topbar {
         gap: 10px;
-        padding: 0 16px;
+        padding: 0 18px;
     }
 
     .votara-admin-brand {
@@ -391,35 +448,408 @@
         min-width: 125px;
     }
 
-    .votara-admin-topnav-link {
-        font-size: 9px;
-        padding: 9px 8px;
-    }
-
-    .votara-admin-user-name {
+    .votara-admin-topnav {
         display: none;
     }
 
+    .votara-admin-menu-button {
+        display: flex;
+    }
 }
 
 
-@media (max-width: 900px) {
+/* Medium screens */
 
+@media (max-width: 900px) {
     .votara-admin-topbar {
-        min-height: 70px;
+        min-height: 68px;
+        padding: 0 14px;
+    }
+
+    .votara-admin-brand {
+        width: 44px;
+        min-width: 44px;
     }
 
     .votara-admin-brand-name {
         display: none;
     }
 
-    .votara-admin-brand {
-        width: 45px;
-        min-width: 45px;
-    }
-
     .votara-topbar-environment {
         display: none;
     }
 
+    .votara-admin-user-name {
+        display: none;
+    }
+
+    .votara-admin-mobile-menu {
+        right: 12px;
+    }
+}
+
+
+/* Small phones */
+
+@media (max-width: 520px) {
+    .votara-admin-topbar {
+        min-height: 64px;
+        padding: 0 10px;
+    }
+
+    .votara-admin-topbar-actions {
+        gap: 4px;
+    }
+
+    .votara-admin-brand-logo {
+        width: 34px;
+        height: 34px;
+    }
+
+    .votara-admin-brand-mark {
+        width: 32px;
+        height: 32px;
+    }
+
+    .votara-notification-button,
+    .votara-admin-logout,
+    .votara-admin-menu-button {
+        width: 32px;
+        height: 32px;
+    }
+
+    .votara-admin-mobile-menu {
+        top: calc(100% + 6px);
+        right: 8px;
+
+        width: calc(100vw - 16px);
+    }
+}
+
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .votara-admin-topnav-link,
+    .votara-admin-mobile-link,
+    .votara-notification-button,
+    .votara-admin-logout {
+        transition: none;
+    }
+}
+
+
+/* ============================================================
+   VOTARA ADMIN TOPBAR — USER ACCESS / LOGOUT UPDATE
+   ============================================================ */
+
+.votara-admin-user {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+}
+
+.votara-admin-user:hover .votara-admin-user-avatar {
+    box-shadow: 0 0 0 3px rgba(38,110,255,.18);
+    transform: translateY(-1px);
+}
+
+.votara-admin-user-avatar {
+    transition: box-shadow .18s ease, transform .18s ease;
+}
+
+/* Environment and notification controls are intentionally removed. */
+.votara-topbar-environment,
+.votara-notification-button {
+    display: none !important;
+}
+
+/* ============================================================
+   LOGOUT CONFIRMATION MODAL
+   ============================================================ */
+
+.votara-logout-modal-backdrop {
+    position: fixed !important;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+
+    width: 100vw;
+    height: 100vh;
+
+    z-index: 99999;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-sizing: border-box;
+    padding: 20px;
+
+    background: rgba(2, 5, 14, 0.76);
+
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+}
+
+.votara-logout-modal {
+    position: relative;
+
+    width: min(420px, calc(100vw - 40px));
+    max-width: 420px;
+
+    margin: 0 auto;
+
+    box-sizing: border-box;
+
+    border: 1px solid rgba(137, 158, 205, 0.26);
+    border-radius: 16px;
+
+    overflow: hidden;
+
+    color: #f7f9ff;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(20, 28, 49, 0.99),
+            rgba(8, 13, 27, 0.99)
+        );
+
+    box-shadow:
+        0 30px 90px rgba(0, 0, 0, 0.55),
+        0 0 0 1px rgba(38, 110, 255, 0.05);
+
+    padding: 22px;
+}
+
+/* Icon */
+
+.votara-logout-modal-icon {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: 0 auto 14px;
+
+    border-radius: 12px;
+
+    color: #8fb3ff;
+
+    background: rgba(38, 110, 255, 0.12);
+
+    border: 1px solid rgba(38, 110, 255, 0.20);
+}
+
+/* Text */
+
+.votara-logout-modal-content {
+    text-align: center;
+}
+
+.votara-logout-modal-content h2 {
+    margin: 0;
+
+    font-size: 17px;
+    font-weight: 800;
+
+    letter-spacing: -0.02em;
+}
+
+.votara-logout-modal-content p {
+    margin: 8px auto 0;
+
+    max-width: 330px;
+
+    color: #8e9bb7;
+
+    font-size: 10px;
+    line-height: 1.55;
+}
+
+/* Buttons */
+
+.votara-logout-modal-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    margin-top: 20px;
+    padding-top: 15px;
+
+    border-top: 1px solid rgba(137, 158, 205, 0.16);
+}
+
+.votara-logout-cancel,
+.votara-logout-confirm {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    min-height: 36px;
+
+    padding: 0 16px;
+
+    border-radius: 9px;
+
+    font-size: 9px;
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+.votara-logout-cancel {
+    border: 1px solid rgba(137, 158, 205, 0.22);
+
+    color: #cbd4e8;
+
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.votara-logout-cancel:hover {
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.votara-logout-confirm {
+    border: 1px solid rgba(220, 38, 38, 0.45);
+
+    color: #ffffff;
+
+    background: #b91c1c;
+}
+
+.votara-logout-confirm:hover {
+    background: #dc2626;
+}
+
+/* Mobile */
+
+@media (max-width: 520px) {
+    .votara-logout-modal-backdrop {
+        padding: 16px;
+    }
+
+    .votara-logout-modal {
+        width: 100%;
+        max-width: 420px;
+
+        padding: 20px;
+    }
+
+    .votara-logout-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(137,158,205,.16);
+}
+
+    .votara-logout-cancel,
+    .votara-logout-confirm {
+        width: 100%;
+    }
+}
+
+.votara-logout-modal {
+    width: min(420px, 100%);
+    border: 1px solid rgba(137,158,205,.26);
+    border-radius: 16px;
+    overflow: hidden;
+    color: #f7f9ff;
+    background: linear-gradient(145deg, rgba(20,28,49,.99), rgba(8,13,27,.99));
+    box-shadow: 0 30px 90px rgba(0,0,0,.55);
+    padding: 22px;
+}
+
+.votara-logout-modal-icon {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 14px;
+    border-radius: 12px;
+    color: #8fb3ff;
+    background: rgba(38,110,255,.12);
+    border: 1px solid rgba(38,110,255,.20);
+}
+
+.votara-logout-modal-content h2 {
+    margin: 0;
+    font-size: 17px;
+    letter-spacing: -.02em;
+}
+
+.votara-logout-modal-content p {
+    margin: 7px 0 0;
+    color: #8e9bb7;
+    font-size: 10px;
+    line-height: 1.55;
+}
+
+.votara-logout-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(137,158,205,.16);
+}
+
+.votara-logout-cancel,
+.votara-logout-confirm {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 36px;
+    padding: 0 14px;
+    border-radius: 9px;
+    font-size: 9px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.votara-logout-cancel {
+    border: 1px solid rgba(137,158,205,.22);
+    color: #cbd4e8;
+    background: rgba(255,255,255,.03);
+}
+
+.votara-logout-cancel:hover {
+    background: rgba(255,255,255,.07);
+}
+
+.votara-logout-confirm {
+    border: 1px solid rgba(220,38,38,.45);
+    color: #fff;
+    background: #b91c1c;
+}
+
+.votara-logout-confirm:hover {
+    background: #dc2626;
+}
+
+@media (max-width: 520px) {
+    .votara-logout-modal-actions {
+        flex-direction: column-reverse;
+    }
+
+    .votara-logout-cancel,
+    .votara-logout-confirm {
+        width: 100%;
+    }
 }

@@ -151,6 +151,8 @@ function AdminDashboard() {
 
     const [showInviteModal, setShowInviteModal] = useState(false);
 
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
     const openInviteModal = () => {
     setShowInviteModal(true);
 };
@@ -217,6 +219,7 @@ useEffect(() => {
         pendingRegistrations: null,
         activeUsers: null,
         totalUsers: null,
+        totalElections: null,
     });
 
     // =====================================================
@@ -257,22 +260,24 @@ useEffect(() => {
             database: "Checking",
         });
 
-    const [environment, setEnvironment] = useState("Production");
-    const [showEnvironmentMenu, setShowEnvironmentMenu] = useState(false);
+    // Authoritative settings loaded from the Admin Settings API.
+    // Dashboard display values should come from the server, not hardcoded UI values.
+    const [systemSettings, setSystemSettings] = useState({});
 
     // =====================================================
     // LOAD ADMIN SESSION
     // =====================================================
+    // Admin uses its own session keys so an Electoral Board login cannot overwrite it.
 
     useEffect(() => {
         const storedUser =
             localStorage.getItem(
-                "votaraStaffUser"
+                "votaraAdminUser"
             );
 
         const token =
             localStorage.getItem(
-                "votaraStaffToken"
+                "votaraAdminToken"
             );
 
         if (!token || !storedUser) {
@@ -289,12 +294,9 @@ useEffect(() => {
             );
 
             if (user.role !== "admin") {
-                navigate(
-                    "/electoral-board/dashboard",
-                    {
-                        replace: true,
-                    }
-                );
+                navigate("/admin-login", {
+                    replace: true,
+                });
 
                 return;
             }
@@ -314,11 +316,11 @@ useEffect(() => {
             );
 
             localStorage.removeItem(
-                "votaraStaffToken"
+                "votaraAdminToken"
             );
 
             localStorage.removeItem(
-                "votaraStaffUser"
+                "votaraAdminUser"
             );
 
             navigate("/admin-login", {
@@ -377,7 +379,7 @@ const checkSystem = async () => {
         try {
             const token =
                 localStorage.getItem(
-                    "votaraStaffToken"
+                    "votaraAdminToken"
                 );
 
             if (!token) {
@@ -427,6 +429,13 @@ const checkSystem = async () => {
 
     totalUsers:
         statistics.totalUsers ??
+        (
+            Number(statistics.totalStudents || 0) +
+            Number(statistics.totalStaff || 0)
+        ),
+
+    totalElections:
+        statistics.totalElections ??
         0,
 });
 
@@ -448,7 +457,10 @@ const checkSystem = async () => {
                 totalUsers:
                     dashboardSystem.totalUsers ??
                     statistics.totalUsers ??
-                    0,
+                    (
+                        Number(statistics.totalStudents || 0) +
+                        Number(statistics.totalStaff || 0)
+                    ),
 
                 electionStatus:
                     dashboardSystem.electionStatus || {
@@ -458,10 +470,10 @@ const checkSystem = async () => {
 
                 serverUsage:
                     dashboardSystem.serverUsage || {
-                        memoryPercent: 0,
-                        heapUsedMB: 0,
-                        heapTotalMB: 0,
-                        uptimeSeconds: 0,
+                        memoryPercent: null,
+                        heapUsedMB: null,
+                        heapTotalMB: null,
+                        uptimeSeconds: null,
                         nodeVersion: "",
                     },
 
@@ -471,6 +483,25 @@ const checkSystem = async () => {
                         recent: [],
                     },
             });
+
+            // System settings are authoritative on the server/database.
+            // A settings failure must not prevent the dashboard statistics from rendering.
+            try {
+                const settingsResponse = await api.get("/admin/settings", {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (settingsResponse.data?.success) {
+                    setSystemSettings(settingsResponse.data.settings || {});
+                }
+            } catch (settingsError) {
+                console.warn(
+                    "Unable to load Admin System Settings for dashboard:",
+                    settingsError?.response?.data?.message || settingsError?.message
+                );
+            }
 
             setLastUpdated(
                 response.data.generatedAt
@@ -487,14 +518,15 @@ const checkSystem = async () => {
             );
 
             if (
-                error.response?.status === 401
+                error.response?.status === 401 ||
+                error.response?.status === 403
             ) {
                 localStorage.removeItem(
-                    "votaraStaffToken"
+                    "votaraAdminToken"
                 );
 
                 localStorage.removeItem(
-                    "votaraStaffUser"
+                    "votaraAdminUser"
                 );
 
                 navigate("/admin-login", {
@@ -531,18 +563,22 @@ const checkSystem = async () => {
     // LOGOUT
     // =====================================================
 
-    const handleLogout = () => {
+    const confirmLogout = () => {
         localStorage.removeItem(
-            "votaraStaffToken"
+            "votaraAdminToken"
         );
 
         localStorage.removeItem(
-            "votaraStaffUser"
+            "votaraAdminUser"
         );
 
         navigate("/admin-login", {
             replace: true,
         });
+    };
+
+    const requestLogout = () => {
+        setShowLogoutConfirm(true);
     };
 
     // =====================================================
@@ -564,39 +600,6 @@ const checkSystem = async () => {
         }, 700);
     };
 
-    const handleExportResults = () => {
-        const rows = [
-            ["VOTARA Admin Dashboard Export", ""],
-            ["Generated", new Date().toLocaleString()],
-            ["Environment", environment],
-            [],
-            ["Metric", "Value"],
-            ["Total Students / Voters", stats.totalStudents ?? 0],
-            ["Staff Accounts", stats.totalStaff ?? 0],
-            ["Pending Registrations", stats.pendingRegistrations ?? 0],
-            ["Active Users", stats.activeUsers ?? 0],
-            ["API Status", systemStatus.api],
-            ["Database Status", systemStatus.database],
-        ];
-
-        const csv = rows
-            .map((row) => row.map((cell) => {
-                const value = String(cell ?? "");
-                return `"${value.replace(/"/g, '""')}"`;
-            }).join(","))
-            .join("\n");
-
-        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `votara-dashboard-${new Date().toISOString().slice(0, 10)}.csv`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(url);
-    };
-
     // =====================================================
     // FORMAT TIME
     // =====================================================
@@ -610,6 +613,23 @@ const checkSystem = async () => {
             hour: "2-digit",
             minute: "2-digit",
         });
+    };
+
+    const formatRelativeTime = (value) => {
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) {
+            return "—";
+        }
+
+        const seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+
+        if (seconds < 60) return "just now";
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes}m`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}h`;
+        const days = Math.floor(hours / 24);
+        return `${days}d`;
     };
 
     // =====================================================
@@ -761,24 +781,12 @@ const checkSystem = async () => {
                     <button type="button" className="votara-admin-topnav-link" onClick={() => goTo("/admin/audit-logs")}>
                         Monitoring &amp; Logs
                     </button>
-                    <button type="button" className="votara-admin-topnav-link" onClick={() => goTo("/admin/settings")}>
-                        Support &amp; Troubleshooting
-                    </button>
                     <button type="button" className="votara-admin-topnav-link" onClick={() => goTo("/admin/reports")}>
                         Reports &amp; Analytics
                     </button>
                 </nav>
 
                 <div className="votara-admin-topbar-actions">
-                    <button
-                        type="button"
-                        className="votara-topbar-environment"
-                        onClick={() => setShowEnvironmentMenu((value) => !value)}
-                        aria-label="Environment"
-                    >
-                        <span className="votara-env-dot"></span>
-                        {environment}
-                    </button>
                     <button
                         type="button"
                         className="votara-notification-button"
@@ -800,7 +808,7 @@ const checkSystem = async () => {
                     <button
                         type="button"
                         className="votara-admin-logout"
-                        onClick={handleLogout}
+                        onClick={requestLogout}
                         title="Logout"
                         aria-label="Logout"
                     >
@@ -808,6 +816,54 @@ const checkSystem = async () => {
                     </button>
                 </div>
             </header>
+
+            {/* LOGOUT CONFIRMATION */}
+            {showLogoutConfirm && (
+                <div
+                    className="votara-dashboard-logout-modal-backdrop"
+                    role="presentation"
+                    onMouseDown={(event) => {
+                        if (event.target === event.currentTarget) {
+                            setShowLogoutConfirm(false);
+                        }
+                    }}
+                >
+                    <div
+                        className="votara-dashboard-logout-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="votara-dashboard-logout-title"
+                    >
+                        <div className="votara-dashboard-logout-icon">
+                            <FiLogOut size={20} />
+                        </div>
+
+                        <div>
+                            <h2 id="votara-dashboard-logout-title">Sign out?</h2>
+                            <p>Are you sure you want to sign out of your VOTARA Admin account?</p>
+                        </div>
+
+                        <div className="votara-dashboard-logout-actions">
+                            <button
+                                type="button"
+                                className="votara-dashboard-logout-cancel"
+                                onClick={() => setShowLogoutConfirm(false)}
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                type="button"
+                                className="votara-dashboard-logout-confirm"
+                                onClick={confirmLogout}
+                            >
+                                <FiLogOut size={15} />
+                                Sign Out
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* =================================================
                 MAIN CONTENT
@@ -827,38 +883,6 @@ const checkSystem = async () => {
                     </div>
 
                     <div className="votara-admin-hero-actions">
-                        <div className="votara-env-picker">
-                            <button
-                                className="votara-env-button"
-                                onClick={() => setShowEnvironmentMenu((value) => !value)}
-                                aria-expanded={showEnvironmentMenu}
-                            >
-                                <span className="votara-env-dot"></span>
-                                {environment}
-                                <span className="votara-env-chevron">⌄</span>
-                            </button>
-                            {showEnvironmentMenu && (
-                                <div className="votara-env-menu">
-                                    {["Production", "Staging", "Development"].map((name) => (
-                                        <button
-                                            key={name}
-                                            className={name === environment ? "selected" : ""}
-                                            onClick={() => {
-                                                setEnvironment(name);
-                                                setShowEnvironmentMenu(false);
-                                            }}
-                                        >
-                                            <span className="votara-env-dot"></span>{name}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        <button className="votara-outline-action" onClick={handleExportResults}>
-                            <FiFileText size={16} /> Export results
-                        </button>
-
                         <button
                         className="votara-primary-action"
                         onClick={() => goTo("/admin/users")}
@@ -1540,29 +1564,69 @@ const checkSystem = async () => {
                             <span className="feature-time">{formatDate(lastUpdated)}</span>
                         </div>
                         <div className="health-score-row">
-                            <strong>{systemStatus.api === "Online" && systemStatus.database === "Connected" ? "99.9" : "—"}<small>%</small></strong>
-                            <span><b>{dashboardLoading ? "Checking" : stats.pendingRegistrations ?? 0}</b> pending registration{(stats.pendingRegistrations ?? 0) === 1 ? "" : "s"}</span>
+                            <strong>
+                                {dashboardLoading
+                                    ? "…"
+                                    : systemDashboard.systemHealth.status}
+                            </strong>
+                            <span>
+                                API <b>{systemDashboard.systemHealth.api}</b>
+                                {" · "}
+                                DB <b>{systemDashboard.systemHealth.database}</b>
+                            </span>
                         </div>
-                        <div className="capacity-track"><span style={{ width: "72%" }}></span></div>
-                        <div className="capacity-labels"><span>Capacity used · 72%</span><span>alert at 80%</span></div>
-                        <div className="mini-chart" aria-label="Registered voters trend">
+                        <div className="capacity-track">
+                            <span
+                                style={{
+                                    width: `${Math.min(
+                                        100,
+                                        Math.max(
+                                            0,
+                                            Number(systemDashboard.serverUsage.memoryPercent) || 0
+                                        )
+                                    )}%`,
+                                }}
+                            />
+                        </div>
+                        <div className="capacity-labels">
+                            <span>
+                                Server memory · {systemDashboard.serverUsage.memoryPercent == null
+                                    ? "Unavailable"
+                                    : `${systemDashboard.serverUsage.memoryPercent}%`}
+                            </span>
+                            <span>
+                                {systemDashboard.serverUsage.uptimeSeconds == null
+                                    ? "Uptime unavailable"
+                                    : `Uptime ${Math.floor(systemDashboard.serverUsage.uptimeSeconds / 3600)}h`}
+                            </span>
+                        </div>
+                        <div className="mini-chart" aria-label="Live dashboard database metrics">
                             <div className="chart-grid-lines"></div>
-                            <svg viewBox="0 0 640 150" preserveAspectRatio="none">
-                                <defs><linearGradient id="votaraArea" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="var(--votara-primary)" stopOpacity="0.65"/><stop offset="100%" stopColor="var(--votara-primary)" stopOpacity="0"/></linearGradient></defs>
-                                <path d="M0 145 L55 98 L110 75 L180 70 L245 62 L310 58 L380 45 L445 38 L510 18 L510 150 L0 150 Z" fill="url(#votaraArea)"/>
-                                <path d="M0 145 L55 98 L110 75 L180 70 L245 62 L310 58 L380 45 L445 38 L510 18" fill="none" stroke="var(--votara-primary)" strokeWidth="3"/>
-                            </svg>
+                            <div className="dashboard-live-metrics">
+                                <div>
+                                    <strong>{dashboardLoading ? "…" : (stats.totalStudents ?? 0).toLocaleString()}</strong>
+                                    <span>Students</span>
+                                </div>
+                                <div>
+                                    <strong>{dashboardLoading ? "…" : (stats.pendingRegistrations ?? 0).toLocaleString()}</strong>
+                                    <span>Pending registrations</span>
+                                </div>
+                                <div>
+                                    <strong>{dashboardLoading ? "…" : (stats.totalStaff ?? 0).toLocaleString()}</strong>
+                                    <span>Staff accounts</span>
+                                </div>
+                            </div>
                         </div>
-                        <div className="chart-label">Registered student voters · Voting time (Polling stations close at 5:00 pm)</div>
+                        <div className="chart-label">Live values returned by the Admin Dashboard API</div>
                     </div>
 
                     <div className="votara-feature-card system-overview-card">
                         <div className="feature-card-title-row"><h2>System Overview</h2><button onClick={() => goTo("/admin/settings")}>Configure</button></div>
                         {[
                             [FiDatabase, "Database Status", systemStatus.database, "/admin/settings"],
-                            [FiActivity, "Kiosk Devices", `${stats.activeUsers ?? 0} active`, "/admin/settings"],
-                            [FiRefreshCw, "Backup Status", "Last backup available", "/admin/settings"],
-                            [FiShield, "Security", "All systems secure", "/admin/settings"],
+                            [FiUsers, "Staff Accounts", `${(stats.totalStaff ?? 0).toLocaleString()} total · ${(stats.activeUsers ?? 0).toLocaleString()} active`, "/admin/users"],
+                            [FiRefreshCw, "Automatic Backup", systemSettings.autoBackup ? `Enabled · ${systemSettings.backupFrequency || "scheduled"}` : "Disabled", "/admin/settings"],
+                            [FiShield, "Security", systemSettings.twoStepVerification ? "Two-step verification enabled" : "Review security settings", "/admin/settings"],
                         ].map(([Icon, title, status, path]) => (
                             <button key={title} className="system-overview-row" onClick={() => goTo(path)}>
                                 <span className="row-icon"><Icon size={17} /></span>
@@ -1581,11 +1645,23 @@ const checkSystem = async () => {
                             <div><strong>Election management</strong><p>Review election schedules, status, and configuration before opening the voting window.</p><button onClick={() => goTo("/admin/election")}>Open election settings</button></div>
                         </div>
                         {[
-                            ["Student Council Election", "Management", "Live"],
-                            ["Electoral Board", "Staff access", "Active"],
-                            ["Candidate Review", "Approval queue", `${stats.pendingRegistrations ?? 0} pending`],
+                            [
+                                systemDashboard.electionStatus.election?.title || "No current election",
+                                "Current election",
+                                systemDashboard.electionStatus.status || "No Election",
+                            ],
+                            [
+                                (stats.totalElections ?? 0).toLocaleString(),
+                                "Total elections in database",
+                                "Recorded",
+                            ],
+                            [
+                                (stats.pendingRegistrations ?? 0).toLocaleString(),
+                                "Registration applications",
+                                "Pending review",
+                            ],
                         ].map(([name, detail, status]) => (
-                            <button className="election-row" key={name} onClick={() => goTo("/admin/election")}>
+                            <button className="election-row" key={`${name}-${detail}`} onClick={() => goTo("/admin/election")}>
                                 <span className="election-dot"></span><span><b>{name}</b><small>{detail}</small></span><em>{status}</em>
                             </button>
                         ))}
@@ -1595,43 +1671,47 @@ const checkSystem = async () => {
                         <div className="feature-card-title-row"><h2>Voters Approval</h2><button onClick={() => goTo("/admin/students")}>Open queue</button></div>
                         <div className="approval-stat"><span></span><strong>{stats.totalStudents ?? "—"}</strong><p>registered students / voters</p></div>
                         <div className="approval-stat"><span></span><strong>{stats.pendingRegistrations ?? "—"}</strong><p>awaiting eligibility review</p><button onClick={() => goTo("/admin/students")}>Review</button></div>
-                        <div className="approval-stat"><span></span><strong>—</strong><p>disqualified / incomplete filing</p><button onClick={() => goTo("/admin/students")}>Details</button></div>
+                        <div className="approval-stat"><span></span><strong>{stats.activeUsers ?? "—"}</strong><p>active staff accounts</p><button onClick={() => goTo("/admin/users")}>View</button></div>
                     </div>
 
                     <div className="votara-feature-card monitor-card">
                         <div className="feature-card-title-row"><h2>Monitor &amp; logs</h2><button onClick={() => goTo("/admin/audit-logs")}>Full log</button></div>
-                        {[
-                            ["Failed login blocked", "6m"],
-                            ["Backup completed", "1h"],
-                            ["Admin role granted", "2h"],
-                            ["Candidate bulk import", "5h"],
-                            ["TLS certificate renewed", "1d"],
-                        ].map(([event, time], index) => (
-                            <button className="log-row" key={event} onClick={() => goTo("/admin/audit-logs")}><span className={`log-dot log-dot-${index}`}></span><span>{event}</span><em>{time}</em></button>
-                        ))}
+                        {(systemDashboard.activityLogs.recent || []).length > 0 ? (
+                            systemDashboard.activityLogs.recent.map((log, index) => (
+                                <button
+                                    className="log-row"
+                                    key={log.id || `${log.action}-${index}`}
+                                    onClick={() => goTo("/admin/audit-logs")}
+                                >
+                                    <span className={`log-dot log-dot-${index % 5}`}></span>
+                                    <span>{log.description || log.action || "System activity"}</span>
+                                    <em>{log.created_at ? formatRelativeTime(log.created_at) : "—"}</em>
+                                </button>
+                            ))
+                        ) : (
+                            <div className="dashboard-empty-state">No audit activity has been recorded yet.</div>
+                        )}
                     </div>
                 </section>
 
                 <section className="votara-feature-card account-role-card">
                     <div className="feature-card-title-row">
-                        <h2>Account by role</h2>
-                        <span>1,500 Total</span>
+                        <h2>Account overview</h2>
+                        <span>{(stats.totalUsers ?? 0).toLocaleString()} Total</span>
                     </div>
                     {[
                         [
-                            "Students / Voter",
+                            "Students / Voters",
                             stats.totalStudents ?? 0,
-                            Math.min(100, ((stats.totalStudents ?? 0) / 1012) * 100),
-                            `${(stats.totalStudents ?? 0).toLocaleString()}/1,012`,
+                            stats.totalUsers ? Math.min(100, ((stats.totalStudents ?? 0) / stats.totalUsers) * 100) : 0,
+                            `${(stats.totalStudents ?? 0).toLocaleString()}`,
                         ],
                         [
-                            "Electoral Board",
-                            stats.totalStaff ?? 26,
-                            Math.min(100, ((stats.totalStaff ?? 26) / 100) * 100),
-                            `${(stats.totalStaff ?? 26).toLocaleString()}`,
+                            "Staff Accounts",
+                            stats.totalStaff ?? 0,
+                            stats.totalUsers ? Math.min(100, ((stats.totalStaff ?? 0) / stats.totalUsers) * 100) : 0,
+                            `${(stats.totalStaff ?? 0).toLocaleString()}`,
                         ],
-                        ["Admin", 7, 7],
-                        ["Kiosk device", 10, 10],
                     ].map(([label, value, percent, displayValue]) => (
                         <div className="role-row" key={label}>
                             <span>{label}</span>
@@ -1645,26 +1725,52 @@ const checkSystem = async () => {
 
                 <section className="votara-feature-card config-support-card">
                     <div className="config-panel">
-                        <h2>Configuration &amp; support</h2>
-                        <span>System configuration</span>
+                        <h2>Configuration snapshot</h2>
+                        <span>Current values returned by System Configuration</span>
                         {[
-                            ["Voting window", "8:00 AM – 5:00 PM", "/admin/settings"],
-                            ["Default quorum", "40%", "/admin/settings"],
-                            ["Session timeout", "20 min idle", "/admin/settings"],
-                            ["Kiosk lockout", "3 failed scans", "/admin/settings"],
+                            [
+                                "Voting window",
+                                systemSettings.votingPeriod || "Not configured",
+                                "/admin/settings",
+                            ],
+                            [
+                                "Session timeout",
+                                systemSettings.sessionTimeout ? `${systemSettings.sessionTimeout} minutes` : "Not configured",
+                                "/admin/settings",
+                            ],
+                            [
+                                "Automatic backup",
+                                systemSettings.autoBackup ? `Enabled · ${systemSettings.backupFrequency || "scheduled"}` : "Disabled",
+                                "/admin/settings",
+                            ],
+                            [
+                                "Maintenance mode",
+                                systemSettings.maintenanceMode ? "Enabled" : "Disabled",
+                                "/admin/settings",
+                            ],
                         ].map(([label, value, path]) => (
-                            <div className="config-row" key={label}><span>{label}</span><b>{value}</b><button onClick={() => goTo(path)}>Edit</button></div>
+                            <div className="config-row" key={label}>
+                                <span>{label}</span>
+                                <b>{value}</b>
+                                <button onClick={() => goTo(path)}>Edit</button>
+                            </div>
                         ))}
                     </div>
-                    <div className="support-panel">
-                        <h3>Open support tickets</h3>
-                        {[
-                            ["high", "#1024 Kiosk 07 offline", "Electoral board 1"],
-                            ["medium", "#1039 Voter can't verify OTP", "Admin queue"],
-                            ["low", "#1031 Export format request", "Admin 2"],
-                        ].map(([level, title, owner]) => (
-                            <button className="ticket-row" key={title} onClick={() => goTo("/admin/audit-logs")}><span className={`ticket-priority ${level}`}>{level}</span><span><b>{title}</b><small>{owner}</small></span><em>Open</em></button>
-                        ))}
+                    <div className="support-panel dashboard-system-summary">
+                        <h3>Live system summary</h3>
+                        <div className="dashboard-summary-item">
+                            <span>Audit activities</span>
+                            <strong>{(systemDashboard.activityLogs.total ?? 0).toLocaleString()}</strong>
+                        </div>
+                        <div className="dashboard-summary-item">
+                            <span>Elections recorded</span>
+                            <strong>{(stats.totalElections ?? 0).toLocaleString()}</strong>
+                        </div>
+                        <div className="dashboard-summary-item">
+                            <span>Current election</span>
+                            <strong>{systemDashboard.electionStatus.election?.title || "None"}</strong>
+                        </div>
+                        <button className="dashboard-summary-action" onClick={() => goTo("/admin/reports")}>Open Reports &amp; Analytics</button>
                     </div>
                 </section>
 

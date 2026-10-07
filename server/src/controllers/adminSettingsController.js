@@ -54,10 +54,6 @@ const authenticateAdmin = async (req) => {
     }
 
 
-    // -----------------------------------------------------
-    // VERIFY JWT
-    // -----------------------------------------------------
-
     let decoded;
 
     try {
@@ -81,10 +77,6 @@ const authenticateAdmin = async (req) => {
     }
 
 
-    // -----------------------------------------------------
-    // VERIFY ADMIN ROLE
-    // -----------------------------------------------------
-
     if (
         !decoded ||
         decoded.role !== "admin"
@@ -100,10 +92,6 @@ const authenticateAdmin = async (req) => {
     }
 
 
-    // -----------------------------------------------------
-    // VERIFY USER ID
-    // -----------------------------------------------------
-
     if (!decoded.userId) {
 
         const error = new Error(
@@ -115,10 +103,6 @@ const authenticateAdmin = async (req) => {
         throw error;
     }
 
-
-    // -----------------------------------------------------
-    // VERIFY ADMIN ACCOUNT
-    // -----------------------------------------------------
 
     const {
         data: admin,
@@ -145,18 +129,10 @@ const authenticateAdmin = async (req) => {
 
     if (adminError) {
 
-        console.error(
-            "❌ Admin Settings authentication lookup error:",
-            adminError
-        );
-
-        const error = new Error(
+        throw new Error(
             `Unable to verify administrator account: ${adminError.message}`
         );
 
-        error.statusCode = 500;
-
-        throw error;
     }
 
 
@@ -171,10 +147,6 @@ const authenticateAdmin = async (req) => {
         throw error;
     }
 
-
-    // -----------------------------------------------------
-    // ACTIVE ACCOUNT
-    // -----------------------------------------------------
 
     if (
         admin.is_active !== true
@@ -199,96 +171,58 @@ const authenticateAdmin = async (req) => {
 // =========================================================
 
 const ALLOWED_SETTINGS = [
-
     "primaryColor",
-
     "theme",
-
     "systemName",
-
     "language",
-
     "timezone",
-
     "dateFormat",
-
     "academicYear",
-
     "registrationPeriod",
-
     "votingPeriod",
-
     "remoteVoting",
-
     "campusKiosk",
-
     "lateEnrolleeWindow",
-
     "otpMethod",
-
     "otpLength",
-
     "otpExpiry",
-
     "maxOtpAttempts",
-
     "resendCooldown",
-
     "senderEmail",
-
     "loginAttempts",
-
     "lockoutDuration",
-
     "otpRequestLimit",
-
     "registrationSubmissions",
-
     "ipRateLimit",
-
     "passwordRules",
-
     "forcePasswordChange",
-
     "sessionTimeout",
-
     "singleSession",
-
     "twoStepVerification",
-
     "kioskRestrictions",
-
     "maintenanceMode",
-
     "scheduledStart",
-
     "scheduledEnd",
-
     "adminAccess",
-
     "votingSafeguard",
-
     "maintenanceMessage",
-
     "emailNotifications",
-
     "electionNotifications",
-
     "securityNotifications",
-
     "allowRegistration",
-
     "allowVoting",
-
     "autoBackup",
-
     "backupFrequency",
-
+    "backupEncryption",
+    "backupRetention",
+    "lastBackupAt",
+    "lastBackupStatus",
+    "platformNotice",
 ];
 
 
 // =========================================================
-// PICK ALLOWED SETTINGS
+// HELPERS
 // =========================================================
 
 const pickAllowedSettings = (
@@ -306,10 +240,8 @@ const pickAllowedSettings = (
                     key
                 )
             ) {
-
                 output[key] =
                     input[key];
-
             }
 
         }
@@ -318,10 +250,6 @@ const pickAllowedSettings = (
     return output;
 };
 
-
-// =========================================================
-// SAFE VALUE COMPARISON
-// =========================================================
 
 const valuesAreEqual = (
     left,
@@ -334,10 +262,6 @@ const valuesAreEqual = (
     );
 };
 
-
-// =========================================================
-// ERROR HANDLER
-// =========================================================
 
 const handleAdminSettingsError = (
     error,
@@ -394,8 +318,6 @@ const handleAdminSettingsError = (
 // =========================================================
 // GET ADMIN SYSTEM SETTINGS
 // =========================================================
-// GET /api/admin/settings
-// =========================================================
 
 const getAdminSystemSettings = async (
     req,
@@ -404,19 +326,11 @@ const getAdminSystemSettings = async (
 
     try {
 
-        // -------------------------------------------------
-        // VERIFY ADMIN
-        // -------------------------------------------------
-
         const admin =
             await authenticateAdmin(
                 req
             );
 
-
-        // -------------------------------------------------
-        // GET SETTINGS
-        // -------------------------------------------------
 
         const {
             data,
@@ -449,7 +363,9 @@ const getAdminSystemSettings = async (
 
 
         // -------------------------------------------------
-        // CREATE DEFAULT ROW IF MISSING
+        // First-time fallback.
+        // This also makes the API usable immediately if
+        // the table exists but has no seeded row.
         // -------------------------------------------------
 
         if (!data) {
@@ -462,10 +378,13 @@ const getAdminSystemSettings = async (
                     "system_settings"
                 )
                 .insert([
+
                     {
                         id: 1,
+
                         settings: {},
                     },
+
                 ])
                 .select(`
                     id,
@@ -495,7 +414,6 @@ const getAdminSystemSettings = async (
                     {},
 
                 metadata: {
-
                     id:
                         created.id,
 
@@ -506,7 +424,6 @@ const getAdminSystemSettings = async (
                         created.updated_at,
 
                     updatedByAdmin: {
-
                         id:
                             admin.id,
 
@@ -515,19 +432,12 @@ const getAdminSystemSettings = async (
 
                         email:
                             admin.email,
-
                     },
-
                 },
 
             });
-
         }
 
-
-        // -------------------------------------------------
-        // RETURN EXISTING SETTINGS
-        // -------------------------------------------------
 
         return res.status(200).json({
 
@@ -552,7 +462,6 @@ const getAdminSystemSettings = async (
                     data.updated_by ===
                         admin.id
                         ? {
-
                             id:
                                 admin.id,
 
@@ -561,10 +470,8 @@ const getAdminSystemSettings = async (
 
                             email:
                                 admin.email,
-
                         }
                         : null,
-
             },
 
         });
@@ -576,15 +483,12 @@ const getAdminSystemSettings = async (
             res,
             "Unable to load Admin System Settings."
         );
-
     }
 };
 
 
 // =========================================================
 // UPDATE ADMIN SYSTEM SETTINGS
-// =========================================================
-// PUT /api/admin/settings
 // =========================================================
 
 const updateAdminSystemSettings = async (
@@ -594,19 +498,11 @@ const updateAdminSystemSettings = async (
 
     try {
 
-        // -------------------------------------------------
-        // VERIFY ADMIN
-        // -------------------------------------------------
-
         const admin =
             await authenticateAdmin(
                 req
             );
 
-
-        // -------------------------------------------------
-        // REQUEST DATA
-        // -------------------------------------------------
 
         const incomingSettings =
             req.body?.settings;
@@ -633,19 +529,11 @@ const updateAdminSystemSettings = async (
         }
 
 
-        // -------------------------------------------------
-        // ONLY ACCEPT ALLOWED SETTINGS
-        // -------------------------------------------------
-
         const safeIncoming =
             pickAllowedSettings(
                 incomingSettings
             );
 
-
-        // -------------------------------------------------
-        // LOAD CURRENT SETTINGS
-        // -------------------------------------------------
 
         const {
             data: existingRow,
@@ -684,32 +572,19 @@ const updateAdminSystemSettings = async (
                 : {};
 
 
-        // -------------------------------------------------
-        // MERGE SETTINGS
-        // -------------------------------------------------
-
         const mergedSettings = {
-
             ...currentSettings,
-
             ...safeIncoming,
-
         };
 
-
-        // -------------------------------------------------
-        // DETERMINE CHANGED KEYS
-        // -------------------------------------------------
 
         const changedKeys =
             ALLOWED_SETTINGS.filter(
                 (key) =>
-
                     Object.prototype.hasOwnProperty.call(
                         safeIncoming,
                         key
                     ) &&
-
                     !valuesAreEqual(
                         currentSettings[key],
                         mergedSettings[key]
@@ -718,7 +593,7 @@ const updateAdminSystemSettings = async (
 
 
         // -------------------------------------------------
-        // NOTHING CHANGED
+        // Nothing changed
         // -------------------------------------------------
 
         if (
@@ -738,20 +613,17 @@ const updateAdminSystemSettings = async (
                 changedKeys: [],
 
                 metadata: {
-
                     updatedAt:
                         existingRow?.updated_at ||
                         null,
-
                 },
 
             });
-
         }
 
 
         // -------------------------------------------------
-        // SAVE TO SUPABASE
+        // SAVE
         // -------------------------------------------------
 
         const {
@@ -774,7 +646,6 @@ const updateAdminSystemSettings = async (
 
                         updated_at:
                             new Date().toISOString(),
-
                     },
                 ],
                 {
@@ -855,21 +726,14 @@ const updateAdminSystemSettings = async (
 
         } catch (auditError) {
 
-            // Settings have already been saved.
-            // Do not undo a successful settings update
-            // just because audit logging encountered an error.
-
+            // The settings update has already succeeded.
+            // Do not roll it back because audit logging fails.
             console.error(
                 "⚠️ System Settings audit log failed:",
                 auditError
             );
-
         }
 
-
-        // -------------------------------------------------
-        // RESPONSE
-        // -------------------------------------------------
 
         return res.status(200).json({
 
@@ -902,7 +766,6 @@ const updateAdminSystemSettings = async (
             res,
             "Unable to save Admin System Settings."
         );
-
     }
 };
 

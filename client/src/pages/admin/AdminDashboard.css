@@ -230,33 +230,7 @@ body {
     flex-shrink: 0;
 }
 
-.votara-topbar-environment {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 7px 12px;
-    min-width: auto;
-    height: auto;
-    border: 1px solid rgba(38, 110, 255, 0.25);
-    border-radius: 18px;
-    background: rgba(38, 110, 255, 0.13);
-    color: #286bff;
-    font-family: inherit;
-    font-size: 10px;
-    font-weight: 400;
-    line-height: 1;
-    white-space: nowrap;
-}
 
-.votara-env-dot {
-    width: 6px;
-    height: 6px;
-    display: inline-block;
-    flex-shrink: 0;
-    border-radius: 50%;
-    background: #1ed760;
-    box-shadow: 0 0 8px rgba(30, 215, 96, 0.5);
-}
 
 .votara-notification-button {
     position: relative;
@@ -363,10 +337,6 @@ body {
         gap: 13px;
     }
 
-    .votara-topbar-environment {
-        padding: 7px 10px;
-    }
-
     .votara-admin-brand-name {
         font-size: 26px;
     }
@@ -434,10 +404,6 @@ body {
     .votara-admin-topbar-actions {
         gap: 8px;
     }
-
-    .votara-topbar-environment {
-        display: none;
-    }
 }
 
 @media (max-width: 390px) {
@@ -457,7 +423,7 @@ body {
     box-sizing: border-box;
     margin: 0;
 
-    padding: 30px 46px 45px;
+    padding: 30px 38px 45px;
 
     /*
      * IMPORTANT:
@@ -494,7 +460,8 @@ body {
    ========================================================= */
 
 .votara-admin-hero {
-    max-width: 1240px;
+    width: 100%;
+    max-width: none;
 
     display: flex;
     align-items: flex-end;
@@ -545,11 +512,7 @@ body {
     gap: 10px;
 }
 
-.votara-env-picker {
-    position: relative;
-}
 
-.votara-env-button,
 .votara-outline-action,
 .votara-primary-action {
     height: 40px;
@@ -566,60 +529,10 @@ body {
     cursor: pointer;
 }
 
-.votara-env-button {
-    min-width: 140px;
-    justify-content: center;
 
-    border: 1px solid #ffffff;
-    background: #ffffff;
-    color: #242231;
-}
 
-.votara-env-chevron {
-    margin-left: 3px;
-    font-size: 16px;
-}
 
-.votara-env-menu {
-    position: absolute;
-    top: 46px;
-    left: 0;
-    z-index: 50;
 
-    width: 150px;
-    padding: 6px;
-
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: 12px;
-
-    background: #26243f;
-    box-shadow: 0 16px 35px rgba(0, 0, 0, 0.35);
-}
-
-.votara-env-menu button {
-    width: 100%;
-
-    display: flex;
-    align-items: center;
-    gap: 8px;
-
-    padding: 10px;
-
-    border: 0;
-    border-radius: 8px;
-
-    background: transparent;
-    color: #d8d5e2;
-
-    text-align: left;
-    cursor: pointer;
-}
-
-.votara-env-menu button:hover,
-.votara-env-menu button.selected {
-    background: rgba(38, 110, 255, 0.18);
-    color: #ffffff;
-}
 
 .votara-outline-action {
     border: 1px solid rgba(255, 255, 255, 0.16);
@@ -651,9 +564,10 @@ body {
 .account-role-card,
 .config-support-card,
 .votara-quick-actions {
-    max-width: 1240px;
-    margin-left: auto;
-    margin-right: auto;
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
 }
 
 .votara-dashboard-grid {
@@ -1536,9 +1450,10 @@ body {
    ========================================================= */
 
 .votara-admin-main > footer {
-    max-width: 1240px;
+    width: 100%;
+    max-width: none;
 
-    margin: 0 auto;
+    margin: 0;
     padding-top: 12px;
 
     border-top: 0;
@@ -1793,7 +1708,6 @@ body {
         flex: 1;
     }
 
-    .votara-env-button,
     .votara-outline-action,
     .votara-primary-action {
         justify-content: center;
@@ -2373,5 +2287,345 @@ body {
 
     .admin-total-users-stat strong {
         font-size: 24px;
+    }
+}
+
+/* =========================================================
+   FINAL SHARED HEADER / CONTENT ALIGNMENT FIX
+   ========================================================= */
+.votara-admin-topbar {
+    position: sticky !important;
+    top: 0 !important;
+    left: auto !important;
+    right: auto !important;
+    z-index: 1200 !important;
+    height: 78px !important;
+    min-height: 78px !important;
+    margin: 0 !important;
+}
+
+.votara-admin-main {
+    margin-top: 0 !important;
+    padding-top: 30px !important;
+}
+
+@media (max-width: 900px) {
+    .votara-admin-topbar {
+        height: 68px !important;
+        min-height: 68px !important;
+    }
+
+    .votara-admin-main {
+        padding-top: 28px !important;
+    }
+}
+
+@media (max-width: 520px) {
+    .votara-admin-topbar {
+        height: 64px !important;
+        min-height: 64px !important;
+    }
+
+    .votara-admin-main {
+        padding-top: 24px !important;
+    }
+}
+
+
+/* =========================================================
+   DATABASE-DRIVEN DASHBOARD CONTENT
+   Added for the live Admin Dashboard update.
+   ========================================================= */
+
+.dashboard-live-metrics {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: center;
+    gap: 12px;
+    padding: 14px 10px;
+}
+
+.dashboard-live-metrics > div {
+    min-width: 0;
+    padding: 12px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.28);
+}
+
+.dashboard-live-metrics strong {
+    display: block;
+    color: var(--admin-text);
+    font-size: 20px;
+    font-weight: 750;
+    line-height: 1.1;
+}
+
+.dashboard-live-metrics span {
+    display: block;
+    margin-top: 5px;
+    color: var(--admin-text-muted);
+    font-size: 9px;
+    line-height: 1.35;
+}
+
+.dashboard-empty-state {
+    padding: 18px 12px;
+    color: var(--admin-text-muted);
+    font-size: 11px;
+    text-align: center;
+    border: 1px dashed rgba(255, 255, 255, 0.10);
+    border-radius: 10px;
+}
+
+.dashboard-system-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.dashboard-system-summary h3 {
+    margin: 0 0 3px;
+    color: var(--admin-text);
+    font-size: 14px;
+    font-weight: 650;
+}
+
+.dashboard-summary-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.dashboard-summary-item span {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--admin-text-muted);
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dashboard-summary-item strong {
+    max-width: 58%;
+    overflow: hidden;
+    color: var(--admin-text);
+    font-size: 11px;
+    font-weight: 650;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dashboard-summary-action {
+    width: 100%;
+    min-height: 36px;
+    margin-top: 2px;
+    padding: 0 13px;
+    border: 1px solid rgba(38, 110, 255, 0.28);
+    border-radius: 9px;
+    background: rgba(38, 110, 255, 0.10);
+    color: var(--votara-primary, #286bff);
+    font: inherit;
+    font-size: 10px;
+    font-weight: 650;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.dashboard-summary-action:hover {
+    background: rgba(38, 110, 255, 0.17);
+    border-color: rgba(38, 110, 255, 0.42);
+}
+
+[data-theme="light"] .dashboard-live-metrics > div,
+[data-theme="light"] .dashboard-summary-item {
+    border-color: #e4e7ec;
+    background: #f8fafc;
+}
+
+[data-theme="light"] .dashboard-empty-state {
+    border-color: #d0d5dd;
+}
+
+@media (max-width: 900px) {
+    .dashboard-live-metrics {
+        grid-template-columns: 1fr;
+        overflow-y: auto;
+    }
+
+    .dashboard-live-metrics > div {
+        padding: 9px 11px;
+    }
+
+    .dashboard-live-metrics strong {
+        font-size: 17px;
+    }
+}
+
+
+/* =========================================================
+   FULL-WIDTH DASHBOARD FRAME ALIGNMENT
+   Keep every dashboard section aligned to the same viewport
+   edges instead of constraining content to a 1240px frame.
+   ========================================================= */
+.votara-admin-hero,
+.votara-dashboard-grid,
+.account-role-card,
+.config-support-card,
+.votara-quick-actions,
+.votara-admin-main > footer {
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+}
+
+.votara-admin-hero,
+.votara-dashboard-grid,
+.account-role-card,
+.config-support-card,
+.votara-quick-actions {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+@media (max-width: 1100px) {
+    .votara-admin-main {
+        padding-left: 24px;
+        padding-right: 24px;
+    }
+}
+
+@media (max-width: 600px) {
+    .votara-admin-main {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+}
+
+
+/* ============================================================
+   ADMIN DASHBOARD LOGOUT CONFIRMATION
+   ============================================================ */
+
+.votara-dashboard-logout-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+    background: rgba(2, 5, 14, 0.76);
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+}
+
+.votara-dashboard-logout-modal {
+    width: min(420px, calc(100vw - 40px));
+    box-sizing: border-box;
+    padding: 22px;
+    border: 1px solid rgba(137, 158, 205, 0.26);
+    border-radius: 16px;
+    color: #f7f9ff;
+    background: linear-gradient(145deg, rgba(20, 28, 49, 0.99), rgba(8, 13, 27, 0.99));
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.55);
+}
+
+.votara-dashboard-logout-icon {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 14px;
+    border-radius: 12px;
+    color: #8fb3ff;
+    background: rgba(38, 110, 255, 0.12);
+    border: 1px solid rgba(38, 110, 255, 0.20);
+}
+
+.votara-dashboard-logout-modal h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.votara-dashboard-logout-modal p {
+    margin: 7px 0 0;
+    color: #8e9bb7;
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.votara-dashboard-logout-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 9px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(137, 158, 205, 0.16);
+}
+
+.votara-dashboard-logout-cancel,
+.votara-dashboard-logout-confirm {
+    min-height: 38px;
+    padding: 0 15px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border-radius: 9px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.votara-dashboard-logout-cancel {
+    border: 1px solid rgba(137, 158, 205, 0.22);
+    color: #cbd4e8;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.votara-dashboard-logout-cancel:hover {
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.votara-dashboard-logout-confirm {
+    border: 1px solid rgba(220, 38, 38, 0.45);
+    color: #fff;
+    background: #b91c1c;
+}
+
+.votara-dashboard-logout-confirm:hover {
+    background: #dc2626;
+}
+
+@media (max-width: 520px) {
+    .votara-dashboard-logout-modal-backdrop {
+        padding: 16px;
+    }
+
+    .votara-dashboard-logout-modal {
+        width: 100%;
+        padding: 20px;
+    }
+
+    .votara-dashboard-logout-actions {
+        flex-direction: column-reverse;
+    }
+
+    .votara-dashboard-logout-cancel,
+    .votara-dashboard-logout-confirm {
+        width: 100%;
     }
 }

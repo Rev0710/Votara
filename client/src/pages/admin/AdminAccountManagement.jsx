@@ -81,12 +81,12 @@ function AdminAccountManagement() {
     useEffect(() => {
         const token =
             localStorage.getItem(
-                "votaraStaffToken"
+                "votaraAdminToken"
             );
 
         const storedUser =
             localStorage.getItem(
-                "votaraStaffUser"
+                "votaraAdminUser"
             );
 
         if (!token || !storedUser) {
@@ -119,11 +119,11 @@ function AdminAccountManagement() {
             );
 
             localStorage.removeItem(
-                "votaraStaffToken"
+                "votaraAdminToken"
             );
 
             localStorage.removeItem(
-                "votaraStaffUser"
+                "votaraAdminUser"
             );
 
             navigate("/admin-login", {
@@ -143,7 +143,7 @@ function AdminAccountManagement() {
         try {
             const token =
                 localStorage.getItem(
-                    "votaraStaffToken"
+                    "votaraAdminToken"
                 );
 
             if (!token) {
@@ -195,11 +195,11 @@ function AdminAccountManagement() {
                 401
             ) {
                 localStorage.removeItem(
-                    "votaraStaffToken"
+                    "votaraAdminToken"
                 );
 
                 localStorage.removeItem(
-                    "votaraStaffUser"
+                    "votaraAdminUser"
                 );
 
                 navigate("/admin-login", {
@@ -312,7 +312,7 @@ function AdminAccountManagement() {
 
             const token =
                 localStorage.getItem(
-                    "votaraStaffToken"
+                    "votaraAdminToken"
                 );
 
             if (!token) {
@@ -380,11 +380,11 @@ function AdminAccountManagement() {
                 401
             ) {
                 localStorage.removeItem(
-                    "votaraStaffToken"
+                    "votaraAdminToken"
                 );
 
                 localStorage.removeItem(
-                    "votaraStaffUser"
+                    "votaraAdminUser"
                 );
 
                 navigate("/admin-login", {

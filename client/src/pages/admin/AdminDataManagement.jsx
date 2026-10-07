@@ -19,6 +19,7 @@ import {
 } from "react-icons/fi";
 import api from "../../services/api";
 import "./AdminDataManagement.css";
+import AdminTopNav from "./AdminTopNav";
 
 const STATUS_OPTIONS = [
     { value: "all", label: "All statuses" },
@@ -535,51 +536,9 @@ function AdminDataManagement() {
         anchor.remove();
         URL.revokeObjectURL(url);
     };
-
-    const go = (path) => navigate(path);
-
     return (
         <div className="votara-data-page">
-            <header className="dm-topbar">
-                <button
-                    type="button"
-                    className="dm-brand"
-                    onClick={() => go("/admin-dashboard")}
-                >
-                    <img src="/src/images/Votara.png" alt="Votara" />
-                    <span>Votara</span>
-                </button>
-
-                <nav className="dm-nav" aria-label="Admin navigation">
-                    <button type="button" onClick={() => go("/admin-dashboard")}>
-                        System Dashboard
-                    </button>
-                    <button type="button" onClick={() => go("/admin/users")}>
-                        User &amp; Access Management
-                    </button>
-                    <button type="button" className="active">
-                        Data Management
-                    </button>
-                    <button type="button" onClick={() => go("/admin/settings")}>
-                        System Configuration
-                    </button>
-                    <button type="button" onClick={() => go("/admin/audit-logs")}>
-                        Monitoring &amp; Logs
-                    </button>
-                    <button type="button" onClick={() => go("/admin/reports")}>
-                        Reports &amp; Analytics
-                    </button>
-                </nav>
-
-                <div className="dm-topbar-actions">
-                    <span className="dm-production">
-                        <i /> Production
-                    </span>
-                    <button type="button" onClick={() => go("/admin-dashboard")}>
-                        Dashboard
-                    </button>
-                </div>
-            </header>
+            <AdminTopNav />
 
             <main className="dm-main">
                 <section className="dm-page-heading">
