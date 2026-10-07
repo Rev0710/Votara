@@ -129,12 +129,12 @@ function ElectoralBoardManagement() {
     useEffect(() => {
         const token =
             localStorage.getItem(
-                "votaraStaffToken"
+                "votaraAdminToken"
             );
 
         const storedUser =
             localStorage.getItem(
-                "votaraStaffUser"
+                "votaraAdminUser"
             );
 
         if (!token || !storedUser) {
@@ -170,11 +170,11 @@ function ElectoralBoardManagement() {
             );
 
             localStorage.removeItem(
-                "votaraStaffToken"
+                "votaraAdminToken"
             );
 
             localStorage.removeItem(
-                "votaraStaffUser"
+                "votaraAdminUser"
             );
 
             navigate("/admin-login", {
@@ -329,7 +329,7 @@ function ElectoralBoardManagement() {
 
             const token =
                 localStorage.getItem(
-                    "votaraStaffToken"
+                    "votaraAdminToken"
                 );
 
             if (!token) {
@@ -403,11 +403,11 @@ function ElectoralBoardManagement() {
                 401
             ) {
                 localStorage.removeItem(
-                    "votaraStaffToken"
+                    "votaraAdminToken"
                 );
 
                 localStorage.removeItem(
-                    "votaraStaffUser"
+                    "votaraAdminUser"
                 );
 
                 navigate(
@@ -628,7 +628,7 @@ function ElectoralBoardManagement() {
             try {
                 const token =
                     localStorage.getItem(
-                        "votaraStaffToken"
+                        "votaraAdminToken"
                     );
 
                 if (!token) {
@@ -677,11 +677,11 @@ function ElectoralBoardManagement() {
                     401
                 ) {
                     localStorage.removeItem(
-                        "votaraStaffToken"
+                        "votaraAdminToken"
                     );
 
                     localStorage.removeItem(
-                        "votaraStaffUser"
+                        "votaraAdminUser"
                     );
 
                     navigate(
@@ -763,7 +763,7 @@ function ElectoralBoardManagement() {
 
             const token =
                 localStorage.getItem(
-                    "votaraStaffToken"
+                    "votaraAdminToken"
                 );
 
             if (!token) {
@@ -814,11 +814,11 @@ function ElectoralBoardManagement() {
                 401
             ) {
                 localStorage.removeItem(
-                    "votaraStaffToken"
+                    "votaraAdminToken"
                 );
 
                 localStorage.removeItem(
-                    "votaraStaffUser"
+                    "votaraAdminUser"
                 );
 
                 navigate(
@@ -879,7 +879,7 @@ function ElectoralBoardManagement() {
 
                 const token =
                     localStorage.getItem(
-                        "votaraStaffToken"
+                        "votaraAdminToken"
                     );
 
                 if (!token) {
@@ -937,11 +937,11 @@ function ElectoralBoardManagement() {
                     401
                 ) {
                     localStorage.removeItem(
-                        "votaraStaffToken"
+                        "votaraAdminToken"
                     );
 
                     localStorage.removeItem(
-                        "votaraStaffUser"
+                        "votaraAdminUser"
                     );
 
                     navigate(
@@ -981,7 +981,7 @@ function ElectoralBoardManagement() {
 
                 const token =
                     localStorage.getItem(
-                        "votaraStaffToken"
+                        "votaraAdminToken"
                     );
 
                 if (!token) {
@@ -1049,11 +1049,11 @@ function ElectoralBoardManagement() {
                     401
                 ) {
                     localStorage.removeItem(
-                        "votaraStaffToken"
+                        "votaraAdminToken"
                     );
 
                     localStorage.removeItem(
-                        "votaraStaffUser"
+                        "votaraAdminUser"
                     );
 
                     navigate(

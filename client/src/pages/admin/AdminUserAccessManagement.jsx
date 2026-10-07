@@ -14,9 +14,10 @@ import {
     FiUsers,
     FiX,
 } from "react-icons/fi";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import "./AdminUserAccessManagement.css";
+import AdminTopNav from "./AdminTopNav";
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
@@ -48,12 +49,11 @@ function formatDate(value) {
 
 export default function AdminUserAccessManagement() {
     const navigate = useNavigate();
-    const location = useLocation();
     const fileInputRef = useRef(null);
 
     const storedAdmin = useMemo(() => {
         try {
-            return JSON.parse(localStorage.getItem("votaraStaffUser") || "null");
+            return JSON.parse(localStorage.getItem("votaraAdminUser") || "null");
         } catch {
             return null;
         }
@@ -63,16 +63,10 @@ export default function AdminUserAccessManagement() {
         storedAdmin?.full_name || "Administrator";
 
     const handleAdminLogout = () => {
-        localStorage.removeItem("votaraStaffToken");
-        localStorage.removeItem("votaraStaffUser");
+        localStorage.removeItem("votaraAdminToken");
+        localStorage.removeItem("votaraAdminUser");
         navigate("/admin-login", { replace: true });
     };
-
-    const goToAdminPage = (path) => {
-        if (location.pathname === path) return;
-        navigate(path);
-    };
-
     const [role, setRole] = useState("electoral_board");
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
@@ -320,83 +314,59 @@ export default function AdminUserAccessManagement() {
         allAccounts.length === 1 ? "" : "s"
     }`;
 
+    const adminCountLabel = `${admins.length} Administrator account${
+        admins.length === 1 ? "" : "s"
+    }`;
+
+    const ebCountLabel = `${ebAccounts.length} Electoral Board account${
+        ebAccounts.length === 1 ? "" : "s"
+    }`;
+
+    const renderAccountRow = (account, adminAccount) => (
+        <div className="ua-account-row" key={`${adminAccount ? "admin" : "electoral_board"}-${account.id}`}>
+            <span className={`ua-avatar ${adminAccount ? "admin" : ""}`}>
+                {account.profile_photo_url ? (
+                    <img src={account.profile_photo_url} alt="" />
+                ) : (
+                    getInitials(account.full_name)
+                )}
+            </span>
+
+            <div className="ua-account-info">
+                <div className="ua-account-name-line">
+                    <strong>{account.full_name}</strong>
+                    <span className={`ua-role-badge ${adminAccount ? "admin" : "eb"}`}>
+                        {adminAccount ? "Administrator" : "Electoral Board"}
+                    </span>
+                </div>
+                <small>{account.email}</small>
+                <small>Created {formatDate(account.created_at)}</small>
+            </div>
+
+            <span className={`ua-status ${account.is_active ? "active" : "inactive"}`}>
+                {account.is_active ? "Active" : "Inactive"}
+            </span>
+
+            <button
+                type="button"
+                className="ua-view-button"
+                onClick={() => handleViewAccount({ ...account, _role: adminAccount ? "admin" : "electoral_board" })}
+            >
+                <FiEye />
+                View
+            </button>
+
+            {adminAccount ? (
+                <span className="ua-admin-access-label">Full Access</span>
+            ) : (
+                <span className="ua-eb-access-label">Election Operations</span>
+            )}
+        </div>
+    );
+
     return (
         <>
-            <header className="votara-admin-topbar ua-shared-topbar">
-                <button
-                    type="button"
-                    className="votara-admin-brand"
-                    onClick={() => goToAdminPage("/admin-dashboard")}
-                    aria-label="Votara System Dashboard"
-                >
-                    <span className="votara-admin-brand-mark" aria-hidden="true">
-                        <img
-                            src="/src/images/Votara.png"
-                            alt=""
-                            className="votara-admin-brand-logo"
-                        />
-                    </span>
-                    <span className="votara-admin-brand-name">Votara</span>
-                </button>
-
-                <nav className="votara-admin-topnav" aria-label="Admin navigation">
-                    <button type="button" className={`votara-admin-topnav-link ${location.pathname === "/admin-dashboard" ? "active" : ""}`} onClick={() => goToAdminPage("/admin-dashboard")}>
-                        System Dashboard
-                    </button>
-                    <button type="button" className={`votara-admin-topnav-link ${location.pathname === "/admin/users" || location.pathname === "/admin/electoral-board" || location.pathname === "/admin/admin-accounts" ? "active" : ""}`} onClick={() => goToAdminPage("/admin/users")}>
-                        User &amp; Access Management
-                    </button>
-                    <button type="button" className={`votara-admin-topnav-link ${location.pathname === "/admin/data-management" ? "active" : ""}`} onClick={() => goToAdminPage("/admin/data-management")}>
-                        Data Management
-                    </button>
-                    <button type="button" className={`votara-admin-topnav-link ${location.pathname === "/admin/settings" ? "active" : ""}`} onClick={() => goToAdminPage("/admin/settings")}>
-                        System Configuration
-                    </button>
-                    <button type="button" className={`votara-admin-topnav-link ${location.pathname === "/admin/audit-logs" ? "active" : ""}`} onClick={() => goToAdminPage("/admin/audit-logs")}>
-                        Monitoring &amp; Logs
-                    </button>
-                    <button type="button" className="votara-admin-topnav-link" onClick={() => goToAdminPage("/admin/settings")}>
-                        Support &amp; Troubleshooting
-                    </button>
-                    <button type="button" className={`votara-admin-topnav-link ${location.pathname === "/admin/reports" ? "active" : ""}`} onClick={() => goToAdminPage("/admin/reports")}>
-                        Reports &amp; Analytics
-                    </button>
-                </nav>
-
-                <div className="votara-admin-topbar-actions">
-                    <button type="button" className="votara-topbar-environment" aria-label="Environment">
-                        <span className="votara-env-dot"></span>
-                        Production
-                    </button>
-                    <button
-                        type="button"
-                        className="votara-notification-button"
-                        onClick={() => goToAdminPage("/admin/audit-logs")}
-                        title="Notifications"
-                        aria-label="Notifications"
-                    >
-                        <span className="notification-dot"></span>
-                        <FiBell size={16} />
-                    </button>
-                    <div className="votara-admin-user">
-                        <span className="votara-admin-user-avatar">
-                            {adminDisplayName.charAt(0).toUpperCase()}
-                        </span>
-                        <span className="votara-admin-user-name">
-                            {adminDisplayName}
-                        </span>
-                    </div>
-                    <button
-                        type="button"
-                        className="votara-admin-logout"
-                        onClick={handleAdminLogout}
-                        title="Logout"
-                        aria-label="Logout"
-                    >
-                        <FiLogOut size={17} />
-                    </button>
-                </div>
-            </header>
+            <AdminTopNav admin={storedAdmin} onLogout={handleAdminLogout} />
 
             <div className="admin-user-access-page">
             <div className="admin-user-access-shell">
@@ -438,9 +408,7 @@ export default function AdminUserAccessManagement() {
                         <div className="ua-role-switcher">
                             <button
                                 type="button"
-                                className={`ua-role-card ${
-                                    isAdmin ? "selected" : ""
-                                }`}
+                                className={`ua-role-card ${isAdmin ? "selected" : ""}`}
                                 onClick={() => handleRoleChange("admin")}
                             >
                                 <span className="ua-role-icon">
@@ -455,9 +423,7 @@ export default function AdminUserAccessManagement() {
 
                             <button
                                 type="button"
-                                className={`ua-role-card ${
-                                    !isAdmin ? "selected" : ""
-                                }`}
+                                className={`ua-role-card ${!isAdmin ? "selected" : ""}`}
                                 onClick={() => handleRoleChange("electoral_board")}
                             >
                                 <span className="ua-role-icon">
@@ -500,9 +466,7 @@ export default function AdminUserAccessManagement() {
 
                                 <button
                                     type="button"
-                                    className={`ua-upload ${
-                                        profilePhotoPreview ? "has-preview" : ""
-                                    }`}
+                                    className={`ua-upload ${profilePhotoPreview ? "has-preview" : ""}`}
                                     onClick={() => fileInputRef.current?.click()}
                                 >
                                     {profilePhotoPreview ? (
@@ -579,144 +543,139 @@ export default function AdminUserAccessManagement() {
                         </form>
                     </section>
 
-                    <div className="ua-right-column">
-                        <section className="ua-card ua-credentials-card">
-                            <div className="ua-panel-heading">
-                                <div>
-                                    <h2>Generated Credentials</h2>
-                                    <p>Password is generated only when the account is created or reset.</p>
-                                </div>
-                                <FiKey className="ua-panel-icon" />
+                    <section className="ua-card ua-credentials-card">
+                        <div className="ua-panel-heading">
+                            <div>
+                                <span className="ua-eyebrow">SECURITY &amp; CREDENTIALS</span>
+                                <h2>Generated Credentials</h2>
+                                <p>
+                                    Password is generated only when the account is created or reset.
+                                </p>
                             </div>
+                            <FiKey className="ua-panel-icon" />
+                        </div>
 
-                            {credentials.temporaryPassword ? (
-                                <div className="ua-credential-body">
-                                    <div className="ua-account-preview">
-                                        <span className="ua-avatar">
-                                            {getInitials(credentials.user?.full_name)}
-                                        </span>
-                                        <div>
-                                            <strong>
-                                                {credentials.user?.full_name || "New Account"}
-                                            </strong>
-                                            <small>
-                                                {credentials.user?.email || email}
-                                            </small>
-                                        </div>
-                                    </div>
-
-                                    <div className="ua-password-box">
-                                        <span>TEMPORARY PASSWORD</span>
-                                        <strong>{credentials.temporaryPassword}</strong>
-                                    </div>
-
-                                    <div className="ua-email-status">
-                                        <FiCheckCircle />
-                                        <span>
-                                            {credentials.emailSent
-                                                ? "Credentials were sent to the account email."
-                                                : "Account created. Email delivery was not confirmed."}
-                                        </span>
+                        {credentials.temporaryPassword ? (
+                            <div className="ua-credential-body">
+                                <div className="ua-account-preview">
+                                    <span className="ua-avatar">
+                                        {getInitials(credentials.user?.full_name)}
+                                    </span>
+                                    <div>
+                                        <strong>
+                                            {credentials.user?.full_name || "New Account"}
+                                        </strong>
+                                        <small>
+                                            {credentials.user?.email || email}
+                                        </small>
                                     </div>
                                 </div>
-                            ) : (
-                                <div className="ua-empty-state">
-                                    <FiShield />
-                                    <strong>No credentials generated yet</strong>
+
+                                <div className="ua-password-box">
+                                    <span>TEMPORARY PASSWORD</span>
+                                    <strong>{credentials.temporaryPassword}</strong>
+                                </div>
+
+                                <div className="ua-email-status">
+                                    <FiCheckCircle />
                                     <span>
-                                        Create an account or reset a password to generate
-                                        temporary credentials.
+                                        {credentials.emailSent
+                                            ? "Credentials were sent to the account email."
+                                            : "Account created. Email delivery was not confirmed."}
                                     </span>
                                 </div>
-                            )}
-                        </section>
+                            </div>
+                        ) : (
+                            <div className="ua-empty-state">
+                                <FiShield />
+                                <strong>No credentials generated yet</strong>
+                                <span>
+                                    Create an account or reset a password to generate
+                                    temporary credentials.
+                                </span>
+                            </div>
+                        )}
+                    </section>
+                </div>
 
-                        <section className="ua-card ua-accounts-card">
-                            <div className="ua-panel-heading">
-                                <div>
-                                    <h2>Recently Added Accounts</h2>
-                                    <p>
-                                        {accountCountLabel} from VOTARA · Administrators and
-                                        Electoral Board
-                                    </p>
-                                </div>
-
+                <div className="ua-account-sections">
+                    <section className="ua-card ua-accounts-card ua-role-accounts-card">
+                        <div className="ua-panel-heading ua-role-panel-heading">
+                            <div>
+                                <span className="ua-section-label admin-label">
+                                    ADMINISTRATOR ACCOUNTS
+                                </span>
+                                <h2>Administrator Accounts</h2>
+                                <p>
+                                    {adminCountLabel} with system administration access.
+                                </p>
+                            </div>
+                            <div className="ua-panel-heading-actions">
+                                <span className="ua-section-count admin-count">{admins.length}</span>
                                 <button
                                     className="ua-refresh-button"
                                     type="button"
                                     onClick={loadAccounts}
                                     disabled={loadingAccounts}
-                                    aria-label="Refresh accounts"
+                                    aria-label="Refresh administrator accounts"
                                 >
                                     <FiRefreshCw className={loadingAccounts ? "ua-spin" : ""} />
                                 </button>
                             </div>
+                        </div>
 
-                            <div className="ua-account-list">
-                                {loadingAccounts ? (
-                                    <div className="ua-list-empty">Loading accounts...</div>
-                                ) : allAccounts.length === 0 ? (
-                                    <div className="ua-list-empty">
-                                        No administrator or Electoral Board accounts found.
-                                    </div>
-                                ) : (
-                                    allAccounts.map((account) => {
-                                        const adminAccount = account._role === "admin";
-                                        return (
-                                            <div className="ua-account-row" key={`${account._role}-${account.id}`}>
-                                                <span className={`ua-avatar ${adminAccount ? "admin" : ""}`}>
-                                                    {account.profile_photo_url ? (
-                                                        <img
-                                                            src={account.profile_photo_url}
-                                                            alt=""
-                                                        />
-                                                    ) : (
-                                                        getInitials(account.full_name)
-                                                    )}
-                                                </span>
+                        <div className="ua-account-list ua-role-account-list">
+                            {loadingAccounts ? (
+                                <div className="ua-list-empty">Loading administrator accounts...</div>
+                            ) : admins.length === 0 ? (
+                                <div className="ua-list-empty">
+                                    No administrator accounts found.
+                                </div>
+                            ) : (
+                                admins.map((account) => renderAccountRow(account, true))
+                            )}
+                        </div>
+                    </section>
 
-                                                <div className="ua-account-info">
-                                                    <div className="ua-account-name-line">
-                                                        <strong>{account.full_name}</strong>
-                                                        <span className={`ua-role-badge ${adminAccount ? "admin" : "eb"}`}>
-                                                            {adminAccount ? "Administrator" : "Electoral Board"}
-                                                        </span>
-                                                    </div>
-                                                    <small>{account.email}</small>
-                                                    <small>Created {formatDate(account.created_at)}</small>
-                                                </div>
-
-                                                <span
-                                                    className={`ua-status ${
-                                                        account.is_active ? "active" : "inactive"
-                                                    }`}
-                                                >
-                                                    {account.is_active ? "Active" : "Inactive"}
-                                                </span>
-
-                                                <button
-                                                    type="button"
-                                                    className="ua-view-button"
-                                                    onClick={() => handleViewAccount(account)}
-                                                >
-                                                    <FiEye />
-                                                    View
-                                                </button>
-
-                                                {adminAccount ? (
-                                                    <span className="ua-admin-access-label">
-                                                        Full Access
-                                                    </span>
-                                                ) : null}
-                                            </div>
-                                        );
-                                    })
-                                )}
+                    <section className="ua-card ua-accounts-card ua-role-accounts-card">
+                        <div className="ua-panel-heading ua-role-panel-heading">
+                            <div>
+                                <span className="ua-section-label eb-label">
+                                    ELECTORAL BOARD ACCOUNTS
+                                </span>
+                                <h2>Electoral Board Accounts</h2>
+                                <p>
+                                    {ebCountLabel} for election, candidate, and voting operations.
+                                </p>
                             </div>
-                        </section>
-                    </div>
+                            <div className="ua-panel-heading-actions">
+                                <span className="ua-section-count eb-count">{ebAccounts.length}</span>
+                                <button
+                                    className="ua-refresh-button"
+                                    type="button"
+                                    onClick={loadAccounts}
+                                    disabled={loadingAccounts}
+                                    aria-label="Refresh Electoral Board accounts"
+                                >
+                                    <FiRefreshCw className={loadingAccounts ? "ua-spin" : ""} />
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="ua-account-list ua-role-account-list">
+                            {loadingAccounts ? (
+                                <div className="ua-list-empty">Loading Electoral Board accounts...</div>
+                            ) : ebAccounts.length === 0 ? (
+                                <div className="ua-list-empty">
+                                    No Electoral Board accounts found.
+                                </div>
+                            ) : (
+                                ebAccounts.map((account) => renderAccountRow(account, false))
+                            )}
+                        </div>
+                    </section>
                 </div>
-            </div>
+                </div>
 
             {selectedAccount && (
                 <div

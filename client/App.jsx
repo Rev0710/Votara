@@ -39,6 +39,7 @@ import ElectionManagement from "./src/pages/electoralBoard/ElectionManagement";
 import CreateElection from "./src/pages/electoralBoard/CreateElection";
 
 import KioskVoting from "./src/pages/electoralBoard/KioskVoting";
+import ElectoralBoardAuditLogs from "./src/pages/electoralBoard/AuditLogs";
 import AdminAuditLogs from "./src/pages/admin/AdminAuditLogs";
 import Reports from "./src/pages/admin/Reports";
 import ElectionResults from "./src/pages/admin/ElectionResults";
@@ -209,7 +210,7 @@ const App = () => {
                 
                 <Route
                     path="/admin-login"
-                    element={<StaffLogin />}
+                    element={<AccountSelection />}
                 />
 
                 {/* =================================================
@@ -243,6 +244,11 @@ const App = () => {
                 <Route
                     path="/kiosk-voting"
                     element={<KioskVoting />}
+                />
+
+                <Route
+                    path="/electoral-board/audit-logs"
+                    element={<ElectoralBoardAuditLogs />}
                 />
 
                 <Route

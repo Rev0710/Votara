@@ -58,7 +58,7 @@
     z-index: 1;
     width: min(1220px, calc(100% - 44px));
     margin: 0 auto;
-    padding: 30px 0 46px;
+    padding: 46px 0 46px;
 }
 
 .admin-user-access-heading {
@@ -1176,4 +1176,435 @@
     .ua-shared-topbar .votara-admin-brand-name { font-size: 21px; }
     .ua-shared-topbar .votara-admin-brand-logo { width: 34px; height: 34px; }
     .ua-shared-topbar .votara-topbar-environment { display: none; }
+}
+
+/* ============================================================
+   FINAL SHARED HEADER / CONTENT ALIGNMENT FIX
+   ============================================================ */
+.ua-shared-topbar {
+    position: sticky !important;
+    top: 0 !important;
+    left: auto !important;
+    right: auto !important;
+    z-index: 1200 !important;
+    height: 78px !important;
+    min-height: 78px !important;
+    margin: 0 !important;
+}
+
+.admin-user-access-page {
+    margin-top: 0 !important;
+}
+
+.admin-user-access-shell {
+    padding-top: 46px !important;
+}
+
+@media (max-width: 900px) {
+    .ua-shared-topbar {
+        height: 68px !important;
+        min-height: 68px !important;
+    }
+
+    .admin-user-access-shell {
+        padding-top: 32px !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .ua-shared-topbar {
+        height: 64px !important;
+        min-height: 64px !important;
+    }
+
+    .admin-user-access-shell {
+        padding-top: 24px !important;
+    }
+}
+
+
+/* ============================================================
+   VOTARA — FULL-WIDTH USER & ACCESS MANAGEMENT
+   Professional role-separated account layout.
+   The existing creation flow and account actions remain unchanged.
+   ============================================================ */
+
+.admin-user-access-page {
+    min-height: calc(100vh - 78px);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.admin-user-access-shell {
+    width: calc(100% - 64px);
+    max-width: none;
+    margin: 0 auto;
+    padding: 34px 0 44px;
+    box-sizing: border-box;
+}
+
+.admin-user-access-heading {
+    margin-bottom: 20px;
+}
+
+.admin-user-access-heading h1 {
+    font-size: clamp(20px, 1.45vw, 26px);
+}
+
+.admin-user-access-heading p {
+    font-size: 12px;
+}
+
+/* Top area: account creation + generated credentials */
+.admin-user-access-grid {
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+    gap: 20px;
+    width: 100%;
+}
+
+.ua-create-card {
+    padding: 28px;
+}
+
+.ua-card h2,
+.ua-panel-heading h2 {
+    font-size: 18px;
+}
+
+.ua-card-heading p,
+.ua-panel-heading p {
+    font-size: 11px;
+}
+
+.ua-role-switcher {
+    gap: 14px;
+    margin: 22px 0;
+}
+
+.ua-role-card {
+    min-height: 70px;
+    padding: 15px;
+}
+
+.ua-role-icon {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+}
+
+.ua-role-copy strong {
+    font-size: 12px;
+}
+
+.ua-role-copy small {
+    font-size: 9px;
+}
+
+.ua-form-row {
+    gap: 14px;
+}
+
+.ua-form-row input {
+    height: 46px;
+    font-size: 11px;
+}
+
+.ua-form-field {
+    margin-top: 18px;
+}
+
+.ua-upload {
+    min-height: 145px;
+}
+
+.ua-form-actions {
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.ua-primary-button,
+.ua-secondary-button {
+    font-size: 10px;
+}
+
+/* Credentials panel fills the same visual area as the create panel. */
+.ua-credentials-card {
+    min-height: 100%;
+}
+
+.ua-credential-body {
+    padding: 24px;
+}
+
+.ua-empty-state {
+    min-height: 250px;
+}
+
+/* ============================================================
+   SEPARATE ACCOUNT SECTIONS
+   ============================================================ */
+
+.ua-account-sections {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 20px;
+    width: 100%;
+    margin-top: 20px;
+    align-items: stretch;
+}
+
+.ua-role-accounts-card {
+    min-width: 0;
+    min-height: 0;
+}
+
+.ua-role-panel-heading {
+    min-height: 88px;
+    box-sizing: border-box;
+    align-items: center;
+}
+
+.ua-section-label {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: .13em;
+}
+
+.ua-section-label.admin-label {
+    color: #6f9cff;
+}
+
+.ua-section-label.eb-label {
+    color: #48d987;
+}
+
+.ua-panel-heading-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 0 0 auto;
+}
+
+.ua-section-count {
+    min-width: 30px;
+    height: 30px;
+    display: inline-grid;
+    place-items: center;
+    padding: 0 8px;
+    box-sizing: border-box;
+    border-radius: 9px;
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.ua-section-count.admin-count {
+    color: #8db0ff;
+    border: 1px solid rgba(38,110,255,.25);
+    background: rgba(38,110,255,.11);
+}
+
+.ua-section-count.eb-count {
+    color: #62e19a;
+    border: 1px solid rgba(46,209,113,.25);
+    background: rgba(46,209,113,.10);
+}
+
+.ua-role-account-list {
+    height: 390px;
+    max-height: 390px;
+    overflow-y: auto;
+}
+
+.ua-role-account-list .ua-account-row {
+    min-height: 76px;
+    padding: 12px 20px;
+}
+
+.ua-role-account-list .ua-avatar {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+}
+
+.ua-role-account-list .ua-account-name-line strong {
+    font-size: 10.5px;
+}
+
+.ua-role-account-list .ua-account-info small {
+    font-size: 8px;
+}
+
+.ua-role-account-list .ua-role-badge {
+    font-size: 7px;
+}
+
+.ua-role-account-list .ua-status {
+    font-size: 8px;
+}
+
+.ua-role-account-list .ua-view-button {
+    font-size: 9px;
+}
+
+.ua-eb-access-label {
+    min-width: 112px;
+    text-align: right;
+    color: #65d995;
+    font-size: 7px;
+    font-weight: 700;
+}
+
+/* Give the two role cards a subtle identity without changing the flow. */
+.ua-role-accounts-card:first-child {
+    box-shadow:
+        0 18px 50px rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255,255,255,0.025),
+        inset 3px 0 0 rgba(38,110,255,.55);
+}
+
+.ua-role-accounts-card:last-child {
+    box-shadow:
+        0 18px 50px rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255,255,255,0.025),
+        inset 3px 0 0 rgba(46,209,113,.55);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 1200px) {
+    .admin-user-access-shell {
+        width: calc(100% - 40px);
+    }
+
+    .admin-user-access-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .ua-role-account-list {
+        height: 360px;
+        max-height: 360px;
+    }
+
+    .ua-eb-access-label,
+    .ua-admin-access-label {
+        display: none;
+    }
+}
+
+@media (max-width: 1000px) {
+    .admin-user-access-grid,
+    .ua-account-sections {
+        grid-template-columns: 1fr;
+    }
+
+    .ua-credentials-card {
+        min-height: auto;
+    }
+
+    .ua-empty-state {
+        min-height: 180px;
+    }
+
+    .ua-role-account-list {
+        height: 350px;
+        max-height: 350px;
+    }
+}
+
+@media (max-width: 720px) {
+    .admin-user-access-shell {
+        width: calc(100% - 24px);
+        padding: 22px 0 30px;
+    }
+
+    .admin-user-access-heading {
+        gap: 10px;
+    }
+
+    .admin-user-access-number {
+        width: 34px;
+        height: 34px;
+        flex-basis: 34px;
+    }
+
+    .admin-user-access-heading h1 {
+        font-size: 18px;
+    }
+
+    .admin-user-access-heading p {
+        font-size: 10px;
+    }
+
+    .ua-create-card {
+        padding: 20px;
+    }
+
+    .ua-role-switcher {
+        gap: 10px;
+    }
+
+    .ua-role-card {
+        min-height: 64px;
+    }
+
+    .ua-form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .ua-role-panel-heading {
+        min-height: auto;
+    }
+
+    .ua-role-account-list {
+        height: 330px;
+        max-height: 330px;
+    }
+
+    .ua-role-account-list .ua-account-row {
+        grid-template-columns: 40px minmax(0, 1fr);
+        gap: 10px;
+    }
+
+    .ua-role-account-list .ua-status,
+    .ua-role-account-list .ua-view-button,
+    .ua-role-account-list .ua-eb-access-label,
+    .ua-role-account-list .ua-admin-access-label {
+        grid-column: 2;
+        justify-self: start;
+    }
+
+    .ua-role-account-list .ua-view-button {
+        width: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-user-access-shell {
+        width: calc(100% - 16px);
+    }
+
+    .ua-create-card {
+        padding: 16px;
+    }
+
+    .ua-panel-heading {
+        padding: 16px;
+    }
+
+    .ua-role-account-list .ua-account-row {
+        padding: 11px 14px;
+    }
+
+    .ua-panel-heading-actions {
+        gap: 6px;
+    }
+
+    .ua-section-count {
+        min-width: 26px;
+        height: 26px;
+    }
 }

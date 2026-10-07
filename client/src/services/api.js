@@ -63,11 +63,15 @@ const getStudentToken = () => {
 };
 
 
+const getAdminToken = () => {
+    return localStorage.getItem("votaraAdminToken") || "";
+};
+
+
+// Legacy staff token is intentionally retained only as a fallback
+// for older non-Admin staff flows. Admin pages use votaraAdminToken.
 const getStaffToken = () => {
-    return (
-        localStorage.getItem("votaraStaffToken") ||
-        ""
-    );
+    return localStorage.getItem("votaraStaffToken") || "";
 };
 
 
@@ -141,6 +145,10 @@ api.interceptors.request.use(
             getStudentToken();
 
 
+        const adminToken =
+            getAdminToken();
+
+
         const ebToken =
             getEBToken();
 
@@ -151,6 +159,30 @@ api.interceptors.request.use(
 
         const kioskToken =
             getKioskToken();
+
+
+        const normalizedRequestUrl =
+            String(requestUrl).toLowerCase();
+
+        const currentPath =
+            String(window.location.pathname || "").toLowerCase();
+
+        const isLoginRequest =
+            normalizedRequestUrl.includes("/staff-auth/login") ||
+            normalizedRequestUrl.includes("/eb-auth/login") ||
+            normalizedRequestUrl.includes("/auth/login");
+
+        const isAdminRequest =
+            currentPath === "/admin-dashboard" ||
+            currentPath === "/admin-login" ||
+            currentPath.startsWith("/admin/") ||
+            normalizedRequestUrl.startsWith("/admin/") ||
+            normalizedRequestUrl.includes("/admin-dashboard");
+
+        const isEBRequest =
+            currentPath.startsWith("/electoral-board") ||
+            normalizedRequestUrl.startsWith("/electoral-board") ||
+            normalizedRequestUrl.startsWith("/eb/");
 
 
         let token = "";
@@ -164,6 +196,15 @@ api.interceptors.request.use(
         // This must take priority over EB/staff tokens.
         //
 
+        // Login endpoints must NEVER inherit a previous session token.
+        if (isLoginRequest) {
+            return config;
+        }
+
+
+        // -------------------------------------------------
+        // KIOSK VOTING
+        // -------------------------------------------------
         if (
             kioskMode &&
             isVotingRequest(requestUrl) &&
@@ -178,10 +219,6 @@ api.interceptors.request.use(
         // -------------------------------------------------
         // NORMAL STUDENT VOTING
         // -------------------------------------------------
-        //
-        // /voting/* must ALWAYS use the student JWT.
-        //
-
         else if (
             isVotingRequest(requestUrl) &&
             studentToken
@@ -193,13 +230,8 @@ api.interceptors.request.use(
 
 
         // -------------------------------------------------
-        // KIOSK NON-VOTING REQUEST
+        // KIOSK NON-VOTING
         // -------------------------------------------------
-        //
-        // Keep the kiosk token available for kiosk-specific
-        // student requests when kiosk mode is active.
-        //
-
         else if (
             kioskMode &&
             isKioskRequest(requestUrl) &&
@@ -212,13 +244,27 @@ api.interceptors.request.use(
 
 
         // -------------------------------------------------
+        // ADMIN
+        // -------------------------------------------------
+        // Admin token is selected before EB/staff whenever the
+        // request originates from an Admin route or /admin/* API.
+        else if (
+            isAdminRequest &&
+            adminToken
+        ) {
+
+            token = adminToken;
+
+        }
+
+
+        // -------------------------------------------------
         // ELECTORAL BOARD
         // -------------------------------------------------
-        //
-        // EB-specific API calls use the EB token.
-        //
-
-        else if (ebToken) {
+        else if (
+            isEBRequest &&
+            ebToken
+        ) {
 
             token = ebToken;
 
@@ -226,9 +272,8 @@ api.interceptors.request.use(
 
 
         // -------------------------------------------------
-        // STAFF / ADMIN
+        // LEGACY STAFF FALLBACK
         // -------------------------------------------------
-
         else if (staffToken) {
 
             token = staffToken;
@@ -239,7 +284,6 @@ api.interceptors.request.use(
         // -------------------------------------------------
         // STUDENT FALLBACK
         // -------------------------------------------------
-
         else if (studentToken) {
 
             token = studentToken;

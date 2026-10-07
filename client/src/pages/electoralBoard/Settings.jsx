@@ -1,760 +1,489 @@
-import React, {
-    useCallback,
-    useEffect,
-    useState
-} from "react";
-
-import api from "../../services/api";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+    FiArrowLeft,
+    FiCheckCircle,
+    FiClock,
+    FiDatabase,
+    FiLock,
+    FiLogOut,
+    FiMail,
+    FiRefreshCw,
+    FiShield,
+    FiUser,
+    FiAlertCircle,
+} from "react-icons/fi";
 
 import "./Settings.css";
+import api from "../../services/api";
 
+// =====================================================
+// ELECTORAL BOARD SETTINGS
+// =====================================================
+// This page is the EB Settings component expected by
+// EBDashboard.jsx:
+//
+//     import Settings from "./Settings";
+//
+// The backend already exposes:
+//     /api/electoral-board/settings
+//
+// api.js supplies the votaraEBToken automatically.
+// =====================================================
 
-// =========================================================
-// VOTARA ELECTORAL BOARD SETTINGS
-// =========================================================
-
-function Settings() {
-
-    const [settings, setSettings] = useState(null);
+const Settings = () => {
+    const navigate = useNavigate();
 
     const [loading, setLoading] = useState(true);
-
-    const [error, setError] = useState("");
-
     const [refreshing, setRefreshing] = useState(false);
+    const [error, setError] = useState("");
+    const [settings, setSettings] = useState(null);
 
-
-    // =====================================================
-    // LOAD SETTINGS
-    // =====================================================
-
-    const loadSettings = useCallback(
-        async (showRefresh = false) => {
-
-            try {
-
-                if (showRefresh) {
-                    setRefreshing(true);
-                } else {
-                    setLoading(true);
-                }
-
-                setError("");
-
-                const response =
-                    await api.get(
-                        "/electoral-board/settings"
-                    );
-
-                const data =
-                    response?.data || {};
-
-                if (!data.success) {
-                    throw new Error(
-                        data.message ||
-                        "Unable to load settings."
-                    );
-                }
-
-                setSettings(data);
-
-            } catch (err) {
-
-                console.error(
-                    "Settings error:",
-                    err
-                );
-
-                setError(
-                    err?.response?.data?.message ||
-                    err?.message ||
-                    "Unable to load Electoral Board settings."
-                );
-
-            } finally {
-
-                setLoading(false);
-                setRefreshing(false);
-
+    const loadSettings = async (showRefresh = false) => {
+        try {
+            if (showRefresh) {
+                setRefreshing(true);
+            } else {
+                setLoading(true);
             }
 
-        },
-        []
-    );
+            setError("");
 
-
-    // =====================================================
-    // INITIAL LOAD
-    // =====================================================
-
-    useEffect(() => {
-
-        loadSettings();
-
-    }, [loadSettings]);
-
-
-    // =====================================================
-    // REFRESH
-    // =====================================================
-
-    const handleRefresh = () => {
-
-        loadSettings(true);
-
-    };
-
-
-    // =====================================================
-    // FORMAT ROLE
-    // =====================================================
-
-    const formatRole = (role) => {
-
-        if (!role) {
-            return "Electoral Board";
-        }
-
-        return String(role)
-            .replace(/_/g, " ")
-            .replace(/\b\w/g, (letter) =>
-                letter.toUpperCase()
+            const response = await api.get(
+                "/electoral-board/settings"
             );
 
-    };
+            const data = response?.data || {};
 
+            if (!data.success) {
+                throw new Error(
+                    data.message ||
+                    "Unable to load Electoral Board settings."
+                );
+            }
 
-    // =====================================================
-    // GET INITIAL
-    // =====================================================
+            setSettings(data);
+        } catch (err) {
+            console.error(
+                "❌ Electoral Board Settings error:",
+                err
+            );
 
-    const getInitial = (name) => {
-
-        if (!name) {
-            return "E";
+            setError(
+                err?.response?.data?.message ||
+                err?.message ||
+                "Unable to load Electoral Board settings."
+            );
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
         }
-
-        return String(name)
-            .trim()
-            .charAt(0)
-            .toUpperCase();
-
     };
 
+    useEffect(() => {
+        loadSettings();
+    }, []);
 
-    // =====================================================
-    // LOADING
-    // =====================================================
+    const handleBack = () => {
+        // Return to the EB dashboard without changing
+        // EBDashboard.jsx.
+        navigate("/electoral-board/dashboard");
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem("votaraEBToken");
+        localStorage.removeItem("votaraEBUser");
+        localStorage.removeItem("votaraStaffToken");
+        localStorage.removeItem("votaraStaffUser");
+
+        navigate("/electoral-board/login", {
+            replace: true,
+        });
+    };
+
+    const account = settings?.account || {};
+    const security = settings?.security || {};
+    const system = settings?.system || {};
 
     if (loading) {
-
         return (
-            <div className="settings-page">
-
-                <div className="settings-loading">
-
-                    <div className="settings-spinner">
-                    </div>
-
+            <div className="eb-settings-page eb-settings-loading">
+                <div className="eb-settings-loading-card">
+                    <FiRefreshCw className="eb-settings-spinner" />
+                    <h2>Loading settings</h2>
                     <p>
-                        Loading Electoral Board settings...
+                        Retrieving your Electoral Board
+                        account information...
                     </p>
-
                 </div>
-
             </div>
         );
-
     }
 
+    return (
+        <div className="eb-settings-page">
+            <div className="eb-settings-container">
 
-    // =====================================================
-    // ERROR
-    // =====================================================
+                {/* =================================================
+                    HEADER
+                ================================================= */}
 
-    if (error && !settings) {
+                <header className="eb-settings-header">
+                    <button
+                        type="button"
+                        className="eb-settings-back"
+                        onClick={handleBack}
+                    >
+                        <FiArrowLeft />
+                        Back to Dashboard
+                    </button>
 
-        return (
-            <div className="settings-page">
-
-                <div className="settings-header">
-
-                    <div>
-
-                        <div className="settings-eyebrow">
+                    <div className="eb-settings-heading">
+                        <div className="eb-settings-badge">
                             ELECTORAL BOARD
                         </div>
 
-                        <h1>
-                            Settings
-                        </h1>
+                        <h1>Settings</h1>
 
                         <p>
-                            Manage your Electoral Board
-                            account and system information.
+                            View your Electoral Board account,
+                            security, and VOTARA system information.
                         </p>
-
                     </div>
 
-                    <button
-                        type="button"
-                        className="settings-refresh-btn"
-                        onClick={handleRefresh}
-                    >
-                        ↻ Refresh
-                    </button>
-
-                </div>
-
-
-                <div className="settings-error">
-
-                    <div className="settings-error-icon">
-                        !
-                    </div>
-
-                    <div>
-
-                        <strong>
-                            Unable to load settings
-                        </strong>
-
-                        <p>
-                            {error}
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </div>
-        );
-
-    }
-
-
-    const account =
-        settings?.account || {};
-
-    const security =
-        settings?.security || {};
-
-    const system =
-        settings?.system || {};
-
-
-    // =====================================================
-    // RENDER
-    // =====================================================
-
-    return (
-        <div className="settings-page">
-
-            {/* =================================================
-                HEADER
-            ================================================= */}
-
-            <div className="settings-header">
-
-                <div>
-
-                    <div className="settings-eyebrow">
-                        ELECTORAL BOARD
-                    </div>
-
-                    <h1>
-                        Settings
-                    </h1>
-
-                    <p>
-                        Manage your Electoral Board
-                        account and review system
-                        security information.
-                    </p>
-
-                </div>
-
-
-                <button
-                    type="button"
-                    className="settings-refresh-btn"
-                    onClick={handleRefresh}
-                    disabled={refreshing}
-                >
-
-                    <span>
-                        ↻
-                    </span>
-
-                    {refreshing
-                        ? "Refreshing..."
-                        : "Refresh"}
-
-                </button>
-
-            </div>
-
-
-            {/* =================================================
-                ERROR AFTER REFRESH
-            ================================================= */}
-
-            {error && settings && (
-
-                <div className="settings-error">
-
-                    <div className="settings-error-icon">
-                        !
-                    </div>
-
-                    <div>
-
-                        <strong>
-                            Unable to refresh settings
-                        </strong>
-
-                        <p>
-                            {error}
-                        </p>
-
-                    </div>
-
-                </div>
-
-            )}
-
-
-            {/* =================================================
-                ACCOUNT PROFILE
-            ================================================= */}
-
-            <section className="settings-card settings-profile-card">
-
-                <div className="settings-card-heading">
-
-                    <div>
-
-                        <div className="settings-card-eyebrow">
-                            ACCOUNT
-                        </div>
-
-                        <h2>
-                            Electoral Board Account
-                        </h2>
-
-                        <p>
-                            Information associated with
-                            your Electoral Board account.
-                        </p>
-
-                    </div>
-
-                    <span
-                        className={
-                            account.isActive
-                                ? "settings-status active"
-                                : "settings-status inactive"
-                        }
-                    >
-                        <span className="settings-status-dot">
-                        </span>
-
-                        {account.isActive
-                            ? "Active"
-                            : "Inactive"}
-                    </span>
-
-                </div>
-
-
-                <div className="settings-profile">
-
-                    <div className="settings-avatar">
-
-                        {getInitial(
-                            account.fullName
-                        )}
-
-                    </div>
-
-
-                    <div className="settings-profile-main">
-
-                        <h3>
-                            {account.fullName ||
-                                "Electoral Board Member"}
-                        </h3>
-
-                        <p>
-                            {account.email ||
-                                "No email available"}
-                        </p>
-
-                        <span className="settings-role-badge">
-                            {formatRole(
-                                account.role
-                            )}
-                        </span>
-
-                    </div>
-
-                </div>
-
-
-                <div className="settings-info-grid">
-
-                    <div className="settings-info-item">
-
-                        <span>
-                            Full Name
-                        </span>
-
-                        <strong>
-                            {account.fullName ||
-                                "—"}
-                        </strong>
-
-                    </div>
-
-
-                    <div className="settings-info-item">
-
-                        <span>
-                            Email Address
-                        </span>
-
-                        <strong>
-                            {account.email ||
-                                "—"}
-                        </strong>
-
-                    </div>
-
-
-                    <div className="settings-info-item">
-
-                        <span>
-                            Account Role
-                        </span>
-
-                        <strong>
-                            {formatRole(
-                                account.role
-                            )}
-                        </strong>
-
-                    </div>
-
-
-                    <div className="settings-info-item">
-
-                        <span>
-                            Account Status
-                        </span>
-
-                        <strong
-                            className={
-                                account.isActive
-                                    ? "settings-value-success"
-                                    : "settings-value-danger"
-                            }
+                    <div className="eb-settings-header-actions">
+                        <button
+                            type="button"
+                            className="eb-settings-refresh"
+                            onClick={() => loadSettings(true)}
+                            disabled={refreshing}
                         >
-                            {account.isActive
-                                ? "Active"
-                                : "Inactive"}
-                        </strong>
+                            <FiRefreshCw
+                                className={
+                                    refreshing
+                                        ? "eb-settings-spin"
+                                        : ""
+                                }
+                            />
+                            {refreshing
+                                ? "Refreshing..."
+                                : "Refresh"}
+                        </button>
 
+                        <button
+                            type="button"
+                            className="eb-settings-logout"
+                            onClick={handleLogout}
+                        >
+                            <FiLogOut />
+                            Logout
+                        </button>
                     </div>
+                </header>
 
-                </div>
+                {/* =================================================
+                    ERROR
+                ================================================= */}
 
-            </section>
-
-
-            {/* =================================================
-                SECURITY
-            ================================================= */}
-
-            <section className="settings-card">
-
-                <div className="settings-card-heading">
-
-                    <div>
-
-                        <div className="settings-card-eyebrow">
-                            SECURITY
-                        </div>
-
-                        <h2>
-                            Authentication & Security
-                        </h2>
-
-                        <p>
-                            Security information for
-                            your current Electoral Board
-                            session.
-                        </p>
-
-                    </div>
-
-                    <div className="settings-security-icon">
-                        ♢
-                    </div>
-
-                </div>
-
-
-                <div className="settings-security-list">
-
-                    <div className="settings-security-item">
-
-                        <div className="settings-security-item-icon">
-                            ✓
-                        </div>
-
+                {error && (
+                    <div className="eb-settings-error">
+                        <FiAlertCircle />
                         <div>
-
                             <strong>
-                                JWT Authentication
+                                Unable to load settings
                             </strong>
-
-                            <p>
-                                Your Electoral Board
-                                session is authenticated
-                                using a signed JSON Web
-                                Token.
-                            </p>
-
+                            <span>{error}</span>
                         </div>
 
-                        <span className="settings-security-badge">
-                            Enabled
-                        </span>
-
+                        <button
+                            type="button"
+                            onClick={() => loadSettings()}
+                        >
+                            Try again
+                        </button>
                     </div>
-
-
-                    <div className="settings-security-item">
-
-                        <div className="settings-security-item-icon">
-                            ◷
-                        </div>
-
-                        <div>
-
-                            <strong>
-                                Session Duration
-                            </strong>
-
-                            <p>
-                                Electoral Board sessions
-                                expire after the configured
-                                authentication period.
-                            </p>
-
-                        </div>
-
-                        <span className="settings-security-badge neutral">
-                            {security.sessionDuration ||
-                                "8 hours"}
-                        </span>
-
-                    </div>
-
-
-                    <div className="settings-security-item">
-
-                        <div className="settings-security-item-icon">
-                            ♢
-                        </div>
-
-                        <div>
-
-                            <strong>
-                                Access Level
-                            </strong>
-
-                            <p>
-                                This account is restricted
-                                to Electoral Board features.
-                            </p>
-
-                        </div>
-
-                        <span className="settings-security-badge">
-                            {security.accessLevel ||
-                                "Electoral Board"}
-                        </span>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-
-            {/* =================================================
-                SYSTEM INFORMATION
-            ================================================= */}
-
-            <section className="settings-card">
-
-                <div className="settings-card-heading">
-
-                    <div>
-
-                        <div className="settings-card-eyebrow">
-                            SYSTEM
-                        </div>
-
-                        <h2>
-                            System Information
-                        </h2>
-
-                        <p>
-                            General information about the
-                            VOTARA Electoral Board system.
-                        </p>
-
-                    </div>
-
-                    <div className="settings-system-icon">
-                        V
-                    </div>
-
-                </div>
-
-
-                <div className="settings-system-grid">
-
-                    <div className="settings-system-item">
-
-                        <span>
-                            System Name
-                        </span>
-
-                        <strong>
-                            {system.systemName ||
-                                "VOTARA"}
-                        </strong>
-
-                    </div>
-
-
-                    <div className="settings-system-item">
-
-                        <span>
-                            Current Module
-                        </span>
-
-                        <strong>
-                            {system.module ||
-                                "Electoral Board"}
-                        </strong>
-
-                    </div>
-
-
-                    <div className="settings-system-item">
-
-                        <span>
-                            Database
-                        </span>
-
-                        <strong>
-                            {system.database ||
-                                "Supabase"}
-                        </strong>
-
-                    </div>
-
-
-                    <div className="settings-system-item">
-
-                        <span>
-                            Ballot Secrecy
-                        </span>
-
-                        <strong className="settings-value-success">
-                            {system.ballotSecrecy
-                                ? "Protected"
-                                : "Not Available"}
-                        </strong>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-
-            {/* =================================================
-                SECURITY NOTICE
-            ================================================= */}
-
-            <section className="settings-notice">
-
-                <div className="settings-notice-icon">
-                    ♢
-                </div>
-
-                <div>
-
-                    <strong>
-                        Account & Election Security
-                    </strong>
-
-                    <p>
-                        Account information is controlled
-                        by the VOTARA authentication system.
-                        Election dates, voting periods,
-                        positions, year-level eligibility,
-                        and election status are managed
-                        through Election Management rather
-                        than this Settings page.
-                    </p>
-
-                </div>
-
-            </section>
-
-
-            {/* =================================================
-                FOOTER INFORMATION
-            ================================================= */}
-
-            <div className="settings-footer">
-
-                <span>
-                    VOTARA Electoral Board
-                </span>
-
-                <span>
-                    Settings information is
-                    read-only.
-                </span>
-
-                {settings?.generatedAt && (
-
-                    <span>
-                        Updated{" "}
-                        {new Date(
-                            settings.generatedAt
-                        ).toLocaleString(
-                            "en-PH",
-                            {
-                                dateStyle: "medium",
-                                timeStyle: "short"
-                            }
-                        )}
-                    </span>
-
                 )}
 
-            </div>
+                {/* =================================================
+                    CONTENT
+                ================================================= */}
 
+                {!error && (
+                    <main className="eb-settings-grid">
+
+                        {/* ACCOUNT */}
+
+                        <section className="eb-settings-card">
+                            <div className="eb-settings-card-header">
+                                <div className="eb-settings-icon blue">
+                                    <FiUser />
+                                </div>
+
+                                <div>
+                                    <h2>Account</h2>
+                                    <p>
+                                        Your Electoral Board account
+                                        information.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="eb-settings-list">
+                                <div className="eb-settings-row">
+                                    <div>
+                                        <strong>Full name</strong>
+                                        <span>
+                                            Name registered to the
+                                            Electoral Board account.
+                                        </span>
+                                    </div>
+                                    <b>
+                                        {account.fullName || "Not available"}
+                                    </b>
+                                </div>
+
+                                <div className="eb-settings-row">
+                                    <div>
+                                        <strong>Email</strong>
+                                        <span>
+                                            Email associated with
+                                            this account.
+                                        </span>
+                                    </div>
+                                    <b>
+                                        {account.email || "Not available"}
+                                    </b>
+                                </div>
+
+                                <div className="eb-settings-row">
+                                    <div>
+                                        <strong>Role</strong>
+                                        <span>
+                                            Access role for this account.
+                                        </span>
+                                    </div>
+                                    <b>
+                                        Electoral Board
+                                    </b>
+                                </div>
+
+                                <div className="eb-settings-row last">
+                                    <div>
+                                        <strong>Account status</strong>
+                                        <span>
+                                            Current account availability.
+                                        </span>
+                                    </div>
+
+                                    <span className="eb-settings-status active">
+                                        <FiCheckCircle />
+                                        {account.isActive
+                                            ? "Active"
+                                            : "Inactive"}
+                                    </span>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* SECURITY */}
+
+                        <section className="eb-settings-card">
+                            <div className="eb-settings-card-header">
+                                <div className="eb-settings-icon green">
+                                    <FiShield />
+                                </div>
+
+                                <div>
+                                    <h2>Security</h2>
+                                    <p>
+                                        Authentication and access
+                                        information for this session.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="eb-settings-list">
+                                <div className="eb-settings-row">
+                                    <div>
+                                        <strong>Authentication</strong>
+                                        <span>
+                                            Authentication method used
+                                            by the Electoral Board API.
+                                        </span>
+                                    </div>
+                                    <b>
+                                        {security.authentication || "JWT"}
+                                    </b>
+                                </div>
+
+                                <div className="eb-settings-row">
+                                    <div>
+                                        <strong>Session duration</strong>
+                                        <span>
+                                            Maximum session duration
+                                            provided by the EB settings API.
+                                        </span>
+                                    </div>
+                                    <b>
+                                        {security.sessionDuration ||
+                                            "Not available"}
+                                    </b>
+                                </div>
+
+                                <div className="eb-settings-row last">
+                                    <div>
+                                        <strong>Access level</strong>
+                                        <span>
+                                            Permission level returned
+                                            for the authenticated account.
+                                        </span>
+                                    </div>
+                                    <b>
+                                        {security.accessLevel ||
+                                            "Electoral Board"}
+                                    </b>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* SYSTEM */}
+
+                        <section className="eb-settings-card">
+                            <div className="eb-settings-card-header">
+                                <div className="eb-settings-icon purple">
+                                    <FiDatabase />
+                                </div>
+
+                                <div>
+                                    <h2>System information</h2>
+                                    <p>
+                                        Information about the VOTARA
+                                        environment used by EB.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="eb-settings-list">
+                                <div className="eb-settings-row">
+                                    <div>
+                                        <strong>System</strong>
+                                        <span>
+                                            Election system name.
+                                        </span>
+                                    </div>
+                                    <b>
+                                        {system.systemName || "VOTARA"}
+                                    </b>
+                                </div>
+
+                                <div className="eb-settings-row">
+                                    <div>
+                                        <strong>Module</strong>
+                                        <span>
+                                            Current application module.
+                                        </span>
+                                    </div>
+                                    <b>
+                                        {system.module ||
+                                            "Electoral Board"}
+                                    </b>
+                                </div>
+
+                                <div className="eb-settings-row">
+                                    <div>
+                                        <strong>Database</strong>
+                                        <span>
+                                            Database service used by
+                                            the application.
+                                        </span>
+                                    </div>
+                                    <b>
+                                        {system.database ||
+                                            "Supabase"}
+                                    </b>
+                                </div>
+
+                                <div className="eb-settings-row last">
+                                    <div>
+                                        <strong>Ballot secrecy</strong>
+                                        <span>
+                                            Indicates whether ballot
+                                            secrecy is enabled.
+                                        </span>
+                                    </div>
+
+                                    <span className="eb-settings-status secure">
+                                        <FiLock />
+                                        {system.ballotSecrecy
+                                            ? "Protected"
+                                            : "Not reported"}
+                                    </span>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* SESSION STATUS */}
+
+                        <section className="eb-settings-card eb-settings-session-card">
+                            <div className="eb-settings-card-header">
+                                <div className="eb-settings-icon amber">
+                                    <FiClock />
+                                </div>
+
+                                <div>
+                                    <h2>Session status</h2>
+                                    <p>
+                                        Current authenticated Electoral
+                                        Board session.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="eb-settings-session-content">
+                                <div className="eb-settings-session-status">
+                                    <span className="eb-settings-live-dot" />
+                                    <div>
+                                        <strong>
+                                            Electoral Board session active
+                                        </strong>
+                                        <span>
+                                            Your account is currently
+                                            authenticated for EB operations.
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    className="eb-settings-secondary-button"
+                                    onClick={handleBack}
+                                >
+                                    <FiArrowLeft />
+                                    Return to Dashboard
+                                </button>
+                            </div>
+                        </section>
+
+                    </main>
+                )}
+
+                <footer className="eb-settings-footer">
+                    <FiMail />
+                    <span>
+                        VOTARA Electoral Board Settings
+                    </span>
+                    {settings?.generatedAt && (
+                        <span>
+                            Last checked:{" "}
+                            {new Date(
+                                settings.generatedAt
+                            ).toLocaleString()}
+                        </span>
+                    )}
+                </footer>
+            </div>
         </div>
     );
-}
+};
 
 export default Settings;

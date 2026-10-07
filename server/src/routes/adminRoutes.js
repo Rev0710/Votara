@@ -11,9 +11,18 @@ const {
     resetElectoralBoardPassword,
 } = require("../controllers/adminController");
 
+const adminReportsRoutes =
+    require("./adminReportsRoutes");
+
 const router = express.Router();
 
 router.get("/dashboard", getAdminDashboard);
+
+// Reports & Analytics
+router.use(
+    "/reports",
+    adminReportsRoutes
+);
 
 router.post("/admin", createAdminAccount);
 router.get("/admin", getAdminAccounts);
