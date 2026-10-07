@@ -1,0 +1,466 @@
+import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import votaraLogo from "../../assets/images/votara-logo.png";
+import api from "../../services/api";
+import "./ForgotPassword.css";
+
+const OTP_LENGTH = 6;
+
+const ForgotPassword = () => {
+    const navigate = useNavigate();
+    const otpRefs = useRef([]);
+
+    const [step, setStep] = useState("email");
+    const [email, setEmail] = useState("");
+    const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(""));
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [confirmed, setConfirmed] = useState(false);
+
+    const clearError = () => setError("");
+
+    const handleBack = () => {
+        if (!loading) navigate("/login");
+    };
+
+    const handleEmailSubmit = async (event) => {
+        event.preventDefault();
+        clearError();
+
+        const normalizedEmail = email.trim().toLowerCase();
+
+        if (!normalizedEmail) {
+            setError("Please enter the email address you used when you registered.");
+            return;
+        }
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+            setError("Please enter a valid email address.");
+            return;
+        }
+
+        try {
+            setLoading(true);
+
+            // Backend endpoint required:
+            // POST /auth/forgot-password
+            // { email }
+            await api.post("/auth/forgot-password", {
+                email: normalizedEmail,
+            });
+
+            setEmail(normalizedEmail);
+            setOtp(Array(OTP_LENGTH).fill(""));
+            setStep("otp");
+        } catch (err) {
+            setError(
+                err?.response?.data?.message ||
+                "We could not send the verification code. Please check your registered email and try again."
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleOtpChange = (index, value) => {
+        clearError();
+
+        const digit = value.replace(/\D/g, "").slice(-1);
+        const nextOtp = [...otp];
+        nextOtp[index] = digit;
+        setOtp(nextOtp);
+
+        if (digit && index < OTP_LENGTH - 1) {
+            otpRefs.current[index + 1]?.focus();
+        }
+    };
+
+    const handleOtpKeyDown = (index, event) => {
+        if (event.key === "Backspace" && !otp[index] && index > 0) {
+            otpRefs.current[index - 1]?.focus();
+        }
+
+        if (event.key === "ArrowLeft" && index > 0) {
+            otpRefs.current[index - 1]?.focus();
+        }
+
+        if (event.key === "ArrowRight" && index < OTP_LENGTH - 1) {
+            otpRefs.current[index + 1]?.focus();
+        }
+    };
+
+    const handleOtpPaste = (event) => {
+        event.preventDefault();
+        const pasted = event.clipboardData
+            .getData("text")
+            .replace(/\D/g, "")
+            .slice(0, OTP_LENGTH);
+
+        if (!pasted) return;
+
+        const nextOtp = Array(OTP_LENGTH).fill("");
+        pasted.split("").forEach((digit, index) => {
+            nextOtp[index] = digit;
+        });
+
+        setOtp(nextOtp);
+        clearError();
+
+        const focusIndex = Math.min(pasted.length, OTP_LENGTH - 1);
+        otpRefs.current[focusIndex]?.focus();
+    };
+
+    const handleVerifyOtp = async (event) => {
+        event.preventDefault();
+        clearError();
+
+        const enteredOtp = otp.join("");
+
+        if (enteredOtp.length !== OTP_LENGTH) {
+            setError("Please enter the complete 6-digit verification code.");
+            return;
+        }
+
+        try {
+            setLoading(true);
+
+            // Backend endpoint required:
+            // POST /auth/verify-forgot-password-otp
+            // { email, otp }
+            await api.post("/auth/verify-forgot-password-otp", {
+                email,
+                otp: enteredOtp,
+            });
+
+            setConfirmed(true);
+
+            window.setTimeout(() => {
+                setConfirmed(false);
+                setStep("password");
+            }, 850);
+        } catch (err) {
+            setError(
+                err?.response?.data?.message ||
+                "That verification code is invalid or expired. Please try again."
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResetPassword = async (event) => {
+        event.preventDefault();
+        clearError();
+
+        if (newPassword.length < 8) {
+            setError("Your new password must be at least 8 characters long.");
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            setError("Your passwords do not match.");
+            return;
+        }
+
+        try {
+            setLoading(true);
+
+            // Backend endpoint required:
+            // POST /auth/reset-password
+            // { email, otp, newPassword, confirmPassword }
+            await api.post("/auth/reset-password", {
+                email,
+                otp: otp.join(""),
+                newPassword,
+                confirmPassword,
+            });
+
+            navigate("/login", {
+                replace: true,
+                state: {
+                    message: "Your password has been changed. You can now sign in with your new password.",
+                },
+            });
+        } catch (err) {
+            setError(
+                err?.response?.data?.message ||
+                "Unable to change your password. Please try again."
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const maskedEmail = email
+        ? email.replace(/^(.{2})(.*)(@.*)$/, (_, first, middle, domain) =>
+              `${first}${"•".repeat(Math.min(Math.max(middle.length, 2), 5))}${domain}`
+          )
+        : "your registered email";
+
+    const renderStepContent = () => {
+        if (step === "email") {
+            return (
+                <>
+                    <span className="forgot-kicker">ACCOUNT RECOVERY</span>
+                    <h1>Forgot your password?</h1>
+                    <p className="forgot-description">
+                        Enter the email address you used when you registered.
+                        We’ll send a 6-digit verification code to confirm your account.
+                    </p>
+
+                    <form onSubmit={handleEmailSubmit}>
+                        <label htmlFor="forgot-email">Registered email</label>
+                        <div className="forgot-input-wrap">
+                            <input
+                                id="forgot-email"
+                                type="email"
+                                value={email}
+                                onChange={(event) => {
+                                    setEmail(event.target.value);
+                                    clearError();
+                                }}
+                                placeholder="Enter your registered email"
+                                autoComplete="email"
+                                disabled={loading}
+                                required
+                            />
+                        </div>
+
+                        <button
+                            type="submit"
+                            className="forgot-primary-button"
+                            disabled={loading}
+                        >
+                            {loading ? "Sending code..." : "Send verification code"}
+                        </button>
+                    </form>
+                </>
+            );
+        }
+
+        if (step === "otp") {
+            return (
+                <>
+                    <span className="forgot-kicker">VERIFY YOUR ACCOUNT</span>
+                    <h1>Enter your code.</h1>
+                    <p className="forgot-description">
+                        We sent a 6-digit verification code to
+                        <strong> {maskedEmail}</strong>.
+                        Enter it below to continue.
+                    </p>
+
+                    <form onSubmit={handleVerifyOtp}>
+                        <label>6-digit verification code</label>
+
+                        <div className="forgot-otp" onPaste={handleOtpPaste}>
+                            {otp.map((digit, index) => (
+                                <input
+                                    key={index}
+                                    ref={(element) => {
+                                        otpRefs.current[index] = element;
+                                    }}
+                                    type="text"
+                                    inputMode="numeric"
+                                    maxLength={1}
+                                    value={digit}
+                                    onChange={(event) => handleOtpChange(index, event.target.value)}
+                                    onKeyDown={(event) => handleOtpKeyDown(index, event)}
+                                    disabled={loading}
+                                    aria-label={`Verification code digit ${index + 1}`}
+                                />
+                            ))}
+                        </div>
+
+                        <button
+                            type="submit"
+                            className="forgot-primary-button"
+                            disabled={loading}
+                        >
+                            {loading ? "Verifying..." : "Verify code"}
+                        </button>
+
+                        <button
+                            type="button"
+                            className="forgot-text-button"
+                            onClick={() => {
+                                setStep("email");
+                                clearError();
+                            }}
+                            disabled={loading}
+                        >
+                            Use a different email
+                        </button>
+                    </form>
+
+                    {confirmed && (
+                        <div className="forgot-confirmed" role="status">
+                            <span>✓</span>
+                            Email confirmed. Taking you to the new password step...
+                        </div>
+                    )}
+                </>
+            );
+        }
+
+        return (
+            <>
+                <span className="forgot-kicker">REQUIRED ACCOUNT STEP</span>
+                <h1>Secure your account</h1>
+                <p className="forgot-description">
+                    Replace your password with one only you know.
+                </p>
+
+                <form onSubmit={handleResetPassword}>
+                    <label htmlFor="forgot-new-password">New password</label>
+                    <div className="forgot-input-wrap password-wrap">
+                        <input
+                            id="forgot-new-password"
+                            type={showNewPassword ? "text" : "password"}
+                            value={newPassword}
+                            onChange={(event) => {
+                                setNewPassword(event.target.value);
+                                clearError();
+                            }}
+                            placeholder="Password"
+                            autoComplete="new-password"
+                            disabled={loading}
+                            required
+                        />
+                        <button
+                            type="button"
+                            className="show-password-button"
+                            onClick={() => setShowNewPassword((value) => !value)}
+                            disabled={loading}
+                        >
+                            {showNewPassword ? "Hide" : "Show"}
+                        </button>
+                    </div>
+
+                    <label htmlFor="forgot-confirm-password">Confirm new password</label>
+                    <div className="forgot-input-wrap password-wrap">
+                        <input
+                            id="forgot-confirm-password"
+                            type={showConfirmPassword ? "text" : "password"}
+                            value={confirmPassword}
+                            onChange={(event) => {
+                                setConfirmPassword(event.target.value);
+                                clearError();
+                            }}
+                            placeholder="Re-enter your password"
+                            autoComplete="new-password"
+                            disabled={loading}
+                            required
+                        />
+                        <button
+                            type="button"
+                            className="show-password-button"
+                            onClick={() => setShowConfirmPassword((value) => !value)}
+                            disabled={loading}
+                        >
+                            {showConfirmPassword ? "Hide" : "Show"}
+                        </button>
+                    </div>
+
+                    <div className="forgot-password-tip">
+                        <strong>Make it long and unique.</strong>
+                        <span>Avoid your student ID, name, or a password you used before.</span>
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="forgot-primary-button"
+                        disabled={loading}
+                    >
+                        {loading ? "Saving..." : "Save new password"}
+                    </button>
+                </form>
+            </>
+        );
+    };
+
+    return (
+        <div className="forgot-page">
+            <div className="forgot-card">
+                <aside className="forgot-left">
+                    <button
+                        type="button"
+                        className="forgot-logo"
+                        onClick={() => navigate("/")}
+                        disabled={loading}
+                    >
+                        <img
+                            src={votaraLogo}
+                            alt="Votara"
+                        />
+                    </button>
+
+                    <div className="forgot-left-content">
+                        <span className="forgot-left-label">
+                            VOTARA&nbsp; / &nbsp;ACCOUNT SECURITY
+                        </span>
+
+                        <h2>
+                            {step === "email" && <>Recover your account.</>}
+                            {step === "otp" && <>Confirm it’s really you.</>}
+                            {step === "password" && <>Set a password only you know.</>}
+                        </h2>
+
+                        <p>
+                            {step === "email" &&
+                                "Enter your registered email and we’ll help you securely regain access."}
+                            {step === "otp" &&
+                                "Use the 6-digit code sent to your registered email before creating a new password."}
+                            {step === "password" &&
+                                "Your email has been confirmed. Choose a new password before continuing."}
+                        </p>
+
+                        <div className="forgot-steps">
+                            <span className={step === "email" ? "active" : "complete"}>01&nbsp; Enter your registered email</span>
+                            <span className={step === "otp" ? "active" : step === "password" ? "complete" : ""}>02&nbsp; Verify the 6-digit code</span>
+                            <span className={step === "password" ? "active" : ""}>03&nbsp; Create your new password</span>
+                        </div>
+                    </div>
+
+                    <div className="forgot-orbit" aria-hidden="true">
+                        <div className="forgot-orbit-ring ring-one"></div>
+                        <div className="forgot-orbit-ring ring-two"></div>
+                        <div className="forgot-orbit-ring ring-three"></div>
+                        <div className="forgot-orbit-core">
+                            <img src={votaraLogo} alt="" />
+                        </div>
+                        <span className="forgot-orbit-icon icon-one">✓</span>
+                        <span className="forgot-orbit-icon icon-two">✦</span>
+                        <span className="forgot-orbit-icon icon-three">●</span>
+                    </div>
+                </aside>
+
+                <main className="forgot-right">
+                    <div className="forgot-form-card">
+                        {error && (
+                            <div className="forgot-error" role="alert">
+                                {error}
+                            </div>
+                        )}
+
+                        {renderStepContent()}
+
+                        <button
+                            type="button"
+                            className="forgot-back-link"
+                            onClick={handleBack}
+                            disabled={loading}
+                        >
+                            Sign in
+                        </button>
+                    </div>
+                </main>
+            </div>
+        </div>
+    );
+};
+
+export default ForgotPassword;

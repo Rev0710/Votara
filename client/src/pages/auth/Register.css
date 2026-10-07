@@ -1,544 +1,443 @@
-/* =========================================
-   VOTARA REGISTRATION PAGE
-========================================= */
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+
+.register-page,
+.register-page * {
+    box-sizing: border-box;
+}
 
 .register-page {
     width: 100%;
     min-height: 100vh;
-
-    background: #eaf0ff;
-
-    padding: 18px;
-
-    font-family: "Poppins", Arial, Helvetica, sans-serif;
-
+    min-height: 100dvh;
+    padding: 18px 26px;
     display: flex;
     align-items: center;
     justify-content: center;
-
-    box-sizing: border-box;
+    background: #7483aa;
+    font-family: "Manrope", Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #11152a;
+    overflow: hidden;
 }
-
-
-/* =========================================
-   MAIN CARD
-========================================= */
 
 .register-card {
-    width: 100%;
-    max-width: 1180px;
-    min-height: 650px;
-
-    background: #ffffff;
-
+    width: min(1050px, 100%);
+    height: min(590px, calc(100vh - 36px));
+    min-height: 560px;
     display: grid;
-    grid-template-columns: 1fr 1fr;
-
+    grid-template-columns: 42% 58%;
     overflow: hidden;
-
-    border-radius: 2px;
-
-    animation: registerCardEnter 0.55s ease-out both;
+    background: #fff;
+    box-shadow: 0 22px 55px rgba(18, 28, 60, .12);
+    animation: registerCardEnter .55s cubic-bezier(.2,.75,.2,1) both;
 }
-
-
-/* =========================================
-   LEFT SIDE
-========================================= */
 
 .register-left {
     position: relative;
-
+    min-width: 0;
+    overflow: hidden;
+    padding: 27px 34px;
     display: flex;
     flex-direction: column;
-
-    padding: 38px 55px;
-
-    overflow: hidden;
+    color: #fff;
+    background: linear-gradient(155deg, #063dff 0%, #155dff 47%, #58c7ee 100%);
 }
 
+.register-left::before {
+    content: "";
+    position: absolute;
+    width: 430px;
+    height: 430px;
+    left: -105px;
+    bottom: -220px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(100, 224, 255, .34), transparent 68%);
+    pointer-events: none;
+}
 
-/* =========================================
-   LOGO
-========================================= */
+.register-left::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,.10) 1px, transparent 1px);
+    background-size: 16px 16px;
+    mask-image: linear-gradient(to bottom, transparent 0%, transparent 58%, #000 100%);
+    pointer-events: none;
+}
+
+/* VOTARA LOGO */
 
 .register-logo {
-    display: inline-flex;
-
-    align-items: center;
-
-    gap: 6px;
-
-    width: fit-content;
-    height: 42px;
-
-    color: #0648ff;
-
-    text-decoration: none;
-
-    font-size: 30px;
-    font-weight: 600;
-
-    line-height: 1;
-
-    flex-shrink: 0;
-
-    animation: registerLogoEnter 0.65s ease-out both;
-}
-
-
-/* =========================================
-   LOGO MARK
-========================================= */
-
-.register-logo-mark {
     position: relative;
-
-    width: 42px;
-    height: 42px;
-
-    display: inline-block;
-
-    flex-shrink: 0;
-}
-
-
-/* TOP LEFT TRIANGLE */
-
-.register-logo-mark .triangle-top {
-    position: absolute;
-
-    width: 0;
-    height: 0;
-
-    border-left: 11px solid transparent;
-    border-right: 11px solid transparent;
-    border-top: 16px solid #0648ff;
-
-    left: 1px;
-    top: 1px;
-}
-
-
-/* TOP RIGHT CIRCLE */
-
-.register-logo-mark .circle {
-    position: absolute;
-
-    width: 17px;
-    height: 17px;
-
-    background: #0648ff;
-
-    border-radius: 50%;
-
-    right: 1px;
-    top: 1px;
-}
-
-
-/* BOTTOM LEFT SHAPE */
-
-.register-logo-mark::before {
-    content: "";
-
-    position: absolute;
-
-    width: 21px;
-    height: 21px;
-
-    background: #0648ff;
-
-    border-radius: 50%;
-
-    left: 0;
-    bottom: 1px;
-
-    clip-path: polygon(
-        0 0,
-        100% 0,
-        100% 50%,
-        50% 50%,
-        50% 100%,
-        0 100%
-    );
-}
-
-
-/* BOTTOM RIGHT TRIANGLE */
-
-.register-logo-mark .triangle-bottom {
-    position: absolute;
-
-    width: 0;
-    height: 0;
-
-    border-left: 11px solid transparent;
-    border-right: 11px solid transparent;
-    border-bottom: 17px solid #0648ff;
-
-    right: 0;
-    bottom: 0;
-}
-
-
-/* LOGO HOVER */
-
-.register-logo:hover {
-    opacity: 0.8;
-}
-
-
-/* =========================================
-   VECTOR IMAGE AREA
-========================================= */
-
-.register-visual {
-    width: 100%;
-    max-width: 430px;
-
-    height: 420px;
-
-    margin: auto;
-
-    display: flex;
+    z-index: 4;
+    width: fit-content;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-
-    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+    color: #fff;
+    text-decoration: none;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
 }
 
-
-/* =========================================
-   VECTOR IMAGE
-   DO NOT MODIFY THE IMAGE ITSELF
-========================================= */
-
-.register-illustration {
-    width: 100%;
-    height: 100%;
-
-    object-fit: contain;
-
+.register-logo img {
     display: block;
+    width: 112px;
+    height: auto;
+    filter: brightness(0) invert(1);
 }
 
-
-/* =========================================
-   RIGHT SIDE
-========================================= */
-
-.register-right {
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    padding: 50px 65px;
-
-    animation: registerContentEnter 0.65s ease-out 0.1s both;
+.register-logo:focus-visible {
+    outline: 2px solid rgba(255,255,255,.8);
+    outline-offset: 5px;
+    border-radius: 5px;
 }
 
+/* LEFT CONTENT */
 
-/* =========================================
-   CONTENT
-========================================= */
+.register-left-copy {
+    position: relative;
+    z-index: 3;
+    margin-top: 67px;
+    max-width: 300px;
+}
 
-.register-content {
-    width: 100%;
-    max-width: 390px;
+.register-eyebrow {
+    display: block;
+    margin-bottom: 18px;
+    color: rgba(255,255,255,.43);
+    font-size: 7px;
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: .16em;
+}
 
+.register-left-copy h2 {
+    margin: 0;
+    color: #fff;
+    font-size: clamp(34px, 3.5vw, 46px);
+    line-height: .98;
+    letter-spacing: -.055em;
+    font-weight: 700;
+}
+
+.register-left-copy p {
+    max-width: 285px;
+    margin: 22px 0 0;
+    color: rgba(255,255,255,.72);
+    font-size: 10px;
+    line-height: 1.55;
+}
+
+.register-steps {
+    margin-top: 29px;
     display: flex;
     flex-direction: column;
-
-    align-items: stretch;
+    gap: 12px;
+    color: rgba(255,255,255,.82);
+    font-size: 8px;
+    font-weight: 600;
 }
 
+.register-steps div {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
 
-/* =========================================
-   HEADING
-========================================= */
+.register-steps span {
+    color: #fff;
+    font-size: 7px;
+    font-weight: 800;
+}
+
+/* ORBIT */
+
+.register-orbit {
+    position: absolute;
+    left: 50%;
+    bottom: -7px;
+    width: 255px;
+    height: 255px;
+    transform: translateX(-50%);
+    z-index: 2;
+    pointer-events: none;
+}
+
+.register-orbit-ring {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    border: 1px solid rgba(33, 106, 255, .48);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.register-orbit .orbit-one {
+    width: 100%;
+    height: 100%;
+}
+
+.register-orbit .orbit-two {
+    width: 76%;
+    height: 76%;
+}
+
+.register-orbit .orbit-three {
+    width: 51%;
+    height: 51%;
+}
+
+.register-orbit-core {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 68px;
+    height: 68px;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(34, 123, 255, .82);
+    border: 1px solid rgba(255,255,255,.15);
+    box-shadow:
+        0 0 0 1px rgba(0,75,255,.08),
+        0 15px 35px rgba(0,52,180,.2);
+}
+
+.register-orbit-core img {
+    display: block;
+    width: 31px;
+    height: 31px;
+    max-width: 31px;
+    max-height: 31px;
+    object-fit: contain;
+    object-position: center;
+    filter: brightness(0) invert(1);
+}
+
+.orbit-dot {
+    position: absolute;
+    width: 25px;
+    height: 25px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: #4b84ec;
+    background: rgba(219,239,255,.9);
+    box-shadow: 0 3px 12px rgba(0,52,180,.12);
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.orbit-check {
+    left: 0;
+    top: 64%;
+}
+
+.orbit-user {
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+}
+
+.orbit-shield {
+    right: 0;
+    top: 40%;
+}
+
+/* RIGHT PANEL */
+
+.register-right {
+    position: relative;
+    min-width: 0;
+    padding: 42px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fff;
+    background-image: radial-gradient(#d8deea 1px, transparent 1px);
+    background-size: 14px 14px;
+}
+
+.register-content {
+    width: min(100%, 370px);
+    min-height: 450px;
+    padding: 43px 38px 35px;
+    display: grid;
+    grid-template-columns: 44% 56%;
+    grid-template-rows: auto 1fr;
+    column-gap: 20px;
+    align-content: start;
+    border-radius: 16px;
+    background: rgba(255,255,255,.98);
+    box-shadow: 0 14px 32px rgba(31, 43, 76, .11);
+    animation: registerContentEnter .6s cubic-bezier(.2,.75,.2,1) .08s both;
+}
 
 .register-heading {
-    width: 100%;
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+    margin: 0;
+    padding-top: 39px;
+}
 
-    margin-bottom: 30px;
+.register-kicker {
+    display: block;
+    margin-bottom: 10px;
+    color: #155eef;
+    font-size: 6px;
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: .08em;
 }
 
 .register-heading h1 {
-    margin: 0 0 12px;
-
-    font-size: 38px;
-
-    line-height: 1.15;
-
+    margin: 0;
+    color: #12172a;
+    font-size: 25px;
+    line-height: .96;
+    letter-spacing: -.045em;
     font-weight: 700;
-
-    color: #101426;
 }
 
 .register-heading p {
-    margin: 0;
-
-    width: 100%;
-
-    max-width: 360px;
-
-    font-size: 14px;
-
-    line-height: 1.7;
-
-    color: #60677a;
+    margin: 11px 0 0;
+    color: #8b91a0;
+    font-size: 7px;
+    line-height: 1.48;
 }
-
-
-/* =========================================
-   ERROR
-========================================= */
-
-.register-error {
-    width: 100%;
-
-    padding: 11px 14px;
-
-    margin-bottom: 18px;
-
-    border-radius: 10px;
-
-    background: #fff0f0;
-
-    border: 1px solid #ffd2d2;
-
-    color: #d93636;
-
-    font-size: 12px;
-
-    line-height: 1.5;
-
-    box-sizing: border-box;
-}
-
-
-/* =========================================
-   FORM
-========================================= */
 
 .register-form {
+    grid-column: 2;
+    grid-row: 1;
     width: 100%;
-
     display: flex;
-
     flex-direction: column;
-
-    gap: 19px;
+    gap: 17px;
 }
-
-
-/* =========================================
-   FORM GROUP
-========================================= */
 
 .form-group {
     width: 100%;
-
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 8px;
+    margin: 0;
 }
-
-
-/* =========================================
-   LABEL
-========================================= */
 
 .form-group label {
-    font-size: 13px;
-
-    font-weight: 600;
-
-    color: #1b2030;
+    display: block;
+    margin: 0 0 8px;
+    color: #272c3c;
+    font-size: 8px;
+    font-weight: 800;
 }
-
-
-/* =========================================
-   INPUT
-========================================= */
 
 .form-group input {
     width: 100%;
-
-    height: 50px;
-
-    padding: 0 18px;
-
-    border: 1.5px solid #0648ff;
-
-    border-radius: 30px;
-
+    height: 39px;
+    padding: 0 14px;
+    border: 1.5px solid #79a0ff;
+    border-radius: 999px;
     outline: none;
-
-    background: #ffffff;
-
-    font-family: "Poppins", Arial, Helvetica, sans-serif;
-
-    font-size: 13px;
-
-    color: #171b2c;
-
-    box-sizing: border-box;
-
-    transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
+    background: #fff;
+    color: #202437;
+    font: inherit;
+    font-size: 8px;
+    transition: border-color .2s ease, box-shadow .2s ease;
 }
-
-
-/* PLACEHOLDER */
 
 .form-group input::placeholder {
-    color: #9ba2b2;
+    color: #a1a6b1;
 }
-
-
-/* FOCUS */
 
 .form-group input:focus {
-    border-color: #0648ff;
-
-    box-shadow:
-        0 0 0 4px rgba(6, 72, 255, 0.08);
+    border-color: #155eef;
+    box-shadow: 0 0 0 3px rgba(21,94,239,.08);
 }
-
-
-/* DISABLED */
 
 .form-group input:disabled {
-    opacity: 0.6;
-
+    background: #f5f7fb;
+    opacity: .72;
     cursor: not-allowed;
 }
-
-
-/* =========================================
-   SUBMIT BUTTON
-========================================= */
 
 .register-submit {
-    width: 150px;
-    height: 48px;
-
-    margin: 7px auto 0;
-
-    border: none;
-
-    border-radius: 25px;
-
-    background: #0648ff;
-
-    color: #ffffff;
-
-    font-family: "Poppins", Arial, Helvetica, sans-serif;
-
-    font-size: 14px;
-
+    display: block;
+    width: 143px;
+    height: 39px;
+    margin: 2px auto 0;
+    border: 0;
+    border-radius: 999px;
+    background: #104dff;
+    color: #fff;
+    font: inherit;
+    font-size: 11px;
     font-weight: 600;
-
     cursor: pointer;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    transition:
-        background 0.2s ease,
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
+    box-shadow: 0 9px 20px rgba(16,77,255,.18);
+    transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
 }
-
-
-/* HOVER */
 
 .register-submit:hover:not(:disabled) {
-    background: #003bd6;
-
-    transform: translateY(-1px);
-
-    box-shadow:
-        0 8px 20px rgba(6, 72, 255, 0.22);
+    background: #0644eb;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 25px rgba(16,77,255,.25);
 }
 
-
-/* DISABLED */
+.register-submit:focus-visible {
+    outline: 2px solid #155eef;
+    outline-offset: 3px;
+}
 
 .register-submit:disabled {
-    opacity: 0.7;
-
+    background: #8ba8ff;
     cursor: not-allowed;
-
-    transform: none;
-
     box-shadow: none;
 }
 
-
-/* =========================================
-   BOTTOM LINKS
-========================================= */
+/* LINKS */
 
 .register-links {
-    width: 100%;
-
+    grid-column: 1 / -1;
+    grid-row: 2;
+    align-self: end;
     display: flex;
-
     flex-direction: column;
-
     align-items: center;
+    justify-content: flex-end;
+    padding-top: 24px;
 }
 
-
-/* =========================================
-   ADMIN LINK
-========================================= */
+.admin-link,
+.signin-link,
+.back-link {
+    width: fit-content;
+    text-align: center;
+    font-size: 7px;
+}
 
 .admin-link {
-    display: block;
-
-    width: fit-content;
-
-    margin-top: 25px;
-
-    color: #151515;
-
-    font-size: 13px;
-
+    color: #155eef;
     text-decoration: underline;
-
-    transition: color 0.2s ease;
+    line-height: 1.35;
 }
 
-.admin-link:hover {
-    color: #0648ff;
+.signin-link {
+    margin-top: 12px;
+    color: #171717;
+    text-decoration: none;
+    font-weight: 500;
 }
 
-
-/* =========================================
-   BACK LINK
-========================================= */
+.signin-link:hover {
+    color: #155eef;
+    text-decoration: underline;
+}
 
 .back-link {
-    display: block;
-
-    width: fit-content;
-
-    margin-top: 32px;
-
-    color: #0648ff;
-
-    font-size: 13px;
-
+    margin-top: 21px;
+    color: #155eef;
     text-decoration: none;
 }
 
@@ -546,650 +445,651 @@
     text-decoration: underline;
 }
 
+/* ERROR */
 
-/* =========================================
-   ANIMATIONS
-========================================= */
-
-@keyframes registerCardEnter {
-
-    from {
-        opacity: 0;
-
-        transform: translateY(25px);
-    }
-
-    to {
-        opacity: 1;
-
-        transform: translateY(0);
-    }
-}
-
-
-@keyframes registerLogoEnter {
-
-    from {
-        opacity: 0;
-
-        transform: translateY(-15px);
-    }
-
-    to {
-        opacity: 1;
-
-        transform: translateY(0);
-    }
-}
-
-
-@keyframes registerContentEnter {
-
-    from {
-        opacity: 0;
-
-        transform: translateX(25px);
-    }
-
-    to {
-        opacity: 1;
-
-        transform: translateX(0);
-    }
-}
-
-
-/* =========================================
-   RESPONSIVE
-========================================= */
-
-@media (max-width: 900px) {
-
-    .register-page {
-        padding: 16px;
-    }
-
-    .register-card {
-        grid-template-columns: 1fr;
-
-        max-width: 600px;
-
-        min-height: auto;
-    }
-
-    .register-left {
-        min-height: 350px;
-
-        padding: 35px 40px;
-    }
-
-    .register-visual {
-        height: 270px;
-
-        margin-top: 25px;
-    }
-
-    .register-right {
-        padding: 45px 40px 55px;
-    }
-
-    .register-content {
-        max-width: 400px;
-    }
-
-    .back-link {
-        margin-top: 30px;
-    }
-}
-
-
-@media (max-width: 520px) {
-
-    .register-page {
-        padding: 0;
-
-        align-items: flex-start;
-    }
-
-    .register-card {
-        width: 100%;
-
-        min-height: 100vh;
-
-        border-radius: 0;
-    }
-
-    .register-left {
-        min-height: 300px;
-
-        padding: 30px 24px;
-    }
-
-    .register-logo {
-        font-size: 26px;
-    }
-
-    .register-visual {
-        height: 220px;
-
-        margin-top: 20px;
-    }
-
-    .register-right {
-        padding: 35px 24px 45px;
-    }
-
-    .register-heading h1 {
-        font-size: 32px;
-    }
-
-    .register-heading p {
-        font-size: 13px;
-    }
-
-    .form-group input {
-        height: 48px;
-    }
-
-    .register-submit {
-        width: 160px;
-    }
-}
-/* =====================================================
-   YEAR LEVEL SELECT
-===================================================== */
-
-.select-wrapper {
-    position: relative;
+.register-error {
+    grid-column: 1 / -1;
     width: 100%;
+    margin: 0 0 14px;
+    padding: 8px 10px;
+    border: 1px solid #ffd5d2;
+    border-radius: 8px;
+    background: #fff1f0;
+    color: #d93025;
+    font-size: 8px;
+    line-height: 1.45;
 }
 
-.select-wrapper select {
-    width: 100%;
-    height: 52px;
-
-    padding: 0 45px 0 18px;
-
-    border: 1px solid #777;
-    border-radius: 28px;
-
-    background-color: #ffffff;
-
-    color: #1f1f1f;
-
-    font-family: inherit;
-    font-size: 16px;
-
-    outline: none;
-
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-
-    cursor: pointer;
-
-    transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-/* Placeholder */
-.select-wrapper select:invalid {
-    color: #9aa3b5;
-}
-
-/* Focus */
-.select-wrapper select:focus {
-    border-color: #1554ff;
-
-    box-shadow: 0 0 0 3px rgba(21, 84, 255, 0.10);
-}
-
-/* Disabled */
-.select-wrapper select:disabled {
-    background-color: #f5f6f8;
-    cursor: not-allowed;
-    opacity: 0.7;
-}
-
-/* Custom dropdown arrow */
-.select-wrapper::after {
-    content: "";
-
-    position: absolute;
-
-    right: 20px;
-    top: 50%;
-
-    width: 8px;
-    height: 8px;
-
-    border-right: 2px solid #555;
-    border-bottom: 2px solid #555;
-
-    transform: translateY(-65%) rotate(45deg);
-
-    pointer-events: none;
-}
-
-/* =====================================================
-   LATE ENROLLEE MODAL OVERLAY
-===================================================== */
+/* LATE ENROLLEE MODAL */
 
 .late-enrollee-overlay {
     position: fixed;
-
     inset: 0;
-
     width: 100%;
     height: 100%;
-
-    background: rgba(15, 23, 42, 0.48);
-
+    background: rgba(15, 23, 42, .48);
     display: flex;
-
     align-items: center;
     justify-content: center;
-
     padding: 20px;
-
     z-index: 9999;
-
-    animation: lateEnrolleeOverlayIn 0.2s ease-out both;
+    animation: lateEnrolleeOverlayIn .2s ease-out both;
 }
-
-
-/* =====================================================
-   LATE ENROLLEE MODAL
-===================================================== */
 
 .late-enrollee-modal {
     width: 100%;
-
     max-width: 460px;
-
-    background: #ffffff;
-
+    background: #fff;
     border-radius: 18px;
-
     padding: 34px 32px 28px;
-
     text-align: center;
-
-    box-shadow:
-        0 25px 70px rgba(15, 23, 42, 0.22);
-
+    box-shadow: 0 25px 70px rgba(15, 23, 42, .22);
     border: 1px solid #e5e7eb;
-
-    animation: lateEnrolleeModalIn 0.25s ease-out both;
+    animation: lateEnrolleeModalIn .25s ease-out both;
 }
-
-
-/* =====================================================
-   MODAL ICON
-===================================================== */
 
 .late-enrollee-icon {
     width: 58px;
     height: 58px;
-
     margin: 0 auto 18px;
-
     border-radius: 50%;
-
     background: #fff7ed;
-
     border: 1px solid #fed7aa;
-
     display: flex;
-
     align-items: center;
     justify-content: center;
 }
-
-
-/* =====================================================
-   ICON MARK
-===================================================== */
 
 .late-enrollee-icon span {
     width: 30px;
     height: 30px;
-
     border-radius: 50%;
-
     background: #f59e0b;
-
-    color: #ffffff;
-
+    color: #fff;
     display: flex;
-
     align-items: center;
     justify-content: center;
-
     font-size: 19px;
-
     font-weight: 700;
 }
-
-
-/* =====================================================
-   MODAL TITLE
-===================================================== */
 
 .late-enrollee-modal h2 {
     margin: 0 0 15px;
-
     color: #111827;
-
     font-size: 25px;
-
     line-height: 1.25;
-
     font-weight: 700;
 }
 
-
-/* =====================================================
-   MAIN MESSAGE
-===================================================== */
-
-.late-enrollee-main-message {
+.late-enrollee-main-message,
+.late-enrollee-sub-message {
     margin: 0 auto 10px;
-
     max-width: 390px;
-
     color: #374151;
-
     font-size: 14px;
-
     line-height: 1.6;
 }
-
-
-/* =====================================================
-   SUB MESSAGE
-===================================================== */
 
 .late-enrollee-sub-message {
-    margin: 0 auto;
-
-    max-width: 390px;
-
+    margin-bottom: 0;
     color: #4b5563;
-
-    font-size: 14px;
-
-    line-height: 1.6;
 }
-
-
-/* =====================================================
-   STUDENT INFORMATION
-===================================================== */
 
 .late-enrollee-student-info {
     margin: 22px auto 0;
-
     max-width: 280px;
-
     padding: 12px 16px;
-
     background: #f8fafc;
-
     border: 1px solid #e5e7eb;
-
     border-radius: 10px;
-
     display: flex;
-
     align-items: center;
     justify-content: space-between;
-
     gap: 15px;
-
     text-align: left;
 }
 
-
-/* =====================================================
-   STUDENT INFO LABEL
-===================================================== */
-
 .late-enrollee-student-info span {
     color: #6b7280;
-
     font-size: 12px;
-
     font-weight: 500;
 }
 
-
-/* =====================================================
-   STUDENT INFO VALUE
-===================================================== */
-
 .late-enrollee-student-info strong {
     color: #111827;
-
     font-size: 13px;
-
     font-weight: 700;
 }
 
-
-/* =====================================================
-   ACTION BUTTONS
-===================================================== */
-
 .late-enrollee-actions {
     width: 100%;
-
     display: flex;
-
     align-items: center;
     justify-content: center;
-
     gap: 12px;
-
     margin-top: 27px;
 }
-
-
-/* =====================================================
-   NO BUTTON
-===================================================== */
 
 .late-enrollee-no-button,
 .late-enrollee-yes-button {
     min-width: 125px;
-
     height: 42px;
-
     border-radius: 22px;
-
     font-family: inherit;
-
     font-size: 13px;
-
     font-weight: 600;
-
     cursor: pointer;
-
-    transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease,
-        background 0.2s ease;
 }
-
-
-/* =====================================================
-   NO BUTTON
-===================================================== */
 
 .late-enrollee-no-button {
-    background: #ffffff;
-
+    background: #fff;
     color: #1648ff;
-
     border: 1.5px solid #1648ff;
 }
-
-
-/* =====================================================
-   NO BUTTON HOVER
-===================================================== */
-
-.late-enrollee-no-button:hover {
-    background: #f3f6ff;
-
-    transform: translateY(-1px);
-
-    box-shadow:
-        0 5px 14px rgba(22, 72, 255, 0.12);
-}
-
-
-/* =====================================================
-   YES BUTTON
-===================================================== */
 
 .late-enrollee-yes-button {
     background: #1648ff;
-
-    color: #ffffff;
-
+    color: #fff;
     border: 1.5px solid #1648ff;
 }
 
+/* ANIMATIONS */
 
-/* =====================================================
-   YES BUTTON HOVER
-===================================================== */
+@keyframes registerCardEnter {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
-.late-enrollee-yes-button:hover {
-    background: #0d39d9;
+@keyframes registerContentEnter {
+    from { opacity: 0; transform: translateX(18px); }
+    to { opacity: 1; transform: translateX(0); }
+}
 
-    transform: translateY(-1px);
+@keyframes lateEnrolleeOverlayIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
 
-    box-shadow:
-        0 6px 16px rgba(22, 72, 255, 0.2);
+@keyframes lateEnrolleeModalIn {
+    from { opacity: 0; transform: translateY(15px) scale(.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 900px) {
+    .register-page {
+        padding: 16px;
+        overflow: auto;
+    }
+
+    .register-card {
+        width: min(760px, 100%);
+        height: auto;
+        min-height: 0;
+        grid-template-columns: 1fr;
+    }
+
+    .register-left {
+        min-height: 430px;
+    }
+
+    .register-left-copy {
+        margin-top: 52px;
+    }
+
+    .register-orbit {
+        bottom: -32px;
+    }
+
+    .register-right {
+        min-height: 520px;
+        padding: 40px 28px;
+    }
+
+    .register-content {
+        width: min(100%, 500px);
+        min-height: 450px;
+    }
+}
+
+@media (max-width: 560px) {
+    .register-page {
+        padding: 0;
+        align-items: stretch;
+    }
+
+    .register-card {
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+
+    .register-left {
+        min-height: 430px;
+        padding: 27px 25px;
+    }
+
+    .register-logo img {
+        width: 96px;
+    }
+
+    .register-left-copy {
+        margin-top: 48px;
+    }
+
+    .register-left-copy h2 {
+        font-size: 42px;
+    }
+
+    .register-orbit {
+        width: 255px;
+        height: 255px;
+        bottom: -7px;
+    }
+
+    .register-right {
+        padding: 28px 18px;
+        min-height: 520px;
+    }
+
+    .register-content {
+        min-height: 430px;
+        padding: 31px 25px 35px;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto 1fr;
+        column-gap: 0;
+    }
+
+    .register-heading {
+        grid-column: 1;
+        grid-row: 1;
+        margin-bottom: 25px;
+        padding-top: 0;
+    }
+
+    .register-form {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    .register-links {
+        grid-column: 1;
+        grid-row: 3;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .register-card,
+    .register-content,
+    .late-enrollee-overlay,
+    .late-enrollee-modal {
+        animation: none;
+    }
 }
 
 
-/* =====================================================
-   BUTTON FOCUS
-===================================================== */
+/* =========================================================
+   VOTARA STUDENT-LOGIN STYLE MATCH
+   Applied to the Register left panel only.
+   ========================================================= */
 
-.late-enrollee-no-button:focus-visible,
-.late-enrollee-yes-button:focus-visible {
-    outline: 2px solid #1648ff;
-
-    outline-offset: 3px;
+.register-left {
+    padding: 27px 34px;
+    background:
+        linear-gradient(
+            155deg,
+            #1245ff 0%,
+            #1c63ff 48%,
+            #57c8ee 100%
+        );
 }
 
+.register-logo {
+    min-height: 25px;
+}
 
-/* =====================================================
-   MODAL NOTICE
-===================================================== */
+.register-logo img {
+    width: 112px;
+    height: auto;
+    object-fit: contain;
+    object-position: left center;
+    filter: brightness(0) invert(1);
+}
 
-.late-enrollee-note {
-    margin: 19px auto 0;
+.register-left-copy {
+    margin-top: 67px;
+    max-width: 310px;
+}
 
-    max-width: 380px;
+.register-eyebrow {
+    margin-bottom: 19px;
+    color: rgba(255,255,255,.43);
+    font-size: 8px;
+    letter-spacing: .16em;
+}
 
-    color: #6b7280;
+.register-left-copy h2 {
+    font-size: clamp(42px, 4.1vw, 55px);
+    line-height: .98;
+    letter-spacing: -.055em;
+    font-weight: 700;
+}
 
+.register-left-copy p {
+    max-width: 300px;
+    margin-top: 23px;
+    color: rgba(255,255,255,.72);
     font-size: 11px;
-
     line-height: 1.55;
 }
 
+.register-steps {
+    margin-top: 30px;
+    gap: 12px;
+    color: rgba(255,255,255,.78);
+    font-size: 9px;
+    font-weight: 600;
+}
 
-/* =====================================================
-   ANIMATION - OVERLAY
-===================================================== */
+.register-steps div {
+    gap: 9px;
+}
 
-@keyframes lateEnrolleeOverlayIn {
+.register-steps span {
+    font-size: 8px;
+    font-weight: 800;
+}
 
-    from {
-        opacity: 0;
+.register-orbit {
+    left: 50%;
+    bottom: -7px;
+    width: 255px;
+    height: 255px;
+}
+
+.register-orbit-ring {
+    border-color: rgba(33, 106, 255, .48);
+}
+
+.register-orbit-core {
+    width: 68px;
+    height: 68px;
+    background: rgba(34, 123, 255, .82);
+}
+
+.register-orbit-core img {
+    width: 31px;
+    height: 31px;
+    filter: brightness(0) invert(1);
+}
+
+.orbit-dot {
+    width: 25px;
+    height: 25px;
+    color: #4b84ec;
+    background: rgba(219,239,255,.9);
+}
+
+@media (max-width: 900px) {
+    .register-left {
+        min-height: 430px;
     }
 
-    to {
-        opacity: 1;
+    .register-left-copy {
+        margin-top: 52px;
     }
 
+    .register-orbit {
+        bottom: -7px;
+    }
+}
+
+@media (max-width: 560px) {
+    .register-left {
+        min-height: 560px;
+        padding: 27px 25px;
+    }
+
+    .register-logo img {
+        width: 96px;
+    }
+
+    .register-left-copy {
+        margin-top: 105px;
+        max-width: 330px;
+    }
+
+    .register-left-copy h2 {
+        font-size: 53px;
+        line-height: .98;
+    }
+
+    .register-left-copy p {
+        max-width: 330px;
+        font-size: 11px;
+    }
+
+    .register-steps {
+        margin-top: 30px;
+        font-size: 9px;
+        gap: 12px;
+    }
+
+    .register-orbit {
+        width: 255px;
+        height: 255px;
+        bottom: -18px;
+    }
 }
 
 
-/* =====================================================
-   ANIMATION - MODAL
-===================================================== */
+/* =========================================================
+   FINAL REGISTER LAYOUT MATCH
+   - Single-column registration card like the reference
+   - Cleaner vertical spacing/alignment
+   - Back button moved to the upper-right-panel area
+   - No form/functionality changes
+   ========================================================= */
 
-@keyframes lateEnrolleeModalIn {
-
-    from {
-        opacity: 0;
-
-        transform:
-            translateY(15px)
-            scale(0.97);
-    }
-
-    to {
-        opacity: 1;
-
-        transform:
-            translateY(0)
-            scale(1);
-    }
-
+.register-right {
+    position: relative;
+    padding: 38px 42px;
+    align-items: center;
+    justify-content: center;
 }
 
+.register-back-top {
+    position: absolute;
+    top: 28px;
+    left: 32px;
+    z-index: 10;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #155eef;
+    font-family: inherit;
+    font-size: 9px;
+    line-height: 1.2;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
 
-/* =====================================================
-   MOBILE
-===================================================== */
+.register-back-top:hover {
+    text-decoration: underline;
+}
 
-@media (max-width: 500px) {
+.register-back-top:focus-visible {
+    outline: 2px solid #155eef;
+    outline-offset: 4px;
+    border-radius: 4px;
+}
 
-    .late-enrollee-overlay {
-        padding: 15px;
+.register-content {
+    width: min(100%, 430px);
+    min-height: 0;
+    height: auto;
+    padding: 42px 54px 34px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0;
+    border-radius: 16px;
+}
+
+.register-heading {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.register-kicker {
+    margin-bottom: 11px;
+    font-size: 7px;
+}
+
+.register-heading h1 {
+    font-size: 27px;
+    line-height: 1;
+    letter-spacing: -.045em;
+    white-space: nowrap;
+}
+
+.register-heading p {
+    max-width: 330px;
+    margin: 12px 0 0;
+    font-size: 8px;
+    line-height: 1.5;
+}
+
+.register-form {
+    width: 100%;
+    margin-top: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.form-group label {
+    margin-bottom: 8px;
+    font-size: 9px;
+}
+
+.form-group input {
+    height: 44px;
+    padding: 0 16px;
+    font-size: 9px;
+}
+
+.register-submit {
+    width: 160px;
+    height: 42px;
+    margin: 0 auto;
+    font-size: 11px;
+}
+
+.register-links {
+    width: 100%;
+    margin-top: 82px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.admin-link,
+.signin-link {
+    font-size: 8px;
+}
+
+.signin-link {
+    margin-top: 13px;
+}
+
+.register-links .back-link {
+    display: none;
+}
+
+/* Keep error visible without breaking the intended layout. */
+.register-error {
+    margin-top: 18px;
+    margin-bottom: 0;
+}
+
+/* =========================================================
+   RESPONSIVE FINAL MATCH
+   ========================================================= */
+
+@media (max-width: 900px) {
+    .register-right {
+        min-height: 520px;
+        padding: 52px 28px 40px;
     }
 
-    .late-enrollee-modal {
-        padding: 29px 21px 23px;
-
-        border-radius: 15px;
+    .register-back-top {
+        top: 24px;
+        left: 28px;
     }
 
-    .late-enrollee-modal h2 {
-        font-size: 22px;
+    .register-content {
+        width: min(100%, 500px);
+        padding: 42px 48px 36px;
     }
 
-    .late-enrollee-main-message,
-    .late-enrollee-sub-message {
-        font-size: 13px;
+    .register-links {
+        margin-top: 70px;
+    }
+}
+
+@media (max-width: 560px) {
+    .register-right {
+        min-height: 540px;
+        padding: 58px 18px 30px;
     }
 
-    .late-enrollee-actions {
-        gap: 9px;
+    .register-back-top {
+        top: 23px;
+        left: 22px;
+        font-size: 9px;
     }
 
-    .late-enrollee-no-button,
-    .late-enrollee-yes-button {
-        min-width: 0;
-
-        flex: 1;
-
-        height: 40px;
-
-        font-size: 12px;
+    .register-content {
+        width: min(100%, 390px);
+        min-height: 0;
+        padding: 34px 28px 32px;
+        border-radius: 16px;
     }
 
-    .late-enrollee-student-info {
+    .register-heading h1 {
+        font-size: 25px;
+        white-space: normal;
+    }
+
+    .register-heading p {
         max-width: 100%;
+        font-size: 8px;
     }
 
+    .register-form {
+        margin-top: 24px;
+        gap: 17px;
+    }
+
+    .form-group input {
+        height: 42px;
+    }
+
+    .register-submit {
+        width: 150px;
+        height: 40px;
+    }
+
+    .register-links {
+        margin-top: 58px;
+    }
 }
