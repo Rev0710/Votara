@@ -390,7 +390,21 @@ const Registrations = ({ onNavigate }) => {
 
     const submitReview = async () => {
 
-        if (!selectedApplication) {
+        // Prevent duplicate review requests from double-clicks.
+        if (actionLoading || !selectedApplication) {
+            return;
+        }
+
+        // -------------------------------------------------
+        // VALIDATE ACTION
+        // -------------------------------------------------
+
+        if (![
+            "approve",
+            "reject",
+            "request_correction",
+        ].includes(reviewAction)) {
+            setError("Please select a valid review decision.");
             return;
         }
 
@@ -399,15 +413,12 @@ const Registrations = ({ onNavigate }) => {
         // -------------------------------------------------
 
         if (
-            reviewAction ===
-                "reject" &&
+            reviewAction === "reject" &&
             !reviewMessage.trim()
         ) {
-
             setError(
                 "Please provide a reason for rejecting the registration."
             );
-
             return;
         }
 
@@ -416,87 +427,124 @@ const Registrations = ({ onNavigate }) => {
         // -------------------------------------------------
 
         if (
-            reviewAction ===
-                "request_correction" &&
+            reviewAction === "request_correction" &&
             !reviewMessage.trim()
         ) {
-
             setError(
                 "Please provide a correction message for the student."
             );
-
             return;
         }
 
         try {
-
             setActionLoading(true);
             setError("");
             setSuccess("");
 
             const token =
-                localStorage.getItem(
-                    "votaraStaffToken"
-                ) ||
-                localStorage.getItem(
-                    "votaraEBToken"
-                );
+                localStorage.getItem("votaraStaffToken") ||
+                localStorage.getItem("votaraEBToken");
 
             if (!token) {
                 navigate("/admin-login");
                 return;
             }
 
-            const response =
-                await api.patch(
-                    `/eb/registrations/${selectedApplication.id}/review`,
-                    {
-                        decision:
-                            reviewAction,
+            const registrationId = selectedApplication.id;
 
-                        reason:
-                            reviewMessage.trim(),
+            // -------------------------------------------------
+            // IMPORTANT: GET THE LATEST APPLICATION FIRST
+            //
+            // The redesigned page can keep an older copy of the
+            // selected application in React state. If another
+            // request already changed its status, the backend can
+            // correctly answer with HTTP 409 Conflict. Refreshing
+            // the record before PATCH prevents us from submitting
+            // a stale review decision.
+            // -------------------------------------------------
+
+            const latestResponse = await api.get(
+                `/eb/registrations/${registrationId}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
                     },
-                    {
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`,
-                        },
-                    }
+                }
+            );
+
+            const latestApplication =
+                latestResponse.data?.application;
+
+            if (!latestApplication) {
+                setError(
+                    "The student registration could not be found. Please refresh the page."
+                );
+                await loadApplications();
+                return;
+            }
+
+            const latestStatus = String(
+                latestApplication.application_status ||
+                ""
+            ).toLowerCase();
+
+            const latestCanReview =
+                latestStatus === "pending_review" ||
+                latestStatus === "needs_correction";
+
+            if (!latestCanReview) {
+                setSelectedApplication(latestApplication);
+                setShowReviewModal(false);
+                setReviewAction(null);
+                setReviewMessage("");
+
+                setError(
+                    `This registration is already ${getStatusLabel(latestStatus).toLowerCase()}. The application list has been refreshed.`
                 );
 
-            const responseData =
-                response.data;
+                await loadApplications();
+                return;
+            }
+
+            // Keep the detail panel synchronized with the latest
+            // server version before submitting the decision.
+            setSelectedApplication(latestApplication);
+
+            // -------------------------------------------------
+            // SUBMIT REVIEW
+            // -------------------------------------------------
+
+            const response = await api.patch(
+                `/eb/registrations/${registrationId}/review`,
+                {
+                    decision: reviewAction,
+                    reason: reviewMessage.trim(),
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            const responseData = response.data;
 
             let defaultMessage =
                 "Registration updated successfully.";
 
-            if (
-                reviewAction ===
-                "approve"
-            ) {
+            if (reviewAction === "approve") {
                 defaultMessage =
                     "Student registration approved successfully.";
-            }
-
-            if (
-                reviewAction ===
-                "reject"
-            ) {
+            } else if (reviewAction === "reject") {
                 defaultMessage =
                     "Student registration rejected successfully.";
-            }
-
-            if (
-                reviewAction ===
-                "request_correction"
-            ) {
+            } else if (reviewAction === "request_correction") {
                 defaultMessage =
                     "Correction request sent successfully.";
             }
 
             setSuccess(
-                responseData.message ||
+                responseData?.message ||
                 defaultMessage
             );
 
@@ -508,22 +556,44 @@ const Registrations = ({ onNavigate }) => {
             await loadApplications();
 
         } catch (err) {
-
             console.error(
                 "Registration review error:",
                 err
             );
 
-            setError(
+            const statusCode = err.response?.status;
+            const serverMessage =
                 err.response?.data?.message ||
-                "Unable to process the registration."
-            );
+                err.response?.data?.error;
+
+            // HTTP 409 means the server rejected the decision
+            // because the registration state changed/conflicts
+            // with the requested action. Refresh instead of
+            // leaving the UI with stale student data.
+            if (statusCode === 409) {
+                setShowReviewModal(false);
+                setReviewAction(null);
+                setReviewMessage("");
+
+                await loadApplications();
+
+                setSelectedApplication(null);
+                setError(
+                    serverMessage ||
+                    "This registration was already changed or reviewed. The application list has been refreshed."
+                );
+            } else {
+                setError(
+                    serverMessage ||
+                    "Unable to process the registration."
+                );
+            }
 
         } finally {
-
             setActionLoading(false);
         }
     };
+
 
     // =====================================================
     // STATUS DISPLAY

@@ -1,20 +1,7 @@
 import axios from "axios";
 
-
 // =====================================================
 // API BASE URL
-// =====================================================
-//
-// Production:
-// https://votara-api-olij.onrender.com/api
-//
-// Local development:
-// http://localhost:5000/api
-//
-// Vercel uses VITE_API_BASE_URL when configured.
-// The production fallback prevents localhost from being
-// accidentally used when the Vercel environment variable
-// is missing.
 // =====================================================
 
 const API_BASE_URL =
@@ -25,16 +12,10 @@ const API_BASE_URL =
             : "http://localhost:5000/api"
     );
 
-
-// =====================================================
-// DEBUG
-// =====================================================
-
 console.log(
     "🌐 VOTARA API BASE URL:",
     API_BASE_URL
 );
-
 
 // =====================================================
 // AXIOS INSTANCE
@@ -47,7 +28,6 @@ const api = axios.create({
         "Content-Type": "application/json",
     },
 });
-
 
 // =====================================================
 // TOKEN HELPERS
@@ -63,6 +43,10 @@ const getStudentToken = () => {
 };
 
 
+// =====================================================
+// STAFF TOKEN
+// =====================================================
+
 const getStaffToken = () => {
     return (
         localStorage.getItem("votaraStaffToken") ||
@@ -71,13 +55,97 @@ const getStaffToken = () => {
 };
 
 
+// =====================================================
+// ELECTORAL BOARD TOKEN
+// =====================================================
+// Older versions may use votaraEBToken.
+// The current EB login stores the token in
+// votaraStaffToken, so we check both.
+//
+// We verify the JWT role before using it.
+// =====================================================
+
 const getEBToken = () => {
-    return (
-        localStorage.getItem("votaraEBToken") ||
-        ""
-    );
+
+    const candidates = [
+        localStorage.getItem("votaraEBToken"),
+        localStorage.getItem("votaraStaffToken"),
+    ].filter(Boolean);
+
+
+    for (const token of candidates) {
+
+        try {
+
+            const parts =
+                token.split(".");
+
+
+            if (parts.length !== 3) {
+                continue;
+            }
+
+
+            const base64Payload =
+                parts[1]
+                    .replace(/-/g, "+")
+                    .replace(/_/g, "/");
+
+
+            // Add missing Base64 padding if necessary
+            const paddedPayload =
+                base64Payload +
+                "=".repeat(
+                    (4 -
+                        (base64Payload.length %
+                            4)) %
+                        4
+                );
+
+
+            const payload =
+                JSON.parse(
+                    atob(paddedPayload)
+                );
+
+
+            // Ignore expired tokens
+            if (
+                payload?.exp &&
+                Number(payload.exp) * 1000 <=
+                    Date.now()
+            ) {
+                continue;
+            }
+
+
+            // IMPORTANT:
+            // Only accept Electoral Board tokens
+            if (
+                payload?.role ===
+                "electoral_board"
+            ) {
+                return token;
+            }
+
+        } catch (error) {
+
+            console.warn(
+                "Unable to inspect possible EB token."
+            );
+
+        }
+
+    }
+
+
+    return "";
 };
 
+
+// =====================================================
+// KIOSK TOKEN
+// =====================================================
 
 const getKioskToken = () => {
     return (
@@ -96,6 +164,7 @@ const isVotingRequest = (url = "") => {
     const normalizedUrl =
         String(url).toLowerCase();
 
+
     return (
         /\/voting(\/|$)/.test(
             normalizedUrl
@@ -111,6 +180,7 @@ const isKioskRequest = (url = "") => {
 
     const normalizedUrl =
         String(url).toLowerCase();
+
 
     return (
         normalizedUrl.includes("/kiosk/") ||
@@ -156,13 +226,34 @@ api.interceptors.request.use(
         let token = "";
 
 
-        // -------------------------------------------------
+        // =================================================
+        // IMPORTANT
+        // =================================================
+        //
+        // If a service already supplied an Authorization
+        // header, DO NOT overwrite it.
+        //
+        // This is especially important for kioskService.js,
+        // which explicitly supplies the Electoral Board JWT.
+        // =================================================
+
+        const existingAuthorization =
+            config.headers?.Authorization ||
+            config.headers?.authorization;
+
+
+        if (
+            existingAuthorization
+        ) {
+
+            return config;
+
+        }
+
+
+        // =================================================
         // KIOSK VOTING
-        // -------------------------------------------------
-        //
-        // Kiosk students use the temporary kiosk JWT.
-        // This must take priority over EB/staff tokens.
-        //
+        // =================================================
 
         if (
             kioskMode &&
@@ -175,12 +266,9 @@ api.interceptors.request.use(
         }
 
 
-        // -------------------------------------------------
+        // =================================================
         // NORMAL STUDENT VOTING
-        // -------------------------------------------------
-        //
-        // /voting/* must ALWAYS use the student JWT.
-        //
+        // =================================================
 
         else if (
             isVotingRequest(requestUrl) &&
@@ -192,13 +280,9 @@ api.interceptors.request.use(
         }
 
 
-        // -------------------------------------------------
-        // KIOSK NON-VOTING REQUEST
-        // -------------------------------------------------
-        //
-        // Keep the kiosk token available for kiosk-specific
-        // student requests when kiosk mode is active.
-        //
+        // =================================================
+        // KIOSK NON-VOTING
+        // =================================================
 
         else if (
             kioskMode &&
@@ -211,12 +295,26 @@ api.interceptors.request.use(
         }
 
 
-        // -------------------------------------------------
+        // =================================================
         // ELECTORAL BOARD
-        // -------------------------------------------------
+        // =================================================
         //
-        // EB-specific API calls use the EB token.
+        // IMPORTANT:
+        // EB token is checked BEFORE generic staff token.
         //
+        // This prevents an Admin token from being sent
+        // to Electoral Board endpoints.
+        // =================================================
+
+        else if (
+            isKioskRequest(requestUrl) &&
+            ebToken
+        ) {
+
+            token = ebToken;
+
+        }
+
 
         else if (ebToken) {
 
@@ -225,9 +323,9 @@ api.interceptors.request.use(
         }
 
 
-        // -------------------------------------------------
+        // =================================================
         // STAFF / ADMIN
-        // -------------------------------------------------
+        // =================================================
 
         else if (staffToken) {
 
@@ -236,9 +334,9 @@ api.interceptors.request.use(
         }
 
 
-        // -------------------------------------------------
+        // =================================================
         // STUDENT FALLBACK
-        // -------------------------------------------------
+        // =================================================
 
         else if (studentToken) {
 
@@ -247,14 +345,15 @@ api.interceptors.request.use(
         }
 
 
-        // -------------------------------------------------
+        // =================================================
         // ATTACH TOKEN
-        // -------------------------------------------------
+        // =================================================
 
         if (token) {
 
             config.headers =
                 config.headers || {};
+
 
             config.headers.Authorization =
                 `Bearer ${token}`;
@@ -315,14 +414,16 @@ api.interceptors.response.use(
                 );
 
 
-            // ------------------------------------------------
-            // KIOSK SESSION EXPIRED
-            // ------------------------------------------------
+            // =================================================
+            // KIOSK STUDENT SESSION EXPIRED
+            // =================================================
 
             if (
                 (
-                    error.response.status === 401 ||
-                    error.response.status === 403
+                    error.response.status ===
+                        401 ||
+                    error.response.status ===
+                        403
                 ) &&
                 isKioskVotingRequest
             ) {
