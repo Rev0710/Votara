@@ -210,7 +210,7 @@ function DashboardMockup({ variant = "vote" }) {
 
                             </div>
 
-                            <div className="result-stat-card"><span>Total votes</span><strong>1,207</strong><small>+12.8% turnout</small></div>
+                            <div className="result-stat-card"><span>Total votes</span><strong>400+</strong><small>+12.8% turnout</small></div>
 
                         </div>
 
@@ -606,7 +606,7 @@ function LandingPage() {
 
                         <div className="hero-orbit-ring hero-orbit-ring-2" />
 
-                        <div className="hero-stat hero-stat-left"><span>Cast votes</span><strong>1,207</strong><i><b /></i></div>
+                        <div className="hero-stat hero-stat-left"><span>Cast votes</span><strong>400+</strong><i><b /></i></div>
 
                         <div className="hero-stat hero-stat-right"><span>Verified voters</span><strong>96%</strong><i><b /></i></div>
 
