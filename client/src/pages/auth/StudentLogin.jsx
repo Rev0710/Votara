@@ -113,24 +113,47 @@ const StudentLogin = () => {
                     </div>
 
                     <div className="student-login-orbit" aria-hidden="true">
-                        <div className="student-login-orbit-ring ring-one" />
-                        <div className="student-login-orbit-ring ring-two" />
-                        <div className="student-login-orbit-ring ring-three" />
+                    <div className="student-login-orbit-ring ring-one" />
+                    <div className="student-login-orbit-ring ring-two" />
+                    <div className="student-login-orbit-ring ring-three" />
 
-                        <div className="student-login-orbit-core">
-                            <img src={votaraLogo} alt="" />
-                        </div>
-
-                        <span className="student-login-orbit-icon icon-check"><FiCheck /></span>
-                        <span className="student-login-orbit-icon icon-user"><FiUser /></span>
-                        <span className="student-login-orbit-icon icon-shield"><FiShield /></span>
+                    <div className="student-login-orbit-core">
+                        <img src={votaraLogo} alt="" />
                     </div>
+
+                    <div className="student-login-orbit-track orbit-track-outer">
+                        <span className="student-login-orbit-icon">
+                            <FiCheck />
+                        </span>
+                    </div>
+
+                    <div className="student-login-orbit-track orbit-track-middle">
+                        <span className="student-login-orbit-icon">
+                            <FiShield />
+                        </span>
+                    </div>
+
+                    <div className="student-login-orbit-track orbit-track-inner">
+                        <span className="student-login-orbit-icon">
+                            <FiUser />
+                        </span>
+                    </div>
+                </div>
                 </div>
 
                 <div className="student-login-right">
                     <div className="student-login-form-card">
-                        <span className="student-login-label">STUDENT LOGIN</span>
-                        <h1>Welcome back</h1>
+                            <button
+                                type="button"
+                                className="student-login-back-button"
+                                onClick={handleBack}
+                                disabled={loading}
+                            >
+                                ← Back to VOTARA
+                            </button>
+
+                            <span className="student-login-label">STUDENT LOGIN</span>
+                            <h1>Welcome back</h1>
                         <p className="login-description">
                             Sign in with your student ID and the temporary<br className="desktop-break" />
                             password sent after your registration is approved.

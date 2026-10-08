@@ -8,6 +8,9 @@ const {
 const {
     uploadProfilePicture,
     getCurrentStudent,
+    forgotPassword,
+    verifyForgotPasswordOTP,
+    resetPassword,
 } = require("../controllers/authController");
 
 const {
@@ -38,6 +41,26 @@ router.post(
     changeTemporaryPassword
 );
 
+
+
+// =====================================================
+// FORGOT PASSWORD
+// =====================================================
+
+router.post(
+    "/forgot-password",
+    forgotPassword
+);
+
+router.post(
+    "/verify-forgot-password-otp",
+    verifyForgotPasswordOTP
+);
+
+router.post(
+    "/reset-password",
+    resetPassword
+);
 
 // =====================================================
 // PROFILE PICTURE

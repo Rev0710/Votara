@@ -378,3 +378,406 @@ to { opacity: 1; transform: translateY(0); }
 .student-login-card,
 .student-login-form-card { animation: none; }
 }
+
+.student-login-form-card {
+    position: relative;
+}
+
+.student-login-back-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 0;
+    margin: 0 0 24px;
+    border: 0;
+    background: transparent;
+    color: #155eef;
+    font: inherit;
+    font-size: 9px;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.student-login-back-button:hover:not(:disabled) {
+    color: #0644eb;
+    text-decoration: underline;
+}
+
+.student-login-back-button:focus-visible {
+    outline: 2px solid #155eef;
+    outline-offset: 4px;
+    border-radius: 3px;
+}
+
+.student-login-back-button:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+}
+
+@media (max-width: 560px) {
+    .student-login-back-button {
+        margin-bottom: 20px;
+        font-size: 9px;
+    }
+}
+.student-login-orbit {
+    position: absolute;
+    left: 50%;
+    bottom: -7px;
+    width: 255px;
+    height: 255px;
+    transform: translateX(-50%);
+    z-index: 2;
+    pointer-events: none;
+}
+
+.student-login-orbit-ring {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    border: 1px solid rgba(33, 106, 255, .48);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.student-login-orbit .ring-one {
+    width: 100%;
+    height: 100%;
+}
+
+.student-login-orbit .ring-two {
+    width: 76%;
+    height: 76%;
+}
+
+.student-login-orbit .ring-three {
+    width: 51%;
+    height: 51%;
+}
+
+.student-login-orbit-core {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 74px;
+    height: 74px;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(34, 123, 255, .82);
+    border: 1px solid rgba(255, 255, 255, .15);
+    box-shadow:
+        0 0 0 1px rgba(0, 75, 255, .08),
+        0 15px 35px rgba(0, 52, 180, .2);
+    z-index: 5;
+}
+
+.student-login-orbit-core img {
+    width: 39px;
+    height: 39px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+}
+
+/* Rotating orbit tracks */
+.student-login-orbit-track {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform-origin: center center;
+    pointer-events: none;
+}
+
+/* Outer ring */
+.orbit-track-outer {
+    width: 100%;
+    height: 100%;
+    margin-left: -50%;
+    margin-top: -50%;
+    animation: studentOrbitOuter 10s linear infinite;
+}
+
+/* Middle ring */
+.orbit-track-middle {
+    width: 76%;
+    height: 76%;
+    margin-left: -38%;
+    margin-top: -38%;
+    animation: studentOrbitMiddle 8s linear infinite reverse;
+}
+
+/* Inner ring */
+.orbit-track-inner {
+    width: 51%;
+    height: 51%;
+    margin-left: -25.5%;
+    margin-top: -25.5%;
+    animation: studentOrbitInner 6s linear infinite;
+}
+
+/* Orbit icons */
+.student-login-orbit-track .student-login-orbit-icon {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 25px;
+    height: 25px;
+    transform: translate(-50%, -50%);
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: #4b84ec;
+    background: rgba(219, 239, 255, .88);
+    box-shadow: 0 3px 12px rgba(0, 52, 180, .12);
+}
+
+.student-login-orbit-icon svg {
+    width: 12px;
+    height: 12px;
+    stroke-width: 2.7;
+}
+
+/* Keep each icon exactly on its ring */
+@keyframes studentOrbitOuter {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes studentOrbitMiddle {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes studentOrbitInner {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 900px) {
+    .student-login-page {
+        padding: 16px;
+    }
+
+    .student-login-card {
+        grid-template-columns: 1fr;
+        min-height: auto;
+    }
+
+    .student-login-left {
+        min-height: 500px;
+        padding: 34px 42px;
+    }
+
+    .student-login-copy {
+        margin-top: 58px;
+    }
+
+    .student-login-orbit {
+        width: 255px;
+        height: 255px;
+        left: 50%;
+        bottom: 20px;
+        transform: translateX(-50%);
+    }
+
+    .student-login-right {
+        min-height: 560px;
+        padding: 55px 40px;
+    }
+
+    .student-login-form-card {
+        width: min(100%, 500px);
+    }
+}
+
+@media (max-width: 560px) {
+    .student-login-page {
+        padding: 0;
+        align-items: stretch;
+    }
+
+    .student-login-card {
+        width: 100%;
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: block;
+    }
+
+    .student-login-left {
+        width: 100%;
+        min-height: 545px;
+        padding: 28px 20px;
+    }
+
+    .student-login-logo img {
+        width: 96px;
+    }
+
+    .student-login-copy {
+        margin-top: 52px;
+    }
+
+    .student-login-kicker {
+        font-size: 7px;
+        margin-bottom: 17px;
+    }
+
+    .student-login-copy h2 {
+        font-size: clamp(38px, 11vw, 48px);
+        line-height: .98;
+    }
+
+    .student-login-copy p {
+        max-width: 340px;
+        margin-top: 22px;
+        font-size: 11px;
+        line-height: 1.55;
+    }
+
+    .student-login-steps {
+        margin-top: 27px;
+        gap: 12px;
+        font-size: 9px;
+    }
+
+    .desktop-break {
+        display: none;
+    }
+
+    .student-login-orbit {
+        width: 225px;
+        height: 225px;
+        left: 50%;
+        bottom: 20px;
+        transform: translateX(-50%);
+    }
+
+    .student-login-orbit-core {
+        width: 68px;
+        height: 68px;
+    }
+
+    .student-login-orbit-core img {
+        width: 36px;
+        height: 36px;
+    }
+
+    .student-login-orbit-track .student-login-orbit-icon {
+        width: 24px;
+        height: 24px;
+    }
+
+    .student-login-orbit-icon svg {
+        width: 11px;
+        height: 11px;
+    }
+
+    .student-login-right {
+        width: 100%;
+        min-height: 560px;
+        padding: 28px 16px 40px;
+    }
+
+    .student-login-form-card {
+        width: 100%;
+        max-width: 500px;
+        padding: 30px 24px 38px;
+        border-radius: 16px;
+    }
+
+    .student-login-back-button {
+        margin-bottom: 22px;
+        font-size: 9px;
+    }
+
+    .student-login-label {
+        font-size: 7px;
+    }
+
+    .student-login-form-card h1 {
+        font-size: clamp(29px, 8vw, 38px);
+    }
+
+    .login-description {
+        font-size: 10px;
+        margin-bottom: 27px;
+    }
+
+    .login-input-group {
+        margin-bottom: 17px;
+    }
+
+    .login-input-group input {
+        height: 42px;
+        font-size: 10px;
+    }
+
+    .student-login-button,
+    .student-signup-button {
+        width: 145px;
+        height: 39px;
+    }
+}
+
+@media (max-width: 380px) {
+    .student-login-left {
+        min-height: 520px;
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .student-login-copy {
+        margin-top: 46px;
+    }
+
+    .student-login-copy h2 {
+        font-size: 36px;
+    }
+
+    .student-login-copy p {
+        font-size: 10px;
+        max-width: 300px;
+    }
+
+    .student-login-orbit {
+        width: 205px;
+        height: 205px;
+        bottom: 20px;
+    }
+
+    .student-login-orbit-core {
+        width: 62px;
+        height: 62px;
+    }
+
+    .student-login-orbit-core img {
+        width: 33px;
+        height: 33px;
+    }
+
+    .student-login-right {
+        padding: 22px 12px 32px;
+    }
+
+    .student-login-form-card {
+        padding: 27px 20px 34px;
+    }
+}
