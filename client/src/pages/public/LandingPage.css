@@ -1015,3 +1015,266 @@
         flex-basis: 38px;
     }
 }
+
+.privacy-rings-motion {
+    position: absolute !important;
+    left: 50% !important;
+    top: 61% !important;
+    width: min(430px, 48vw) !important;
+    height: min(430px, 48vw) !important;
+    margin: 0 !important;
+    transform: translate(-50%, -50%) !important;
+    overflow: visible !important;
+    z-index: 6 !important;
+    pointer-events: none !important;
+}
+
+.privacy-rings-motion .privacy-ring {
+    position: absolute !important;
+    left: 50% !important;
+    top: 40% !important;
+    transform: translate(-50%, -50%) !important;
+    border: 1px solid rgba(49,112,255,.48) !important;
+    border-radius: 50% !important;
+    background: transparent !important;
+    pointer-events: none !important;
+}
+
+.privacy-rings-motion .privacy-ring-outer {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.privacy-rings-motion .privacy-ring-middle {
+    width: 72% !important;
+    height: 72% !important;
+}
+
+.privacy-rings-motion .privacy-ring-inner {
+    width: 45% !important;
+    height: 45% !important;
+}
+.privacy-orbit-motion {
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    border-radius: 50%;
+    pointer-events: none !important;
+    transform-origin: 40% 40% !important;
+    box-sizing: border-box !important;
+}
+
+.privacy-orbit-motion .privacy-orbit-glyph {
+    position: absolute !important;
+    left: 50% !important;
+    top: 0 !important;
+    width: clamp(30px, 2.7vw, 40px) !important;
+    height: clamp(30px, 2.7vw, 40px) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: translate(-50%, -50%) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #155eef !important;
+    background: #191a30 !important;
+    border: 1px solid rgba(49,112,255,.35);
+    border-radius: 50%;
+    box-sizing: border-box !important;
+    filter: drop-shadow(0 0 8px rgba(21,94,239,.25));
+    z-index: 10 !important;
+}
+
+.privacy-orbit-motion .privacy-orbit-glyph svg {
+    width: 60% !important;
+    height: 60% !important;
+    stroke-width: 2.3;
+}
+.privacy-orbit-motion-outer {
+    width: 91% !important;
+    height: 91% !important;
+    transform: translate(-50%, -50%);
+    animation: privacyOrbitOuter 13s linear infinite;
+}
+
+.privacy-orbit-motion-middle {
+    width: 63% !important;
+    height: 63% !important;
+    transform: translate(-50%, -50%);
+    animation: privacyOrbitMiddle 9s linear infinite reverse;
+}
+
+.privacy-orbit-motion-inner {
+    width: 36% !important;
+    height: 36% !important;
+    transform: translate(-50%, -50%);
+    animation: privacyOrbitInner 6.5s linear infinite;
+}
+
+.privacy-orbit-motion-outer .privacy-orbit-glyph {
+    animation: privacyCounterOuter 13s linear infinite;
+}
+
+.privacy-orbit-motion-middle .privacy-orbit-glyph {
+    animation: privacyCounterMiddle 9s linear infinite reverse;
+}
+
+.privacy-orbit-motion-inner .privacy-orbit-glyph {
+    animation: privacyCounterInner 6.5s linear infinite;
+}
+
+@keyframes privacyOrbitOuter {
+    from {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    to {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+@keyframes privacyOrbitMiddle {
+    from {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    to {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+@keyframes privacyOrbitInner {
+    from {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    to {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+@keyframes privacyCounterOuter {
+    from {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    to {
+        transform: translate(-50%, -50%) rotate(-360deg);
+    }
+}
+
+@keyframes privacyCounterMiddle {
+    from {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    to {
+        transform: translate(-50%, -50%) rotate(-360deg);
+    }
+}
+
+@keyframes privacyCounterInner {
+    from {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    to {
+        transform: translate(-50%, -50%) rotate(-360deg);
+    }
+}
+
+.privacy-rings-motion .privacy-votara-core {
+    position: absolute !important;
+    left: 50% !important;
+    top: 40% !important;
+    width: clamp(72px, 7vw, 92px) !important;
+    height: clamp(72px, 7vw, 92px) !important;
+    margin: 0 !important;
+    transform: translate(-50%, -50%) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 20 !important;
+}
+
+.privacy-rings-motion .privacy-votara-mark {
+    width: 48px !important;
+    height: 48px !important;
+    max-width: 48px !important;
+    max-height: 48px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+    object-fit: contain !important;
+    object-position: center !important;
+}
+
+@media (max-width: 760px) {
+    .privacy-rings-motion {
+        top: 64% !important;
+        width: min(340px, 78vw) !important;
+        height: min(340px, 78vw) !important;
+    }
+}
+
+@media (max-width: 420px) {
+    .privacy-rings-motion {
+        top: 66% !important;
+        width: 300px !important;
+        height: 300px !important;
+    }
+}
+
+/* PRIVACY ORBIT - SEND BEHIND TEXT */
+.privacy-section {
+    position: relative;
+    overflow: hidden;
+}
+
+.privacy-content {
+    position: relative;
+    z-index: 10;
+}
+
+.privacy-rings {
+    position: absolute !important;
+    left: 50% !important;
+    top: 64% !important;
+    width: 390px !important;
+    height: 390px !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 1 !important;
+    pointer-events: none !important;
+}
+
+.privacy-ring {
+    z-index: 1 !important;
+}
+
+.privacy-core {
+    z-index: 2 !important;
+}
+
+.privacy-orbit {
+    z-index: 3 !important;
+}
+
+/* Keep the orbit visible but behind the content */
+.privacy-content {
+    z-index: 10 !important;
+}
+
+/* Center the orbit on the privacy section */
+.privacy-section .privacy-rings {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Mobile */
+@media (max-width: 700px) {
+    .privacy-rings {
+        top: 67% !important;
+        width: 300px !important;
+        height: 300px !important;
+    }
+}
+
+
