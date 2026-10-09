@@ -1129,3 +1129,28 @@ Behavior:
 - Existing old plaintext passwords cannot be recovered from the database; only a newly generated temporary password can be displayed after creation/reset.
 - Admin audit logging now guarantees actor_email is populated, preventing the NOT NULL audit_logs error.
 - Admin Dashboard top User navigation now points to /admin/electoral-board.
+
+VOTARA uses layered security, where frontend validation improves user-side protection while backend authentication, authorization, OTP verification, rate limiting, database controls, and audit logging enforce the actual security of the voting system.
+
+The most important security layers:
+1. Authentication & authorization
+2. Role-based access control
+3. Email OTP verification
+4. Password hashing
+5. JWT/session protection
+6. Rate limiting
+7. OTP expiration and abuse protection
+8. Audit logging
+9. Supabase/database security
+10. Kiosk session accountabilityThe most important security layers for your presentation
+If you're explaining VOTARA to your panel, I'd highlight these 10:
+1. Authentication & authorization
+2. Role-based access control
+3. Email OTP verification
+4. Password hashing
+5. JWT/session protection
+6. Rate limiting
+7. OTP expiration and abuse protection
+8. Audit logging
+9. Supabase/database security
+10. Kiosk session accountability
