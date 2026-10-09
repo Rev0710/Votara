@@ -1128,38 +1128,52 @@ const sendRegistrationOTP = async (
         // CHECK EMAIL IN REGISTRATION APPLICATIONS
         // =================================================
 
-        const registrationsUsingEmail =
-            await findRegistrationByEmail(
-                normalizedEmail
-            );
+                const registrationsUsingEmail =
+                await findRegistrationByEmail(
+                    normalizedEmail
+                );
 
+            const activeRegistrationStatuses = [
+                "otp_verified",
+                "needs_correction",
+                "pending_review",
+                "approved",
+            ];
 
-        const emailUsedByAnotherStudent =
-            registrationsUsingEmail.find(
-                (registration) =>
-                    String(
-                        registration.student_id
-                    ).trim() !==
-                    normalizedStudentId
-            );
+            const emailUsedByAnotherStudent =
+                registrationsUsingEmail.find(
+                    (registration) => {
+                        const registrationStudentId =
+                            String(
+                                registration.student_id
+                            ).trim();
 
+                        const registrationStatus =
+                            String(
+                                registration.application_status ||
+                                ""
+                            ).trim().toLowerCase();
 
-        if (
-            emailUsedByAnotherStudent
-        ) {
+                        return (
+                            registrationStudentId !==
+                                normalizedStudentId &&
+                            activeRegistrationStatuses.includes(
+                                registrationStatus
+                            )
+                        );
+                    }
+                );
 
-            return res.status(409).json({
-
-                success: false,
-
-                code:
-                    "EMAIL_ALREADY_USED",
-
-                message:
-                    "This email address has already been used by another student. Please use a different email address.",
-
-            });
-        }
+            if (
+                emailUsedByAnotherStudent
+            ) {
+                return res.status(409).json({
+                    success: false,
+                    code: "EMAIL_ALREADY_USED",
+                    message:
+                        "This email address is already linked to another active student registration. Please use a different email address.",
+                });
+            }
 
 
         // =================================================
@@ -2366,8 +2380,69 @@ const resendRegistrationOTP = async (
         // FIND REGISTRATION
         // =================================================
 
-        let registrationQuery =
-            supabase
+        let registration = null;
+
+
+        // -------------------------------------------------
+        // PRIMARY LOOKUP: STUDENT ID
+        // -------------------------------------------------
+
+        if (normalizedStudentId) {
+
+            const {
+                data,
+                error,
+            } = await supabase
+                .from(
+                    "registration_applications"
+                )
+                .select("*")
+                .eq(
+                    "student_id",
+                    normalizedStudentId
+                )
+                .order(
+                    "created_at",
+                    {
+                        ascending: false,
+                    }
+                )
+                .limit(1)
+                .maybeSingle();
+
+
+            if (error) {
+
+                console.error(
+                    "❌ Registration lookup by student ID failed:",
+                    error.message
+                );
+
+                return res.status(500).json({
+
+                    success: false,
+
+                    message:
+                        "Unable to find registration information.",
+
+                });
+            }
+
+
+            registration = data;
+        }
+
+
+        // -------------------------------------------------
+        // FALLBACK LOOKUP: EMAIL
+        // -------------------------------------------------
+
+        if (!registration) {
+
+            const {
+                data,
+                error,
+            } = await supabase
                 .from(
                     "registration_applications"
                 )
@@ -2386,60 +2461,31 @@ const resendRegistrationOTP = async (
                 .maybeSingle();
 
 
-        if (
-            normalizedStudentId
-        ) {
+            if (error) {
 
-            registrationQuery =
-                supabase
-                    .from(
-                        "registration_applications"
-                    )
-                    .select("*")
-                    .eq(
-                        "student_id",
-                        normalizedStudentId
-                    )
-                    .eq(
-                        "email",
-                        normalizedEmail
-                    )
-                    .order(
-                        "created_at",
-                        {
-                            ascending: false,
-                        }
-                    )
-                    .limit(1)
-                    .maybeSingle();
+                console.error(
+                    "❌ Registration lookup by email failed:",
+                    error.message
+                );
+
+                return res.status(500).json({
+
+                    success: false,
+
+                    message:
+                        "Unable to find registration information.",
+
+                });
+            }
+
+
+            registration = data;
         }
 
 
-        const {
-            data:
-                registration,
-            error:
-                registrationError,
-        } = await registrationQuery;
-
-
-        if (registrationError) {
-
-            console.error(
-                "❌ Registration lookup error:",
-                registrationError.message
-            );
-
-            return res.status(500).json({
-
-                success: false,
-
-                message:
-                    "Unable to find registration information.",
-
-            });
-        }
-
+        // -------------------------------------------------
+        // REGISTRATION NOT FOUND
+        // -------------------------------------------------
 
         if (!registration) {
 
@@ -2449,6 +2495,53 @@ const resendRegistrationOTP = async (
 
                 message:
                     "Registration information not found. Please register again.",
+
+            });
+        }
+
+
+        // -------------------------------------------------
+        // VERIFY STUDENT ID MATCH
+        // -------------------------------------------------
+
+        if (
+            normalizedStudentId &&
+            String(
+                registration.student_id || ""
+            ).trim() !==
+                normalizedStudentId
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Registration information does not match the student record.",
+
+            });
+        }
+
+
+        // -------------------------------------------------
+        // VERIFY EMAIL MATCH
+        // -------------------------------------------------
+
+        if (
+            String(
+                registration.email || ""
+            )
+                .trim()
+                .toLowerCase() !==
+            normalizedEmail
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Registration information does not match the registered email.",
 
             });
         }

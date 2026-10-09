@@ -8,6 +8,8 @@ import { useNavigate } from "react-router-dom";
 
 import api from "../../services/api";
 
+import votaraLogo from "../../assets/images/votara-logo.png";
+
 
 // =========================================================
 // VOTARA - REGISTRATION REQUIREMENTS
@@ -1657,19 +1659,64 @@ const RegistrationRequirements = () => {
 
         <div
             style={{
+                position:
+                    "relative",
+
                 minHeight:
                     "100vh",
 
-                background:
-                    "#f4f7fc",
+                backgroundColor:
+                    "#ffffff",
+
+                backgroundImage:
+                    "radial-gradient(circle, rgba(38,110,255,0.16) 1px, transparent 1px)",
+
+                backgroundSize:
+                    "16px 16px",
+
+                backgroundPosition:
+                    "0 0",
 
                 padding:
                     "35px 20px",
 
                 fontFamily:
                     "Arial, sans-serif",
+
+                boxSizing:
+                    "border-box",
             }}
         >
+
+            <img
+                src={votaraLogo}
+                alt="VOTARA"
+                style={{
+                    position:
+                        "absolute",
+
+                    top:
+                        "24px",
+
+                    left:
+                        "30px",
+
+                    width:
+                        "115px",
+
+                    height:
+                        "auto",
+
+                    objectFit:
+                        "contain",
+
+                    zIndex:
+                        10,
+
+                    display:
+                        "block",
+                }}
+            />
 
             <div
                 style={{

@@ -9,6 +9,17 @@ const crypto = require("crypto");
 
 const supabase = require("../config/supabase");
 
+const {
+    generateOtp,
+    verifyOtp,
+    validateResetToken,
+    consumeResetToken,
+} = require("../services/otpService");
+
+const {
+    sendForgotPasswordOTPEmail,
+} = require("../services/emailService");
+
 // ============================================================
 // CONFIGURATION
 // ============================================================
@@ -21,6 +32,34 @@ if (!JWT_SECRET) {
 
 // Existing VOTARA private bucket
 const PROFILE_BUCKET = "student-verification";
+
+const PASSWORD_CHANGE_COOLDOWN_MS = 48 * 60 * 60 * 1000;
+const PASSWORD_COOLDOWN_MESSAGE =
+    "Please come back again after 48 hours to change your password, or contact the Electoral Board directly.";
+
+function getPasswordCooldownRemaining(passwordChangedAt) {
+    if (!passwordChangedAt) {
+        return 0;
+    }
+
+    const changedAt = new Date(passwordChangedAt).getTime();
+
+    if (!Number.isFinite(changedAt)) {
+        return 0;
+    }
+
+    const elapsed = Date.now() - changedAt;
+
+    if (elapsed >= PASSWORD_CHANGE_COOLDOWN_MS) {
+        return 0;
+    }
+
+    return PASSWORD_CHANGE_COOLDOWN_MS - elapsed;
+}
+
+function isPasswordChangeLocked(passwordChangedAt) {
+    return getPasswordCooldownRemaining(passwordChangedAt) > 0;
+}
 
 // ============================================================
 // HELPERS
@@ -516,7 +555,8 @@ const changeTemporaryPassword = async (req, res) => {
                     student_id,
                     email,
                     account_status,
-                    must_change_password
+                    must_change_password,
+                    password_changed_at
                     `
                 )
                 .eq("student_id", studentId)
@@ -548,6 +588,13 @@ const changeTemporaryPassword = async (req, res) => {
             });
         }
 
+        if (isPasswordChangeLocked(account.password_changed_at)) {
+            return res.status(429).json({
+                success: false,
+                message: PASSWORD_COOLDOWN_MESSAGE,
+            });
+        }
+
         // ----------------------------------------------------
         // Hash new password
         // ----------------------------------------------------
@@ -567,6 +614,7 @@ const changeTemporaryPassword = async (req, res) => {
                 .update({
                     password_hash: passwordHash,
                     must_change_password: false,
+                    password_changed_at: new Date().toISOString(),
                     updated_at: new Date().toISOString(),
                 })
                 .eq("id", account.id)
@@ -1212,6 +1260,440 @@ const getCurrentStudent = async (req, res) => {
     }
 };
 
+
+// ============================================================
+// FORGOT PASSWORD - SEND OTP
+// ============================================================
+
+const forgotPassword = async (req, res) => {
+    try {
+        const email = normalizeEmail(req.body?.email);
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: "Registered email is required.",
+            });
+        }
+
+        // ----------------------------------------------------
+        // Find the registered student account
+        // ----------------------------------------------------
+
+        const {
+            data: account,
+            error: accountError,
+        } = await supabase
+            .from("student_accounts")
+            .select(`
+                id,
+                student_id,
+                email,
+                account_status,
+                password_changed_at
+            `)
+            .ilike("email", email)
+            .maybeSingle();
+
+        if (accountError) {
+            console.error(
+                "❌ Forgot password account lookup error:",
+                accountError
+            );
+
+            return res.status(500).json({
+                success: false,
+                message: "Unable to verify the registered email.",
+            });
+        }
+
+        if (!account) {
+            return res.status(404).json({
+                success: false,
+                message:
+                    "That email address is not registered with a VOTARA student account.",
+            });
+        }
+
+        if (account.account_status !== "active") {
+            return res.status(403).json({
+                success: false,
+                message:
+                    "This student account is not currently active.",
+            });
+        }
+
+        if (isPasswordChangeLocked(account.password_changed_at)) {
+            return res.status(429).json({
+                success: false,
+                message: PASSWORD_COOLDOWN_MESSAGE,
+            });
+        }
+
+        const otp = generateOtp(email);
+
+        await sendForgotPasswordOTPEmail(
+            email,
+            otp
+        );
+
+        return res.status(200).json({
+            success: true,
+            message:
+                "A 6-digit verification code has been sent to your registered email.",
+        });
+    } catch (error) {
+        console.error(
+            "❌ Forgot password error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message:
+                "Unable to send the verification code. Please try again.",
+        });
+    }
+};
+
+
+// ============================================================
+// FORGOT PASSWORD - VERIFY OTP
+// ============================================================
+
+const verifyForgotPasswordOTP = async (
+    req,
+    res
+) => {
+    try {
+        const email = normalizeEmail(req.body?.email);
+        const otp = String(req.body?.otp || "").trim();
+
+        if (!email || !otp) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Registered email and 6-digit verification code are required.",
+            });
+        }
+
+        if (!/^\d{6}$/.test(otp)) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "The verification code must contain exactly 6 digits.",
+            });
+        }
+
+        const {
+            data: account,
+            error: accountError,
+        } = await supabase
+            .from("student_accounts")
+            .select(`
+                id,
+                email,
+                account_status
+            `)
+            .ilike("email", email)
+            .maybeSingle();
+
+        if (accountError) {
+            console.error(
+                "❌ Forgot password verification lookup error:",
+                accountError
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Unable to verify your account.",
+            });
+        }
+
+        if (!account) {
+            return res.status(404).json({
+                success: false,
+                message:
+                    "Student account was not found.",
+            });
+        }
+
+        if (account.account_status !== "active") {
+            return res.status(403).json({
+                success: false,
+                message:
+                    "This student account is not currently active.",
+            });
+        }
+
+        const verification = verifyOtp(
+            email,
+            otp
+        );
+
+        if (!verification.success) {
+            return res.status(400).json({
+                success: false,
+                message: verification.message,
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message:
+                "Verification code confirmed.",
+            resetToken:
+                verification.resetToken,
+        });
+    } catch (error) {
+        console.error(
+            "❌ Verify forgot password OTP error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message:
+                "Unable to verify the code. Please try again.",
+        });
+    }
+};
+
+
+// ============================================================
+// FORGOT PASSWORD - RESET PASSWORD
+// ============================================================
+
+const resetPassword = async (
+    req,
+    res
+) => {
+    try {
+        const email = normalizeEmail(req.body?.email);
+        const resetToken = String(
+            req.body?.resetToken || ""
+        ).trim();
+
+        const newPassword = String(
+            req.body?.newPassword || ""
+        );
+
+        const confirmPassword = String(
+            req.body?.confirmPassword || ""
+        );
+
+        if (
+            !email ||
+            !resetToken ||
+            !newPassword ||
+            !confirmPassword
+        ) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Email, verification session, new password, and confirmation password are required.",
+            });
+        }
+
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "New password and confirmation password do not match.",
+            });
+        }
+
+        const passwordError =
+            validatePassword(newPassword);
+
+        if (passwordError) {
+            return res.status(400).json({
+                success: false,
+                message: passwordError,
+            });
+        }
+
+        // ----------------------------------------------------
+        // Validate reset token WITHOUT consuming it yet.
+        // The token must survive validation failures such as
+        // using the current password as the new password.
+        // ----------------------------------------------------
+
+        const tokenIsValid =
+            validateResetToken(
+                email,
+                resetToken
+            );
+
+        if (!tokenIsValid) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Your password reset session is invalid or expired. Please request a new verification code.",
+            });
+        }
+
+        const {
+            data: account,
+            error: accountError,
+        } = await supabase
+            .from("student_accounts")
+            .select(`
+                id,
+                student_id,
+                email,
+                password_hash,
+                account_status,
+                password_changed_at
+            `)
+            .ilike("email", email)
+            .maybeSingle();
+
+        if (accountError) {
+            console.error(
+                "❌ Reset password account lookup error:",
+                accountError
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Unable to retrieve your student account.",
+            });
+        }
+
+        if (!account) {
+            return res.status(404).json({
+                success: false,
+                message:
+                    "Student account was not found.",
+            });
+        }
+
+        if (account.account_status !== "active") {
+            return res.status(403).json({
+                success: false,
+                message:
+                    "This student account is not currently active.",
+            });
+        }
+
+        // ----------------------------------------------------
+        // Enforce the 48-hour password-change cooldown.
+        // ----------------------------------------------------
+
+        if (isPasswordChangeLocked(account.password_changed_at)) {
+            return res.status(429).json({
+                success: false,
+                message: PASSWORD_COOLDOWN_MESSAGE,
+            });
+        }
+
+        // ----------------------------------------------------
+        // Prevent reusing the current password.
+        // The reset token is NOT consumed here.
+        // ----------------------------------------------------
+
+        if (account.password_hash) {
+            const samePassword =
+                await bcrypt.compare(
+                    newPassword,
+                    account.password_hash
+                );
+
+            if (samePassword) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Your new password must be different from your current password.",
+                });
+            }
+        }
+
+        // ----------------------------------------------------
+        // Hash the new password
+        // ----------------------------------------------------
+
+        const passwordHash =
+            await bcrypt.hash(
+                newPassword,
+                12
+            );
+
+        const passwordChangedAt =
+            new Date().toISOString();
+
+        // ----------------------------------------------------
+        // Save the new password
+        // ----------------------------------------------------
+
+        const {
+            error: updateError,
+        } = await supabase
+            .from("student_accounts")
+            .update({
+                password_hash:
+                    passwordHash,
+                must_change_password:
+                    false,
+                password_changed_at:
+                    passwordChangedAt,
+                updated_at:
+                    passwordChangedAt,
+            })
+            .eq("id", account.id);
+
+        if (updateError) {
+            console.error(
+                "❌ Forgot password update error:",
+                updateError
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Failed to update your password. Please try again.",
+            });
+        }
+
+        // ----------------------------------------------------
+        // Consume the reset token ONLY after the password has
+        // been successfully updated.
+        // ----------------------------------------------------
+
+        const consumed =
+            consumeResetToken(
+                email,
+                resetToken
+            );
+
+        if (!consumed) {
+            console.error(
+                "❌ Reset token could not be consumed after password update."
+            );
+        }
+
+        return res.status(200).json({
+            success: true,
+            message:
+                "Your password has been changed successfully.",
+        });
+    } catch (error) {
+        console.error(
+            "❌ Reset password error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message:
+                "Unable to change your password. Please try again.",
+        });
+    }
+};
+
+
 // ============================================================
 // EXPORTS
 // ============================================================
@@ -1221,4 +1703,7 @@ module.exports = {
     changeTemporaryPassword,
     uploadProfilePicture,
     getCurrentStudent,
+    forgotPassword,
+    verifyForgotPasswordOTP,
+    resetPassword,
 };

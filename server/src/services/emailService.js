@@ -907,11 +907,127 @@ const sendRegistrationApprovalEmail = async (
 };
 
 // =====================================================
+// SEND FORGOT PASSWORD OTP EMAIL
+// =====================================================
+
+const sendForgotPasswordOTPEmail = async (
+    email,
+    otp
+) => {
+    try {
+        const safeOTP = escapeHtml(otp);
+
+        const html = `
+            <div style="
+                font-family: Arial, sans-serif;
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 30px;
+                background: #ffffff;
+                border: 1px solid #e5e7eb;
+                border-radius: 12px;
+            ">
+                <h2 style="
+                    color: #0648ff;
+                    margin-bottom: 20px;
+                ">
+                    VOTARA Account Recovery
+                </h2>
+
+                <p>Hello,</p>
+
+                <p>
+                    We received a request to reset the password
+                    for your VOTARA student account.
+                </p>
+
+                <p>
+                    Your 6-digit verification code is:
+                </p>
+
+                <div style="
+                    margin: 25px 0;
+                    padding: 20px;
+                    text-align: center;
+                    background: #f3f6ff;
+                    border-radius: 10px;
+                ">
+                    <span style="
+                        font-size: 32px;
+                        font-weight: bold;
+                        letter-spacing: 8px;
+                        color: #0648ff;
+                    ">
+                        ${safeOTP}
+                    </span>
+                </div>
+
+                <p style="
+                    color: #666;
+                    line-height: 1.6;
+                ">
+                    This verification code will expire after
+                    5 minutes. Do not share this code with anyone.
+                </p>
+
+                <p style="
+                    color: #666;
+                    line-height: 1.6;
+                ">
+                    If you did not request a password reset,
+                    you can safely ignore this email.
+                </p>
+
+                <hr style="
+                    border: none;
+                    border-top: 1px solid #eeeeee;
+                    margin: 25px 0;
+                ">
+
+                <p style="
+                    font-size: 12px;
+                    color: #888;
+                    line-height: 1.6;
+                ">
+                    VOTARA Electoral Board<br>
+                    Western Institute of Technology
+                </p>
+            </div>
+        `;
+
+        const info = await sendEmail({
+            to: email,
+            subject: "VOTARA Password Reset Verification Code",
+            html,
+        });
+
+        console.log(
+            "✅ FORGOT PASSWORD OTP EMAIL SENT:",
+            email,
+            info.id
+        );
+
+        return {
+            success: true,
+            messageId: info.id,
+        };
+    } catch (error) {
+        console.error(
+            "❌ FORGOT PASSWORD OTP EMAIL FAILED:",
+            error.message
+        );
+
+        throw error;
+    }
+};
+
+// =====================================================
 // EXPORT
 // =====================================================
 
 module.exports = {
     sendOTPEmail,
+    sendForgotPasswordOTPEmail,
     sendRegistrationApprovalEmail,
     verifyEmailConnection,
 };

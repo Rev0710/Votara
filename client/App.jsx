@@ -12,6 +12,7 @@ import StudentRegistration from "./src/pages/auth/StudentRegistration";
 import RegistrationConfirmation from "./src/pages/auth/RegistrationConfirmation";
 import RegistrationSubmitted from "./src/pages/public/RegistrationSubmitted";
 import StudentLogin from "./src/pages/auth/StudentLogin";
+import ForgotPassword from "./src/pages/auth/ForgotPassword";
 import AccountSelection from "./src/pages/auth/AccountSelection";
 import ChangeTemporaryPassword from "./src/pages/auth/ChangeTemporaryPassword";
 import UploadProfilePicture from "./src/pages/auth/UploadProfilePicture";
@@ -192,7 +193,12 @@ const App = () => {
 
                 <Route
                     path="/login"
-                    element={<LoginPage />}
+                    element={<StudentLogin />}
+                />
+
+                <Route
+                    path="/forgot-password"
+                    element={<ForgotPassword />}
                 />
 
 
