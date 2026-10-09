@@ -1837,7 +1837,7 @@
         const [navEnvironment] = useState("Production");
         const [navAdmin] = useState(() => {
             try {
-                const storedUser = localStorage.getItem("votaraStaffUser");
+                const storedUser = localStorage.getItem("votaraAdminUser");
                 return storedUser ? JSON.parse(storedUser) : null;
             } catch {
                 return null;
@@ -1870,8 +1870,8 @@
             setIsElectionPageTransitioning(true);
 
             window.setTimeout(() => {
-                localStorage.removeItem("votaraStaffToken");
-                localStorage.removeItem("votaraStaffUser");
+                localStorage.removeItem("votaraAdminToken");
+                localStorage.removeItem("votaraAdminUser");
                 navigate("/admin-login", { replace: true });
             }, 700);
         };

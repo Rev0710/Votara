@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import "./EBDashboard.css";
 
@@ -10,6 +10,7 @@ import Registrations from "./Registrations";
 import LateEnrolleeManagement from "./LateEnrolleeManagement";
 import PartyListManagement from "./PartyListManagement";
 import ElectionManagement from "./ElectionManagement";
+import CreateElection from "./CreateElection";
 import CandidateManagement from "./EBCandidateManagement";
 import KioskManagement from "./KioskManagement";
 import VotingMonitoring from "./VotingMonitoring";
@@ -21,47 +22,31 @@ import Settings from "./Settings";
 // ELECTORAL BOARD DASHBOARD
 // =====================================================
 
-
-// Use the JWT that actually belongs to the Electoral Board.
-// Both staff and EB tokens may exist in localStorage, so do not
-// blindly prefer the staff token.
-const getEBAuthToken = () => {
-    const candidates = [
-        localStorage.getItem("votaraEBToken"),
-        localStorage.getItem("votaraStaffToken"),
-    ].filter(Boolean);
-
-    for (const token of candidates) {
-        try {
-            const payload = JSON.parse(
-                atob(
-                    token
-                        .split(".")[1]
-                        .replace(/-/g, "+")
-                        .replace(/_/g, "/")
-                )
-            );
-
-            if (payload?.role === "electoral_board") {
-                return token;
-            }
-        } catch {
-            // Ignore malformed tokens and try the next token.
-        }
-    }
-
-    return null;
-};
-
-
 const EBDashboard = () => {
 
     const navigate = useNavigate();
+    const location = useLocation();
 
     const [ebUser, setEbUser] = useState(null);
 
     const [activeSection, setActiveSection] =
         useState("dashboard");
+
+    // Restore the dashboard section when returning from a standalone
+    // page such as ManagePartyList.jsx.
+    useEffect(() => {
+        const returnToSection = location.state?.returnToSection;
+
+        if (!returnToSection) return;
+
+        setActiveSection(returnToSection);
+        setSidebarOpen(false);
+        window.scrollTo({ top: 0, behavior: "auto" });
+
+        // Clear the navigation state so refreshing the dashboard does not
+        // repeatedly force the same section.
+        navigate(location.pathname, { replace: true, state: {} });
+    }, [location, navigate]);
 
     const [sidebarOpen, setSidebarOpen] =
         useState(false);
@@ -133,24 +118,9 @@ const EBDashboard = () => {
             setDashboardLoading(true);
             setDashboardError("");
 
-            const token = getEBAuthToken();
-
-            if (!token) {
-                setDashboardError(
-                    "Electoral Board authentication is required. Please log in again as an Electoral Board account."
-                );
-                setDashboardLoading(false);
-                return;
-            }
-
             const response =
                 await api.get(
-                    "/registration/eb/dashboard-stats",
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
+                    "/registration/eb/dashboard-stats"
                 );
 
             const data =
@@ -336,12 +306,6 @@ const EBDashboard = () => {
             id: "registrations",
             label: "Registration Management",
             icon: "▤",
-        },
-
-        {
-            id: "lateEnrollees",
-            label: "Late Enrollee Management",
-            icon: "◈",
         },
 
         {
@@ -614,13 +578,13 @@ const EBDashboard = () => {
 
                 <header className="eb-topbar" style={styles.topbar}>
                     <div className="eb-brand">
-                        <div><img src="/src/images/Votara.png" alt="eb-brand-mark" className="eb-brand-mark"/></div>
+                        <div ><img src="/src/images/Votara.png" alt="eb-brand-mark" className="eb-brand-mark" /></div>
                         <div className="eb-brand-name">Votara</div>
                     </div>
 
                     <nav className="eb-top-nav" aria-label="Electoral Board navigation">
                         {menuItems
-                            .filter((item) => !["partyLists", "monitoring", "results", "lateEnrollees"].includes(item.id))
+                            .filter((item) => !["partyLists", "monitoring", "results"].includes(item.id))
                             .map((item) => (
                                 <button
                                     key={item.id}
@@ -638,8 +602,8 @@ const EBDashboard = () => {
                             <span className="eb-duty-dot" />
                             On duty
                         </div>
-                        <button type="button" aria-label="Notifications">
-                            <img src="/src/images/bell.png" alt="eb-icon-button" className="eb-icon-button"  />
+                        <button type="button" className="eb-icon-button" aria-label="Notifications">
+                            <img src="/src/images/bell.png" alt="eb-icon-button" />
                         </button>
                         <div className="eb-profile-wrapper">
                             <button
@@ -906,11 +870,14 @@ const EBDashboard = () => {
                         LATE ENROLLEES
                     ================================================= */}
 
-                    {activeSection === "lateEnrollees" && (
+                    {activeSection ===
+                        "lateEnrollees" && (
+
                         <LateEnrolleeManagement
-                        onNavigate={handleNavigation}
+                            onNavigate={handleNavigation}
                         />
-                        )}
+
+                    )}
 
 
                     {/* =================================================
@@ -939,8 +906,25 @@ const EBDashboard = () => {
                     ================================================= */}
 
                         {activeSection === "election" && (
-                            <ElectionManagement />
+                            <ElectionManagement
+                                onCreateElection={() =>
+                                    handleNavigation("createElection")
+                                }
+                            />
                         )}
+
+
+                    {/* =================================================
+                        CREATE ELECTION
+                    ================================================= */}
+
+                    {activeSection === "createElection" && (
+                        <CreateElection
+                            onBack={() =>
+                                handleNavigation("election")
+                            }
+                        />
+                    )}
 
 
                     {/* =================================================

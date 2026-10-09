@@ -12,6 +12,7 @@ import StudentRegistration from "./src/pages/auth/StudentRegistration";
 import RegistrationConfirmation from "./src/pages/auth/RegistrationConfirmation";
 import RegistrationSubmitted from "./src/pages/public/RegistrationSubmitted";
 import StudentLogin from "./src/pages/auth/StudentLogin";
+import ForgotPassword from "./src/pages/auth/ForgotPassword";
 import AccountSelection from "./src/pages/auth/AccountSelection";
 import ChangeTemporaryPassword from "./src/pages/auth/ChangeTemporaryPassword";
 import UploadProfilePicture from "./src/pages/auth/UploadProfilePicture";
@@ -35,10 +36,12 @@ import CandidateManagement from "./src/pages/admin/CandidateManagement";
 import Election from "./src/pages/admin/Election";
 
 import EBCandidateManagement from "./src/pages/electoralBoard/EBCandidateManagement";
+import ManagePartyList from "./src/pages/electoralBoard/ManagePartyList";
 import ElectionManagement from "./src/pages/electoralBoard/ElectionManagement";
 import CreateElection from "./src/pages/electoralBoard/CreateElection";
 
 import KioskVoting from "./src/pages/electoralBoard/KioskVoting";
+import ElectoralBoardAuditLogs from "./src/pages/electoralBoard/AuditLogs";
 import AdminAuditLogs from "./src/pages/admin/AdminAuditLogs";
 import Reports from "./src/pages/admin/Reports";
 import ElectionResults from "./src/pages/admin/ElectionResults";
@@ -190,7 +193,12 @@ const App = () => {
 
                 <Route
                     path="/login"
-                    element={<LoginPage />}
+                    element={<StudentLogin />}
+                />
+
+                <Route
+                    path="/forgot-password"
+                    element={<ForgotPassword />}
                 />
 
 
@@ -209,7 +217,7 @@ const App = () => {
                 
                 <Route
                     path="/admin-login"
-                    element={<StaffLogin />}
+                    element={<AccountSelection />}
                 />
 
                 {/* =================================================
@@ -243,6 +251,11 @@ const App = () => {
                 <Route
                     path="/kiosk-voting"
                     element={<KioskVoting />}
+                />
+
+                <Route
+                    path="/electoral-board/audit-logs"
+                    element={<ElectoralBoardAuditLogs />}
                 />
 
                 <Route
@@ -309,6 +322,11 @@ const App = () => {
                     element={
                         <EBCandidateManagement />
                     }
+                />
+
+                <Route
+                    path="/electoral-board/manage-party-list"
+                    element={<ManagePartyList />}
                 />
 
                 <Route

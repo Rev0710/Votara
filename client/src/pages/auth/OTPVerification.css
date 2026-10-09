@@ -1,337 +1,2005 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+
 
 * {
-    box-sizing: border-box;
+
+  box-sizing: border-box;
+
 }
+
+
+
+html,
+
+body,
+
+#root {
+
+  margin: 0;
+
+  min-height: 100%;
+
+}
+
+
+
+body {
+
+  font-family: "Poppins", sans-serif;
+
+}
+
+
+
+/* =========================================================
+
+ PAGE
+
+========================================================= */
+
+
 
 .otp-page {
-    min-height: 100vh;
-    background: #e9efff;
-    padding: 14px;
-    font-family: "Poppins", sans-serif;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+
+  min-height: 100vh;
+
+  padding: 14px;
+
+  background: #7d8bab;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  font-family: "Poppins", sans-serif;
+
 }
+
+
+
+/* =========================================================
+
+ MAIN CARD
+
+========================================================= */
+
+
 
 .otp-card {
-    width: 100%;
-    max-width: 1170px;
-    min-height: 660px;
-    background: #ffffff;
-    position: relative;
-    padding: 65px 78px;
-}
 
-/* =========================
-   LOGO
-========================= */
+  width: 100%;
 
-.otp-logo {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
+  max-width: 1180px;
 
-    text-decoration: none;
-    color: #0f4fff;
+  min-height: 700px;
 
-    font-size: 28px;
-    font-weight: 500;
-}
+  display: grid;
 
-.otp-logo-mark {
-    width: 28px;
-    height: 28px;
-    position: relative;
-    display: inline-block;
-}
+  grid-template-columns: 35% 65%;
 
-.otp-logo-mark .triangle {
-    position: absolute;
-    background: #0f4fff;
-}
+  overflow: hidden;
 
-.otp-logo-mark .triangle-top {
-    width: 13px;
-    height: 9px;
-    top: 2px;
-    left: 0;
-    clip-path: polygon(0 0, 100% 0, 50% 100%);
-}
+  position: relative;
 
-.otp-logo-mark .circle {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #0f4fff;
-    top: 1px;
-    right: 0;
-}
+  background: #ffffff;
 
-.otp-logo-mark .triangle-bottom {
-    width: 14px;
-    height: 10px;
-    bottom: 1px;
-    left: 7px;
-    clip-path: polygon(0 0, 100% 0, 50% 100%);
+  border-radius: 2px;
+
+  box-shadow: 0 18px 48px rgba(20, 38, 80, 0.16);
+
 }
 
 
-/* =========================
-   PROGRESS
-========================= */
 
-.otp-progress-wrapper {
-    width: 320px;
-    margin: 70px auto 0;
+/* =========================================================
+
+ LEFT PANEL
+
+========================================================= */
+
+
+
+.otp-left-panel {
+
+  position: relative;
+
+  min-height: 700px;
+
+  padding: 34px 42px;
+
+  overflow: hidden;
+
+  color: #ffffff;
+
+  background:
+
+    radial-gradient(
+
+      circle at 78% 88%,
+
+      rgba(83, 203, 255, 0.58),
+
+      transparent 36%
+
+    ),
+
+    linear-gradient(
+
+      155deg,
+
+      #1044ff 0%,
+
+      #1768ff 46%,
+
+      #4ec3ed 100%
+
+    );
+
 }
 
-.otp-progress {
-    width: 100%;
-    height: 3px;
-    background: #69c8eb;
-    position: relative;
+
+
+/* =========================================================
+
+ TOP LOGO
+
+========================================================= */
+
+
+
+.otp-left-panel .otp-logo {
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: flex-start;
+
+  width: auto;
+
+  height: auto;
+
+  margin: 0;
+
+  padding: 0;
+
+  border: 0;
+
+  outline: 0;
+
+  background: transparent;
+
+  cursor: pointer;
+
+  position: relative;
+
+  z-index: 10;
+
 }
 
-.otp-progress-active {
-    width: 50%;
-    height: 3px;
-    background: #0f4fff;
+
+
+.otp-left-panel .otp-logo img {
+
+  display: block;
+
+  width: 112px;
+
+  height: auto;
+
+  object-fit: contain;
+
+  filter: brightness(0) invert(1);
+
 }
 
-.otp-progress-wrapper span {
-    display: block;
-    text-align: right;
-    margin-top: 8px;
 
-    font-size: 11px;
-    color: #111;
+
+.otp-left-panel .otp-logo:disabled {
+
+  opacity: 1;
+
+  cursor: pointer;
+
 }
 
 
-/* =========================
-   CONTENT
-========================= */
+
+/* =========================================================
+
+ LEFT CONTENT
+
+========================================================= */
+
+
+
+.otp-left-content {
+
+  position: relative;
+
+  z-index: 5;
+
+  max-width: 300px;
+
+  margin-top: 92px;
+
+}
+
+
+
+.otp-left-kicker {
+
+  display: block;
+
+  margin-bottom: 18px;
+
+  color: rgba(255, 255, 255, 0.66);
+
+  font-size: 7px;
+
+  font-weight: 600;
+
+  letter-spacing: 2px;
+
+  line-height: 1.4;
+
+  text-transform: uppercase;
+
+}
+
+
+
+.otp-left-content h2 {
+
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: 26px;
+
+  font-weight: 600;
+
+  line-height: 1.14;
+
+  letter-spacing: -0.4px;
+
+}
+
+
+
+.otp-left-description {
+
+  max-width: 285px;
+
+  margin: 20px 0 0;
+
+  color: rgba(255, 255, 255, 0.8);
+
+  font-size: 10px;
+
+  line-height: 1.65;
+
+}
+
+
+
+/* =========================================================
+
+ STEPS
+
+========================================================= */
+
+
+
+.otp-step-list {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 12px;
+
+  margin-top: 34px;
+
+}
+
+
+
+.otp-step {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+
+  color: rgba(255, 255, 255, 0.52);
+
+  font-size: 8px;
+
+  line-height: 1.35;
+
+}
+
+
+
+.otp-step-number {
+
+  width: 20px;
+
+  flex: 0 0 20px;
+
+  color: rgba(255, 255, 255, 0.68);
+
+  font-size: 7px;
+
+  font-weight: 600;
+
+}
+
+
+
+.otp-step.active {
+
+  color: #ffffff;
+
+  font-weight: 600;
+
+}
+
+
+
+.otp-step.active .otp-step-number {
+
+  color: #ffffff;
+
+}
+
+
+
+/* =========================================================
+
+ ORBIT
+
+========================================================= */
+
+
+
+.otp-orbit {
+
+  position: absolute;
+
+  width: 190px;
+
+  height: 190px;
+
+  left: 50%;
+
+  bottom: 10px;
+
+  transform: translateX(-50%);
+
+  z-index: 2;
+
+  pointer-events: none;
+
+}
+
+
+
+.otp-orbit-ring {
+
+  position: absolute;
+
+  left: 50%;
+
+  top: 50%;
+
+  border: 1px solid rgba(255, 255, 255, 0.22);
+
+  border-radius: 50%;
+
+  transform: translate(-50%, -50%);
+
+}
+
+
+
+.otp-orbit-ring.ring-one {
+
+  width: 70px;
+
+  height: 70px;
+
+}
+
+
+
+.otp-orbit-ring.ring-two {
+
+  width: 125px;
+
+  height: 125px;
+
+}
+
+
+
+.otp-orbit-ring.ring-three {
+
+  width: 178px;
+
+  height: 178px;
+
+}
+
+
+
+/* =========================================================
+
+ ORBIT CORE
+
+========================================================= */
+
+
+
+.otp-orbit-core {
+
+  position: absolute;
+
+  left: 50%;
+
+  top: 50%;
+
+  width: 56px;
+
+  height: 56px;
+
+  transform: translate(-50%, -50%);
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border: 1px solid rgba(255, 255, 255, 0.16);
+
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.12);
+
+  box-shadow:
+
+    0 0 0 8px rgba(255, 255, 255, 0.035),
+
+    0 0 28px rgba(255, 255, 255, 0.1);
+
+}
+
+
+
+.otp-orbit-core img {
+
+  display: block;
+
+  width: 30px;
+
+  height: 30px;
+
+  object-fit: contain;
+
+  filter: brightness(0) invert(1);
+
+}
+
+
+
+/* =========================================================
+
+ ORBIT ICONS
+
+========================================================= */
+
+
+
+.otp-orbit-dot {
+
+  position: absolute;
+
+  left: 50%;
+
+  top: 50%;
+
+  width: 22px;
+
+  height: 22px;
+
+  margin-left: -11px;
+
+  margin-top: -11px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.84);
+
+  color: #3478ed;
+
+  font-size: 9px;
+
+  font-weight: 700;
+
+  line-height: 1;
+
+  box-shadow: 0 4px 12px rgba(0, 35, 120, 0.14);
+
+}
+
+
+
+.otp-orbit-dot.orbit-check {
+
+  --orbit-radius: 88px;
+
+  animation: otpOrbitCheck 12s linear infinite;
+
+}
+
+
+
+.otp-orbit-dot.orbit-shield {
+
+  --orbit-radius: 66px;
+
+  animation: otpOrbitShield 15s linear infinite;
+
+}
+
+
+
+.otp-orbit-dot.orbit-user {
+
+  --orbit-radius: 45px;
+
+  animation: otpOrbitUser 10s linear infinite;
+
+}
+
+
+
+@keyframes otpOrbitCheck {
+
+  from {
+
+    transform: rotate(0deg) translateY(calc(-1 * var(--orbit-radius))) rotate(0deg);
+
+  }
+
+
+
+  to {
+
+    transform: rotate(360deg) translateY(calc(-1 * var(--orbit-radius))) rotate(-360deg);
+
+  }
+
+}
+
+
+
+@keyframes otpOrbitShield {
+
+  from {
+
+    transform: rotate(120deg) translateY(calc(-1 * var(--orbit-radius))) rotate(-120deg);
+
+  }
+
+
+
+  to {
+
+    transform: rotate(480deg) translateY(calc(-1 * var(--orbit-radius))) rotate(-480deg);
+
+  }
+
+}
+
+
+
+@keyframes otpOrbitUser {
+
+  from {
+
+    transform: rotate(230deg) translateY(calc(-1 * var(--orbit-radius))) rotate(-230deg);
+
+  }
+
+
+
+  to {
+
+    transform: rotate(590deg) translateY(calc(-1 * var(--orbit-radius))) rotate(-590deg);
+
+  }
+
+}
+
+
+
+/* =========================================================
+
+ RIGHT PANEL
+
+========================================================= */
+
+
+
+.otp-right-panel {
+
+  position: relative;
+
+  min-width: 0;
+
+  min-height: 700px;
+
+  padding: 34px 62px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  background-color: #ffffff;
+
+  background-image: radial-gradient(
+
+    #d9dfea 1px,
+
+    transparent 1px
+
+  );
+
+  background-position: 0 0;
+
+  background-size: 14px 14px;
+
+}
+
+
+
+/* =========================================================
+
+ OTP CARD
+
+========================================================= */
+
+
+
+.otp-content-card {
+
+  width: 100%;
+
+  max-width: 405px;
+
+  min-height: 410px;
+
+  padding: 34px 46px 32px;
+
+  background: rgba(255, 255, 255, 0.975);
+
+  border: 1px solid #edf0f6;
+
+  border-radius: 18px;
+
+  box-shadow: 0 12px 34px rgba(30, 55, 100, 0.07);
+
+}
+
+
 
 .otp-content {
-    width: 100%;
-    max-width: 650px;
-    margin: 68px auto 0;
-    text-align: center;
+
+  width: 100%;
+
+  max-width: none;
+
+  margin: 0;
+
+  text-align: left;
+
 }
+
+
+
+/* =========================================================
+
+ TOP BACK BUTTON
+
+========================================================= */
+
+
+
+.otp-back-top {
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 6px;
+
+  margin: 0 0 24px;
+
+  padding: 0;
+
+  border: 0;
+
+  outline: 0;
+
+  background: transparent;
+
+  color: #4c72d9;
+
+  font-family: "Poppins", sans-serif;
+
+  font-size: 8px;
+
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition:
+
+    color 0.2s ease,
+
+    transform 0.2s ease;
+
+}
+
+
+
+.otp-back-top:hover {
+
+  color: #174fd7;
+
+  transform: translateX(-2px);
+
+}
+
+
+
+.otp-back-top:disabled {
+
+  opacity: 0.5;
+
+  cursor: not-allowed;
+
+  transform: none;
+
+}
+
+
+
+.otp-back-arrow {
+
+  font-size: 13px;
+
+  line-height: 1;
+
+  font-weight: 400;
+
+}
+
+
+
+/* =========================================================
+
+ OTP HEADING
+
+========================================================= */
+
+
+
+.otp-content .otp-kicker {
+
+  display: block;
+
+  margin-bottom: 10px;
+
+  color: #1d62f5;
+
+  font-size: 7px;
+
+  font-weight: 700;
+
+  letter-spacing: 1.25px;
+
+  line-height: 1.4;
+
+  text-transform: uppercase;
+
+}
+
+
 
 .otp-content h1 {
-    margin: 0 0 35px;
 
-    font-size: 21px;
-    line-height: 1.45;
-    font-weight: 500;
-    color: #111;
-}
+  margin: 0 0 10px;
 
-.otp-content h1 span {
-    font-weight: 400;
-}
+  color: #111827;
 
+  font-size: 23px;
 
-/* =========================
-   OTP INPUTS
-========================= */
+  font-weight: 600;
 
-.otp-inputs {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    margin-bottom: 14px;
-}
+  line-height: 1.22;
 
-.otp-inputs input {
-    width: 58px;
-    height: 58px;
+  letter-spacing: -0.25px;
 
-    border: 1px solid #999;
-    border-radius: 9px;
-
-    outline: none;
-
-    text-align: center;
-
-    font-family: "Poppins", sans-serif;
-    font-size: 24px;
-    font-weight: 500;
-
-    color: #111;
-
-    background: #fff;
-
-    transition: 0.2s ease;
-}
-
-.otp-inputs input:focus {
-    border-color: #0f4fff;
-    box-shadow: 0 0 0 2px rgba(15, 79, 255, 0.12);
 }
 
 
-/* =========================
-   MESSAGES
-========================= */
 
-.otp-error {
-    margin: 10px 0;
+.otp-content p {
 
-    color: #ef3333;
-    font-size: 12px;
-}
+  margin: 5px 0;
 
-.otp-success {
-    margin: 10px 0;
+  color: #8a91a1;
 
-    color: #159447;
-    font-size: 12px;
+  font-size: 9px;
+
+  line-height: 1.6;
+
 }
 
 
-/* =========================
-   RESEND
-========================= */
+
+.otp-content strong {
+
+  display: inline;
+
+  margin: 0;
+
+  color: #252b36;
+
+  font-size: 10px;
+
+  font-weight: 600;
+
+}
+
+
+
+.otp-email-display {
+
+  margin-top: 7px;
+
+  color: #70798b;
+
+  font-size: 9px;
+
+}
+
+
+
+.otp-email-display strong {
+
+  color: #202735;
+
+}
+
+
+
+/* =========================================================
+
+ HIDE OLD PROGRESS
+
+========================================================= */
+
+
+
+.otp-progress-section,
+
+.otp-progress,
+
+.otp-progress-active {
+
+  display: none;
+
+}
+
+
+
+/* =========================================================
+
+ OTP INPUTS
+
+========================================================= */
+
+
+
+.otp-input-container {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: flex-start;
+
+  gap: 8px;
+
+  margin: 26px 0 16px;
+
+}
+
+
+
+.otp-input-container input {
+
+  width: 38px;
+
+  height: 40px;
+
+  padding: 0;
+
+  border: 1px solid #dfe4ed;
+
+  border-radius: 7px;
+
+  outline: none;
+
+  background: #ffffff;
+
+  color: #111827;
+
+  text-align: center;
+
+  font-family: "Poppins", sans-serif;
+
+  font-size: 15px;
+
+  font-weight: 500;
+
+  transition:
+
+    border-color 0.2s ease,
+
+    box-shadow 0.2s ease,
+
+    transform 0.2s ease;
+
+}
+
+
+
+.otp-input-container input:focus {
+
+  border-color: #2864ff;
+
+  box-shadow: 0 0 0 2px rgba(40, 100, 255, 0.1);
+
+  transform: translateY(-1px);
+
+}
+
+
+
+.otp-input-container input:disabled {
+
+  background: #f5f7fa;
+
+  cursor: not-allowed;
+
+}
+
+
+
+/* =========================================================
+
+ ACTION ROW
+
+========================================================= */
+
+
+
+.otp-action-row {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 15px;
+
+  flex-wrap: wrap;
+
+}
+
+
 
 .resend-button {
-    display: block;
 
-    margin: 15px auto 20px;
+  display: inline-block;
 
-    border: none;
-    background: transparent;
+  margin: 0;
 
-    color: #0f4fff;
+  padding: 0;
 
-    font-family: "Poppins", sans-serif;
-    font-size: 12px;
+  border: none;
 
-    cursor: pointer;
+  background: transparent;
+
+  color: #7695ed;
+
+  font-family: "Poppins", sans-serif;
+
+  font-size: 8px;
+
+  cursor: pointer;
+
+  transition: opacity 0.2s ease;
+
 }
+
+
+
+.resend-button:hover {
+
+  opacity: 0.7;
+
+}
+
+
 
 .resend-button.disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
+
+  opacity: 0.6;
+
+  cursor: not-allowed;
+
 }
 
 
-/* =========================
-   VERIFY BUTTON
-========================= */
 
 .verify-button {
-    width: 100%;
-    max-width: 545px;
 
-    height: 56px;
+  width: 116px;
 
-    border: none;
-    border-radius: 8px;
+  height: 34px;
 
-    background: #0f4fff;
-    color: #fff;
+  border: none;
 
-    font-family: "Poppins", sans-serif;
-    font-size: 15px;
-    font-weight: 600;
+  border-radius: 20px;
 
-    cursor: pointer;
+  background: #0f4fff;
 
-    transition: 0.2s ease;
+  color: #ffffff;
+
+  font-family: "Poppins", sans-serif;
+
+  font-size: 9px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  box-shadow: 0 7px 16px rgba(15, 79, 255, 0.17);
+
+  transition:
+
+    background 0.2s ease,
+
+    transform 0.2s ease,
+
+    opacity 0.2s ease;
+
 }
+
+
 
 .verify-button:hover {
-    background: #0642df;
+
+  background: #0642df;
+
+  transform: translateY(-1px);
+
 }
+
+
 
 .verify-button:disabled {
-    opacity: 0.65;
-    cursor: not-allowed;
+
+  opacity: 0.6;
+
+  cursor: not-allowed;
+
+  transform: none;
+
 }
 
 
-/* =========================
-   BACK
-========================= */
 
-.otp-back {
-    margin-top: 24px;
+/* =========================================================
 
-    border: none;
-    background: transparent;
+ MESSAGES
 
-    color: #0f4fff;
+========================================================= */
 
-    font-family: "Poppins", sans-serif;
-    font-size: 11px;
 
-    cursor: pointer;
+
+.otp-error {
+
+  margin: 10px 0;
+
+  padding: 8px 10px;
+
+  border-radius: 6px;
+
+  background: #fff1f1;
+
+  color: #dc3b3b;
+
+  font-size: 8px;
+
+  line-height: 1.5;
+
 }
 
 
-/* =========================
-   RESPONSIVE
-========================= */
+
+.otp-success {
+
+  margin: 10px 0;
+
+  padding: 8px 10px;
+
+  border-radius: 6px;
+
+  background: #effaf3;
+
+  color: #159447;
+
+  font-size: 8px;
+
+  line-height: 1.5;
+
+}
+
+
+
+/* =========================================================
+
+ RESPONSIVE TABLET
+
+========================================================= */
+
+
+
+@media (max-width: 900px) {
+
+  .otp-page {
+
+    padding: 12px;
+
+  }
+
+
+
+  .otp-card {
+
+    grid-template-columns: 38% 62%;
+
+    min-height: 650px;
+
+  }
+
+
+
+  .otp-left-panel {
+
+    min-height: 650px;
+
+    padding: 28px;
+
+  }
+
+
+
+  .otp-left-panel .otp-logo img {
+
+    width: 100px;
+
+  }
+
+
+
+  .otp-left-content {
+
+    margin-top: 68px;
+
+  }
+
+
+
+  .otp-left-content h2 {
+
+    font-size: 22px;
+
+  }
+
+
+
+  .otp-right-panel {
+
+    min-height: 650px;
+
+    padding: 28px;
+
+  }
+
+
+
+  .otp-content-card {
+
+    max-width: 360px;
+
+    padding: 30px 32px;
+
+  }
+
+
+
+  .otp-orbit {
+
+    width: 165px;
+
+    height: 165px;
+
+  }
+
+
+
+  .otp-orbit-ring.ring-three {
+
+    width: 155px;
+
+    height: 155px;
+
+  }
+
+
+
+  .otp-orbit-ring.ring-two {
+
+    width: 108px;
+
+    height: 108px;
+
+  }
+
+
+
+  .otp-orbit-dot.orbit-check {
+
+    --orbit-radius: 76px;
+
+  }
+
+
+
+  .otp-orbit-dot.orbit-shield {
+
+    --orbit-radius: 57px;
+
+  }
+
+
+
+  .otp-orbit-dot.orbit-user {
+
+    --orbit-radius: 38px;
+
+  }
+
+}
+
+
+
+/* =========================================================
+
+ MOBILE
+
+========================================================= */
+
+
 
 @media (max-width: 700px) {
 
-    .otp-page {
-        padding: 8px;
-    }
+  .otp-page {
 
-    .otp-card {
-        min-height: calc(100vh - 16px);
-        padding: 40px 25px;
-    }
+    min-height: 100vh;
 
-    .otp-logo {
-        font-size: 25px;
-    }
+    padding: 8px;
 
-    .otp-progress-wrapper {
-        width: 80%;
-        margin-top: 55px;
-    }
+    align-items: stretch;
 
-    .otp-content {
-        margin-top: 55px;
-    }
+  }
 
-    .otp-content h1 {
-        font-size: 18px;
-    }
 
-    .otp-inputs {
-        gap: 7px;
-    }
 
-    .otp-inputs input {
-        width: 45px;
-        height: 50px;
-        font-size: 20px;
-    }
+  .otp-card {
 
-    .verify-button {
-        max-width: 100%;
-    }
+    min-height: calc(100vh - 16px);
+
+    grid-template-columns: 1fr;
+
+    grid-template-rows: 300px 1fr;
+
+    border-radius: 8px;
+
+  }
+
+
+
+  .otp-left-panel {
+
+    min-height: 300px;
+
+    padding: 22px 25px;
+
+  }
+
+
+
+  .otp-left-panel .otp-logo img {
+
+    width: 92px;
+
+  }
+
+
+
+  .otp-left-content {
+
+    max-width: 230px;
+
+    margin-top: 40px;
+
+  }
+
+
+
+  .otp-left-content h2 {
+
+    font-size: 21px;
+
+  }
+
+
+
+  .otp-left-description {
+
+    max-width: 220px;
+
+    font-size: 9px;
+
+  }
+
+
+
+  .otp-step-list {
+
+    gap: 8px;
+
+    margin-top: 20px;
+
+  }
+
+
+
+  .otp-step {
+
+    font-size: 7px;
+
+  }
+
+
+
+  .otp-orbit {
+
+    width: 145px;
+
+    height: 145px;
+
+    right: 15px;
+
+    bottom: -28px;
+
+    left: auto;
+
+    transform: none;
+
+  }
+
+
+
+  .otp-orbit-ring.ring-three {
+
+    width: 140px;
+
+    height: 140px;
+
+  }
+
+
+
+  .otp-orbit-ring.ring-two {
+
+    width: 96px;
+
+    height: 96px;
+
+  }
+
+
+
+  .otp-orbit-ring.ring-one {
+
+    width: 60px;
+
+    height: 60px;
+
+  }
+
+
+
+  .otp-orbit-dot.orbit-check {
+
+    --orbit-radius: 70px;
+
+  }
+
+
+
+  .otp-orbit-dot.orbit-shield {
+
+    --orbit-radius: 53px;
+
+  }
+
+
+
+  .otp-orbit-dot.orbit-user {
+
+    --orbit-radius: 34px;
+
+  }
+
+
+
+  .otp-right-panel {
+
+    min-height: 480px;
+
+    padding: 24px 18px;
+
+  }
+
+
+
+  .otp-content-card {
+
+    max-width: 390px;
+
+    min-height: auto;
+
+    padding: 25px 24px 28px;
+
+  }
+
+
+
+  .otp-back-top {
+
+    margin-bottom: 20px;
+
+  }
+
+
+
+  .otp-content h1 {
+
+    font-size: 21px;
+
+  }
+
+
+
+  .otp-input-container {
+
+    justify-content: center;
+
+    gap: 7px;
+
+  }
+
+
+
+  .otp-action-row {
+
+    justify-content: center;
+
+  }
+
+
+
+  .otp-back-top {
+
+    font-size: 8px;
+
+  }
+
+
+
+  .verify-button {
+
+    width: 120px;
+
+  }
+
 }
+
+
+
+/* =========================================================
+
+ SMALL MOBILE
+
+========================================================= */
+
+
 
 @media (max-width: 400px) {
 
-    .otp-card {
-        padding: 30px 18px;
-    }
+  .otp-card {
 
-    .otp-inputs {
-        gap: 5px;
-    }
+    grid-template-rows: 275px 1fr;
 
-    .otp-inputs input {
-        width: 42px;
-        height: 48px;
-    }
+  }
+
+
+
+  .otp-left-panel {
+
+    min-height: 275px;
+
+    padding: 20px;
+
+  }
+
+
+
+  .otp-left-panel .otp-logo img {
+
+    width: 86px;
+
+  }
+
+
+
+  .otp-left-content {
+
+    margin-top: 32px;
+
+  }
+
+
+
+  .otp-left-content h2 {
+
+    font-size: 19px;
+
+  }
+
+
+
+  .otp-step-list {
+
+    margin-top: 15px;
+
+  }
+
+
+
+  .otp-orbit {
+
+    width: 125px;
+
+    height: 125px;
+
+    right: 5px;
+
+    bottom: -30px;
+
+  }
+
+
+
+  .otp-orbit-ring.ring-three {
+
+    width: 120px;
+
+    height: 120px;
+
+  }
+
+
+
+  .otp-orbit-ring.ring-two {
+
+    width: 82px;
+
+    height: 82px;
+
+  }
+
+
+
+  .otp-orbit-ring.ring-one {
+
+    width: 52px;
+
+    height: 52px;
+
+  }
+
+
+
+  .otp-orbit-core {
+
+    width: 43px;
+
+    height: 43px;
+
+  }
+
+
+
+  .otp-orbit-core img {
+
+    width: 24px;
+
+    height: 24px;
+
+  }
+
+
+
+  .otp-orbit-dot {
+
+    width: 19px;
+
+    height: 19px;
+
+    margin-left: -9.5px;
+
+    margin-top: -9.5px;
+
+    font-size: 8px;
+
+  }
+
+
+
+  .otp-orbit-dot.orbit-check {
+
+    --orbit-radius: 59px;
+
+  }
+
+
+
+  .otp-orbit-dot.orbit-shield {
+
+    --orbit-radius: 45px;
+
+  }
+
+
+
+  .otp-orbit-dot.orbit-user {
+
+    --orbit-radius: 29px;
+
+  }
+
+
+
+  .otp-content-card {
+
+    padding: 24px 18px;
+
+  }
+
+
+
+  .otp-input-container {
+
+    gap: 5px;
+
+  }
+
+
+
+  .otp-input-container input {
+
+    width: 34px;
+
+    height: 38px;
+
+  }
+
+}
+
+
+
+/* =========================================================
+
+ REDUCED MOTION
+
+========================================================= */
+
+
+
+@media (prefers-reduced-motion: reduce) {
+
+  .otp-orbit-dot {
+
+    animation: none;
+
+  }
+
+}
+
+/* =========================================================
+   DISCLAIMER MODAL - ADDITION ONLY
+   Existing OTP, VOTARA logo, orbit rings, icon positions,
+   orbit animations, and responsive rules above are unchanged.
+========================================================= */
+
+.otp-disclaimer-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(26, 42, 78, 0.68);
+    backdrop-filter: blur(3px);
+    overflow-y: auto;
+}
+
+.otp-disclaimer-modal {
+    width: min(920px, 100%);
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 24px 70px rgba(15, 31, 70, 0.3);
+}
+
+.otp-disclaimer-header {
+    position: relative;
+    min-height: 190px;
+    padding: 30px 48px 38px;
+    overflow: hidden;
+    color: #ffffff;
+    background:
+        radial-gradient(circle at 86% 8%, rgba(87, 209, 255, 0.62), transparent 34%),
+        linear-gradient(145deg, #1044ff 0%, #1768ff 52%, #4ec3ed 100%);
+}
+
+.otp-disclaimer-header-copy {
+    position: relative;
+    z-index: 2;
+    max-width: 560px;
+}
+
+.otp-disclaimer-header .otp-disclaimer-kicker {
+    display: block;
+    margin-bottom: 9px;
+    color: rgba(255, 255, 255, 0.68);
+    font-size: 7px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+}
+
+.otp-disclaimer-header h2 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 27px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.otp-disclaimer-header p {
+    margin: 8px 0 0;
+    max-width: 440px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 8px;
+    line-height: 1.6;
+}
+
+.otp-disclaimer-orbit {
+    position: absolute;
+    right: 42px;
+    top: 18px;
+    width: 150px;
+    height: 150px;
+    pointer-events: none;
+}
+
+.otp-disclaimer-ring {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.disclaimer-ring-one { width: 58px; height: 58px; }
+.disclaimer-ring-two { width: 98px; height: 98px; }
+.disclaimer-ring-three { width: 142px; height: 142px; }
+
+.otp-disclaimer-core {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.035), 0 0 28px rgba(255, 255, 255, 0.1);
+    transform: translate(-50%, -50%);
+}
+
+.otp-disclaimer-core img {
+    display: block;
+    width: 29px;
+    height: 29px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+}
+
+.otp-disclaimer-body { padding: 28px 42px 30px; }
+
+.otp-disclaimer-label {
+    display: block;
+    margin-bottom: 7px;
+    color: #1d62f5;
+    font-size: 7px;
+    font-weight: 700;
+    letter-spacing: 1.1px;
+}
+
+.otp-disclaimer-body h3 {
+    margin: 0;
+    color: #172033;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.otp-disclaimer-intro {
+    margin: 8px 0 16px;
+    color: #747d8e;
+    font-size: 8px;
+    line-height: 1.6;
+}
+
+.otp-disclaimer-list { display: flex; flex-direction: column; }
+
+.otp-disclaimer-item {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 10px;
+    padding: 10px 0;
+    border-top: 1px solid #edf0f6;
+}
+
+.otp-disclaimer-item:last-child { border-bottom: 1px solid #edf0f6; }
+
+.otp-disclaimer-number {
+    padding-top: 1px;
+    color: #2161ef;
+    font-size: 7px;
+    font-weight: 700;
+}
+
+.otp-disclaimer-item strong {
+    display: block;
+    margin-bottom: 3px;
+    color: #293140;
+    font-size: 8px;
+    font-weight: 700;
+}
+
+.otp-disclaimer-item p {
+    margin: 0;
+    color: #7c8595;
+    font-size: 7px;
+    line-height: 1.55;
+}
+
+.otp-disclaimer-confirmation {
+    margin: 14px 0 13px;
+    color: #424b5a;
+    font-size: 7px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.otp-disclaimer-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.otp-disclaimer-back,
+.otp-disclaimer-agree {
+    height: 34px;
+    border-radius: 18px;
+    font-family: "Poppins", sans-serif;
+    font-size: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+}
+
+.otp-disclaimer-back {
+    width: 100px;
+    border: 1px solid #dfe4ed;
+    background: #ffffff;
+    color: #4c5667;
+}
+
+.otp-disclaimer-agree {
+    width: 170px;
+    border: 1px solid #0f4fff;
+    background: #0f4fff;
+    color: #ffffff;
+    box-shadow: 0 7px 16px rgba(15, 79, 255, 0.17);
+}
+
+.otp-disclaimer-back:hover,
+.otp-disclaimer-agree:hover { transform: translateY(-1px); }
+.otp-disclaimer-agree:hover { background: #0642df; }
+
+@media (max-width: 700px) {
+    .otp-disclaimer-overlay { padding: 10px; }
+    .otp-disclaimer-modal { max-height: calc(100vh - 20px); }
+    .otp-disclaimer-header { min-height: 170px; padding: 24px 25px 38px; }
+    .otp-disclaimer-header h2 { font-size: 22px; }
+    .otp-disclaimer-orbit { right: -12px; top: 26px; transform: scale(0.78); }
+    .otp-disclaimer-body { padding: 24px 22px 25px; }
+    .otp-disclaimer-item { grid-template-columns: 24px 1fr; }
+    .otp-disclaimer-item p { font-size: 7px; }
+    .otp-disclaimer-actions { flex-direction: column-reverse; align-items: stretch; }
+    .otp-disclaimer-back,
+    .otp-disclaimer-agree { width: 100%; }
 }

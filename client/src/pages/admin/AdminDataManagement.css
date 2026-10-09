@@ -1951,3 +1951,47 @@ code {
         animation: none;
     }
 }
+
+/* ============================================================
+   FINAL SHARED HEADER / CONTENT ALIGNMENT FIX
+   ============================================================ */
+.votara-admin-topbar,
+.dm-topbar {
+    position: sticky !important;
+    top: 0 !important;
+    left: auto !important;
+    right: auto !important;
+    z-index: 1200 !important;
+    height: 78px !important;
+    min-height: 78px !important;
+    margin: 0 !important;
+}
+
+.dm-main {
+    margin-top: 0 !important;
+    padding-top: 32px !important;
+}
+
+@media (max-width: 900px) {
+    .votara-admin-topbar,
+    .dm-topbar {
+        height: 68px !important;
+        min-height: 68px !important;
+    }
+
+    .dm-main {
+        padding-top: 28px !important;
+    }
+}
+
+@media (max-width: 520px) {
+    .votara-admin-topbar,
+    .dm-topbar {
+        height: 64px !important;
+        min-height: 64px !important;
+    }
+
+    .dm-main {
+        padding-top: 24px !important;
+    }
+}

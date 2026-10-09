@@ -38,7 +38,7 @@ const DataManagement = () => {
     const storedAdmin = useMemo(() => {
         try {
             return JSON.parse(
-                localStorage.getItem("votaraStaffUser") || "null"
+                localStorage.getItem("votaraAdminUser") || "null"
             );
         } catch {
             return null;
@@ -54,8 +54,8 @@ const DataManagement = () => {
     };
 
     const handleAdminLogout = () => {
-        localStorage.removeItem("votaraStaffToken");
-        localStorage.removeItem("votaraStaffUser");
+        localStorage.removeItem("votaraAdminToken");
+        localStorage.removeItem("votaraAdminUser");
         navigate("/admin-login", { replace: true });
     };
 
@@ -85,7 +85,7 @@ const DataManagement = () => {
 
     const [selectedFile, setSelectedFile] = useState(null);
 
-    const token = localStorage.getItem("votaraStaffToken");
+    const token = localStorage.getItem("votaraAdminToken");
 
     const authConfig = {
         headers: {
@@ -158,10 +158,10 @@ const DataManagement = () => {
                 401
             ) {
                 localStorage.removeItem(
-                    "votaraStaffToken"
+                    "votaraAdminToken"
                 );
                 localStorage.removeItem(
-                    "votaraStaffUser"
+                    "votaraAdminUser"
                 );
 
                 navigate("/admin-login", {
