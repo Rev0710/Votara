@@ -1,16 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import "./StudentDashboard.css";
 import Profile from "./Profile";
-
-// Import sidebar assets through Vite so they work in development and production.
-import dashboardIcon from "../../images/home.png";
-import dashboardActiveIcon from "../../images/homealt.png";
-import voteIcon from "../../images/Results.png";
-import candidatesIcon from "../../images/Candidates.png";
-import guidelinesIcon from "../../images/guidelinesalt.png";
-import settingsIcon from "../../images/settingalt.png";
-import logoutIcon from "../../images/logoutalt.png";
-import votaraLogo from "../../images/Votara.png";
 import {
     getPartyListsForElection,
     getPartyListCandidates,
@@ -40,13 +30,21 @@ import {
 // LOGO
 // =====================================================
 
-const votaraLogoSrc = votaraLogo;
+const votaraLogoSrc = "/src/images/Votara.png";
 
 // =====================================================
 // SIDEBAR ICONS
 // =====================================================
 
+import dashboardIcon from "/src/images/homealt.png";
+import voteIcon from "/src/images/votealt.png";
+import guidelinesIcon from "/src/images/guidelinesalt.png";
+import settingsIcon from "/src/images/settingalt.png";
 
+import dashboardActiveIcon from "/src/images/home.png";
+import voteActiveIcon from "/src/images/review.png";
+import guidelinesActiveIcon from "/src/images/guidelines.png";
+import settingsActiveIcon from "/src/images/setting.png";
 
 // =====================================================
 // HELPERS
@@ -174,14 +172,20 @@ const getProfilePictureValue = (studentData) => {
         studentData.profilePictureUrl ||
         studentData.profile_picture_url ||
         studentData.profile_picture ||
+        studentData.profilePhoto ||
         studentData.profilePhotoUrl ||
+        studentData.profile_photo ||
         studentData.profile_photo_url ||
         studentData.profilePhotoStoragePath ||
         studentData.profile_photo_storage_path ||
+        studentData.profileImage ||
+        studentData.profile_image ||
         studentData.avatar ||
         studentData.avatar_url ||
         studentData.photo ||
         studentData.photo_url ||
+        studentData.imageUrl ||
+        studentData.image_url ||
         ""
     );
 };
@@ -282,119 +286,104 @@ useEffect(() => {
     // =================================================
 
     useEffect(() => {
-        const fetchStudent = async () => {
-            try {
-                const token = localStorage.getItem("votaraToken");
+        let mounted = true;
 
-                if (!token) {
+        const readStoredStudent = () => {
+            try {
+                const stored = localStorage.getItem("votaraStudent");
+                return stored ? JSON.parse(stored) : null;
+            } catch (storageError) {
+                console.warn("Unable to read stored student profile:", storageError);
+                return null;
+            }
+        };
+
+        const mergeStudentData = (...records) => {
+            const merged = {};
+            records.forEach((record) => {
+                if (!record || typeof record !== "object") return;
+                Object.entries(record).forEach(([key, value]) => {
+                    // Keep valid cached values if the API returns empty fields.
+                    if (value !== undefined && value !== null && value !== "") {
+                        merged[key] = value;
+                    }
+                });
+            });
+            return merged;
+        };
+
+        const fetchStudent = async () => {
+            const token = localStorage.getItem("votaraToken");
+
+            if (!token) {
+                if (mounted) {
                     setStudent(null);
-                    return;
+                    setLoading(false);
+                }
+                return;
+            }
+
+            // Render the saved profile immediately while fresh API data loads.
+            let currentStudent = readStoredStudent();
+            if (currentStudent && mounted) setStudent(currentStudent);
+
+            try {
+                const results = await Promise.allSettled([
+                    fetch(`${API_BASE_URL}/api/auth/me`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }).then(async (response) => {
+                        const data = await response.json().catch(() => ({}));
+                        if (!response.ok) {
+                            throw new Error(data?.message || `Profile request failed (${response.status})`);
+                        }
+                        return data?.student || data?.data?.student || null;
+                    }),
+                    getStudentProfile().then((response) => {
+                        if (response?.success && response?.student) return response.student;
+                        if (response?.data?.student) return response.data.student;
+                        return null;
+                    }),
+                ]);
+
+                const authStudent = results[0].status === "fulfilled" ? results[0].value : null;
+                const profileStudent = results[1].status === "fulfilled" ? results[1].value : null;
+
+                if (results[0].status === "rejected") {
+                    console.warn("Unable to refresh student authentication profile:", results[0].reason);
+                }
+                if (results[1].status === "rejected") {
+                    console.warn("Unable to refresh student profile/photo:", results[1].reason);
                 }
 
-                const response = await fetch(
-                    `${API_BASE_URL}/api/auth/me`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
+                const refreshedStudent = mergeStudentData(
+                    currentStudent,
+                    authStudent,
+                    profileStudent
                 );
 
-                const data = await response.json();
-
-                let storedStudent = null;
-
-                try {
-                    const stored =
-                        localStorage.getItem("votaraStudent");
-
-                    if (stored) {
-                        storedStudent = JSON.parse(stored);
-                    }
-                } catch (storageError) {
-                    console.warn(
-                        "Unable to read stored student profile:",
-                        storageError
-                    );
-                }
-
-                if (data.success && data.student) {
-
-                    let mergedStudent = {
-                        ...(storedStudent || {}),
-                        ...data.student,
-                    };
-
-                    /*
-                     * Always refresh the profile endpoint. It returns a signed
-                     * URL for the private student-verification image, while
-                     * /auth/me and localStorage may contain only the storage path.
-                     */
+                if (Object.keys(refreshedStudent).length > 0 && mounted) {
+                    currentStudent = refreshedStudent;
+                    setStudent(refreshedStudent);
                     try {
-                        const profileResponse = await getStudentProfile();
-
-                        if (
-                            profileResponse?.success &&
-                            profileResponse?.student
-                        ) {
-                            mergedStudent = {
-                                ...mergedStudent,
-                                ...profileResponse.student,
-                            };
-                        }
-                    } catch (profileError) {
-                        console.warn(
-                            "Unable to refresh saved student profile:",
-                            profileError
-                        );
+                        localStorage.setItem("votaraStudent", JSON.stringify(refreshedStudent));
+                    } catch (storageError) {
+                        console.warn("Unable to cache refreshed student profile:", storageError);
                     }
-
-                    setStudent(mergedStudent);
-
-                    // Keep the newest profile data available to the
-                    // rest of the student application.
-                    localStorage.setItem(
-                        "votaraStudent",
-                        JSON.stringify(mergedStudent)
-                    );
-
-                } else if (storedStudent) {
-
-                    let restoredStudent =
-                        storedStudent;
-
-                    try {
-                        const profileResponse = await getStudentProfile();
-
-                        if (
-                            profileResponse?.success &&
-                            profileResponse?.student
-                        ) {
-                            restoredStudent = {
-                                ...restoredStudent,
-                                ...profileResponse.student,
-                            };
-                        }
-                    } catch (profileError) {
-                        console.warn(
-                            "Unable to restore saved student profile:",
-                            profileError
-                        );
-                    }
-
-                    setStudent(restoredStudent);
                 }
             } catch (error) {
-                console.error(
-                    "Unable to load student:",
-                    error
-                );
+                console.error("Unable to refresh student profile:", error);
+                // Do not replace a previously saved photo/profile with initials
+                // just because the server is temporarily unavailable.
+                if (currentStudent && mounted) setStudent(currentStudent);
             } finally {
-                setLoading(false);
+                if (mounted) setLoading(false);
             }
         };
 
         fetchStudent();
+        return () => {
+            mounted = false;
+        };
     }, []);
 
     // =================================================
@@ -634,11 +623,7 @@ useEffect(() => {
 
     const studentYearLevel =
         normalizeYearLevel(
-            student?.yearLevel ??
-            student?.year_level ??
-            student?.yearLevelName ??
-            student?.year_level_name ??
-            student?.year
+            student?.yearLevel
         );
 
     const studentEligible =
@@ -685,38 +670,38 @@ const sidebarItems = [
     {
         id: "dashboard",
         label: "Dashboard",
-        icon: dashboardIcon,
-        activeIcon: dashboardActiveIcon,
+        icon: "/src/images/home.png",
+        activeIcon: "/src/images/homealt.png",
     },
     {
         id: "vote",
         label: "Vote",
-        icon: voteIcon,
-        activeIcon: voteIcon,
+        icon: "/src/images/Results.png",
+        activeIcon: "/src/images/Results.png",
     },
     {
         id: "candidates",
         label: "Candidates",
-        icon: candidatesIcon,
-        activeIcon: candidatesIcon,
+        icon: "/src/images/Candidates.png",
+        activeIcon: "/src/images/Candidates.png",
     },
     {
         id: "results",
         label: "Results",
-        icon: voteIcon,
-        activeIcon: voteIcon,
+        icon: "/src/images/Results.png",
+        activeIcon: "/src/images/Results.png",
     },
     {
         id: "guidelines",
         label: "Voters Guidelines",
-        icon: guidelinesIcon,
-        activeIcon: guidelinesIcon,
+        icon: "/src/images/guidelinesalt.png",
+        activeIcon: "/src/images/guidelinesalt.png",
     },
     {
         id: "settings",
         label: "Settings",
-        icon: settingsIcon,
-        activeIcon: settingsIcon,
+        icon: "/src/images/settingalt.png",
+        activeIcon: "/src/images/settingalt.png",
     },
 ];
 
@@ -2801,7 +2786,7 @@ const resultsAreVisible =
                             }
                         >
                             <img
-                                src={logoutIcon}
+                                src="/src/images/logoutalt.png"
                                 alt="Log out"
                                 className="logout-image"
                             />
