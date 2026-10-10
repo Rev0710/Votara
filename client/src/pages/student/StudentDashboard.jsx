@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import "./StudentDashboard.css";
 import Profile from "./Profile";
+import {
+    getPartyListsForElection,
+    getPartyListCandidates,
+} from "../../services/partyListService";
 
 import {
     getActiveElection,
@@ -16,8 +20,10 @@ import {
     checkVoteStatus,
 } from "../../services/votingService";
 
+
 import {
     getStudentProfile,
+    getPublishedStudentResults,
 } from "../../services/studentService";
 
 // =====================================================
@@ -163,9 +169,13 @@ const getProfilePictureValue = (studentData) => {
 
     return (
         studentData.profilePicture ||
-        studentData.profile_picture ||
-        studentData.profile_picture_url ||
         studentData.profilePictureUrl ||
+        studentData.profile_picture_url ||
+        studentData.profile_picture ||
+        studentData.profilePhotoUrl ||
+        studentData.profile_photo_url ||
+        studentData.profilePhotoStoragePath ||
+        studentData.profile_photo_storage_path ||
         studentData.avatar ||
         studentData.avatar_url ||
         studentData.photo ||
@@ -202,8 +212,36 @@ function StudentDashboard() {
     // GENERAL DASHBOARD STATE
     // =================================================
 
-    const [sidebarOpen, setSidebarOpen] = useState(true);
+const [partyLists, setPartyLists] = useState([]);
+const [partyListsLoading, setPartyListsLoading] = useState(false);
+const [partyListsError, setPartyListsError] = useState("");
+const [studentResults, setStudentResults] = useState(null);
+const [resultsLoading, setResultsLoading] = useState(false);
+const [resultsError, setResultsError] = useState("");
+
+const [selectedPartyList, setSelectedPartyList] = useState(null);
+const [partyRoster, setPartyRoster] = useState([]);
+const [partyRosterLoading, setPartyRosterLoading] = useState(false);
+const [partyRosterError, setPartyRosterError] = useState("");
+
+
+    const [sidebarOpen, setSidebarOpen] = useState(
+    () => window.matchMedia("(min-width: 721px)").matches
+);
+
+useEffect(() => {
+    const handleResize = () => {
+        setSidebarOpen(window.matchMedia("(min-width: 721px)").matches);
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+        window.removeEventListener("resize", handleResize);
+    };
+}, []);
     const [activeMenu, setActiveMenu] = useState("dashboard");
+    const [activeSidebarItem, setActiveSidebarItem] = useState("dashboard");
 
     const [student, setStudent] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -227,6 +265,8 @@ function StudentDashboard() {
     // Stores selections as:
     // { positionId: candidateId }
     const [selectedVotes, setSelectedVotes] = useState({});
+    const [selectedCandidateDetails, setSelectedCandidateDetails] =
+    useState(null);
 
     const [electionLoading, setElectionLoading] = useState(true);
     const [electionError, setElectionError] = useState("");
@@ -284,43 +324,27 @@ function StudentDashboard() {
                     };
 
                     /*
-                     * The authentication endpoint may not return the
-                     * saved profile picture. When that happens, load
-                     * the existing student profile record so the
-                     * dashboard can immediately show the photo that
-                     * was already saved.
+                     * Always refresh the profile endpoint. It returns a signed
+                     * URL for the private student-verification image, while
+                     * /auth/me and localStorage may contain only the storage path.
                      */
-                    if (
-                        !getProfilePictureValue(
-                            mergedStudent
-                        )
-                    ) {
+                    try {
+                        const profileResponse = await getStudentProfile();
 
-                        try {
-
-                            const profileResponse =
-                                await getStudentProfile();
-
-                            if (
-                                profileResponse?.success &&
-                                profileResponse?.student
-                            ) {
-
-                                mergedStudent = {
-                                    ...mergedStudent,
-                                    ...profileResponse.student,
-                                };
-
-                            }
-
-                        } catch (profileError) {
-
-                            console.warn(
-                                "Unable to load saved student profile picture:",
-                                profileError
-                            );
-
+                        if (
+                            profileResponse?.success &&
+                            profileResponse?.student
+                        ) {
+                            mergedStudent = {
+                                ...mergedStudent,
+                                ...profileResponse.student,
+                            };
                         }
+                    } catch (profileError) {
+                        console.warn(
+                            "Unable to refresh saved student profile:",
+                            profileError
+                        );
                     }
 
                     setStudent(mergedStudent);
@@ -337,37 +361,23 @@ function StudentDashboard() {
                     let restoredStudent =
                         storedStudent;
 
-                    if (
-                        !getProfilePictureValue(
-                            restoredStudent
-                        )
-                    ) {
+                    try {
+                        const profileResponse = await getStudentProfile();
 
-                        try {
-
-                            const profileResponse =
-                                await getStudentProfile();
-
-                            if (
-                                profileResponse?.success &&
-                                profileResponse?.student
-                            ) {
-
-                                restoredStudent = {
-                                    ...restoredStudent,
-                                    ...profileResponse.student,
-                                };
-
-                            }
-
-                        } catch (profileError) {
-
-                            console.warn(
-                                "Unable to restore saved student profile picture:",
-                                profileError
-                            );
-
+                        if (
+                            profileResponse?.success &&
+                            profileResponse?.student
+                        ) {
+                            restoredStudent = {
+                                ...restoredStudent,
+                                ...profileResponse.student,
+                            };
                         }
+                    } catch (profileError) {
+                        console.warn(
+                            "Unable to restore saved student profile:",
+                            profileError
+                        );
                     }
 
                     setStudent(restoredStudent);
@@ -389,111 +399,192 @@ function StudentDashboard() {
     // LOAD ACTIVE ELECTION
     // =================================================
 
-    useEffect(() => {
-        let mounted = true;
+    
+useEffect(() => {
+    let mounted = true;
+    let requestInFlight = false;
+    let refreshTimer;
 
-        const loadElectionData = async () => {
-            try {
-                setElectionLoading(true);
-                setElectionError("");
+    const loadElectionData = async (silent = false) => {
+        if (requestInFlight) return;
 
-                const electionResponse =
-                    await getActiveElection();
+        requestInFlight = true;
 
-                if (!mounted) return;
+        if (!silent) {
+            setElectionLoading(true);
+        }
 
-                const activeElection =
-                    extractElection(electionResponse);
+        try {
+            setElectionError("");
 
-                if (!activeElection?.id) {
-                    setElection(null);
-                    setPositions([]);
-                    setCandidates([]);
-                    setHasVoted(false);
-                    return;
-                }
+            const electionResponse = await getActiveElection();
 
-                setElection(activeElection);
+            if (!mounted) return;
 
-                const [
-                    configurationResponse,
-                    candidateResponse,
-                ] = await Promise.all([
-                    getElectionConfiguration(
-                        activeElection.id
-                    ),
-                    getApprovedCandidatesForElection(
-                        activeElection.id
-                    ),
-                ]);
+            const activeElection = extractElection(electionResponse);
 
-                if (!mounted) return;
-
-                setPositions(
-                    extractArray(
-                        configurationResponse,
-                        "positions"
-                    )
-                );
-
-                setCandidates(
-                    extractArray(
-                        candidateResponse,
-                        "candidates"
-                    )
-                );
-
-                // Check whether this student already voted.
-                try {
-                    const voteStatus =
-                        await checkVoteStatus(
-                            activeElection.id
-                        );
-
-                    if (!mounted) return;
-
-                    setHasVoted(
-                        Boolean(
-                            voteStatus?.hasVoted ??
-                            voteStatus?.data?.hasVoted
-                        )
-                    );
-                } catch (statusError) {
-                    console.warn(
-                        "Unable to check vote status:",
-                        statusError
-                    );
-                }
-            } catch (error) {
-                console.error(
-                    "Unable to load election data:",
-                    error
-                );
-
-                if (!mounted) return;
-
+            if (!activeElection?.id) {
                 setElection(null);
                 setPositions([]);
                 setCandidates([]);
+                setHasVoted(false);
+                return;
+            }
 
-                setElectionError(
-                    error?.response?.data?.message ||
-                    error?.message ||
-                    "Unable to load the current election."
+            setElection(activeElection);
+
+            const [
+                configurationResponse,
+                candidateResponse,
+            ] = await Promise.all([
+                getElectionConfiguration(activeElection.id),
+                getApprovedCandidatesForElection(activeElection.id),
+            ]);
+
+            if (!mounted) return;
+
+            setPositions(
+                extractArray(configurationResponse, "positions")
+            );
+
+            setCandidates(
+                extractArray(candidateResponse, "candidates")
+            );
+
+            try {
+                const voteStatus = await checkVoteStatus(
+                    activeElection.id
                 );
-            } finally {
-                if (mounted) {
-                    setElectionLoading(false);
+
+                if (!mounted) return;
+
+                setHasVoted(
+                    Boolean(
+                        voteStatus?.hasVoted ??
+                        voteStatus?.data?.hasVoted
+                    )
+                );
+            } catch (statusError) {
+                console.warn(
+                    "Unable to check vote status:",
+                    statusError
+                );
+            }
+        } catch (error) {
+            if (!mounted) return;
+
+            // No active election is a normal state.
+            if (error?.response?.status === 404) {
+                setElection(null);
+                setPositions([]);
+                setCandidates([]);
+                setHasVoted(false);
+                setElectionError("");
+            } else {
+                console.error(
+                    "Unable to refresh election data:",
+                    error
+                );
+
+                // Keep previously loaded data during temporary
+                // network failures instead of blanking the dashboard.
+                if (!silent) {
+                    setElectionError(
+                        error?.response?.data?.message ||
+                        error?.message ||
+                        "Unable to load the current election."
+                    );
                 }
             }
-        };
+        } finally {
+            requestInFlight = false;
 
-        loadElectionData();
+            if (mounted && !silent) {
+                setElectionLoading(false);
+            }
+        }
+    };
 
-        return () => {
-            mounted = false;
-        };
-    }, []);
+    const refreshElection = () => {
+        if (document.visibilityState === "visible") {
+            loadElectionData(true);
+        }
+    };
+
+    // Load immediately when the dashboard opens.
+    loadElectionData(false);
+
+    // Check for EB election changes every 15 seconds.
+    refreshTimer = window.setInterval(() => {
+        refreshElection();
+    }, 15000);
+
+    // Refresh immediately when the student returns to this tab.
+    document.addEventListener("visibilitychange", refreshElection);
+
+    return () => {
+        mounted = false;
+        window.clearInterval(refreshTimer);
+        document.removeEventListener(
+            "visibilitychange",
+            refreshElection
+        );
+    };
+}, []);
+
+// =================================================
+// LOAD EB-APPROVED PARTY LISTS FOR THE ACTIVE ELECTION
+// =================================================
+
+useEffect(() => {
+    let cancelled = false;
+
+    const loadPartyLists = async () => {
+        if (!election?.id) {
+            setPartyLists([]);
+            return;
+        }
+
+        setPartyListsLoading(true);
+        setPartyListsError("");
+
+        try {
+            const response = await getPartyListsForElection(election.id);
+
+            const rows = Array.isArray(response?.data)
+                ? response.data
+                : [];
+
+            const approvedLists = rows.filter(
+                (party) =>
+                    String(party.approval_status || "").toLowerCase() === "approved" &&
+                    party.is_active === true
+            );
+
+            if (!cancelled) {
+                setPartyLists(approvedLists);
+            }
+        } catch (error) {
+            if (!cancelled) {
+                setPartyLists([]);
+                setPartyListsError(
+                    error?.response?.data?.message ||
+                    "Unable to load approved party lists."
+                );
+            }
+        } finally {
+            if (!cancelled) {
+                setPartyListsLoading(false);
+            }
+        }
+    };
+
+    loadPartyLists();
+
+    return () => {
+        cancelled = true;
+    };
+}, [election?.id]);
 
     // =================================================
     // STUDENT INFORMATION
@@ -513,22 +604,27 @@ function StudentDashboard() {
         .slice(0, 2)
         .toUpperCase();
 
-    const profilePictureValue =
-        getProfilePictureValue(student);
+            
+        const profilePictureValue = getProfilePictureValue(student);
 
-    const resolvedProfilePicture =
-        resolveImageUrl(profilePictureValue);
+        const resolvedProfilePicture = resolveImageUrl(profilePictureValue);
 
-    const profilePicture =
-        resolvedProfilePicture &&
-        !resolvedProfilePicture.startsWith("data:") &&
-        !resolvedProfilePicture.startsWith("blob:")
-            ? `${resolvedProfilePicture}${
-                resolvedProfilePicture.includes("?")
-                    ? "&"
-                    : "?"
-            }v=${profileImageVersion}`
-            : resolvedProfilePicture;
+        const isEmbeddedImage =
+            resolvedProfilePicture.startsWith("data:image/") ||
+            resolvedProfilePicture.startsWith("blob:");
+
+        const isSignedStorageUrl =
+            resolvedProfilePicture.includes("/storage/v1/object/sign/");
+
+        const profilePicture =
+            resolvedProfilePicture &&
+            !isEmbeddedImage &&
+            !isSignedStorageUrl
+                ? `${resolvedProfilePicture}${
+                    resolvedProfilePicture.includes("?") ? "&" : "?"
+                }v=${profileImageVersion}`
+                : resolvedProfilePicture;
+
 
     useEffect(() => {
         setProfileImageError(false);
@@ -578,32 +674,46 @@ function StudentDashboard() {
     // SIDEBAR ITEMS
     // =================================================
 
-    const sidebarItems = [
-        {
-            id: "dashboard",
-            label: "Dashboard",
-            icon: dashboardIcon,
-            activeIcon: dashboardActiveIcon,
-        },
-        {
-            id: "vote",
-            label: "Vote",
-            icon: voteIcon,
-            activeIcon: voteActiveIcon,
-        },
-        {
-            id: "guidelines",
-            label: "VOTERS GUIDELINES",
-            icon: guidelinesIcon,
-            activeIcon: guidelinesActiveIcon,
-        },
-        {
-            id: "settings",
-            label: "Settings",
-            icon: settingsIcon,
-            activeIcon: settingsActiveIcon,
-        },
-    ];
+    
+const sidebarItems = [
+    {
+        id: "dashboard",
+        label: "Dashboard",
+        icon: "/src/images/home.png",
+        activeIcon: "/src/images/homealt.png",
+    },
+    {
+        id: "vote",
+        label: "Vote",
+        icon: "/src/images/Results.png",
+        activeIcon: "/src/images/Results.png",
+    },
+    {
+        id: "candidates",
+        label: "Candidates",
+        icon: "/src/images/Candidates.png",
+        activeIcon: "/src/images/Candidates.png",
+    },
+    {
+        id: "results",
+        label: "Results",
+        icon: "/src/images/Results.png",
+        activeIcon: "/src/images/Results.png",
+    },
+    {
+        id: "guidelines",
+        label: "Voters Guidelines",
+        icon: "/src/images/guidelinesalt.png",
+        activeIcon: "/src/images/guidelinesalt.png",
+    },
+    {
+        id: "settings",
+        label: "Settings",
+        icon: "/src/images/settingalt.png",
+        activeIcon: "/src/images/settingalt.png",
+    },
+];
+
 
     // =================================================
     // ELIGIBLE POSITIONS
@@ -708,16 +818,57 @@ const candidatesByPosition = useMemo(() => {
     // MENU CHANGE
     // =================================================
 
-    const handleMenuClick = (id) => {
-        if (id === activeMenu) return;
+        
+const handleMenuClick = (id) => {
+    setActiveSidebarItem(id);
+    setActiveMenu(id);
 
-        setActiveMenu(id);
+    if (window.matchMedia("(max-width: 720px)").matches) {
+        setSidebarOpen(false);
+    }
 
-        window.scrollTo({
-            top: 0,
-            behavior: "smooth",
-        });
-    };
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+    });
+};
+
+
+// =================================================
+// OPEN PARTY LIST AND LOAD ITS CANDIDATES
+// =================================================
+
+const handleOpenPartyList = async (partyList) => {
+    setSelectedPartyList(partyList);
+    setPartyRoster([]);
+    setPartyRosterError("");
+    setPartyRosterLoading(true);
+
+    try {
+        const response = await getPartyListCandidates(partyList.id);
+
+        const rows = Array.isArray(response?.data)
+            ? response.data
+            : [];
+
+        const approvedCandidates = rows.filter(
+            (candidate) =>
+                candidate.is_active === true &&
+                String(candidate.approval_status || "").toLowerCase() === "approved" &&
+                String(candidate.election_id) === String(election?.id)
+        );
+
+        setPartyRoster(approvedCandidates);
+    } catch (error) {
+        setPartyRosterError(
+            error?.response?.data?.message ||
+            "Unable to load candidates for this party list."
+        );
+    } finally {
+        setPartyRosterLoading(false);
+    }
+};
+
 
     // =================================================
     // FAQ
@@ -725,19 +876,29 @@ const candidatesByPosition = useMemo(() => {
 
     const faqs = [
         {
-            question: "QUESTION 1",
+            question: "Where can I see historical results?",
             answer:
                 "You can participate in the election by selecting the Vote section from the sidebar.",
         },
         {
-            question: "QUESTION 2",
+            question: "Can I view results without logging in?",
             answer:
                 "Review the available candidates and select your preferred candidate before submitting your vote.",
         },
         {
-            question: "QUESTION 3",
+            question: "How is my vote protected?",
             answer:
                 "Once your vote is submitted and confirmed, your participation will be recorded.",
+        },
+        {
+            question: "Can I change my vote after submitting?",
+            answer:
+                "Once your vote is submitted and confirmed, you won't be able to change it.",
+        },
+         {
+            question: "Who can create an election?",
+            answer:
+                "Those Electoral Board.",
         },
     ];
 
@@ -782,14 +943,15 @@ const candidatesByPosition = useMemo(() => {
     // VIEW CANDIDATE DETAILS
     // =================================================
 
-    const handleViewDetails = (candidate) => {
+        const handleViewDetails = (candidate) => {
+            setSelectedCandidateDetails(candidate);
+
         const name =
             candidate?.full_name ||
             candidate?.fullName ||
             candidate?.name ||
             "Candidate";
 
-        alert(`Candidate: ${name}`);
     };
 
     // =================================================
@@ -951,37 +1113,34 @@ const candidatesByPosition = useMemo(() => {
     // PROFILE UPDATE
     // =================================================
 
-    const handleProfileUpdated = (updatedStudent) => {
+    const handleProfileUpdated = async (updatedStudent) => {
+        if (!updatedStudent) return;
 
-        if (!updatedStudent) {
-            return;
+        let mergedStudent = {
+            ...(student || {}),
+            ...updatedStudent,
+        };
+
+        // Refresh the private photo URL after upload; the upload response may
+        // contain only a storage path, which is not directly displayable.
+        try {
+            const profileResponse = await getStudentProfile();
+            if (profileResponse?.success && profileResponse?.student) {
+                mergedStudent = {
+                    ...mergedStudent,
+                    ...profileResponse.student,
+                };
+            }
+        } catch (profileError) {
+            console.warn("Unable to refresh the updated student profile:", profileError);
         }
 
-        setStudent((previous) => ({
-            ...(previous || {}),
-            ...updatedStudent,
-        }));
-
-        // Force the browser to refresh an unchanged image URL.
+        setStudent(mergedStudent);
         setProfileImageVersion(Date.now());
         setProfileImageError(false);
 
         try {
-            const storedStudent =
-                localStorage.getItem("votaraStudent");
-
-            const parsedStudent =
-                storedStudent
-                    ? JSON.parse(storedStudent)
-                    : {};
-
-            localStorage.setItem(
-                "votaraStudent",
-                JSON.stringify({
-                    ...parsedStudent,
-                    ...updatedStudent,
-                })
-            );
+            localStorage.setItem("votaraStudent", JSON.stringify(mergedStudent));
         } catch (storageError) {
             console.warn(
                 "Unable to synchronize updated profile with local storage:",
@@ -1141,23 +1300,133 @@ const candidatesByPosition = useMemo(() => {
                                     : "VOTE"}
                             </button>
 
+                            
                             <button
                                 type="button"
                                 className="candidate-details-button"
-                                onClick={() =>
-                                    handleViewDetails(
-                                        candidate
-                                    )
-                                }
+                                aria-label={`View campaign platform for ${candidateName}`}
+                                title="View campaign platform"
+                                onClick={() => handleViewDetails(candidate)}
                             >
-                                View Details
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    width="17"
+                                    height="17"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="1.8"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    aria-hidden="true"
+                                >
+                                    <path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5z" />
+                                </svg>
                             </button>
+
                         </div>
                     </article>
                 );
             }
         );
     };
+
+    // =================================================
+    // STUDENT RESULTS LOADER
+    // =================================================
+
+const loadStudentResults = async () => {
+    try {
+        setResultsLoading(true);
+        setResultsError("");
+
+        const response = await getPublishedStudentResults();
+
+        if (!response?.success) {
+            throw new Error(
+                response?.message ||
+                "Unable to load election results."
+            );
+        }
+
+        // Always replace the previous response, including when
+        // results are no longer published or the election is open.
+        setStudentResults(response);
+    } catch (error) {
+        setStudentResults(null);
+
+        setResultsError(
+            error?.response?.data?.message ||
+            error?.message ||
+            "Unable to load election results."
+        );
+    } finally {
+        setResultsLoading(false);
+    }
+};
+
+
+    // =================================================
+    // AUTO-REFRESH PUBLISHED RESULTS
+    // =================================================
+
+    useEffect(() => {
+    if (activeMenu !== "results") return;
+
+    let cancelled = false;
+    let requestInFlight = false;
+
+    const refreshResults = async () => {
+        if (
+            cancelled ||
+            requestInFlight ||
+            document.visibilityState !== "visible"
+        ) {
+            return;
+        }
+
+        requestInFlight = true;
+
+        try {
+            setResultsLoading(true);
+            setResultsError("");
+
+            const response = await getPublishedStudentResults();
+
+            if (!response?.success) {
+                throw new Error(
+                    response?.message || "Unable to load election results."
+                );
+            }
+
+            if (!cancelled) {
+                setStudentResults(response);
+            }
+        } catch (error) {
+            if (!cancelled) {
+                setResultsError(
+                    error?.response?.data?.message ||
+                    error?.message ||
+                    "Unable to load election results."
+                );
+            }
+        } finally {
+            requestInFlight = false;
+
+            if (!cancelled) {
+                setResultsLoading(false);
+            }
+        }
+    };
+
+    refreshResults();
+
+    const timer = window.setInterval(refreshResults, 15000);
+
+    return () => {
+        cancelled = true;
+        window.clearInterval(timer);
+    };
+}, [activeMenu]);
 
     // =================================================
     // LOADING SCREEN
@@ -1171,11 +1440,216 @@ const candidatesByPosition = useMemo(() => {
         );
     }
 
+
+
+
+
+
+
+
+
+
+
     // =================================================
     // MAIN PAGE CONTENT
     // =================================================
 
     const renderMainContent = () => {
+
+        
+    if (activeMenu === "results") {
+        const electionResults = studentResults?.positions || [];
+
+const resultStatus = String(
+    studentResults?.election?.status || ""
+).trim().toLowerCase();
+
+const electionFinished = [
+    "closed",
+    "completed",
+    "finished",
+].includes(resultStatus);
+
+const resultsAreVisible =
+    studentResults?.published === true &&
+    electionFinished;
+
+        return (
+            <main className="dashboard-main content-page-animation">
+                <section className="student-results-page">
+                    <div className="student-results-heading">
+                        <div>
+                            <h1>Election Results</h1>
+                            <p>
+                                Official results published by the Electoral Board.
+                            </p>
+                        </div>
+
+                        <button
+                            type="button"
+                            className="student-results-refresh"
+                            onClick={loadStudentResults}
+                            disabled={resultsLoading}
+                        >
+                            {resultsLoading ? "Refreshing..." : "Refresh"}
+                        </button>
+                    </div>
+
+                    {resultsError ? (
+                        <div className="student-results-message error">
+                            <h2>Unable to load results</h2>
+                            <p>{resultsError}</p>
+                            <button
+                                type="button"
+                                onClick={loadStudentResults}
+                            >
+                                Try Again
+                            </button>
+                        </div>
+                    ) : resultsLoading && !studentResults ? (
+                        <div className="student-results-message">
+                            Loading election results...
+                        </div>
+                    ) : !resultsAreVisible ? (
+                        
+
+<div className="student-results-message">
+    <h2>
+        {electionFinished
+            ? "Election Finished"
+            : "Election is still ongoing"}
+    </h2>
+
+    <p>
+        {electionFinished
+            ? "The election has finished. Please wait until the Electoral Board releases the official results."
+            : "Please wait until the election has finished and the Electoral Board releases the official results."}
+    </p>
+</div>
+
+
+                    ) : electionResults.length === 0 ? (
+                        <div className="student-results-message">
+                            <h2>No position results available</h2>
+                            <p>
+                                No position results were returned for this election.
+                            </p>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="student-results-election">
+                                <span>Published Election</span>
+                                <h2>
+                                    {studentResults.election?.title ||
+                                        "VOTARA Election"}
+                                </h2>
+                                {studentResults.election?.published_at && (
+                                    <p>
+                                        Published:{" "}
+                                        {new Date(
+                                            studentResults.election.published_at
+                                        ).toLocaleString()}
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="student-results-grid">
+                                {electionResults.map((position) => (
+                                    <article
+                                        className="student-result-card"
+                                        key={position.id}
+                                    >
+                                        <div className="student-result-card-heading">
+                                            <h2>{position.name}</h2>
+
+                                            <span
+                                                className={`student-result-status ${position.resultStatus}`}
+                                            >
+                                                {position.resultStatus === "winner"
+                                                    ? "Winner declared"
+                                                    : position.resultStatus === "tie"
+                                                    ? "Tied"
+                                                    : "No votes"}
+                                            </span>
+                                        </div>
+
+                                        {position.description && (
+                                            <p className="student-result-description">
+                                                {position.description}
+                                            </p>
+                                        )}
+
+                                        {position.resultStatus === "tie" && (
+                                            <p className="student-result-notice">
+                                                This position has tied candidates.
+                                            </p>
+                                        )}
+
+                                        {position.resultStatus === "no_votes" && (
+                                            <p className="student-result-notice">
+                                                No votes were recorded for this position.
+                                            </p>
+                                        )}
+
+                                        <div className="student-result-candidates">
+                                            {position.candidates.map((candidate) => (
+                                                <div
+                                                    className={`student-result-candidate ${
+                                                        position.winner?.id === candidate.id
+                                                            ? "is-winner"
+                                                            : ""
+                                                    }`}
+                                                    key={candidate.id}
+                                                >
+                                                    <div className="student-result-candidate-info">
+                                                        {candidate.profilePicture ? (
+                                                            <img
+                                                                src={candidate.profilePicture}
+                                                                alt={candidate.fullName}
+                                                            />
+                                                        ) : (
+                                                            <div className="student-result-avatar">
+                                                                {(candidate.fullName || "C")
+                                                                    .charAt(0)
+                                                                    .toUpperCase()}
+                                                            </div>
+                                                        )}
+
+                                                        <div>
+                                                            <strong>
+                                                                {candidate.fullName}
+                                                            </strong>
+                                                            <span>
+                                                                {candidate.partyListName ||
+                                                                    "Independent"}
+                                                            </span>
+                                                            {position.winner?.id === candidate.id && (
+                                                                <span className="student-result-winner-label">
+                                                                    Official winner
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    <strong className="student-result-votes">
+                                                        {candidate.voteCount}{" "}
+                                                        {candidate.voteCount === 1
+                                                            ? "vote"
+                                                            : "votes"}
+                                                    </strong>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </article>
+                                ))}
+                            </div>
+                        </>
+                    )}
+                </section>
+            </main>
+        );
+    }
+
         // =================================================
         // DASHBOARD
         // =================================================
@@ -1186,19 +1660,6 @@ const candidatesByPosition = useMemo(() => {
         ) {
             return (
                 <main className="dashboard-main content-page-animation">
-                    <section className="welcome-section">
-                        <h1>
-                            Hello{" "}
-                            <strong>
-                                {firstName}!
-                            </strong>
-                        </h1>
-
-                        <p>
-                            Welcome to Votara
-                        </p>
-                    </section>
-
                     <div className="dashboard-grid">
                         {/* LEFT COLUMN */}
 
@@ -1208,28 +1669,35 @@ const candidatesByPosition = useMemo(() => {
                                     electionStatusClass
                                 }`}
                             >
-                                <div className="election-card-header">
-                                    <div>
-                                        <h2>
-                                            {electionIsOpen
-                                                ? "Ongoing Elections"
-                                                : electionIsScheduled
-                                                ? "Upcoming Election"
-                                                : "Election Status"}
-                                        </h2>
+                                
+<div className="election-card-header">
+    <div className="election-card-heading">
+        <span className="election-eyebrow">
+            {electionIsOpen
+                ? "ACTIVE NOW"
+                : electionIsScheduled
+                ? "UPCOMING ELECTION"
+                : "ELECTION STATUS"}
+                        </span>
 
-                                        <h3>
-                                            {election?.title ||
-                                                "No election currently available"}
-                                        </h3>
-                                    </div>
+                        <h3>
+                            {election?.title || "PSITS Election"}
+                        </h3>
 
-                                    <span
-                                        className={`election-status-badge ${electionStatusClass}`}
-                                    >
-                                        {electionStatusLabel}
-                                    </span>
-                                </div>
+                        <p className="election-banner-subtitle">
+                            Your vote shapes the future of campus life.
+                            Review the candidates and cast your digital
+                            ballot before voting closes.
+                        </p>
+                    </div>
+
+                    <span
+                        className={`election-status-badge ${electionStatusClass}`}
+                    >
+                        {electionStatusLabel}
+                    </span>
+                </div>
+
 
                                 {election ? (
                                     <div className="election-card-meta">
@@ -1290,9 +1758,7 @@ const candidatesByPosition = useMemo(() => {
                                     type="button"
                                     className="vote-button"
                                     disabled={!studentCanVote}
-                                    onClick={() =>
-                                        handleMenuClick("vote")
-                                    }
+                                    onClick={() => handleMenuClick("vote")}
                                     title={
                                         hasVoted
                                             ? "You already voted in this election."
@@ -1305,79 +1771,44 @@ const candidatesByPosition = useMemo(() => {
                                 >
                                     {hasVoted
                                         ? "VOTE SUBMITTED"
-                                        : electionIsOpen &&
-                                          studentEligible
+                                        : electionIsOpen && studentEligible
                                         ? "Vote Now"
                                         : electionIsScheduled
                                         ? "NOT OPEN YET"
                                         : "VOTING CLOSED"}
                                 </button>
+
+                                <button
+                                    type="button"
+                                    className="view-candidates-button"
+                                    onClick={() => handleMenuClick("candidates")}
+                                >
+                                    View Candidates
+                                </button>
                             </section>
 
-                            <section className="results-card main-hover-card">
-                                <div className="results-header">
-                                    <h3>
-                                        Election Information
-                                    </h3>
+                            <section className="results-card live-results-card main-hover-card">
+                                <div className="results-header live-results-header">
+                                    <div>
+                                        <h3>Live result</h3>
+                                        <p>Election results overview</p>
+                                    </div>
+                                    <span className="live-results-badge">
+                                        <span className="live-results-dot" />
+                                        Awaiting data
+                                    </span>
                                 </div>
 
-                                <div className="position-title">
-                                    <h2>
-                                        {election?.title ||
-                                            "No active election"}
-                                    </h2>
-                                </div>
-
-                                <div className="chart">
-                                    <div className="chart-row">
-                                        <span className="candidate-name">
-                                            Election
-                                        </span>
-
-                                        <div className="bar-area">
-                                            <div
-                                                className="bar"
-                                                style={{
-                                                    width:
-                                                        election
-                                                            ? "100%"
-                                                            : "0%",
-                                                }}
-                                            />
-                                        </div>
-
-                                        <span
-                                            className={`vote-count status-text ${electionStatusClass}`}
-                                        >
-                                            {election
-                                                ? electionStatusLabel
-                                                : "Inactive"}
-                                        </span>
+                                <div className="live-results-empty-state">
+                                    <div className="live-results-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <rect x="5" y="5" width="38" height="38" rx="12" fill="#EEF4FF" />
+                                            <path d="M14 32V25M24 32V17M34 32V21" stroke="#2563EB" strokeWidth="4" strokeLinecap="round" />
+                                        </svg>
                                     </div>
-
-                                    <div className="chart-row">
-                                        <span className="candidate-name">
-                                            Your Status
-                                        </span>
-
-                                        <div className="bar-area">
-                                            <div
-                                                className="bar"
-                                                style={{
-                                                    width:
-                                                        hasVoted
-                                                            ? "100%"
-                                                            : "50%",
-                                                }}
-                                            />
-                                        </div>
-
-                                        <span className="vote-count">
-                                            {hasVoted
-                                                ? "Voted"
-                                                : "Not Voted"}
-                                        </span>
-                                    </div>
+                                    <h4>Election results will appear here</h4>
+                                    <p>Candidate standings and vote percentages will be displayed here when results are connected to the Electoral Board.</p>
+                                    <span className="live-results-note">Results are not available yet.</span>
                                 </div>
                             </section>
 
@@ -1402,10 +1833,13 @@ const candidatesByPosition = useMemo(() => {
                             </section>
 
                             <section className="faq-section">
-                                <h3>
-                                    FAQs
-                                </h3>
-
+                            <div className="faq-intro">
+                                <h3>FAQs</h3>
+                                <p>
+                                    Answer the questions voters ask before they
+                                    register, vote or check results.
+                                </p>
+                                </div>
                                 <div className="faq-list">
                                     {faqs.map(
                                         (
@@ -1605,6 +2039,11 @@ const candidatesByPosition = useMemo(() => {
                                             "Submit and confirm",
                                             "Get a confirmation once your vote is recorded",
                                         ],
+                                        [
+                                            "5",
+                                            "Waiting for election result",
+                                            "Results will appear after they become available",
+                                        ],
                                     ].map(
                                         (
                                             [
@@ -1617,18 +2056,20 @@ const candidatesByPosition = useMemo(() => {
                                             <div
                                                 className={`process-item ${
                                                     index ===
-                                                    3
-                                                        ? "last"
+                                                    4
+                                                        ? "last process-item-pending"
                                                         : ""
                                                 }`}
                                                 key={
                                                     number
                                                 }
                                             >
-                                                <div className="process-number">
-                                                    {
-                                                        number
-                                                    }
+                                                <div
+                                                    className={`process-number ${
+                                                        index === 4 ? "inactive" : ""
+                                                    }`}
+                                                >
+                                                    {number}
                                                 </div>
 
                                                 <div className="process-text">
@@ -1654,6 +2095,128 @@ const candidatesByPosition = useMemo(() => {
                 </main>
             );
         }
+
+
+        if (activeMenu === "candidates") {
+    return (
+        <main className="dashboard-main content-page-animation">
+            <section className="welcome-section">
+                <h1>
+                    Candidate Directory
+                </h1>
+                <p>
+                    Review the candidates, their positions,
+                    party lists, and campaign platforms.
+                </p>
+            </section>
+
+            {!election ? (
+                <section className="candidates-empty-state">
+                    <h2>No election available</h2>
+                    <p>
+                        Candidate information will appear when
+                        an election is available.
+                    </p>
+                </section>
+            ) : (
+                <>
+                    <section className="candidates-election-banner">
+                        <span>Current Election</span>
+                        <h2>
+                            {election.title || "VOTARA Election"}
+                        </h2>
+                        <p>
+                            {electionStatusLabel}
+                        </p>
+                    </section>
+
+                    {eligiblePositions.map((position) => {
+                        const positionCandidates =
+                            candidatesByPosition[position.id] || [];
+
+                        return (
+                            <section
+                                className="directory-position"
+                                key={position.id}
+                            >
+                                <div className="directory-position-heading">
+                                    <div>
+                                        <h2>{position.name}</h2>
+                                        <p>
+                                            {positionCandidates.length} candidate
+                                            {positionCandidates.length !== 1
+                                                ? "s"
+                                                : ""}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {positionCandidates.length === 0 ? (
+                                    <div className="candidates-empty-state">
+                                        No active candidates are listed
+                                        for this position yet.
+                                    </div>
+                                ) : (
+                                    <div className="directory-candidate-grid">
+                                        {positionCandidates.map((candidate) => (
+                                            <article
+                                                className="directory-candidate-card"
+                                                key={candidate.id}
+                                            >
+                                                <div className="directory-candidate-photo">
+                                                    {candidate.profile_picture ? (
+                                                        <img
+                                                            src={candidate.profile_picture}
+                                                            alt={candidate.full_name || "Candidate"}
+                                                        />
+                                                    ) : (
+                                                        <span>
+                                                            {(candidate.full_name || "C")
+                                                                .charAt(0)
+                                                                .toUpperCase()}
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                <div className="directory-candidate-info">
+                                                    <h3>
+                                                        {candidate.full_name ||
+                                                            candidate.fullName ||
+                                                            "Unnamed Candidate"}
+                                                    </h3>
+
+                                                    <span className="directory-position-badge">
+                                                        {position.name}
+                                                    </span>
+
+                                                    <p className="directory-party-name">
+                                                        Party List:{" "}
+                                                        {candidate.party_list?.name ||
+                                                            candidate.partyList?.name ||
+                                                            "Independent"}
+                                                    </p>
+
+                                                    <div className="directory-platform">
+                                                        <h4>Campaign Platform</h4>
+                                                        <p>
+                                                            {candidate.platform?.trim()
+                                                                ? candidate.platform
+                                                                : "No campaign platform provided."}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </article>
+                                        ))}
+                                    </div>
+                                )}
+                            </section>
+                        );
+                    })}
+                </>
+            )}
+        </main>
+    );
+}
 
         // =================================================
         // VOTE PAGE
@@ -2047,17 +2610,13 @@ const candidatesByPosition = useMemo(() => {
         <div className="student-dashboard">
             {/* ================= NAVBAR ================= */}
 
+            
             <header className="top-navbar">
                 <div className="nav-left">
                     <button
                         type="button"
                         className="menu-toggle"
-                        onClick={() =>
-                            setSidebarOpen(
-                                (previous) =>
-                                    !previous
-                            )
-                        }
+                        onClick={() => setSidebarOpen((previous) => !previous)}
                         aria-label="Toggle sidebar"
                     >
                         <span />
@@ -2065,44 +2624,22 @@ const candidatesByPosition = useMemo(() => {
                         <span />
                     </button>
 
-                    <div className="brand">
-                        <img
-                            src={
-                                votaraLogoSrc
-                            }
-                            alt="Votara"
-                            className="votara-logo"
-                        />
-
-                        <span>
-                            Votara
-                        </span>
+                    <div className="header-greeting">
+                        <h1>
+                            Hello <strong>{firstName}!</strong>
+                        </h1>
+                        <p>Welcome to Votara</p>
                     </div>
                 </div>
-
-                {/* SEARCH */}
 
                 <div className="search-container">
                     <input
                         type="text"
                         placeholder="Search"
-                        value={
-                            searchValue
-                        }
-                        onChange={(
-                            event
-                        ) =>
-                            setSearchValue(
-                                event.target.value
-                            )
-                        }
-                        onKeyDown={(
-                            event
-                        ) => {
-                            if (
-                                event.key ===
-                                "Enter"
-                            ) {
+                        value={searchValue}
+                        onChange={(event) => setSearchValue(event.target.value)}
+                        onKeyDown={(event) => {
+                            if (event.key === "Enter") {
                                 handleSearch();
                             }
                         }}
@@ -2112,26 +2649,18 @@ const candidatesByPosition = useMemo(() => {
                         type="button"
                         className="search-button"
                         aria-label="Search"
-                        onClick={
-                            handleSearch
-                        }
+                        onClick={handleSearch}
                     >
                         ⌕
                     </button>
                 </div>
-
-                {/* RIGHT NAV */}
 
                 <div className="nav-right">
                     <button
                         type="button"
                         className="nav-icon-button"
                         aria-label="Notifications"
-                        onClick={() =>
-                            alert(
-                                "You have no new notifications."
-                            )
-                        }
+                        onClick={() => alert("You have no new notifications.")}
                     >
                         <img
                             src="/src/images/bell.png"
@@ -2139,45 +2668,9 @@ const candidatesByPosition = useMemo(() => {
                             className="nav-icon-image"
                         />
                     </button>
-
-                    <button
-                        type="button"
-                        className="help-button"
-                        aria-label="Help"
-                        onClick={() =>
-                            handleMenuClick(
-                                "guidelines"
-                            )
-                        }
-                    >
-                        ?
-                    </button>
-
-                    <div className="nav-profile">
-                        {profilePicture &&
-                        !profileImageError ? (
-                            <img
-                                src={profilePicture}
-                                alt={fullName}
-                                className="nav-profile-image"
-                                onError={() =>
-                                    setProfileImageError(true)
-                                }
-                            />
-                        ) : (
-                            <div className="nav-profile-placeholder">
-                                {initials}
-                            </div>
-                        )}
-
-                        <span>
-                            {
-                                firstName
-                            }
-                        </span>
-                    </div>
                 </div>
             </header>
+
 
             <div className="dashboard-body">
                 {/* ================= SIDEBAR ================= */}
@@ -2189,16 +2682,23 @@ const candidatesByPosition = useMemo(() => {
                             : "sidebar-collapsed"
                     }`}
                 >
+                    <div className="sidebar-brand">
+                        <img
+                            src={votaraLogoSrc}
+                            alt=""
+                            className="sidebar-brand-logo"
+                        />
+                        <span>Votara</span>
+                    </div>
+
+                    
                     <div className="sidebar-profile">
-                        {profilePicture &&
-                        !profileImageError ? (
+                        {profilePicture && !profileImageError ? (
                             <img
                                 src={profilePicture}
                                 alt={fullName}
                                 className="profile-picture"
-                                onError={() =>
-                                    setProfileImageError(true)
-                                }
+                                onError={() => setProfileImageError(true)}
                             />
                         ) : (
                             <div className="profile-placeholder">
@@ -2206,32 +2706,27 @@ const candidatesByPosition = useMemo(() => {
                             </div>
                         )}
 
-                        <div className="profile-details">
-                            <h3>
-                                {
-                                    fullName
-                                }
-                            </h3>
+                        <div className="sidebar-profile-info">
+                            <h3>{fullName}</h3>
 
                             <button
                                 type="button"
-                                onClick={() =>
-                                    setSettingsModal(
-                                        "Edit profile"
-                                    )
-                                }
+                                className="sidebar-edit-profile"
+                                onClick={() => setSettingsModal("Edit profile")}
                             >
-                                Show Profile
+                                Edit Profile
                             </button>
                         </div>
+
+                        <span className="sidebar-online-badge">Online</span>
                     </div>
+
 
                     <nav className="sidebar-menu">
                         {sidebarItems.map(
                             (item) => {
                                 const isActive =
-                                    activeMenu ===
-                                    item.id;
+                                    activeSidebarItem === item.id;
 
                                 return (
                                     <button
@@ -2288,6 +2783,10 @@ const candidatesByPosition = useMemo(() => {
                     </nav>
 
                     <div className="sidebar-bottom">
+                        <div className="sidebar-help-card">
+                            <strong>Need help?</strong>
+                            <p>Use the dashboard to review your voting status, candidate information, and voter guidelines.</p>
+                        </div>
                         <button
                             type="button"
                             className="logout-button"
@@ -2312,6 +2811,155 @@ const candidatesByPosition = useMemo(() => {
 
                 {renderMainContent()}
             </div>
+            
+            
+
+{/* ================= CANDIDATE CAMPAIGN PLATFORM ================= */}
+
+{selectedCandidateDetails && (
+    <div
+        className="candidate-platform-overlay"
+        onClick={() => setSelectedCandidateDetails(null)}
+    >
+        <section
+            className="candidate-platform-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="candidate-platform-title"
+            onClick={(event) => event.stopPropagation()}
+        >
+            <button
+                type="button"
+                className="candidate-platform-close"
+                aria-label="Close campaign platform"
+                onClick={() => setSelectedCandidateDetails(null)}
+            >
+                ×
+            </button>
+
+            <div className="candidate-platform-profile">
+                <img
+                    src={
+                        resolveImageUrl(
+                            selectedCandidateDetails.profile_picture ||
+                            selectedCandidateDetails.profilePicture ||
+                            selectedCandidateDetails.profile_picture_url ||
+                            selectedCandidateDetails.profilePictureUrl
+                        ) || "/src/images/candidate.png"
+                    }
+                    alt={
+                        selectedCandidateDetails.full_name ||
+                        selectedCandidateDetails.fullName ||
+                        selectedCandidateDetails.name ||
+                        "Candidate"
+                    }
+                    className="candidate-platform-image"
+                />
+
+                <div className="candidate-platform-identity">
+                    <span className="candidate-platform-kicker">
+                        Candidate Profile
+                    </span>
+
+                    <h2 id="candidate-platform-title">
+                        {selectedCandidateDetails.full_name ||
+                            selectedCandidateDetails.fullName ||
+                            selectedCandidateDetails.name ||
+                            "Candidate"}
+                    </h2>
+
+                    <p>
+                        For{" "}
+                        <strong>
+                            {selectedCandidateDetails.position_name ||
+                                selectedCandidateDetails.positionName ||
+                                selectedCandidateDetails.position?.name ||
+                                selectedCandidateDetails.position ||
+                                "Student Officer"}
+                        </strong>
+                    </p>
+                </div>
+            </div>
+
+            <div className="candidate-platform-content">
+                <h3>Campaign Platform</h3>
+
+                {(() => {
+                    const platform =
+                        selectedCandidateDetails.campaign_platform ||
+                        selectedCandidateDetails.campaignPlatform ||
+                        selectedCandidateDetails.platform ||
+                        selectedCandidateDetails.manifesto ||
+                        selectedCandidateDetails.platform_statement ||
+                        selectedCandidateDetails.platformStatement ||
+                        selectedCandidateDetails.description ||
+                        "";
+
+                    if (Array.isArray(platform)) {
+                        return platform.length > 0 ? (
+                            <ol>
+                                {platform.map((item, index) => (
+                                    <li key={index}>
+                                        {typeof item === "string"
+                                            ? item
+                                            : item?.description ||
+                                              item?.text ||
+                                              JSON.stringify(item)}
+                                    </li>
+                                ))}
+                            </ol>
+                        ) : (
+                            <p className="candidate-platform-empty">
+                                This candidate has not provided a campaign
+                                platform yet.
+                            </p>
+                        );
+                    }
+
+                    if (typeof platform === "object" && platform !== null) {
+                        const entries = Object.values(platform).filter(
+                            (item) => typeof item === "string" && item.trim()
+                        );
+
+                        return entries.length > 0 ? (
+                            <ul>
+                                {entries.map((item, index) => (
+                                    <li key={index}>{item}</li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="candidate-platform-empty">
+                                This candidate has not provided a campaign
+                                platform yet.
+                            </p>
+                        );
+                    }
+
+                    return platform.trim() ? (
+                        <p className="candidate-platform-text">
+                            {platform}
+                        </p>
+                    ) : (
+                        <p className="candidate-platform-empty">
+                            This candidate has not provided a campaign
+                            platform yet.
+                        </p>
+                    );
+                })()}
+            </div>
+
+            <div className="candidate-platform-footer">
+                <button
+                    type="button"
+                    onClick={() => setSelectedCandidateDetails(null)}
+                >
+                    Close
+                </button>
+            </div>
+        </section>
+    </div>
+)}
+
 
             {/* ================= SETTINGS / PROFILE MODAL ================= */}
 

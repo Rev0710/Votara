@@ -828,67 +828,124 @@
   cursor: pointer;
 }
 
-/* =========================
-   FAQ
-========================= */
 
-.faq-section {
-  padding: 0 5px;
+/* =========================================
+   FAQ SECTION — VOTARA STUDENT DASHBOARD
+   ========================================= */
+
+.student-dashboard .faq-section {
+    display: grid;
+    grid-template-columns: minmax(180px, 0.75fr) minmax(0, 1.5fr);
+    align-items: start;
+    gap: 32px;
+    padding: 24px 30px;
+    background: transparent;
 }
 
-.faq-section h3 {
-  margin-bottom: 20px;
-  font-size: 14px;
+.student-dashboard .faq-section h3 {
+    margin: 0 0 8px;
+    color: #252b3b;
+    font-size: 14px;
+    font-weight: 600;
 }
 
-.faq-list {
-  display: grid;
-
-  grid-template-columns:
-    repeat(3, minmax(0, 1fr));
-
-  gap: 35px;
+.student-dashboard .faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
 }
 
-.faq-button {
-  width: 100%;
-  min-height: 45px;
-
-  border: none;
-  border-radius: 28px;
-
-  background: #bec8e2;
-  color: #272c39;
-
-  font-size: 11px;
-  cursor: pointer;
-
-  transition:
-    transform 0.2s ease,
-    background 0.25s ease,
-    box-shadow 0.25s ease;
+.student-dashboard .faq-item {
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid #e7ebf5;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(25, 40, 80, 0.07);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.faq-button:hover {
-  transform: translateY(-3px);
-
-  background: #aebddd;
-
-  box-shadow:
-    0 8px 16px
-    rgba(70, 80, 110, 0.16);
+.student-dashboard .faq-item:hover {
+    background: #ffffff;
+    border-color: #dce5ff;
+    box-shadow: 0 5px 14px rgba(25, 40, 80, 0.10);
 }
 
-.faq-active {
-  background: #9dadd6;
+.student-dashboard .faq-button {
+    width: 100%;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 16px;
+    background: #ffffff;
+    color: #252b3b;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
 }
 
-.faq-answer {
-  padding: 14px 8px;
-  color: #555;
-  font-size: 12px;
-  line-height: 1.5;
+.student-dashboard .faq-button:hover,
+.student-dashboard .faq-button:focus-visible {
+    background: #ffffff;
+    color: #252b3b;
 }
+
+.student-dashboard .faq-button:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: -3px;
+}
+
+.student-dashboard .faq-button::after {
+    content: "+";
+    flex: 0 0 auto;
+    color: #155cff;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.student-dashboard .faq-active {
+    background: #ffffff;
+    color: #252b3b;
+}
+
+.student-dashboard .faq-active::after {
+    content: "−";
+}
+
+.student-dashboard .faq-answer {
+    padding: 0 16px 14px;
+    background: #ffffff;
+    color: #70798d;
+    font-size: 11px;
+    line-height: 1.7;
+}
+
+/* FAQ responsive layout */
+@media (max-width: 750px) {
+    .student-dashboard .faq-section {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        padding: 20px 16px;
+    }
+
+    .student-dashboard .faq-list {
+        gap: 10px;
+    }
+
+    .student-dashboard .faq-button {
+        min-height: 44px;
+        padding: 12px 14px;
+    }
+}
+
 
 /* =========================
    CALENDAR
@@ -1674,7 +1731,7 @@
 .election-card-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 20px;
+  gap: 12px 20px;
   margin-top: 22px;
   color: #666c78;
   font-size: 13px;
@@ -2579,6 +2636,3756 @@
         .password-form {
 
         grid-template-columns: 1fr !important;
+    }
+}
+
+
+
+/* =====================================================
+   VOTARA STUDENT DASHBOARD — REFERENCE LAYOUT OVERRIDES
+   Keeps the existing component and voting workflows intact.
+===================================================== */
+:root {
+  --student-navy: #111827;
+  --student-navy-deep: #0b1220;
+  --student-blue: #155dfb;
+  --student-blue-soft: #eaf0ff;
+  --student-text: #171b2c;
+  --student-muted: #7b8192;
+  --student-border: #e8ebf2;
+  --student-surface: #ffffff;
+}
+
+.student-dashboard {
+  min-height: 100vh;
+  color: var(--student-text);
+  background: #f5f7fb;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.top-navbar {
+  height: 76px;
+  margin-left: 236px;
+  width: calc(100% - 236px);
+  padding: 0 26px;
+  background: #fff;
+  border-bottom: 1px solid var(--student-border);
+  box-shadow: 0 3px 14px rgba(20, 30, 55, .035);
+  position: relative;
+  z-index: 5;
+}
+
+.nav-left { gap: 12px; }
+.top-navbar .menu-toggle,
+.top-navbar .nav-left > .brand { display: none; }
+.search-container {
+  width: min(32vw, 360px);
+  height: 36px;
+  padding-left: 13px;
+  border-color: #e8ebf2;
+  border-radius: 20px;
+  background: #fafbfe;
+}
+.search-container input { font-size: 12px; }
+.search-button { width: 36px; font-size: 18px; }
+.nav-right { gap: 12px; }
+.nav-icon-button { width: 32px; height: 32px; }
+.nav-icon-image { width: 18px; height: 18px; }
+.help-button { display: none; }
+.nav-profile { gap: 8px; font-size: 12px; font-weight: 600; }
+.nav-profile-image, .nav-profile-placeholder { width: 30px; height: 30px; border-color: #dce5ff; }
+
+.dashboard-body {
+  min-height: calc(100vh - 76px);
+  display: flex;
+  margin-left: 236px;
+}
+
+.sidebar {
+  position: fixed;
+  z-index: 20;
+  left: 0;
+  top: 0;
+  width: 236px;
+  min-width: 236px;
+  height: 100vh;
+  min-height: 100vh;
+  padding: 12px 12px 14px;
+  border-radius: 0;
+  background: var(--student-navy);
+  color: #f7f9ff;
+  overflow-y: auto;
+  transition: width .25s ease, min-width .25s ease;
+}
+
+.sidebar-brand {
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  color: #2d6cff;
+  font-size: 15px;
+  font-weight: 750;
+  letter-spacing: .2px;
+}
+.sidebar-brand-logo { width: 23px; height: 23px; object-fit: contain; }
+.sidebar-profile {
+  align-items: flex-start;
+  padding: 13px 12px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255,255,255,.055);
+  border-radius: 14px;
+  background: rgba(255,255,255,.045);
+}
+.profile-picture, .profile-placeholder { width: 42px; height: 42px; font-size: 13px; border: 2px solid rgba(75, 119, 255, .8); }
+.profile-details { margin: -40px 0 0 52px; min-width: 0; text-align: left; }
+.profile-details h3 { max-width: 115px; overflow: hidden; text-overflow: ellipsis; font-size: 11px; line-height: 1.4; white-space: normal; }
+.profile-details button { margin-top: 2px; color: #aeb9d0; font-size: 9px; text-decoration: none; }
+.sidebar-menu { gap: 5px; padding-top: 0; }
+.sidebar-item { height: 37px; gap: 12px; padding: 0 11px; border-radius: 9px; color: #c5ccda; font-size: 11px; }
+.sidebar-item:hover { background: rgba(255,255,255,.075); }
+.sidebar-item.active { color: #fff; background: var(--student-blue); border-radius: 9px; }
+.sidebar-icon-wrapper { width: 16px; height: 16px; }
+.sidebar-menu-icon { width: 15px; height: 15px; }
+.sidebar-bottom { padding: 10px 2px 0; }
+.logout-button {
+  min-height: 37px;
+  padding: 0 11px;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 9px;
+  background: rgba(255,255,255,.045);
+  gap: 12px;
+  color: #e9edf7;
+  font-size: 11px;
+  text-align: left;
+}
+.logout-button:hover { background: rgba(239,68,68,.15); color: #fff; }
+.logout-image { width: 15px; height: 15px; }
+
+.dashboard-main {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  padding: 18px 22px 28px;
+  background-color: #fbfcff;
+  background-image: radial-gradient(#e6eaf3 .8px, transparent .8px);
+  background-size: 13px 13px;
+}
+.welcome-section { margin: 0 0 15px; padding: 0 2px; }
+.welcome-section h1 { font-size: 21px; font-weight: 400; line-height: 1.3; }
+.welcome-section p { margin-top: 3px; color: #9aa1b1; font-size: 10px; }
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(245px, .8fr);
+  grid-template-areas:
+    "hero calendar"
+    "results process"
+    "announcement announcement"
+    "faq faq";
+  align-items: stretch;
+  gap: 12px;
+}
+.left-column, .right-column { display: contents; }
+.election-card { grid-area: hero; min-height: 175px; padding: 20px 19px; border: 0; border-radius: 13px; background: linear-gradient(115deg, rgba(12,18,30,.78), rgba(12,18,30,.42)), url('/src/images/election-banner.png') center/cover, #20283a; color: #fff; box-shadow: 0 5px 15px rgba(18,29,55,.12); }
+.election-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.election-card h2 { color: #aabfff; font-size: 9px; text-transform: uppercase; letter-spacing: .55px; }
+.election-card h3 { max-width: 90%; margin: 27px 0 7px; font-size: clamp(17px, 2vw, 25px); font-weight: 750; line-height: 1.1; }
+.election-card-meta { display: flex; gap: 12px; flex-wrap: wrap; color: rgba(255,255,255,.72); font-size: 9px; }
+.election-status-badge { padding: 4px 7px; border-radius: 20px; font-size: 8px; white-space: nowrap; }
+.election-card-message, .election-notice { max-width: 90%; margin: 8px 0; color: rgba(255,255,255,.8); font-size: 10px; }
+.election-card .election-notice { background: rgba(255,255,255,.12); border-radius: 6px; padding: 6px; }
+.vote-button { width: auto; min-width: 88px; height: 29px; padding: 0 14px; margin-top: 6px; border-radius: 8px; background: var(--student-blue); font-size: 10px; font-weight: 650; }
+.vote-button:disabled { opacity: .72; cursor: not-allowed; }
+.calendar-card { grid-area: calendar; min-width: 0; padding: 17px; border: 1px solid var(--student-border); border-radius: 13px; background: #fff; box-shadow: 0 4px 13px rgba(30,45,75,.055); }
+.calendar-card h3, .process-card h3 { margin: 0 0 14px; font-size: 11px; font-weight: 750; }
+.calendar-tabs { padding: 12px; border-radius: 8px; background: #17172e; gap: 4px; }
+.calendar-tabs button { padding: 5px 4px; border-radius: 4px; color: #c8c9d6; font-size: 8px; }
+.calendar-tabs .selected-tab { background: #2b2b4b; color: #fff; text-decoration: none; }
+.time-row, .calendar-line { display: none; }
+.election-time { margin-top: 9px; gap: 10px; }
+.date { min-width: 37px; color: #303448; font-size: 9px; }
+.date span { font-size: 15px; font-weight: 750; }
+.countdown { min-width: 0; padding: 8px; border-radius: 7px; background: #17172e; }
+.countdown small { font-size: 8px; }
+.countdown-values { gap: 5px; }
+.countdown-values span { flex: 1; padding: 5px 3px; background: #2a2a49; font-size: 6px; }
+.countdown-values strong { font-size: 9px; overflow-wrap: anywhere; }
+.results-card { grid-area: results; min-width: 0; min-height: 195px; padding: 17px; border: 1px solid var(--student-border); border-radius: 13px; background: #fff; box-shadow: 0 4px 13px rgba(30,45,75,.055); }
+.results-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.results-header h3 { margin: 0; font-size: 11px; }
+.results-status-pill { padding: 4px 7px; border-radius: 20px; background: #edf3ff; color: #2258df; font-size: 8px; white-space: nowrap; }
+.results-status-closed { background: #e8f8ee; color: #148043; }
+.position-title { margin: 12px 0; justify-content: center; }
+.position-title h2 { font-size: 12px; }
+.results-empty-state { display: flex; align-items: flex-start; gap: 10px; padding: 15px 12px; border: 1px dashed #dce3f0; border-radius: 9px; background: #fbfcff; }
+.results-empty-icon { display: grid; place-items: center; flex: 0 0 27px; width: 27px; height: 27px; border-radius: 50%; background: var(--student-blue-soft); color: var(--student-blue); font-size: 17px; font-weight: 700; }
+.results-empty-state strong { display: block; font-size: 10px; line-height: 1.45; }
+.results-empty-state p { margin: 5px 0 0; color: var(--student-muted); font-size: 9px; line-height: 1.55; }
+.results-footer { display: flex; align-items: center; gap: 7px; margin-top: 12px; color: var(--student-muted); font-size: 9px; }
+.results-footer strong { color: #353b4e; }
+.results-participation-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--student-blue); }
+.process-card { grid-area: process; min-width: 0; padding: 17px; border: 1px solid var(--student-border); border-radius: 13px; background: #fff; box-shadow: 0 4px 13px rgba(30,45,75,.055); }
+.process-list { gap: 8px; }
+.process-item { gap: 9px; min-height: 42px; }
+.process-item:not(.last)::after { top: 22px; left: 10px; width: 1px; height: 25px; background: #b8c9ff; }
+.process-number { width: 21px; height: 21px; background: var(--student-blue); font-size: 9px; }
+.process-number.inactive { background: #e5e7eb; }
+.process-text { padding-top: 2px; }
+.process-text strong { font-size: 9px; }
+.process-text span { font-size: 8px; line-height: 1.45; }
+.announcement-card { grid-area: announcement; min-height: 82px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 5px 16px; padding: 17px 20px; border: 0; border-radius: 11px; background: #17172e; color: #fff; box-shadow: none; }
+.announcement-card h3 { margin: 0; font-size: 12px; }
+.announcement-card p { grid-column: 1; margin: 0; color: #a9aabd; font-size: 9px; }
+.announcement-line { display: none; }
+.announcement-card button { grid-column: 2; grid-row: 1 / span 2; width: auto; min-width: 82px; height: 27px; margin: 0; padding: 0 10px; border: 1px solid #3a3a55; border-radius: 6px; background: transparent; color: #fff; font-size: 9px; }
+.faq-section { grid-area: faq; display: grid; grid-template-columns: minmax(150px, .7fr) minmax(0, 1.3fr); align-items: start; gap: 15px; padding: 0 2px; }
+.faq-section > h3 { margin: 0; font-size: 11px; }
+.faq-list { display: flex; flex-direction: column; gap: 7px; }
+.faq-item { min-width: 0; }
+.faq-button { min-height: 34px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border: 1px solid var(--student-border); border-radius: 9px; background: #fff; box-shadow: 0 3px 10px rgba(30,45,75,.045); color: #3f4556; font-size: 9px; text-align: left; }
+.faq-button::after { content: "+"; color: var(--student-blue); font-size: 16px; font-weight: 700; }
+.faq-active { background: #f6f8ff; }
+.faq-answer { padding: 9px 12px; color: #70788a; font-size: 9px; line-height: 1.5; }
+.main-hover-card { transition: box-shadow .2s ease, transform .2s ease; }
+.main-hover-card:hover { transform: translateY(-2px); background-color: #fff; box-shadow: 0 8px 22px rgba(30,45,75,.09); }
+
+/* Keep other student pages readable with the new sidebar frame. */
+.vote-main, .guidelines-main, .settings-main, .profile-main { margin: 0; padding: 24px; min-width: 0; flex: 1; background: #fbfcff; }
+.sidebar-collapsed { width: 236px; min-width: 236px; }
+.sidebar-collapsed .sidebar-label, .sidebar-collapsed .logout-text { display: inline; }
+.sidebar-collapsed .sidebar-profile { padding: 13px 12px; }
+.sidebar-collapsed .profile-details { display: block; }
+.sidebar-collapsed .sidebar-item { justify-content: flex-start; padding: 0 11px; gap: 12px; }
+.sidebar-collapsed .logout-button { justify-content: flex-start; }
+
+@media (min-width: 1400px) {
+  .dashboard-main { padding: 22px 30px 32px; }
+  .dashboard-grid { gap: 15px; }
+  .election-card { min-height: 205px; }
+}
+@media (max-width: 1000px) {
+  .top-navbar { margin-left: 205px; width: calc(100% - 205px); padding: 0 16px; }
+  .dashboard-body { margin-left: 205px; }
+  .sidebar { width: 205px; min-width: 205px; }
+  .dashboard-grid { grid-template-columns: minmax(0, 1.2fr) minmax(210px, .8fr); }
+  .faq-section { grid-template-columns: 1fr; gap: 8px; }
+}
+@media (max-width: 720px) {
+  .top-navbar { height: 62px; margin-left: 0; width: 100%; padding: 0 14px; }
+  .top-navbar .menu-toggle { display: flex; }
+  .top-navbar .nav-left > .brand { display: none; }
+  .nav-left { gap: 8px; }
+  .search-container { width: min(45vw, 230px); height: 32px; }
+  .nav-profile span { display: none; }
+  .dashboard-body { min-height: calc(100vh - 62px); margin-left: 0; }
+  .sidebar { top: 62px; width: 236px; min-width: 236px; height: calc(100vh - 62px); min-height: 0; transform: translateX(-100%); transition: transform .25s ease; }
+  .sidebar.sidebar-open { transform: translateX(0); }
+  .sidebar.sidebar-collapsed { transform: translateX(-100%); }
+  .dashboard-main { width: 100%; padding: 15px 12px 22px; }
+  .dashboard-grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "hero" "calendar" "results" "process" "announcement" "faq"; gap: 10px; }
+  .election-card { min-height: 170px; }
+  .faq-section { grid-template-columns: 1fr; }
+  .right-column { display: contents; }
+  .announcement-card { padding: 15px; }
+}
+.election-card {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: 14px;
+    overflow: hidden;
+    color: #ffffff;
+}
+
+/* Compact student profile - sidebar only */
+.sidebar .sidebar-profile {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 9px;
+    margin: 10px;
+    padding: 10px;
+    min-width: 0;
+    border-radius: 14px;
+}
+
+.sidebar .sidebar-profile .profile-picture,
+.sidebar .sidebar-profile .profile-placeholder {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px;
+    flex: 0 0 38px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.sidebar .sidebar-profile .profile-details {
+    flex: 1;
+    min-width: 0;
+    margin-top: 0;
+    text-align: left;
+}
+
+.sidebar .sidebar-profile .profile-details h3 {
+    font-size: 11px;
+    line-height: 1.35;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.sidebar .sidebar-profile .profile-details button {
+    margin-top: 3px;
+    font-size: 9px;
+}
+
+.sidebar-collapsed .sidebar-profile {
+    justify-content: center;
+    padding: 8px 2px;
+}
+
+.sidebar-collapsed .sidebar-profile .profile-picture,
+.sidebar-collapsed .sidebar-profile .profile-placeholder {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px;
+    flex-basis: 34px;
+}
+
+/* Dashboard sizing and overflow */
+.student-dashboard {
+    width: 100%;
+    max-width: 100%;
+    min-height: 100vh;
+    overflow-x: clip;
+}
+
+.dashboard-body {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+}
+
+.sidebar {
+    width: 195px;
+    min-width: 195px;
+    flex-shrink: 0;
+    border-radius: 0;
+}
+
+.sidebar-collapsed {
+    width: 64px;
+    min-width: 64px;
+}
+
+.dashboard-main {
+    flex: 1;
+    min-width: 0;
+    width: 0;
+    padding: 24px;
+}
+
+.dashboard-grid {
+    grid-template-columns:
+        minmax(0, 1.6fr)
+        minmax(0, 0.9fr);
+    gap: 14px;
+}
+
+.left-column,
+.right-column {
+    min-width: 0;
+    gap: 14px;
+}
+
+.election-card,
+.results-card,
+.calendar-card,
+.process-card,
+.announcement-card {
+    min-width: 0;
+    max-width: 100%;
+    border-radius: 14px;
+}
+
+.election-card {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.chart-row {
+    grid-template-columns:
+        minmax(55px, 80px)
+        minmax(0, 1fr)
+        32px;
+    gap: 5px;
+}
+
+.chart {
+    min-width: 0;
+}
+
+.faq-list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+}
+
+@media (max-width: 1050px) {
+    .dashboard-main {
+        padding: 18px;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .right-column {
+        display: grid;
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 700px) {
+    .sidebar {
+        width: 245px;
+        min-width: 245px;
+    }
+
+    .dashboard-main {
+        width: 100%;
+        padding: 14px;
+    }
+
+    .right-column {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .welcome-section h1 {
+        font-size: 23px;
+    }
+
+    .election-card {
+        min-height: 190px;
+        padding: 18px;
+    }
+
+    .results-card {
+        padding: 14px;
+        overflow-x: auto;
+    }
+
+    .chart {
+        min-width: 260px;
+    }
+
+    .announcement-card {
+        padding: 16px;
+    }
+}
+
+/* =====================================================
+   DASHBOARD LAYOUT + HOVER FIX (FINAL OVERRIDES)
+   These rules intentionally override earlier duplicate
+   declarations without changing dashboard logic.
+===================================================== */
+.student-dashboard,
+.student-dashboard * {
+  box-sizing: border-box;
+}
+
+.student-dashboard {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100vh;
+  overflow-x: clip;
+  color: #252b3b;
+  background: #f8faff;
+}
+
+.dashboard-body {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+  margin-left: 0;
+}
+
+/* Fixed dark sidebar aligned to the supplied reference. */
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  width: 240px;
+  min-width: 240px;
+  height: 100dvh;
+  min-height: 0;
+  padding: 16px 12px 14px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 0;
+  border-radius: 0;
+  background: #111827;
+  color: #f8fafc;
+  box-shadow: none;
+  transition: width .2s ease, transform .25s ease;
+}
+
+.sidebar-brand {
+  flex: 0 0 auto;
+  min-height: 48px;
+  margin: 0 0 18px;
+  color: #2d6cff;
+  font-size: 19px;
+}
+
+.sidebar-brand-logo {
+  width: 23px;
+  height: 23px;
+}
+
+.sidebar .sidebar-profile {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  margin: 0 0 14px;
+  padding: 12px 10px;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 16px;
+  background: rgba(255,255,255,.045);
+}
+
+.sidebar .sidebar-profile .profile-picture,
+.sidebar .sidebar-profile .profile-placeholder {
+  display: block;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border: 2px solid #5b83ff;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.sidebar .sidebar-profile .profile-details {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  text-align: left;
+}
+
+.sidebar .sidebar-profile .profile-details h3 {
+  max-width: 100%;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: #f3f4f6;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.sidebar .sidebar-profile .profile-details button {
+  margin-top: 4px;
+  padding: 0;
+  color: #aebbd0;
+  font-size: 10px;
+  text-decoration: none;
+}
+
+.sidebar-menu {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 5px;
+  padding: 0;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  height: auto;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #c4cad6;
+  font-size: 13px;
+  line-height: 1.3;
+  text-align: left;
+  white-space: normal;
+}
+
+.sidebar-item:hover {
+  background: rgba(255,255,255,.07);
+  color: #fff;
+}
+
+.sidebar-item.active {
+  border-radius: 10px;
+  background: #1d5eff;
+  color: #fff;
+}
+
+.sidebar-icon-wrapper {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.sidebar-menu-icon {
+  width: 17px;
+  height: 17px;
+}
+
+.sidebar-bottom {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: auto;
+  padding: 18px 2px 2px;
+}
+
+/* This card is styled when the matching help element exists in JSX. */
+.sidebar-help-card {
+  margin-bottom: 2px;
+  padding: 12px 10px;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 12px;
+  background: rgba(255,255,255,.045);
+  color: #d8deea;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.sidebar-help-card strong,
+.sidebar-help-card h4 {
+  display: block;
+  margin: 0 0 5px;
+  color: #fff;
+  font-size: 11px;
+}
+
+.sidebar-help-card p {
+  margin: 0;
+  color: #aeb8ca;
+  font-size: 9px;
+}
+
+.logout-button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  gap: 12px;
+  padding: 0 12px;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 10px;
+  background: rgba(255,255,255,.045);
+  color: #e5e7eb;
+  font-size: 12px;
+  text-align: left;
+}
+
+.logout-button:hover {
+  background: rgba(255,255,255,.09);
+  color: #fff;
+}
+
+/* Keep the page content inside the viewport with balanced gutters. */
+.top-navbar {
+  width: calc(100% - 240px);
+  margin-left: 240px;
+}
+
+.dashboard-main {
+  flex: 1 1 auto;
+  width: calc(100% - 240px);
+  min-width: 0;
+  margin-left: 240px;
+  padding: 28px clamp(20px, 2.2vw, 34px) 36px;
+}
+
+.welcome-section {
+  margin: 0 0 16px;
+  padding: 0 2px;
+}
+
+.welcome-section h1 {
+  font-size: clamp(22px, 2vw, 30px);
+  line-height: 1.25;
+}
+
+.welcome-section p {
+  margin-top: 5px;
+  font-size: 12px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(235px, .8fr);
+  grid-template-areas:
+    "hero calendar"
+    "results process"
+    "announcement announcement"
+    "faq faq";
+  align-items: stretch;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+}
+
+.left-column,
+.right-column {
+  min-width: 0;
+  gap: 16px;
+}
+
+.election-card,
+.results-card,
+.calendar-card,
+.process-card,
+.announcement-card {
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  border-radius: 16px;
+}
+
+.election-card {
+  min-height: 250px;
+  padding: 26px 24px;
+  border: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow: 0 5px 15px rgba(18,29,55,.1);
+  color: #fff;
+}
+
+.election-card-header {
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.election-card h3 {
+  max-width: 100%;
+  margin: 28px 0 18px;
+  overflow-wrap: anywhere;
+  font-size: clamp(20px, 2vw, 30px);
+  line-height: 1.15;
+}
+
+.election-card-meta {
+  gap: 8px;
+  font-size: 11px;
+}
+
+.election-card-meta span {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.election-status-badge {
+  flex: 0 0 auto;
+  font-size: 11px;
+  padding: 8px 12px;
+}
+
+.vote-button {
+  min-height: 36px;
+  margin-top: 9px;
+  padding: 0 16px;
+  font-size: 11px;
+}
+
+.results-card,
+.calendar-card,
+.process-card {
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #e4e9f2;
+  box-shadow: 0 4px 14px rgba(30,45,75,.045);
+}
+
+.results-card {
+  min-height: 300px;
+}
+
+.calendar-card,
+.process-card {
+  overflow: hidden;
+}
+
+.calendar-tabs,
+.election-time,
+.countdown,
+.countdown-values {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.election-time {
+  gap: 10px;
+}
+
+.countdown-values span {
+  min-width: 0;
+}
+
+.process-card {
+  min-height: 300px;
+}
+
+.process-text {
+  min-width: 0;
+}
+
+.process-text span {
+  overflow-wrap: anywhere;
+  font-size: 9px;
+}
+
+.announcement-card {
+  min-width: 0;
+  padding: 20px 24px;
+}
+
+/* Critical fix: hovering the election frame must not move, zoom, or recolor it. */
+.main-hover-card,
+.main-hover-card:hover,
+.election-card,
+.election-card:hover {
+  transform: none !important;
+  filter: none !important;
+  transition: none !important;
+}
+
+.election-card:hover {
+  border-color: transparent !important;
+  background-color: transparent;
+  box-shadow: 0 5px 15px rgba(18,29,55,.1) !important;
+}
+
+/* Do not apply a hover effect to dashboard layout cards. */
+.results-card:hover,
+.calendar-card:hover,
+.process-card:hover,
+.announcement-card:hover {
+  transform: none !important;
+  filter: none !important;
+}
+
+/* Keep the compact sidebar behavior on tablet/mobile. */
+@media (max-width: 1050px) {
+  .dashboard-main {
+    padding: 22px 20px 30px;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(220px, .72fr);
+    gap: 14px;
+  }
+
+  .election-card {
+    min-height: 220px;
+  }
+}
+
+@media (max-width: 820px) {
+  .top-navbar {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .dashboard-body {
+    margin-left: 0;
+  }
+
+  .sidebar {
+    top: 62px;
+    height: calc(100dvh - 62px);
+    transform: translateX(-100%);
+  }
+
+  .sidebar.sidebar-open {
+    transform: translateX(0);
+  }
+
+  .sidebar.sidebar-collapsed {
+    transform: translateX(-100%);
+  }
+
+  .dashboard-main {
+    width: 100%;
+    margin-left: 0;
+    padding: 22px 18px 28px;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "hero"
+      "calendar"
+      "results"
+      "process"
+      "announcement"
+      "faq";
+    gap: 12px;
+  }
+
+  .election-card {
+    min-height: 210px;
+    padding: 22px;
+  }
+
+  .right-column {
+    display: contents;
+  }
+}
+
+@media (max-width: 520px) {
+  .dashboard-main {
+    padding: 18px 12px 24px;
+  }
+
+  .welcome-section h1 {
+    font-size: 22px;
+    overflow-wrap: anywhere;
+  }
+
+  .election-card {
+    min-height: 190px;
+    padding: 18px;
+    border-radius: 13px;
+  }
+
+  .election-card-header {
+    flex-wrap: wrap;
+  }
+
+  .election-card h3 {
+    margin-top: 20px;
+    font-size: 22px;
+  }
+
+  .election-card-meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .election-card-meta span {
+    width: auto;
+    max-width: 100%;
+  }
+
+  .results-card,
+  .calendar-card,
+  .process-card {
+    padding: 16px;
+  }
+
+  .results-empty-state {
+    padding: 12px;
+  }
+
+  .announcement-card {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 16px;
+  }
+
+  .announcement-card button {
+    grid-column: 1;
+    grid-row: auto;
+    justify-self: start;
+  }
+}
+
+/* =========================================================
+   VOTARA STUDENT DASHBOARD - FINAL REFERENCE OVERRIDES
+   Fixes compact profile, fixed election banner hover, and overflow.
+========================================================= */
+.student-dashboard,
+.student-dashboard * {
+  box-sizing: border-box;
+}
+
+.dashboard-body {
+  width: auto;
+  min-width: 0;
+  margin-left: 236px;
+  overflow-x: clip;
+}
+
+.dashboard-main,
+.vote-main,
+.guidelines-main,
+.settings-main,
+.profile-main {
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
+  max-width: 100%;
+  margin-left: 0;
+  overflow-x: clip;
+  padding: clamp(18px, 2vw, 28px);
+}
+
+.dashboard-grid {
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1.65fr) minmax(220px, 0.9fr);
+  gap: clamp(12px, 1.2vw, 16px);
+}
+
+.left-column,
+.right-column {
+  min-width: 0;
+}
+
+.election-card,
+.calendar-card,
+.results-card,
+.process-card,
+.announcement-card,
+.faq-section {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.calendar-card,
+.process-card {
+  overflow: hidden;
+}
+
+/* Always show the chosen banner image at the same scale and position. */
+.election-card,
+.election-card:hover,
+.main-hover-card.election-card:hover {
+  transform: none !important;
+  filter: none !important;
+  transition: none !important;
+  background-image:
+    linear-gradient(105deg, rgba(9, 15, 28, .78), rgba(9, 15, 28, .35)),
+    url('/src/images/votara-design.png') !important;
+  background-repeat: no-repeat !important;
+  background-position: center center !important;
+  background-size: cover !important;
+  border-color: transparent !important;
+  box-shadow: 0 5px 15px rgba(18, 29, 55, .12) !important;
+}
+
+.main-hover-card,
+.main-hover-card:hover,
+.results-card:hover,
+.calendar-card:hover,
+.process-card:hover,
+.announcement-card:hover {
+  transform: none !important;
+  filter: none !important;
+  transition: none !important;
+}
+
+.main-hover-card:hover:not(.election-card) {
+  background-color: inherit;
+  box-shadow: inherit;
+}
+
+/* Sidebar: compact horizontal profile like the reference screenshot. */
+.sidebar {
+  width: 236px;
+  min-width: 236px;
+  padding: 12px 12px 14px;
+  overflow-x: hidden;
+  background: #111827;
+  border-radius: 0;
+}
+
+.sidebar-brand {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  height: auto;
+  gap: 8px;
+  margin: 0 0 14px;
+  color: #2d6cff;
+  font-size: 18px;
+  font-weight: 750;
+}
+
+.sidebar-brand-logo {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+.sidebar .sidebar-profile {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 8px;
+  min-width: 0;
+  margin: 0 0 13px;
+  padding: 11px 10px;
+  border: 1px solid rgba(255, 255, 255, .07);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, .045);
+}
+
+.sidebar .sidebar-profile > .profile-picture,
+.sidebar .sidebar-profile > .profile-placeholder {
+  grid-column: 1;
+  grid-row: 1;
+  display: grid;
+  place-items: center;
+  flex: 0 0 42px;
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px;
+  max-width: 42px;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  border: 2px solid rgba(91, 131, 255, .95);
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center;
+  font-size: 13px !important;
+  line-height: 1 !important;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.sidebar .sidebar-profile .sidebar-profile-info {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+}
+
+.sidebar .sidebar-profile .profile-details {
+  min-width: 0;
+  margin: 0 !important;
+  padding: 0;
+  text-align: left;
+}
+
+.sidebar .sidebar-profile .profile-details h3 {
+  max-width: 100%;
+  margin: 0;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  color: #f3f4f6;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+}
+
+.sidebar .sidebar-profile .profile-details button {
+  display: inline-block;
+  margin: 4px 0 0;
+  padding: 0;
+  color: #aebbd0;
+  font-size: 10px;
+  line-height: 1.3;
+  text-decoration: none;
+}
+
+.sidebar-online-badge {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: block;
+  width: 100%;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #0645ff;
+  color: #fff;
+  font-size: 9px;
+  line-height: 1.2;
+}
+
+.sidebar-menu {
+  flex: 0 0 auto;
+  gap: 5px;
+  padding: 0;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 38px;
+  height: auto;
+  gap: 11px;
+  padding: 9px 11px;
+  border-radius: 9px;
+  color: #c5ccda;
+  font-size: 11px;
+  line-height: 1.3;
+  text-align: left;
+  transition: background-color .18s ease, color .18s ease;
+}
+
+.sidebar-item:hover {
+  background: rgba(255, 255, 255, .09);
+  color: #fff;
+}
+
+.sidebar-item:hover .sidebar-menu-icon {
+  filter: brightness(0) invert(1);
+}
+
+.sidebar-item.active {
+  background: #155dfc;
+  color: #fff;
+}
+
+.sidebar-item.active .sidebar-menu-icon {
+  filter: brightness(0) invert(1);
+}
+
+.sidebar-icon-wrapper {
+  flex: 0 0 17px;
+  width: 17px;
+  height: 17px;
+}
+
+.sidebar-menu-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+.sidebar-bottom {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: 0;
+  margin-top: auto;
+  padding: 18px 2px 2px;
+}
+
+.sidebar-help-card {
+  margin: 0 0 2px;
+  padding: 10px 9px;
+  border: 1px solid rgba(255, 255, 255, .07);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, .045);
+  color: #d8deea;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.sidebar-help-card strong {
+  display: block;
+  margin: 0 0 5px;
+  color: #fff;
+  font-size: 10px;
+}
+
+.sidebar-help-card p {
+  margin: 0;
+  color: #aeb8ca;
+  font-size: 9px;
+}
+
+.logout-button {
+  min-height: 40px;
+  padding: 0 11px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, .045);
+  color: #e9edf7;
+  font-size: 11px;
+  text-align: left;
+}
+
+/* At smaller widths, stack dashboard cards instead of clipping the right column. */
+@media (max-width: 1050px) {
+  .dashboard-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "hero"
+      "calendar"
+      "results"
+      "process"
+      "announcement"
+      "faq";
+  }
+
+  .left-column,
+  .right-column {
+    display: contents;
+  }
+
+  .election-card {
+    min-height: 210px;
+  }
+}
+
+@media (max-width: 820px) {
+  .dashboard-body {
+    margin-left: 0;
+  }
+
+  .dashboard-main,
+  .vote-main,
+  .guidelines-main,
+  .settings-main,
+  .profile-main {
+    width: 100%;
+    max-width: 100%;
+    padding: 18px 14px 24px;
+  }
+
+  .sidebar {
+    width: 236px;
+    min-width: 236px;
+  }
+}
+
+@media (max-width: 520px) {
+  .dashboard-main,
+  .vote-main,
+  .guidelines-main,
+  .settings-main,
+  .profile-main {
+    padding: 16px 11px 22px;
+  }
+
+  .sidebar {
+    width: min(236px, 84vw);
+    min-width: min(236px, 84vw);
+  }
+
+  .election-card {
+    min-height: 190px;
+    padding: 18px;
+  }
+
+  .election-card h3 {
+    overflow-wrap: anywhere;
+    font-size: 22px;
+  }
+
+  .election-card-meta {
+    gap: 7px;
+  }
+}
+
+
+.election-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 20px; /* Space between the buttons */
+    margin-top: 8px;
+}
+
+.election-card-actions .vote-button {
+    margin-top: 0;
+}
+
+.view-candidates-button {
+    min-height: 40px;
+    padding: 0 18px; /* Space inside the button */
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    border-radius: 10px;
+    background: rgba(15, 24, 43, 0.58);
+    color: #fff;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.18s ease,
+                border-color 0.18s ease;
+}
+
+.view-candidates-button:hover {
+    background: #fff;
+    border-color: #fff;
+    color: #174fe8;
+}
+
+
+/* Announcement banner */
+.announcement-card {
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 18px;
+    padding: clamp(16px, 2vw, 24px);
+}
+
+.announcement-card h3 {
+    color: #fff;
+    font-size: clamp(13px, 1.1vw, 16px);
+    line-height: 1.35;
+}
+
+.announcement-card p {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    color: #d0d4e5;
+    font-size: clamp(11px, 0.9vw, 13px);
+    line-height: 1.55;
+}
+
+.announcement-card button {
+    min-height: 32px;
+    align-self: center;
+    font-size: 11px;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+/* Larger, responsive FAQ section */
+.faq-section {
+    min-width: 0;
+    grid-template-columns: minmax(130px, 0.55fr)
+                           minmax(0, 1.8fr);
+    gap: clamp(16px, 3vw, 42px);
+    margin-top: 8px;
+}
+
+.faq-section > h3 {
+    padding-top: 12px;
+    font-size: clamp(13px, 1.05vw, 16px);
+}
+
+.faq-list,
+.faq-item {
+    min-width: 0;
+    width: 100%;
+}
+
+.faq-list {
+    gap: 10px;
+}
+
+.faq-button {
+    width: 100%;
+    min-height: 48px;
+    padding: 11px 16px;
+    gap: 14px;
+    font-size: clamp(12px, 1vw, 15px);
+    line-height: 1.45;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: left;
+}
+
+.faq-button::after {
+    flex: 0 0 auto;
+    font-size: 20px;
+}
+
+.faq-answer {
+    padding: 12px 16px 16px;
+    font-size: clamp(11px, 0.9vw, 13px);
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+}
+
+/* Prevent grid content from forcing horizontal overflow */
+.dashboard-grid,
+.left-column,
+.right-column,
+.dashboard-main,
+.results-card,
+.chart-row {
+    min-width: 0;
+}
+
+/* Tablet */
+@media (max-width: 820px) {
+    .faq-section {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+    }
+
+    .faq-section > h3 {
+        padding-top: 0;
+    }
+
+    .announcement-card {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+}
+
+/* Mobile */
+@media (max-width: 520px) {
+    .election-card-actions {
+        align-items: stretch;
+    }
+
+    .election-card-actions .vote-button,
+    .view-candidates-button {
+        min-height: 36px;
+        padding: 0 11px;
+        font-size: 11px;
+    }
+
+    .announcement-card {
+        grid-template-columns: minmax(0, 1fr);
+        align-items: start;
+        padding: 16px;
+    }
+
+    .announcement-card button {
+        grid-column: 1;
+        grid-row: auto;
+        justify-self: start;
+        margin-top: 4px;
+    }
+
+    .faq-button {
+        min-height: 50px;
+        padding: 12px 13px;
+        font-size: 13px;
+    }
+
+    .faq-answer {
+        padding: 11px 13px 14px;
+        font-size: 12px;
+    }
+}
+
+
+/* Force spacing between election action buttons */
+.election-card-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 16px !important;
+    row-gap: 12px !important;
+}
+
+.election-card-actions > .vote-button,
+.election-card-actions > .view-candidates-button {
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+}
+
+/* FINAL FIX: Separate the Vote and View Candidates buttons */
+.student-dashboard button.view-candidates-button {
+    margin-left: 16px !important;
+    position: relative;
+    left: 0;
+    transform: none;
+    box-sizing: border-box;
+}
+
+/* Keep the buttons aligned when the layout wraps */
+.student-dashboard .election-card-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+}
+
+/* Remove conflicting margins from the Vote button */
+.student-dashboard .election-card-actions button.vote-button {
+    margin: 0 !important;
+}
+
+
+/* Election banner — compact reference design */
+.student-dashboard .election-card,
+.student-dashboard .election-card:hover,
+.student-dashboard .main-hover-card.election-card:hover {
+    position: relative;
+    isolation: isolate;
+    min-height: 300px;
+    padding: 24px 28px;
+    overflow: hidden;
+    border: none !important;
+    border-radius: 20px;
+    background-color: #172033;
+    background-image:
+        linear-gradient(
+            105deg,
+            rgba(8, 13, 25, 0.82),
+            rgba(8, 13, 25, 0.35)
+        ),
+        url("/src/images/votara-design.png") !important;
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(16, 24, 45, 0.14);
+    transform: none !important;
+    filter: none !important;
+    transition: none !important;
+}
+
+.student-dashboard .election-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.student-dashboard .election-card-heading {
+    min-width: 0;
+    max-width: 480px;
+}
+
+.student-dashboard .election-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    min-height: 25px;
+    padding: 0 13px;
+    border-radius: 20px;
+    background: rgba(20, 85, 255, 0.65);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+.student-dashboard .election-card-heading h3 {
+    margin: 26px 0 5px;
+    color: #fff;
+    font-size: clamp(27px, 3vw, 38px);
+    font-weight: 750;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+}
+
+.student-dashboard .election-banner-subtitle {
+    max-width: 440px;
+    margin: 0 0 16px;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.student-dashboard .election-status-badge {
+    flex-shrink: 0;
+    padding: 9px 15px;
+    border: none;
+    border-radius: 24px;
+    background: #effcf5;
+    color: #087b48;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.student-dashboard .election-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin-top: 12px;
+}
+
+.student-dashboard .election-card-meta span {
+    padding: 8px 11px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.student-dashboard .election-card-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.student-dashboard .election-card-actions .vote-button {
+    min-height: 42px;
+    margin: 0 !important;
+    padding: 0 21px;
+    border: none;
+    border-radius: 11px;
+    background: #1455ff;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.student-dashboard .election-card-actions .view-candidates-button {
+    min-height: 42px;
+    margin: 0 !important;
+    padding: 0 22px;
+    border: none;
+    border-radius: 11px;
+    background: #252843;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.student-dashboard .election-card-actions .view-candidates-button:hover {
+    background: #343957;
+    color: #fff;
+}
+
+/* Keep the banner stable on hover */
+.student-dashboard .election-card:hover {
+    background-color: #172033 !important;
+    box-shadow: 0 8px 20px rgba(16, 24, 45, 0.14) !important;
+}
+
+/* Tablet */
+@media (max-width: 820px) {
+    .student-dashboard .election-card,
+    .student-dashboard .election-card:hover {
+        min-height: 270px;
+        padding: 22px;
+    }
+
+    .student-dashboard .election-card-heading h3 {
+        margin-top: 22px;
+    }
+
+    .student-dashboard .election-banner-subtitle {
+        max-width: 100%;
+    }
+}
+
+/* Mobile */
+@media (max-width: 520px) {
+    .student-dashboard .election-card,
+    .student-dashboard .election-card:hover {
+        min-height: 0;
+        padding: 18px;
+        border-radius: 16px;
+    }
+
+    .student-dashboard .election-card-header {
+        gap: 8px;
+    }
+
+    .student-dashboard .election-eyebrow {
+        min-height: 23px;
+        padding: 0 10px;
+        font-size: 9px;
+    }
+
+    .student-dashboard .election-card-heading h3 {
+        margin-top: 22px;
+        font-size: clamp(23px, 7vw, 30px);
+    }
+
+    .student-dashboard .election-status-badge {
+        padding: 7px 9px;
+        font-size: 10px;
+    }
+
+    .student-dashboard .election-banner-subtitle {
+        font-size: 11px;
+    }
+
+    .student-dashboard .election-card-meta {
+        gap: 7px;
+    }
+
+    .student-dashboard .election-card-meta span {
+        font-size: 10px;
+    }
+
+    .student-dashboard .election-card-actions {
+        gap: 10px;
+    }
+
+    .student-dashboard .election-card-actions .vote-button,
+    .student-dashboard .election-card-actions .view-candidates-button {
+        min-height: 40px;
+        padding: 0 13px;
+        font-size: 11px;
+    }
+}
+
+
+/* =========================================================
+   STUDENT DASHBOARD - LIVE RESULTS + HOVER CONTRAST FIX
+   UI-only placeholder: no fabricated candidates or percentages.
+========================================================= */
+.student-dashboard .results-card.live-results-card {
+  min-height: 210px;
+  padding: 17px;
+  overflow: hidden;
+  border: 1px solid var(--student-border, #e2e8f0);
+  border-radius: 13px;
+  background: #fff;
+  color: #202638;
+  box-shadow: 0 4px 13px rgba(30, 45, 75, .055);
+}
+
+.student-dashboard .live-results-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.student-dashboard .live-results-header h3 {
+  margin: 0;
+  color: #202638;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.student-dashboard .live-results-header p {
+  margin: 4px 0 0;
+  color: #8790a2;
+  font-size: 9px;
+}
+
+.student-dashboard .live-results-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 9px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.student-dashboard .live-results-dot {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 6px;
+  border-radius: 50%;
+  background: #94a3b8;
+}
+
+.student-dashboard .live-results-empty-state {
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 10px;
+  text-align: center;
+}
+
+.student-dashboard .live-results-icon {
+  width: 38px;
+  height: 38px;
+  margin-bottom: 8px;
+}
+
+.student-dashboard .live-results-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.student-dashboard .live-results-empty-state h4 {
+  margin: 0;
+  color: #252b3b;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.student-dashboard .live-results-empty-state p {
+  max-width: 390px;
+  margin: 6px 0 9px;
+  color: #778195;
+  font-size: 9px;
+  line-height: 1.55;
+}
+
+.student-dashboard .live-results-note {
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 9px;
+  font-weight: 600;
+}
+
+/* Compact five-step timeline to match the reference design. */
+.student-dashboard .process-card {
+  padding: 17px;
+  border: 1px solid var(--student-border, #e2e8f0);
+  border-radius: 13px;
+  background: #fff;
+  color: #202638;
+  box-shadow: 0 4px 13px rgba(30, 45, 75, .055);
+}
+
+.student-dashboard .process-card h3 {
+  margin: 0 0 16px;
+  color: #202638;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.student-dashboard .process-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.student-dashboard .process-item {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  min-height: 38px;
+  padding-bottom: 9px;
+}
+
+.student-dashboard .process-item:not(.last)::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 20px;
+  left: 9px;
+  width: 1px;
+  height: calc(100% - 4px);
+  background: #9bb6ff;
+}
+
+.student-dashboard .process-number {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 19px;
+  height: 19px;
+  flex: 0 0 19px;
+  border-radius: 50%;
+  background: #175cff;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 650;
+  transform: none;
+}
+
+.student-dashboard .process-item:hover .process-number {
+  transform: none;
+}
+
+.student-dashboard .process-number.inactive {
+  background: #e1e4e8;
+  color: #626b78;
+}
+
+.student-dashboard .process-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding-top: 2px;
+}
+
+.student-dashboard .process-text strong {
+  color: #252b3b;
+  font-size: 9px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+.student-dashboard .process-text span {
+  margin-top: 2px;
+  color: #818898;
+  font-size: 8px;
+  line-height: 1.4;
+}
+
+.student-dashboard .process-item-pending .process-text strong {
+  color: #646b77;
+  font-weight: 500;
+}
+
+/* Keep the dark announcement banner dark on hover. The previous
+   background-color: inherit rule made its white text disappear. */
+.student-dashboard .announcement-card.main-hover-card,
+.student-dashboard .announcement-card.main-hover-card:hover,
+.student-dashboard .announcement-card.main-hover-card:focus-within {
+  background: #17172e !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  transform: none !important;
+  filter: none !important;
+}
+
+.student-dashboard .announcement-card h3,
+.student-dashboard .announcement-card:hover h3 {
+  color: #fff !important;
+}
+
+.student-dashboard .announcement-card p,
+.student-dashboard .announcement-card:hover p {
+  color: #d0d4e5 !important;
+}
+
+.student-dashboard .announcement-card button,
+.student-dashboard .announcement-card:hover button {
+  color: #fff;
+}
+
+/* FAQ cards keep readable contrast when hovered or expanded. */
+.student-dashboard .faq-button,
+.student-dashboard .faq-button:hover,
+.student-dashboard .faq-button:focus-visible {
+  background: #fff;
+  color: #3f4556;
+}
+
+.student-dashboard .faq-button:hover {
+  border-color: #cbd8f5;
+  box-shadow: 0 4px 12px rgba(30, 45, 75, .08);
+}
+
+.student-dashboard .faq-answer {
+  background: #fff;
+  color: #70788a;
+}
+
+@media (max-width: 520px) {
+  .student-dashboard .live-results-card,
+  .student-dashboard .process-card {
+    padding: 15px;
+  }
+
+  .student-dashboard .live-results-empty-state {
+    min-height: 150px;
+  }
+}
+
+/* FAQ introduction */
+.student-dashboard .faq-intro {
+    min-width: 0;
+    align-self: start;
+}
+
+.student-dashboard .faq-intro h3 {
+    margin: 0 0 5px;
+    color: #252b3b;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.student-dashboard .faq-intro p {
+    max-width: 270px;
+    margin: 0;
+    color: #747d91;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.6;
+}
+
+/* Keep FAQ text readable during hover */
+.student-dashboard .faq-item:hover .faq-button,
+.student-dashboard .faq-button:hover {
+    background: #ffffff;
+    color: #252b3b;
+}
+
+/* =========================================
+   RESPONSIVE STUDENT DASHBOARD HEADER
+   ========================================= */
+
+.student-dashboard .top-navbar {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: clamp(12px, 2vw, 28px);
+
+    width: calc(100% - 236px);
+    height: 82px;
+    margin-left: 236px;
+    padding: 12px clamp(16px, 2vw, 30px);
+
+    background: #f5f5f5;
+    border: 1px solid #e7e8ed;
+    border-radius: 16px;
+    box-shadow: 0 5px 18px rgba(20, 30, 55, 0.10);
+
+    position: sticky;
+    top: 8px;
+    z-index: 200;
+}
+
+.student-dashboard .top-navbar .nav-left {
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 14px;
+}
+
+.student-dashboard .top-navbar .header-greeting {
+    min-width: 0;
+}
+
+.student-dashboard .header-greeting h1 {
+    margin: 0;
+    color: #202438;
+    font-size: clamp(19px, 2vw, 25px);
+    font-weight: 400;
+    line-height: 1.25;
+    letter-spacing: -0.5px;
+}
+
+.student-dashboard .header-greeting h1 strong {
+    font-weight: 750;
+}
+
+.student-dashboard .header-greeting p {
+    margin: 4px 0 0;
+    color: #85899a;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.student-dashboard .top-navbar .menu-toggle {
+    display: none;
+    flex: 0 0 28px;
+}
+
+.student-dashboard .top-navbar .search-container {
+    display: flex;
+    flex: 0 1 180px;
+    width: 180px;
+    min-width: 120px;
+    height: 34px;
+    padding-left: 12px;
+
+    background: #ffffff;
+    border: 1px solid #dedfe5;
+    border-radius: 20px;
+    box-shadow: none;
+}
+
+.student-dashboard .top-navbar .search-container:focus-within {
+    background: #ffffff;
+    border-color: #c7d4ff;
+    box-shadow: 0 0 0 3px rgba(37, 92, 255, 0.08);
+}
+
+.student-dashboard .top-navbar .search-container input {
+    width: 100%;
+    min-width: 0;
+    color: #252b3b;
+    font-size: 11px;
+}
+
+.student-dashboard .top-navbar .search-container input::placeholder {
+    color: #a0a3ad;
+}
+
+.student-dashboard .top-navbar .search-button {
+    flex: 0 0 32px;
+    width: 32px;
+    height: 100%;
+    padding: 0;
+    color: #292d3a;
+    font-size: 19px;
+}
+
+.student-dashboard .top-navbar .nav-right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    gap: 8px;
+}
+
+.student-dashboard .top-navbar .nav-icon-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 5px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+}
+
+.student-dashboard .top-navbar .nav-icon-button:hover {
+    background: #e9ecf3;
+}
+
+.student-dashboard .top-navbar .nav-icon-image {
+    display: block;
+    width: 17px;
+    height: 17px;
+    object-fit: contain;
+}
+
+/* Tablet */
+@media (max-width: 1000px) {
+    .student-dashboard .top-navbar {
+        width: calc(100% - 205px);
+        margin-left: 205px;
+        padding: 12px 16px;
+        gap: 12px;
+    }
+
+    .student-dashboard .top-navbar .search-container {
+        flex-basis: 155px;
+        width: 155px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 720px) {
+    .student-dashboard .top-navbar {
+        width: 100%;
+        height: 72px;
+        margin-left: 0;
+        padding: 9px 12px;
+        gap: 10px;
+        top: 0;
+        border-radius: 0 0 14px 14px;
+    }
+
+    .student-dashboard .top-navbar .menu-toggle {
+        display: flex;
+        width: 25px;
+        flex: 0 0 25px;
+    }
+
+    .student-dashboard .top-navbar .menu-toggle span {
+        width: 21px;
+        background: #252b3b;
+    }
+
+    .student-dashboard .top-navbar .nav-left {
+        gap: 9px;
+    }
+
+    .student-dashboard .header-greeting h1 {
+        font-size: clamp(15px, 4vw, 19px);
+        letter-spacing: -0.3px;
+    }
+
+    .student-dashboard .header-greeting p {
+        margin-top: 3px;
+        font-size: 10px;
+    }
+
+    .student-dashboard .top-navbar .search-container {
+        flex: 0 1 135px;
+        width: 135px;
+        min-width: 80px;
+        height: 32px;
+        padding-left: 9px;
+    }
+
+    .student-dashboard .top-navbar .search-button {
+        flex-basis: 27px;
+        width: 27px;
+        font-size: 17px;
+    }
+
+    .student-dashboard .top-navbar .nav-right {
+        gap: 0;
+    }
+
+    .student-dashboard .top-navbar .nav-icon-button {
+        width: 28px;
+        height: 28px;
+        padding: 4px;
+    }
+}
+
+/* Very narrow phones */
+@media (max-width: 380px) {
+    .student-dashboard .top-navbar {
+        gap: 7px;
+        padding-right: 8px;
+        padding-left: 8px;
+    }
+
+    .student-dashboard .top-navbar .nav-left {
+        gap: 6px;
+    }
+
+    .student-dashboard .header-greeting h1 {
+        font-size: 14px;
+    }
+
+    .student-dashboard .header-greeting p {
+        font-size: 9px;
+    }
+
+    .student-dashboard .top-navbar .search-container {
+        flex-basis: 95px;
+        width: 95px;
+        min-width: 70px;
+    }
+}
+
+/* =========================================
+   STUDENT SIDEBAR PROFILE
+   ========================================= */
+
+.student-dashboard .sidebar {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    padding: 12px 12px 14px;
+    background: #111827;
+    color: #f7f9ff;
+}
+
+.student-dashboard .sidebar-brand {
+    flex: 0 0 38px;
+    margin-bottom: 12px;
+    color: #2463ff;
+    font-size: 15px;
+}
+
+.student-dashboard .sidebar-profile {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-items: center;
+    gap: 4px 9px;
+    min-width: 0;
+    margin: 0 0 12px;
+    padding: 11px 9px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.045);
+}
+
+.student-dashboard .sidebar .profile-picture,
+.student-dashboard .sidebar .profile-placeholder {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    margin: 0;
+    border: 2px solid #345fff;
+    border-radius: 50%;
+    object-fit: cover;
+    overflow: hidden;
+}
+
+.student-dashboard .sidebar .profile-placeholder {
+    background: #3922a7;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.student-dashboard .sidebar-profile-info {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+}
+
+.student-dashboard .sidebar-profile-info h3 {
+    display: block;
+    max-width: 100%;
+    margin: 0;
+    overflow: hidden;
+    color: #f7f9ff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.student-dashboard .sidebar-edit-profile {
+    display: inline-block;
+    margin: 3px 0 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #aebbd8;
+    font-size: 9px;
+    line-height: 1.4;
+    text-align: left;
+    cursor: pointer;
+}
+
+.student-dashboard .sidebar-edit-profile:hover {
+    background: transparent;
+    color: #ffffff;
+    text-decoration: underline;
+}
+
+.student-dashboard .sidebar-online-badge {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: block;
+    width: 100%;
+    margin: 3px 0 0;
+    padding: 5px 9px;
+    border-radius: 20px;
+    background: #155dfb;
+    color: #ffffff;
+    font-size: 9px;
+    line-height: 1.2;
+}
+
+/* Keep the navigation and help/logout area aligned */
+.student-dashboard .sidebar-menu {
+    flex: 0 0 auto;
+    width: 100%;
+}
+
+.student-dashboard .sidebar-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    margin-top: auto;
+    padding: 12px 2px 0;
+}
+
+.student-dashboard .sidebar-help-card {
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.045);
+    color: #e9edf7;
+}
+
+.student-dashboard .sidebar-help-card strong {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 9px;
+}
+
+.student-dashboard .sidebar-help-card p {
+    margin: 0;
+    color: #aebbd0;
+    font-size: 8px;
+    line-height: 1.5;
+}
+
+.student-dashboard .sidebar .logout-button {
+    width: 100%;
+    flex-shrink: 0;
+}
+
+/* Short screens: allow the sidebar itself to scroll */
+@media (max-height: 620px) {
+    .student-dashboard .sidebar {
+        overflow-y: auto;
+    }
+
+    .student-dashboard .sidebar-bottom {
+        margin-top: 18px;
+    }
+}
+
+/* Mobile sidebar keeps the same profile layout */
+@media (max-width: 720px) {
+    .student-dashboard .sidebar {
+        padding: 12px;
+    }
+
+    .student-dashboard .sidebar-profile {
+        grid-template-columns: 38px minmax(0, 1fr);
+        padding: 11px 9px;
+    }
+
+    .student-dashboard .sidebar-profile-info h3 {
+        font-size: 11px;
+    }
+}
+
+/* =========================================
+   VOTARA SIDEBAR — COMPACT REFERENCE STYLE
+   ========================================= */
+
+.student-dashboard .sidebar {
+    width: 202px;
+    min-width: 202px;
+    border-radius: 0;
+    background: #111827;
+    overflow-x: hidden;
+}
+
+.student-dashboard .sidebar-collapsed {
+    width: 64px;
+    min-width: 64px;
+}
+
+/* Menu spacing */
+.student-dashboard .sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 8px 12px;
+}
+
+.student-dashboard .sidebar-item {
+    box-sizing: border-box;
+    width: 100%;
+    height: 43px;
+    min-height: 43px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: #f4f6fb;
+    font-size: 12px;
+    font-weight: 400;
+    text-align: left;
+    white-space: nowrap;
+    transition: background 0.18s ease, color 0.18s ease;
+}
+
+.student-dashboard .sidebar-item:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: #ffffff;
+}
+
+.student-dashboard .sidebar-item.active {
+    background: #124cff;
+    color: #ffffff;
+    border-radius: 10px;
+}
+
+/* Compact icon containers */
+.student-dashboard .sidebar-icon-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 19px;
+    width: 19px;
+    height: 19px;
+    overflow: hidden;
+}
+
+/* Show one icon at a time */
+.student-dashboard .sidebar-menu-icon {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 19px;
+    height: 19px;
+    object-fit: contain;
+    transform: none;
+    transition: opacity 0.15s ease;
+}
+
+.student-dashboard .sidebar-menu-icon.normal-icon {
+    opacity: 1;
+}
+
+.student-dashboard .sidebar-menu-icon.normal-icon.hide-icon {
+    opacity: 0;
+    transform: none;
+}
+
+.student-dashboard .sidebar-menu-icon.active-icon {
+    opacity: 0;
+    transform: none;
+}
+
+.student-dashboard .sidebar-menu-icon.active-icon.show-icon {
+    opacity: 1;
+    transform: none;
+}
+
+.student-dashboard .sidebar-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Sidebar profile spacing */
+.student-dashboard .sidebar-profile {
+    margin: 4px 12px 10px;
+    padding: 10px;
+    border-radius: 13px;
+}
+
+/* Bottom help and logout */
+.student-dashboard .sidebar-bottom {
+    margin-top: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.student-dashboard .sidebar-help-card {
+    padding: 10px;
+    border-radius: 11px;
+}
+
+.student-dashboard .sidebar-help-card strong {
+    font-size: 10px;
+}
+
+.student-dashboard .sidebar-help-card p {
+    font-size: 9px;
+    line-height: 1.45;
+}
+
+.student-dashboard .logout-button {
+    min-height: 42px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    color: #ffffff;
+    font-size: 12px;
+}
+
+.student-dashboard .logout-button:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Collapsed sidebar */
+.student-dashboard .sidebar-collapsed .sidebar-menu {
+    padding-right: 8px;
+    padding-left: 8px;
+}
+
+.student-dashboard .sidebar-collapsed .sidebar-item {
+    justify-content: center;
+    gap: 0;
+    padding: 0;
+}
+
+.student-dashboard .sidebar-collapsed .sidebar-label,
+.student-dashboard .sidebar-collapsed .sidebar-help-card,
+.student-dashboard .sidebar-collapsed .logout-text {
+    display: none;
+}
+
+.student-dashboard .sidebar-collapsed .sidebar-bottom {
+    padding-right: 8px;
+    padding-left: 8px;
+}
+
+.student-dashboard .sidebar-collapsed .logout-button {
+    justify-content: center;
+    padding: 0;
+}
+
+/* Responsive sizing */
+@media (max-width: 900px) {
+    .student-dashboard .sidebar {
+        width: 190px;
+        min-width: 190px;
+    }
+}
+
+@media (max-width: 720px) {
+    .student-dashboard .sidebar {
+        width: 202px;
+        min-width: 202px;
+    }
+}
+
+/* Sidebar navigation polish */
+.student-dashboard .sidebar-item {
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.student-dashboard .sidebar-item:hover {
+    background-color: rgba(255, 255, 255, 0.09);
+}
+
+.student-dashboard .sidebar-item.active {
+    background: #155dfc;
+    color: #fff;
+}
+
+.student-dashboard .sidebar-item:focus-visible,
+.student-dashboard .menu-toggle:focus-visible {
+    outline: 2px solid #60a5fa;
+    outline-offset: 3px;
+}
+
+/* Smooth mobile drawer */
+@media (max-width: 720px) {
+    .student-dashboard .sidebar {
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .student-dashboard .sidebar-backdrop {
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .student-dashboard .sidebar-item {
+        min-height: 44px;
+    }
+}
+
+/* =========================================
+   MOBILE SIDEBAR — STABLE ALIGNMENT
+   Append at the bottom of StudentDashboard.css
+   ========================================= */
+
+@media (max-width: 720px) {
+    .student-dashboard .sidebar,
+    .student-dashboard .sidebar.sidebar-open,
+    .student-dashboard .sidebar.sidebar-collapsed {
+        box-sizing: border-box;
+        width: min(280px, 86vw);
+        min-width: 0;
+        max-width: 86vw;
+        height: calc(100dvh - 64px);
+        max-height: calc(100dvh - 64px);
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        transition: transform 0.2s ease;
+    }
+
+    .student-dashboard .sidebar-menu {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        width: 100%;
+        padding: 8px 12px;
+        box-sizing: border-box;
+    }
+
+    .student-dashboard .sidebar-item {
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        width: 100%;
+        min-width: 0;
+        min-height: 44px;
+        height: 44px;
+        flex-shrink: 0;
+        gap: 12px;
+        padding: 0 12px;
+        margin: 0;
+        border: 0;
+        border-radius: 10px;
+        transform: none !important;
+        transition: background-color 0.15s ease, color 0.15s ease;
+    }
+
+    .student-dashboard .sidebar-icon-wrapper {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 20px;
+        width: 20px;
+        height: 20px;
+        margin: 0;
+        transform: none !important;
+    }
+
+    .student-dashboard .sidebar-menu-icon {
+        max-width: 20px;
+        max-height: 20px;
+        transform: none !important;
+        transition: none !important;
+    }
+
+    .student-dashboard .sidebar-label {
+        min-width: 0;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .student-dashboard .sidebar-item.active {
+        background: #155dfc;
+        color: #ffffff;
+        transform: none !important;
+        box-shadow: none;
+    }
+
+    .student-dashboard .sidebar-bottom {
+        flex: 0 0 auto;
+        margin-top: auto;
+        padding: 18px 12px 14px;
+        box-sizing: border-box;
+    }
+
+    .student-dashboard .sidebar-help-card,
+    .student-dashboard .logout-button {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Prevent mobile drawer contents from using collapsed-sidebar styling */
+    .student-dashboard .sidebar.sidebar-collapsed .sidebar-label,
+    .student-dashboard .sidebar.sidebar-collapsed .sidebar-help-card,
+    .student-dashboard .sidebar.sidebar-collapsed .logout-text {
+        display: initial;
+    }
+
+    .student-dashboard .sidebar.sidebar-collapsed .sidebar-item {
+        justify-content: flex-start;
+        gap: 12px;
+        padding: 0 12px;
+    }
+
+    .student-dashboard .sidebar.sidebar-collapsed .sidebar-bottom {
+        padding: 18px 12px 14px;
+    }
+
+    .student-dashboard .sidebar.sidebar-collapsed .logout-button {
+        justify-content: flex-start;
+        padding: 0 12px;
+    }
+}
+
+/* Remove hover-only visual changes on touch devices */
+@media (hover: none), (pointer: coarse) {
+    .student-dashboard .sidebar-item:hover,
+    .student-dashboard .sidebar-item:hover .sidebar-menu-icon,
+    .student-dashboard .sidebar-item.active:hover {
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
+    .student-dashboard .sidebar-item:hover {
+        background-color: transparent;
+    }
+
+    .student-dashboard .sidebar-item.active,
+    .student-dashboard .sidebar-item.active:hover {
+        background-color: #155dfc;
+        color: #ffffff;
+    }
+
+    .student-dashboard .sidebar-menu-icon,
+    .student-dashboard .sidebar-item,
+    .student-dashboard .sidebar-item:hover {
+        transition: none !important;
+    }
+}
+
+/* =========================================
+   ELECTION BANNER — MOBILE RESPONSIVENESS
+   ========================================= */
+
+@media (max-width: 720px) {
+    .student-dashboard .election-card,
+    .student-dashboard .election-card:hover {
+        box-sizing: border-box;
+        width: 100%;
+        min-width: 0;
+        min-height: 0;
+        padding: 24px 20px;
+        border-radius: 18px;
+        overflow: hidden;
+        transform: none !important;
+        transition: none !important;
+        background-position: center;
+        background-size: cover;
+    }
+
+    .student-dashboard .election-card-header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .student-dashboard .election-card-heading {
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+
+    .student-dashboard .election-card-heading h3 {
+        max-width: 100%;
+        margin: 20px 0 10px;
+        font-size: clamp(25px, 7vw, 34px);
+        line-height: 1.12;
+        overflow-wrap: anywhere;
+    }
+
+    .student-dashboard .election-banner-subtitle {
+        max-width: 100%;
+        margin-bottom: 16px;
+        font-size: 13px;
+        line-height: 1.55;
+        overflow-wrap: anywhere;
+    }
+
+    .student-dashboard .election-status-badge {
+        max-width: 100%;
+        white-space: normal;
+    }
+
+    .student-dashboard .election-card-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .student-dashboard .election-card-actions button {
+        box-sizing: border-box;
+        max-width: 100%;
+        min-height: 42px;
+        margin: 0;
+        transform: none !important;
+    }
+}
+
+@media (max-width: 380px) {
+    .student-dashboard .election-card,
+    .student-dashboard .election-card:hover {
+        padding: 20px 15px;
+    }
+
+    .student-dashboard .election-card-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .student-dashboard .election-card-actions button {
+        width: 100%;
+    }
+}
+
+/* ==========================================
+   FIX: ELECTION BANNER TEXT SHIFT ON HOVER
+   ========================================== */
+
+.student-dashboard .election-card,
+.student-dashboard .election-card:hover,
+.student-dashboard .election-card:focus,
+.student-dashboard .election-card:focus-within,
+.student-dashboard .main-hover-card,
+.student-dashboard .main-hover-card:hover {
+    transform: none !important;
+    translate: none !important;
+    scale: none !important;
+    filter: none !important;
+}
+
+/* Keep the banner's inner content anchored */
+.student-dashboard .election-card .election-card-header,
+.student-dashboard .election-card .election-card-heading,
+.student-dashboard .election-card .election-banner-subtitle,
+.student-dashboard .election-card .election-card-actions {
+    position: relative;
+    left: auto !important;
+    right: auto !important;
+    transform: none !important;
+    translate: none !important;
+    transition: none !important;
+}
+
+/* Prevent hover from changing spacing or dimensions */
+.student-dashboard .election-card,
+.student-dashboard .election-card:hover {
+    box-sizing: border-box !important;
+    padding-left: 28px !important;
+    padding-right: 28px !important;
+    border-width: 0 !important;
+}
+
+/* Keep heading and subtitle aligned */
+.student-dashboard .election-card .election-card-heading h3,
+.student-dashboard .election-card .election-banner-subtitle {
+    margin-left: 0 !important;
+    text-indent: 0 !important;
+}
+
+/* Keep the same alignment on mobile */
+@media (max-width: 720px) {
+    .student-dashboard .election-card,
+    .student-dashboard .election-card:hover {
+        padding-left: 20px !important;
+        padding-right: 20px !important;
+    }
+}
+
+/* Avoid hover movement on touch devices */
+@media (hover: none), (pointer: coarse) {
+    .student-dashboard .election-card:hover,
+    .student-dashboard .election-card:hover * {
+        transform: none !important;
+        translate: none !important;
+        animation: none !important;
+    }
+}
+
+/* =========================================
+   MOBILE SIDEBAR — ROUNDED EDGES
+   ========================================= */
+
+@media (max-width: 720px) {
+    .student-dashboard .sidebar,
+    .student-dashboard .sidebar.sidebar-open,
+    .student-dashboard .sidebar.sidebar-collapsed {
+        border-radius: 0 20px 20px 0 !important;
+        overflow: hidden auto;
+        clip-path: inset(0 round 0 20px 20px);
+        box-shadow: 8px 0 28px rgba(15, 23, 42, 0.2);
+    }
+
+    /* Keep the menu content neatly inside the rounded panel */
+    .student-dashboard .sidebar-header,
+    .student-dashboard .sidebar-profile,
+    .student-dashboard .sidebar-bottom {
+        border-radius: 14px;
+    }
+
+    .student-dashboard .sidebar-item {
+        border-radius: 12px;
+    }
+}
+
+
+/* =========================================
+   VOTE PAGE — DOTTED BACKGROUND
+   ========================================= */
+
+.student-dashboard .vote-main {
+    min-height: 100%;
+    box-sizing: border-box;
+    background-color: #ffffff;
+    background-image: radial-gradient(
+        circle,
+        rgba(111, 132, 180, 0.28) 1.1px,
+        transparent 1.2px
+    );
+    background-size: 18px 18px;
+}
+
+/* Candidate card layout */
+.student-dashboard .candidate-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    width: 100%;
+    max-width: 1200px;
+}
+
+.student-dashboard .candidate-card {
+    min-width: 0;
+    border: 1px solid #e3e8f2;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 6px 18px rgba(26, 42, 77, 0.1);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.student-dashboard .candidate-card:hover {
+    transform: none;
+    box-shadow: 0 9px 24px rgba(26, 42, 77, 0.15);
+}
+
+.student-dashboard .candidate-card.candidate-selected {
+    border: 2px solid #155dfc;
+    outline: none;
+}
+
+.student-dashboard .candidate-card-bottom {
+    align-items: center;
+    gap: 10px;
+}
+
+.student-dashboard .candidate-vote-button {
+    flex: 1;
+    min-width: 0;
+    border-radius: 999px;
+    background: #124cff;
+    font-weight: 700;
+}
+
+.student-dashboard .candidate-details-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 1px solid #dce3ef;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #25304a;
+}
+
+.student-dashboard .candidate-details-button:hover {
+    background: #edf3ff;
+    color: #124cff;
+    transform: none;
+}
+
+/* =========================================
+   CENTERED CAMPAIGN PLATFORM MODAL
+   ========================================= */
+
+.student-dashboard .candidate-platform-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 24px;
+    overflow-y: auto;
+    background: rgba(16, 24, 43, 0.58);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    animation: candidatePlatformFadeIn 0.18s ease-out;
+}
+
+.student-dashboard .candidate-platform-modal {
+    position: relative;
+    width: min(100%, 650px);
+    max-height: min(82vh, 760px);
+    max-height: min(82dvh, 760px);
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 38px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 22px;
+    background: #ffffff;
+    box-shadow: 0 24px 80px rgba(9, 18, 40, 0.28);
+    animation: candidatePlatformRise 0.22s ease-out;
+}
+
+.student-dashboard .candidate-platform-close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 1px solid #e4e8f0;
+    border-radius: 50%;
+    background: #f8faff;
+    color: #252b3b;
+    font-size: 25px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.student-dashboard .candidate-platform-profile {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding-right: 20px;
+}
+
+.student-dashboard .candidate-platform-image {
+    flex: 0 0 96px;
+    width: 96px;
+    height: 96px;
+    border: 3px solid #e8edff;
+    border-radius: 50%;
+    background: #f2f5fb;
+    object-fit: cover;
+}
+
+.student-dashboard .candidate-platform-identity {
+    min-width: 0;
+}
+
+.student-dashboard .candidate-platform-kicker {
+    color: #155dfc;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.student-dashboard .candidate-platform-identity h2 {
+    margin: 5px 0;
+    color: #171f33;
+    font-size: clamp(21px, 3vw, 29px);
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
+.student-dashboard .candidate-platform-identity p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.student-dashboard .candidate-platform-identity strong {
+    color: #20283a;
+}
+
+.student-dashboard .candidate-platform-content {
+    margin-top: 30px;
+}
+
+.student-dashboard .candidate-platform-content h3 {
+    margin: 0 0 14px;
+    color: #20283a;
+    font-size: 16px;
+}
+
+.student-dashboard .candidate-platform-content p,
+.student-dashboard .candidate-platform-content li {
+    color: #424b5f;
+    font-size: 14px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+}
+
+.student-dashboard .candidate-platform-text {
+    white-space: pre-line;
+}
+
+.student-dashboard .candidate-platform-content ol,
+.student-dashboard .candidate-platform-content ul {
+    padding-left: 22px;
+}
+
+.student-dashboard .candidate-platform-content li + li {
+    margin-top: 8px;
+}
+
+.student-dashboard .candidate-platform-empty {
+    padding: 15px;
+    border: 1px dashed #d9e0ec;
+    border-radius: 12px;
+    background: #f8faff;
+}
+
+.student-dashboard .candidate-platform-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 26px;
+}
+
+.student-dashboard .candidate-platform-footer button {
+    min-width: 100px;
+    min-height: 42px;
+    padding: 10px 22px;
+    border: 0;
+    border-radius: 10px;
+    background: #124cff;
+    color: #ffffff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.student-dashboard .candidate-platform-footer button:hover {
+    background: #0c3fd8;
+}
+
+@keyframes candidatePlatformFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes candidatePlatformRise {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Tablet and mobile */
+@media (max-width: 900px) {
+    .student-dashboard .candidate-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+}
+
+@media (max-width: 560px) {
+    .student-dashboard .vote-main {
+        padding: 24px 14px 32px;
+    }
+
+    .student-dashboard .candidate-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .student-dashboard .candidate-platform-overlay {
+        align-items: center;
+        padding: 14px;
+    }
+
+    .student-dashboard .candidate-platform-modal {
+        width: 100%;
+        max-height: 88vh;
+        max-height: 88dvh;
+        padding: 54px 20px 22px;
+        border-radius: 18px;
+    }
+
+    .student-dashboard .candidate-platform-profile {
+        align-items: flex-start;
+        gap: 14px;
+        padding-right: 0;
+    }
+
+    .student-dashboard .candidate-platform-image {
+        flex-basis: 70px;
+        width: 70px;
+        height: 70px;
+    }
+
+    .student-dashboard .candidate-platform-content {
+        margin-top: 24px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .student-dashboard .candidate-platform-overlay,
+    .student-dashboard .candidate-platform-modal {
+        animation: none;
+    }
+}
+
+/* Candidates and student content background */
+.dashboard-main {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    min-height: 100%;
+    padding: 24px 28px 36px;
+    background-color: #fbfcff;
+    background-image: radial-gradient(
+        circle,
+        #d6e0f5 1.3px,
+        transparent 1.5px
+    );
+    background-size: 20px 20px;
+}
+
+/* Candidate directory */
+.candidates-election-banner {
+    margin-bottom: 28px;
+    padding: 24px;
+    border-radius: 16px;
+    background: #17172e;
+    color: #ffffff;
+    box-shadow: 0 8px 24px rgba(30, 45, 75, 0.1);
+}
+
+.candidates-election-banner span {
+    color: #aebfff;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.candidates-election-banner h2 {
+    margin: 8px 0;
+    font-size: clamp(20px, 2.5vw, 30px);
+}
+
+.candidates-election-banner p {
+    margin: 0;
+    color: #c5c8d9;
+}
+
+.directory-position {
+    margin: 30px 0;
+}
+
+.directory-position-heading {
+    margin-bottom: 16px;
+}
+
+.directory-position-heading h2 {
+    margin: 0;
+    color: #252b3b;
+    font-size: 24px;
+}
+
+.directory-position-heading p {
+    margin: 5px 0 0;
+    color: #778096;
+    font-size: 14px;
+}
+
+.directory-candidate-grid {
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(min(100%, 280px), 1fr)
+    );
+    gap: 20px;
+}
+
+.directory-candidate-card {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid #e3e8f2;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 6px 20px rgba(30, 45, 75, 0.07);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.directory-candidate-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(30, 45, 75, 0.12);
+}
+
+.directory-candidate-photo {
+    display: grid;
+    place-items: center;
+    height: 180px;
+    overflow: hidden;
+    background: #edf3ff;
+    color: #2455e8;
+    font-size: 54px;
+    font-weight: 800;
+}
+
+.directory-candidate-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.directory-candidate-info {
+    padding: 20px;
+}
+
+.directory-candidate-info h3 {
+    margin: 0 0 10px;
+    color: #20283a;
+    font-size: 20px;
+    overflow-wrap: anywhere;
+}
+
+.directory-position-badge {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 20px;
+    background: #edf3ff;
+    color: #2455e8;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.directory-party-name {
+    margin: 15px 0;
+    color: #69738a;
+    font-size: 14px;
+}
+
+.directory-platform {
+    padding-top: 14px;
+    border-top: 1px solid #edf0f6;
+}
+
+.directory-platform h4 {
+    margin: 0 0 8px;
+    color: #30384c;
+    font-size: 14px;
+}
+
+.directory-platform p {
+    margin: 0;
+    color: #687187;
+    font-size: 14px;
+    line-height: 1.7;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+.candidates-empty-state {
+    padding: 24px;
+    border: 1px dashed #cbd5e7;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #687187;
+    line-height: 1.6;
+}
+
+.candidates-empty-state h2 {
+    margin-top: 0;
+    color: #252b3b;
+}
+
+@media (max-width: 720px) {
+    .dashboard-main {
+        padding: 18px 14px 28px;
+    }
+
+    .candidates-election-banner {
+        padding: 18px;
+    }
+
+    .directory-candidate-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+
+.student-results-page {
+    width: 100%;
+    padding: 8px 0 32px;
+    color: #172033;
+}
+
+.student-results-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.student-results-heading h1 {
+    margin: 0 0 8px;
+    font-size: clamp(24px, 3vw, 32px);
+    font-weight: 750;
+}
+
+.student-results-heading p,
+.student-results-description {
+    color: #64748b;
+}
+
+.student-results-refresh,
+.student-results-message button {
+    border: 0;
+    border-radius: 10px;
+    padding: 11px 16px;
+    background: #1e3a8a;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.student-results-refresh:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.student-results-message,
+.student-results-election,
+.student-result-card {
+    padding: 22px;
+    margin-bottom: 20px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgb(15 23 42 / 5%);
+}
+
+.student-results-message h2,
+.student-results-election h2 {
+    margin-top: 0;
+}
+
+.student-results-message.error {
+    border-color: #fecaca;
+    color: #991b1b;
+}
+
+.student-results-election span {
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.student-results-election h2 {
+    margin: 8px 0;
+}
+
+.student-results-election p {
+    color: #64748b;
+    font-size: 14px;
+}
+
+.student-results-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.student-result-card {
+    margin: 0;
+    min-width: 0;
+}
+
+.student-result-card-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.student-result-card-heading h2 {
+    margin: 0;
+    font-size: 19px;
+}
+
+.student-result-status {
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.student-result-status.winner {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.student-result-status.tie {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.student-result-status.no_votes {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.student-result-description,
+.student-result-notice {
+    color: #64748b;
+    font-size: 14px;
+}
+
+.student-result-candidates {
+    display: grid;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.student-result-candidate {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+.student-result-candidate.is-winner {
+    border-color: #86efac;
+    background: #f0fdf4;
+}
+
+.student-result-candidate-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.student-result-candidate-info img,
+.student-result-avatar {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.student-result-avatar {
+    display: grid;
+    place-items: center;
+    background: #dbeafe;
+    color: #1e40af;
+    font-weight: 700;
+}
+
+.student-result-candidate-info div:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.student-result-candidate-info span {
+    color: #64748b;
+    font-size: 13px;
+}
+
+.student-result-winner-label {
+    color: #166534 !important;
+    font-weight: 700;
+}
+
+.student-result-votes {
+    flex-shrink: 0;
+    color: #1e3a8a;
+    font-size: 14px;
+}
+
+@media (max-width: 850px) {
+    .student-results-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 520px) {
+    .student-results-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .student-result-candidate {
+        align-items: flex-start;
+    }
+
+    .student-result-votes {
+        font-size: 12px;
     }
 }
 
