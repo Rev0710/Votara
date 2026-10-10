@@ -394,6 +394,8 @@
 }
 
 .sidebar-menu-icon {
+  display: block;
+  visibility: visible;
   position: absolute;
   top: 50%;
   left: 50%;

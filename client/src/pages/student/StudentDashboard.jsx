@@ -1,6 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import "./StudentDashboard.css";
 import Profile from "./Profile";
+
+// Import sidebar assets through Vite so they work in development and production.
+import dashboardIcon from "../../images/home.png";
+import dashboardActiveIcon from "../../images/homealt.png";
+import voteIcon from "../../images/Results.png";
+import candidatesIcon from "../../images/Candidates.png";
+import guidelinesIcon from "../../images/guidelinesalt.png";
+import settingsIcon from "../../images/settingalt.png";
+import logoutIcon from "../../images/logoutalt.png";
+import votaraLogo from "../../images/Votara.png";
 import {
     getPartyListsForElection,
     getPartyListCandidates,
@@ -30,21 +40,13 @@ import {
 // LOGO
 // =====================================================
 
-const votaraLogoSrc = "/src/images/Votara.png";
+const votaraLogoSrc = votaraLogo;
 
 // =====================================================
 // SIDEBAR ICONS
 // =====================================================
 
-import dashboardIcon from "/src/images/homealt.png";
-import voteIcon from "/src/images/votealt.png";
-import guidelinesIcon from "/src/images/guidelinesalt.png";
-import settingsIcon from "/src/images/settingalt.png";
 
-import dashboardActiveIcon from "/src/images/home.png";
-import voteActiveIcon from "/src/images/review.png";
-import guidelinesActiveIcon from "/src/images/guidelines.png";
-import settingsActiveIcon from "/src/images/setting.png";
 
 // =====================================================
 // HELPERS
@@ -290,7 +292,7 @@ useEffect(() => {
                 }
 
                 const response = await fetch(
-                    "http://localhost:5000/api/auth/me",
+                    `${API_BASE_URL}/api/auth/me`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -632,7 +634,11 @@ useEffect(() => {
 
     const studentYearLevel =
         normalizeYearLevel(
-            student?.yearLevel
+            student?.yearLevel ??
+            student?.year_level ??
+            student?.yearLevelName ??
+            student?.year_level_name ??
+            student?.year
         );
 
     const studentEligible =
@@ -679,38 +685,38 @@ const sidebarItems = [
     {
         id: "dashboard",
         label: "Dashboard",
-        icon: "/src/images/home.png",
-        activeIcon: "/src/images/homealt.png",
+        icon: dashboardIcon,
+        activeIcon: dashboardActiveIcon,
     },
     {
         id: "vote",
         label: "Vote",
-        icon: "/src/images/Results.png",
-        activeIcon: "/src/images/Results.png",
+        icon: voteIcon,
+        activeIcon: voteIcon,
     },
     {
         id: "candidates",
         label: "Candidates",
-        icon: "/src/images/Candidates.png",
-        activeIcon: "/src/images/Candidates.png",
+        icon: candidatesIcon,
+        activeIcon: candidatesIcon,
     },
     {
         id: "results",
         label: "Results",
-        icon: "/src/images/Results.png",
-        activeIcon: "/src/images/Results.png",
+        icon: voteIcon,
+        activeIcon: voteIcon,
     },
     {
         id: "guidelines",
         label: "Voters Guidelines",
-        icon: "/src/images/guidelinesalt.png",
-        activeIcon: "/src/images/guidelinesalt.png",
+        icon: guidelinesIcon,
+        activeIcon: guidelinesIcon,
     },
     {
         id: "settings",
         label: "Settings",
-        icon: "/src/images/settingalt.png",
-        activeIcon: "/src/images/settingalt.png",
+        icon: settingsIcon,
+        activeIcon: settingsIcon,
     },
 ];
 
@@ -2795,7 +2801,7 @@ const resultsAreVisible =
                             }
                         >
                             <img
-                                src="/src/images/logoutalt.png"
+                                src={logoutIcon}
                                 alt="Log out"
                                 className="logout-image"
                             />
