@@ -27,24 +27,24 @@ import {
 } from "../../services/studentService";
 
 // =====================================================
-// LOGO
+// VITE ASSET IMPORTS
+// Keep images in client/src/images and import them so Vite
+// bundles them correctly for both local development and Vercel.
 // =====================================================
 
-const votaraLogoSrc = "/src/images/Votara.png";
-
-// =====================================================
-// SIDEBAR ICONS
-// =====================================================
-
-import dashboardIcon from "/src/images/homealt.png";
-import voteIcon from "/src/images/votealt.png";
-import guidelinesIcon from "/src/images/guidelinesalt.png";
-import settingsIcon from "/src/images/settingalt.png";
-
-import dashboardActiveIcon from "/src/images/home.png";
-import voteActiveIcon from "/src/images/review.png";
-import guidelinesActiveIcon from "/src/images/guidelines.png";
-import settingsActiveIcon from "/src/images/setting.png";
+import votaraLogoSrc from "../../images/Votara.png";
+import dashboardIcon from "../../images/homealt.png";
+import dashboardActiveIcon from "../../images/home.png";
+import voteIcon from "../../images/votealt.png";
+import voteActiveIcon from "../../images/review.png";
+import candidatesIcon from "../../images/Candidates.png";
+import resultsIcon from "../../images/Results.png";
+import guidelinesIcon from "../../images/guidelinesalt.png";
+import guidelinesActiveIcon from "../../images/guidelines.png";
+import settingsIcon from "../../images/settingalt.png";
+import settingsActiveIcon from "../../images/setting.png";
+import logoutIcon from "../../images/logoutalt.png";
+import bellIcon from "../../images/bell.png";
 
 // =====================================================
 // HELPERS
@@ -117,9 +117,12 @@ const formatTime = (value) => {
 };
 
 
-const API_BASE_URL =
-    import.meta.env.VITE_API_URL ||
-    "http://localhost:5000";
+const API_BASE_URL = (
+    import.meta.env.VITE_API_BASE_URL ||
+    (import.meta.env.PROD
+        ? "https://votara-api-olij.onrender.com/api"
+        : "http://localhost:5000/api")
+).replace(/\/api\/?$/, "");
 
 const resolveImageUrl = (value) => {
     if (!value) return "";
@@ -172,20 +175,14 @@ const getProfilePictureValue = (studentData) => {
         studentData.profilePictureUrl ||
         studentData.profile_picture_url ||
         studentData.profile_picture ||
-        studentData.profilePhoto ||
         studentData.profilePhotoUrl ||
-        studentData.profile_photo ||
         studentData.profile_photo_url ||
         studentData.profilePhotoStoragePath ||
         studentData.profile_photo_storage_path ||
-        studentData.profileImage ||
-        studentData.profile_image ||
         studentData.avatar ||
         studentData.avatar_url ||
         studentData.photo ||
         studentData.photo_url ||
-        studentData.imageUrl ||
-        studentData.image_url ||
         ""
     );
 };
@@ -257,6 +254,7 @@ useEffect(() => {
     const [selectedFaq, setSelectedFaq] = useState(null);
 
     const [settingsModal, setSettingsModal] = useState(null);
+    const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
     const [profileImageError, setProfileImageError] = useState(false);
     const [profileImageVersion, setProfileImageVersion] = useState(0);
 
@@ -286,7 +284,7 @@ useEffect(() => {
     // =================================================
 
     useEffect(() => {
-        let mounted = true;
+        let cancelled = false;
 
         const readStoredStudent = () => {
             try {
@@ -298,91 +296,122 @@ useEffect(() => {
             }
         };
 
-        const mergeStudentData = (...records) => {
-            const merged = {};
-            records.forEach((record) => {
-                if (!record || typeof record !== "object") return;
-                Object.entries(record).forEach(([key, value]) => {
-                    // Keep valid cached values if the API returns empty fields.
-                    if (value !== undefined && value !== null && value !== "") {
-                        merged[key] = value;
-                    }
-                });
-            });
+        const mergeStudentProfile = (storedStudent, serverStudent) => {
+            const stored = storedStudent || {};
+            const server = serverStudent || {};
+
+            // Do not let an empty API photo field erase the saved image.
+            const storedPhoto = getProfilePictureValue(stored);
+            const serverPhoto = getProfilePictureValue(server);
+
+            const merged = {
+                ...stored,
+                ...server,
+            };
+
+            if (serverPhoto) {
+                merged.profilePicture = serverPhoto;
+            } else if (storedPhoto) {
+                merged.profilePicture = storedPhoto;
+            }
+
+            // Normalize common backend field names without replacing valid values.
+            merged.fullName =
+                server.fullName || server.full_name ||
+                stored.fullName || stored.full_name || "Student";
+            merged.yearLevel =
+                server.yearLevel ?? server.year_level ??
+                stored.yearLevel ?? stored.year_level ?? "";
+
             return merged;
         };
 
         const fetchStudent = async () => {
-            const token = localStorage.getItem("votaraToken");
+            const storedStudent = readStoredStudent();
+            const token =
+                localStorage.getItem("votaraToken") ||
+                localStorage.getItem("votaraStudentToken") ||
+                localStorage.getItem("studentToken") ||
+                "";
+
+            // Show the saved account immediately while the server refresh runs.
+            if (!cancelled && storedStudent) {
+                setStudent(storedStudent);
+            }
 
             if (!token) {
-                if (mounted) {
-                    setStudent(null);
+                if (!cancelled) {
+                    setStudent(storedStudent || null);
                     setLoading(false);
                 }
                 return;
             }
 
-            // Render the saved profile immediately while fresh API data loads.
-            let currentStudent = readStoredStudent();
-            if (currentStudent && mounted) setStudent(currentStudent);
-
             try {
-                const results = await Promise.allSettled([
-                    fetch(`${API_BASE_URL}/api/auth/me`, {
-                        headers: { Authorization: `Bearer ${token}` },
-                    }).then(async (response) => {
-                        const data = await response.json().catch(() => ({}));
-                        if (!response.ok) {
-                            throw new Error(data?.message || `Profile request failed (${response.status})`);
-                        }
-                        return data?.student || data?.data?.student || null;
-                    }),
-                    getStudentProfile().then((response) => {
-                        if (response?.success && response?.student) return response.student;
-                        if (response?.data?.student) return response.data.student;
-                        return null;
-                    }),
-                ]);
+                let serverStudent = null;
 
-                const authStudent = results[0].status === "fulfilled" ? results[0].value : null;
-                const profileStudent = results[1].status === "fulfilled" ? results[1].value : null;
-
-                if (results[0].status === "rejected") {
-                    console.warn("Unable to refresh student authentication profile:", results[0].reason);
-                }
-                if (results[1].status === "rejected") {
-                    console.warn("Unable to refresh student profile/photo:", results[1].reason);
+                // Use the configured API service first. It has the correct
+                // production URL and attaches the current student token.
+                try {
+                    const profileResponse = await getStudentProfile();
+                    if (profileResponse?.success && profileResponse?.student) {
+                        serverStudent = profileResponse.student;
+                    }
+                } catch (profileError) {
+                    console.warn(
+                        "Unable to refresh student profile from /students/profile:",
+                        profileError
+                    );
                 }
 
-                const refreshedStudent = mergeStudentData(
-                    currentStudent,
-                    authStudent,
-                    profileStudent
-                );
-
-                if (Object.keys(refreshedStudent).length > 0 && mounted) {
-                    currentStudent = refreshedStudent;
-                    setStudent(refreshedStudent);
+                // Legacy fallback, using the configured API host rather than
+                // localhost so deployed mobile browsers do not call themselves.
+                if (!serverStudent) {
                     try {
-                        localStorage.setItem("votaraStudent", JSON.stringify(refreshedStudent));
+                        const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                            },
+                        });
+                        const data = await response.json().catch(() => ({}));
+                        if (response.ok && data?.success && data?.student) {
+                            serverStudent = data.student;
+                        }
+                    } catch (authError) {
+                        console.warn("Unable to refresh student from /auth/me:", authError);
+                    }
+                }
+
+                if (cancelled) return;
+
+                if (serverStudent) {
+                    const mergedStudent = mergeStudentProfile(storedStudent, serverStudent);
+                    setStudent(mergedStudent);
+                    try {
+                        localStorage.setItem("votaraStudent", JSON.stringify(mergedStudent));
                     } catch (storageError) {
                         console.warn("Unable to cache refreshed student profile:", storageError);
                     }
+                } else if (storedStudent) {
+                    // Keep the cached profile visible during temporary API failures.
+                    setStudent(storedStudent);
+                } else {
+                    setStudent(null);
                 }
             } catch (error) {
-                console.error("Unable to refresh student profile:", error);
-                // Do not replace a previously saved photo/profile with initials
-                // just because the server is temporarily unavailable.
-                if (currentStudent && mounted) setStudent(currentStudent);
+                console.error("Unable to load student:", error);
+                if (!cancelled) {
+                    setStudent(storedStudent || null);
+                }
             } finally {
-                if (mounted) setLoading(false);
+                if (!cancelled) setLoading(false);
             }
         };
 
         fetchStudent();
+
         return () => {
-            mounted = false;
+            cancelled = true;
         };
     }, []);
 
@@ -670,38 +699,38 @@ const sidebarItems = [
     {
         id: "dashboard",
         label: "Dashboard",
-        icon: "/src/images/home.png",
-        activeIcon: "/src/images/homealt.png",
+        icon: dashboardIcon,
+        activeIcon: dashboardActiveIcon,
     },
     {
         id: "vote",
         label: "Vote",
-        icon: "/src/images/Results.png",
-        activeIcon: "/src/images/Results.png",
+        icon: voteIcon,
+        activeIcon: voteActiveIcon,
     },
     {
         id: "candidates",
         label: "Candidates",
-        icon: "/src/images/Candidates.png",
-        activeIcon: "/src/images/Candidates.png",
+        icon: candidatesIcon,
+        activeIcon: candidatesIcon,
     },
     {
         id: "results",
         label: "Results",
-        icon: "/src/images/Results.png",
-        activeIcon: "/src/images/Results.png",
+        icon: resultsIcon,
+        activeIcon: resultsIcon,
     },
     {
         id: "guidelines",
         label: "Voters Guidelines",
-        icon: "/src/images/guidelinesalt.png",
-        activeIcon: "/src/images/guidelinesalt.png",
+        icon: guidelinesIcon,
+        activeIcon: guidelinesActiveIcon,
     },
     {
         id: "settings",
         label: "Settings",
-        icon: "/src/images/settingalt.png",
-        activeIcon: "/src/images/settingalt.png",
+        icon: settingsIcon,
+        activeIcon: settingsActiveIcon,
     },
 ];
 
@@ -1235,7 +1264,7 @@ const handleOpenPartyList = async (partyList) => {
                         candidate.profilePicture ||
                         candidate.profile_picture_url ||
                         candidate.profilePictureUrl
-                    ) || "/src/images/candidate.png";
+                    ) || candidatesIcon;
 
                 const isSelected =
                     selectedVotes[
@@ -2654,7 +2683,7 @@ const resultsAreVisible =
                         onClick={() => alert("You have no new notifications.")}
                     >
                         <img
-                            src="/src/images/bell.png"
+                            src={bellIcon}
                             alt="Notifications"
                             className="nav-icon-image"
                         />
@@ -2781,13 +2810,11 @@ const resultsAreVisible =
                         <button
                             type="button"
                             className="logout-button"
-                            onClick={
-                                handleLogout
-                            }
+                            onClick={() => setShowLogoutConfirmation(true)}
                         >
                             <img
-                                src="/src/images/logoutalt.png"
-                                alt="Log out"
+                                src={logoutIcon}
+                                alt=""
                                 className="logout-image"
                             />
 
@@ -2836,7 +2863,7 @@ const resultsAreVisible =
                             selectedCandidateDetails.profilePicture ||
                             selectedCandidateDetails.profile_picture_url ||
                             selectedCandidateDetails.profilePictureUrl
-                        ) || "/src/images/candidate.png"
+                        ) || candidatesIcon
                     }
                     alt={
                         selectedCandidateDetails.full_name ||
@@ -3038,6 +3065,46 @@ const resultsAreVisible =
                         </div>
                     </div>
                 )}
+
+            {showLogoutConfirmation && (
+                <div
+                    className="logout-confirmation-overlay"
+                    onClick={() => setShowLogoutConfirmation(false)}
+                >
+                    <section
+                        className="logout-confirmation-dialog"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="logout-confirmation-title"
+                        aria-describedby="logout-confirmation-description"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <div className="logout-confirmation-symbol" aria-hidden="true">
+                            ?
+                        </div>
+                        <h2 id="logout-confirmation-title">Log out of VOTARA?</h2>
+                        <p id="logout-confirmation-description">
+                            Are you sure you want to log out of your student account?
+                        </p>
+                        <div className="logout-confirmation-actions">
+                            <button
+                                type="button"
+                                className="logout-cancel-button"
+                                onClick={() => setShowLogoutConfirmation(false)}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                className="logout-confirm-button"
+                                onClick={handleLogout}
+                            >
+                                Yes, log out
+                            </button>
+                        </div>
+                    </section>
+                </div>
+            )}
 
             </div>
     );
