@@ -6389,3 +6389,116 @@
     }
 }
 
+
+
+/* =====================================================
+   LOGOUT CONFIRMATION DIALOG
+===================================================== */
+.logout-confirmation-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(7, 13, 29, 0.68);
+  backdrop-filter: blur(4px);
+  animation: logoutOverlayIn 160ms ease-out;
+}
+
+.logout-confirmation-dialog {
+  width: min(420px, 100%);
+  padding: 28px;
+  border: 1px solid #e5eaf4;
+  border-radius: 18px;
+  background: #fff;
+  color: #172033;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+  text-align: center;
+  animation: logoutDialogIn 180ms ease-out;
+}
+
+.logout-confirmation-symbol {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: #eef3ff;
+  color: #1554ff;
+  font-size: 27px;
+  font-weight: 700;
+}
+
+.logout-confirmation-dialog h2 {
+  margin: 0 0 8px;
+  color: #172033;
+  font-size: 21px;
+}
+
+.logout-confirmation-dialog p {
+  margin: 0;
+  color: #657089;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.logout-confirmation-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.logout-confirmation-actions button {
+  min-height: 42px;
+  padding: 0 18px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.logout-confirmation-actions button:active {
+  transform: translateY(1px);
+}
+
+.logout-cancel-button {
+  background: #f2f5fa;
+  border-color: #e1e7f0 !important;
+  color: #263249;
+}
+
+.logout-cancel-button:hover {
+  background: #e8edf5;
+}
+
+.logout-confirm-button {
+  background: #1554ff;
+  color: #fff;
+}
+
+.logout-confirm-button:hover {
+  background: #1045d8;
+}
+
+@keyframes logoutOverlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes logoutDialogIn {
+  from { opacity: 0; transform: translateY(7px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 480px) {
+  .logout-confirmation-dialog { padding: 24px 18px; }
+  .logout-confirmation-actions { flex-direction: column-reverse; }
+  .logout-confirmation-actions button { width: 100%; }
+}
