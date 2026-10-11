@@ -18,6 +18,7 @@ import "./Profile.css";
 const Profile = ({
     onClose,
     onProfileUpdated,
+    initialSection = "profile",
 }) => {
 
     const fileInputRef =
@@ -51,7 +52,7 @@ const Profile = ({
     const [
         showPassword,
         setShowPassword,
-    ] = useState(false);
+    ] = useState(initialSection === "password");
 
     const [
         message,
@@ -70,6 +71,7 @@ const Profile = ({
         firstName: "",
         middleName: "",
         lastName: "",
+        email: "",
         birthday: "",
         contactNumber: "",
         province: "",
@@ -85,50 +87,6 @@ const Profile = ({
         newPassword: "",
         confirmPassword: "",
     });
-
-
-    // =====================================================
-    // SYNCHRONIZE PROFILE WITH DASHBOARD
-    // =====================================================
-
-    const syncProfile = (updatedStudent) => {
-
-        if (!updatedStudent) {
-            return;
-        }
-
-        try {
-
-            const storedStudent =
-                localStorage.getItem(
-                    "votaraStudent"
-                );
-
-            const parsedStudent =
-                storedStudent
-                    ? JSON.parse(storedStudent)
-                    : {};
-
-            localStorage.setItem(
-                "votaraStudent",
-                JSON.stringify({
-                    ...parsedStudent,
-                    ...updatedStudent,
-                })
-            );
-
-        } catch (storageError) {
-
-            console.warn(
-                "Unable to synchronize student profile cache:",
-                storageError
-            );
-        }
-
-        if (typeof onProfileUpdated === "function") {
-            onProfileUpdated(updatedStudent);
-        }
-    };
 
 
     // =====================================================
@@ -155,7 +113,6 @@ const Profile = ({
             }
 
             setProfile(student);
-            syncProfile(student);
 
             setForm({
                 firstName:
@@ -166,6 +123,9 @@ const Profile = ({
 
                 lastName:
                     student.lastName || "",
+
+                email:
+                    student.email || "",
 
                 birthday:
                     student.birthday || "",
@@ -247,25 +207,50 @@ const Profile = ({
                     form
                 );
 
-            const updatedStudent =
-                data?.student
-                    ? {
-                        ...profile,
-                        ...data.student,
-                    }
-                    : {
-                        ...profile,
-                        ...form,
-                    };
+            if (data?.student) {
 
-            setProfile(updatedStudent);
-            syncProfile(updatedStudent);
+                setProfile(
+                    data.student
+                );
+
+                if (typeof onProfileUpdated === "function") {
+                    onProfileUpdated(data.student);
+                }
+            }
 
             setEditing(false);
 
             setMessage(
                 "Your profile has been updated successfully."
             );
+
+            // Keep local student information synchronized.
+            const storedStudent =
+                localStorage.getItem(
+                    "votaraStudent"
+                );
+
+            if (storedStudent) {
+
+                try {
+
+                    const parsed =
+                        JSON.parse(
+                            storedStudent
+                        );
+
+                    localStorage.setItem(
+                        "votaraStudent",
+                        JSON.stringify({
+                            ...parsed,
+                            ...(data?.student || {}),
+                        })
+                    );
+
+                } catch {
+                    // Ignore local storage parsing errors.
+                }
+            }
 
         } catch (err) {
 
@@ -367,21 +352,54 @@ const Profile = ({
                             base64Image
                         );
 
-                    const updatedProfile = {
-                        ...profile,
-                        profilePicture:
-                            data?.profilePicture ||
-                            data?.student?.profilePicture ||
-                            data?.student?.profile_picture ||
-                            base64Image,
-                    };
-
-                    setProfile(updatedProfile);
-                    syncProfile(updatedProfile);
+                    setProfile(
+                        (previous) => ({
+                            ...previous,
+                            profilePicture:
+                                data.profilePicture ||
+                                base64Image,
+                        })
+                    );
 
                     setMessage(
                         "Profile picture updated successfully."
                     );
+
+                    if (typeof onProfileUpdated === "function") {
+                        onProfileUpdated({
+                            profilePicture: data.profilePicture || base64Image,
+                        });
+                    }
+
+                    // Synchronize dashboard cache.
+                    const storedStudent =
+                        localStorage.getItem(
+                            "votaraStudent"
+                        );
+
+                    if (storedStudent) {
+
+                        try {
+
+                            const parsed =
+                                JSON.parse(
+                                    storedStudent
+                                );
+
+                            localStorage.setItem(
+                                "votaraStudent",
+                                JSON.stringify({
+                                    ...parsed,
+                                    profilePicture:
+                                        data.profilePicture ||
+                                        base64Image,
+                                })
+                            );
+
+                        } catch {
+                            // Ignore local storage errors.
+                        }
+                    }
 
                 } catch (err) {
 
@@ -451,13 +469,16 @@ const Profile = ({
 
             await removeStudentProfilePicture();
 
-            const updatedProfile = {
-                ...profile,
-                profilePicture: "",
-            };
+            setProfile(
+                (previous) => ({
+                    ...previous,
+                    profilePicture: "",
+                })
+            );
 
-            setProfile(updatedProfile);
-            syncProfile(updatedProfile);
+            if (typeof onProfileUpdated === "function") {
+                onProfileUpdated({ profilePicture: "" });
+            }
 
             setMessage(
                 "Profile picture removed successfully."
@@ -504,37 +525,6 @@ const Profile = ({
     };
 
 
-    const passwordStatus = {
-        length:
-            passwordForm.newPassword.length >= 8 &&
-            passwordForm.newPassword.length <= 50,
-
-        uppercase:
-            /[A-Z]/.test(
-                passwordForm.newPassword
-            ),
-
-        lowercase:
-            /[a-z]/.test(
-                passwordForm.newPassword
-            ),
-
-        number:
-            /[0-9]/.test(
-                passwordForm.newPassword
-            ),
-
-        special:
-            /[^A-Za-z0-9]/.test(
-                passwordForm.newPassword
-            ),
-
-        match:
-            passwordForm.confirmPassword.length > 0 &&
-            passwordForm.newPassword ===
-                passwordForm.confirmPassword,
-    };
-
     const handleChangePassword = async (
         event
     ) => {
@@ -567,12 +557,11 @@ const Profile = ({
 
 
         if (
-            newPassword.length < 8 ||
-            newPassword.length > 50
+            newPassword.length !== 8
         ) {
 
             setError(
-                "Your new password must contain between 8 and 50 characters."
+                "Your new password must contain exactly 8 characters."
             );
 
             return;
@@ -790,12 +779,13 @@ const Profile = ({
                     </span>
 
                     <h1>
-                        My Profile
+                        {initialSection === "password" ? "Change Password" : "My Profile"}
                     </h1>
 
                     <p>
-                        View and manage your personal
-                        Votara account information.
+                        {initialSection === "password"
+                            ? "Update your student account password securely."
+                            : "View and manage your personal Votara account information."}
                     </p>
 
                 </div>
@@ -832,6 +822,8 @@ const Profile = ({
             )}
 
 
+            {initialSection !== "password" && (
+                <>
             {/* =================================================
                 PROFILE HERO
             ================================================= */}
@@ -1045,6 +1037,22 @@ const Profile = ({
                                     onChange={
                                         handleChange
                                     }
+                                    required
+                                />
+                            </label>
+
+
+                            <label>
+                                <span>
+                                    Email Address
+                                </span>
+
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={form.email}
+                                    onChange={handleChange}
+                                    autoComplete="email"
                                     required
                                 />
                             </label>
@@ -1286,6 +1294,12 @@ const Profile = ({
             </section>
 
 
+                </>
+            )}
+
+            {/* Password management is accessed from Settings, not the Show Profile view. */}
+            {initialSection === "password" && (
+            <>
             {/* =================================================
                 SECURITY
             ================================================= */}
@@ -1365,14 +1379,13 @@ const Profile = ({
                             <input
                                 type="password"
                                 name="currentPassword"
-                                autoComplete="current-password"
-                                maxLength={50}
                                 value={
                                     passwordForm.currentPassword
                                 }
                                 onChange={
                                     handlePasswordChange
                                 }
+                                maxLength={8}
                                 required
                             />
                         </label>
@@ -1386,143 +1399,21 @@ const Profile = ({
                             <input
                                 type="password"
                                 name="newPassword"
-                                autoComplete="new-password"
-                                maxLength={50}
-                                minLength={8}
-                                className={
-                                    passwordForm.newPassword
-                                        ? passwordStatus.length
-                                            ? "password-input-valid"
-                                            : "password-input-invalid"
-                                        : ""
-                                }
                                 value={
                                     passwordForm.newPassword
                                 }
                                 onChange={
                                     handlePasswordChange
                                 }
+                                maxLength={8}
                                 required
                             />
 
-                            <div className="password-status-panel">
-
-                                <div className="password-status-header">
-                                    <small>
-                                        Password requirements
-                                    </small>
-
-                                    <span
-                                        className={
-                                            passwordStatus.length
-                                                ? "password-character-count valid"
-                                                : "password-character-count"
-                                        }
-                                    >
-                                        {passwordForm.newPassword.length}/50
-                                    </span>
-                                </div>
-
-                                <div className="password-status-grid">
-
-                                    <div
-                                        className={
-                                            passwordStatus.length
-                                                ? "password-status-item valid"
-                                                : "password-status-item warning"
-                                        }
-                                    >
-                                        <span className="password-status-icon">
-                                            {passwordStatus.length ? "✓" : "!"}
-                                        </span>
-
-                                        <span>
-                                            At least 8 characters
-                                        </span>
-                                    </div>
-
-                                    <div
-                                        className={
-                                            passwordStatus.uppercase
-                                                ? "password-status-item valid"
-                                                : "password-status-item warning"
-                                        }
-                                    >
-                                        <span className="password-status-icon">
-                                            {passwordStatus.uppercase ? "✓" : "!"}
-                                        </span>
-
-                                        <span>
-                                            Uppercase letter
-                                        </span>
-                                    </div>
-
-                                    <div
-                                        className={
-                                            passwordStatus.lowercase
-                                                ? "password-status-item valid"
-                                                : "password-status-item warning"
-                                        }
-                                    >
-                                        <span className="password-status-icon">
-                                            {passwordStatus.lowercase ? "✓" : "!"}
-                                        </span>
-
-                                        <span>
-                                            Lowercase letter
-                                        </span>
-                                    </div>
-
-                                    <div
-                                        className={
-                                            passwordStatus.number
-                                                ? "password-status-item valid"
-                                                : "password-status-item warning"
-                                        }
-                                    >
-                                        <span className="password-status-icon">
-                                            {passwordStatus.number ? "✓" : "!"}
-                                        </span>
-
-                                        <span>
-                                            Number
-                                        </span>
-                                    </div>
-
-                                    <div
-                                        className={
-                                            passwordStatus.special
-                                                ? "password-status-item valid"
-                                                : "password-status-item warning"
-                                        }
-                                    >
-                                        <span className="password-status-icon">
-                                            {passwordStatus.special ? "✓" : "!"}
-                                        </span>
-
-                                        <span>
-                                            Special character
-                                        </span>
-                                    </div>
-
-                                    <div
-                                        className={
-                                            passwordStatus.match
-                                                ? "password-status-item valid"
-                                                : "password-status-item warning"
-                                        }
-                                    >
-                                        <span className="password-status-icon">
-                                            {passwordStatus.match ? "✓" : "!"}
-                                        </span>
-
-                                        <span>
-                                            Passwords match
-                                        </span>
-                                    </div>
-
-                                </div>
-                            </div>
+                            <small>
+                                Exactly 8 characters:
+                                uppercase, lowercase,
+                                number and special character.
+                            </small>
                         </label>
 
 
@@ -1534,22 +1425,13 @@ const Profile = ({
                             <input
                                 type="password"
                                 name="confirmPassword"
-                                autoComplete="new-password"
-                                maxLength={50}
-                                minLength={8}
-                                className={
-                                    passwordForm.confirmPassword
-                                        ? passwordStatus.match
-                                            ? "password-input-valid"
-                                            : "password-input-invalid"
-                                        : ""
-                                }
                                 value={
                                     passwordForm.confirmPassword
                                 }
                                 onChange={
                                     handlePasswordChange
                                 }
+                                maxLength={8}
                                 required
                             />
                         </label>
@@ -1583,6 +1465,8 @@ const Profile = ({
                 )}
 
             </section>
+            </>
+            )}
 
         </div>
     );
