@@ -12,6 +12,7 @@ import {
     updateStudentProfile,
 } from "../../services/authService";
 
+import api from "../../services/api";
 import "./Settings.css";
 
 
@@ -58,6 +59,17 @@ const Settings = () => {
 
     const [error, setError] =
         useState("");
+
+    const [reportView, setReportView] = useState("");
+    const [reportDraft, setReportDraft] = useState({ category: "", subject: "", description: "", contactEmail: "", attachment: null });
+    const [reportHistory, setReportHistory] = useState([]);
+    const [selectedReport, setSelectedReport] = useState(null);
+    const [reportHistoryTimeline, setReportHistoryTimeline] = useState([]);
+    const [reportLoading, setReportLoading] = useState(false);
+    const [reportSubmitting, setReportSubmitting] = useState(false);
+    const [reportError, setReportError] = useState("");
+    const [submittedReport, setSubmittedReport] = useState(null);
+
 
 
     // =====================================================
@@ -373,6 +385,97 @@ const Settings = () => {
     // =====================================================
     // PAGE
     // =====================================================
+    const reportCategories = [
+        "Voting issue",
+        "Account or profile",
+        "Candidate information",
+        "Election results",
+        "Other",
+    ];
+
+    const openReportCategory = () => {
+        setReportDraft((current) => ({ ...current, contactEmail: current.contactEmail || profile.email || "" }));
+        setReportError("");
+        setReportView("category");
+    };
+
+    const loadReportHistory = async () => {
+        setReportLoading(true);
+        setReportError("");
+        try {
+            const response = await api.get("/students/issues");
+            setReportHistory(response.data?.reports || []);
+            setReportView("history");
+        } catch (err) {
+            setReportError(err.response?.data?.message || err.message || "Unable to load report history.");
+            setReportView("history");
+        } finally {
+            setReportLoading(false);
+        }
+    };
+
+    const openReportHistoryDetail = async (report) => {
+        setSelectedReport(report);
+        setReportHistoryTimeline([]);
+        setReportError("");
+        setReportView("history-detail");
+        try {
+            const response = await api.get(`/students/issues/${report.id}/history`);
+            setReportHistoryTimeline(response.data?.history || []);
+        } catch (err) {
+            setReportError(err.response?.data?.message || "Unable to load report updates.");
+        }
+    };
+
+    const handleReportAttachment = (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        const allowed = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+        if (!allowed.includes(file.type)) {
+            setReportError("Choose a JPG, PNG, WEBP, or PDF file.");
+            event.target.value = "";
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            setReportError("Attachment must be 5 MB or smaller.");
+            event.target.value = "";
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+            setReportDraft((current) => ({ ...current, attachment: { name: file.name, type: file.type, data: reader.result } }));
+            setReportError("");
+        };
+        reader.onerror = () => setReportError("Unable to read the selected attachment.");
+        reader.readAsDataURL(file);
+    };
+
+    const submitIssueReport = async (event) => {
+        event.preventDefault();
+        setReportSubmitting(true);
+        setReportError("");
+        try {
+            const response = await api.post("/students/issues", reportDraft);
+            const report = response.data?.report;
+            if (!response.data?.success || !report) throw new Error(response.data?.message || "The report was not saved.");
+            setSubmittedReport(report);
+            setReportView("submitted");
+        } catch (err) {
+            setReportError(err.response?.data?.message || err.message || "Unable to submit your report.");
+        } finally {
+            setReportSubmitting(false);
+        }
+    };
+
+    const closeReportFlow = () => {
+        setReportView("");
+        setReportError("");
+        setSubmittedReport(null);
+        setSelectedReport(null);
+        setReportDraft({ category: "", subject: "", description: "", contactEmail: profile.email || "", attachment: null });
+    };
+
+
 
     return (
         <div className="settings-page">
@@ -466,7 +569,7 @@ const Settings = () => {
                     </button>
 
 
-                    <button className="settings-menu">
+                    <button className="settings-menu" onClick={openReportCategory}>
                         <span>●</span>
                         Report an Issue
                         <b>›</b>
@@ -874,6 +977,57 @@ const Settings = () => {
                 </main>
 
             </div>
+
+            {reportView && (
+                <div className="student-report-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !reportSubmitting) closeReportFlow(); }}>
+                    <section className="student-report-modal" role="dialog" aria-modal="true" aria-labelledby="student-report-title">
+                        {reportView === "category" && <>
+                            <div className="student-report-kicker">STUDENT / SETTINGS · REPORT AN ISSUE</div>
+                            <h2 id="student-report-title">Issue category</h2>
+                            <p className="student-report-intro">Choose the category that best describes your issue.</p>
+                            <div className="student-report-category-list">{reportCategories.map((category) => <button type="button" key={category} onClick={() => { setReportDraft((current) => ({ ...current, category, contactEmail: current.contactEmail || profile.email || "" })); setReportError(""); setReportView("form"); }}>{category}<span>›</span></button>)}</div>
+                            <div className="student-report-modal-footer"><button type="button" className="student-report-secondary" onClick={loadReportHistory} disabled={reportLoading}>{reportLoading ? "Loading history…" : "View report history"}</button><button type="button" className="student-report-quiet" onClick={closeReportFlow}>Cancel</button></div>
+                        </>}
+
+                        {reportView === "form" && <>
+                            <div className="student-report-kicker">STUDENT / SETTINGS · NEW REPORT</div>
+                            <h2 id="student-report-title">Report an issue</h2>
+                            <p className="student-report-intro">Provide the details below. Your report will be sent to the VOTARA administrator.</p>
+                            <div className="student-report-selected-category"><span>Issue category</span><strong>{reportDraft.category}</strong><button type="button" onClick={() => setReportView("category")}>Change</button></div>
+                            <form className="student-report-form" onSubmit={submitIssueReport}>
+                                <label>Subject <span>*</span><input required minLength={4} maxLength={160} value={reportDraft.subject} onChange={(event) => setReportDraft((current) => ({ ...current, subject: event.target.value }))} placeholder="Briefly describe the issue" /></label>
+                                <label>Description <span>*</span><textarea required minLength={10} maxLength={5000} rows={5} value={reportDraft.description} onChange={(event) => setReportDraft((current) => ({ ...current, description: event.target.value }))} placeholder="Explain what happened and include any useful details." /></label>
+                                <label>Contact email <span>*</span><input type="email" required value={reportDraft.contactEmail} onChange={(event) => setReportDraft((current) => ({ ...current, contactEmail: event.target.value }))} placeholder="name@example.com" /></label>
+                                <label>Attachment <small>Optional · JPG, PNG, WEBP, or PDF · Max 5 MB</small><input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" onChange={handleReportAttachment} /></label>
+                                {reportDraft.attachment && <div className="student-report-attachment-name">Attached: {reportDraft.attachment.name}<button type="button" onClick={() => setReportDraft((current) => ({ ...current, attachment: null }))}>Remove</button></div>}
+                                {reportError && <div className="student-report-error" role="alert">{reportError}</div>}
+                                <div className="student-report-modal-footer"><button type="button" className="student-report-secondary" onClick={() => setReportView("category")} disabled={reportSubmitting}>Back</button><button type="submit" className="student-report-primary" disabled={reportSubmitting}>{reportSubmitting ? "Submitting…" : "Submit report"}</button></div>
+                            </form>
+                        </>}
+
+                        {reportView === "submitted" && submittedReport && <div className="student-report-submitted">
+                            <div className="student-report-success-icon">✓</div><div className="student-report-kicker">STUDENT / SETTINGS · REPORT SUBMITTED</div><h2 id="student-report-title">Report submitted</h2><p>Your issue has been recorded. You can review its status in your report history.</p>
+                            <div className="student-report-reference"><span>Report reference</span><strong>{submittedReport.reference}</strong></div><p className="student-report-contact">Updates will be associated with {submittedReport.contact_email || reportDraft.contactEmail}.</p>
+                            <div className="student-report-modal-footer"><button type="button" className="student-report-secondary" onClick={loadReportHistory}>View report history</button><button type="button" className="student-report-primary" onClick={closeReportFlow}>Done</button></div>
+                        </div>}
+
+                        {reportView === "history" && <>
+                            <div className="student-report-kicker">STUDENT / SETTINGS</div><h2 id="student-report-title">My report history</h2><p className="student-report-intro">Review the reports you have submitted and their latest status.</p>
+                            {reportError && <div className="student-report-error" role="alert">{reportError}</div>}
+                            {reportLoading ? <div className="student-report-empty">Loading your reports…</div> : reportHistory.length ? <div className="student-report-history-list">{reportHistory.map((report) => <button type="button" className="student-report-history-item" key={report.id} onClick={() => openReportHistoryDetail(report)}><span className="student-report-history-copy"><strong>{report.subject}</strong><small>{report.reference} · {report.category} · {new Date(report.created_at).toLocaleDateString()}</small></span><span className={`student-report-status status-${report.status}`}>{String(report.status).replace("_", " ")}</span><b>›</b></button>)}</div> : <div className="student-report-empty">You have not submitted any reports yet.</div>}
+                            <div className="student-report-modal-footer"><button type="button" className="student-report-secondary" onClick={openReportCategory}>New report</button><button type="button" className="student-report-primary" onClick={closeReportFlow}>Done</button></div>
+                        </>}
+
+                        {reportView === "history-detail" && selectedReport && <>
+                            <div className="student-report-kicker">STUDENT / SETTINGS · REPORT DETAILS</div><h2 id="student-report-title">{selectedReport.reference}</h2>
+                            <div className="student-report-detail-card"><div><span>Status</span><strong className={`student-report-status status-${selectedReport.status}`}>{String(selectedReport.status).replace("_", " ")}</strong></div><div><span>Category</span><strong>{selectedReport.category}</strong></div><div><span>Subject</span><strong>{selectedReport.subject}</strong></div><div><span>Description</span><p>{selectedReport.description}</p></div>{selectedReport.admin_response && <div><span>Administrator response</span><p>{selectedReport.admin_response}</p></div>}{selectedReport.attachment_url && <div><span>Attachment</span><a href={selectedReport.attachment_url} target="_blank" rel="noreferrer">View attachment</a></div>}</div>
+                            <h3 className="student-report-timeline-title">Report updates</h3>{reportHistoryTimeline.length ? <div className="student-report-timeline">{reportHistoryTimeline.map((item) => <div key={item.id}><strong>{String(item.status).replace("_", " ")}</strong><span>{item.note || "Status updated"}</span><small>{new Date(item.created_at).toLocaleString()}</small></div>)}</div> : <div className="student-report-empty">No status updates are available yet.</div>}
+                            {reportError && <div className="student-report-error" role="alert">{reportError}</div>}
+                            <div className="student-report-modal-footer"><button type="button" className="student-report-secondary" onClick={loadReportHistory}>Back to history</button><button type="button" className="student-report-primary" onClick={closeReportFlow}>Done</button></div>
+                        </>}
+                    </section>
+                </div>
+            )}
 
         </div>
     );

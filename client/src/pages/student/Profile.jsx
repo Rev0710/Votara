@@ -44,10 +44,13 @@ const Profile = ({
         setUploadingPhoto,
     ] = useState(false);
 
+    const [showRemovePhotoWarning, setShowRemovePhotoWarning] =
+        useState(false);
+
     const [
         editing,
         setEditing,
-    ] = useState(false);
+    ] = useState(initialSection === "edit");
 
     const [
         showPassword,
@@ -450,16 +453,12 @@ const Profile = ({
     // REMOVE PHOTO
     // =====================================================
 
-    const handleRemovePhoto = async () => {
+    const handleRemovePhoto = () => {
+        setShowRemovePhotoWarning(true);
+    };
 
-        const confirmed =
-            window.confirm(
-                "Remove your current profile picture?"
-            );
-
-        if (!confirmed) {
-            return;
-        }
+    const confirmRemovePhoto = async () => {
+        setShowRemovePhotoWarning(false);
 
         try {
 
@@ -779,13 +778,15 @@ const Profile = ({
                     </span>
 
                     <h1>
-                        {initialSection === "password" ? "Change Password" : "My Profile"}
+                        {initialSection === "password" ? "Change Password" : initialSection === "edit" ? "Edit Profile" : "My Profile"}
                     </h1>
 
                     <p>
                         {initialSection === "password"
                             ? "Update your student account password securely."
-                            : "View and manage your personal Votara account information."}
+                            : initialSection === "edit"
+                            ? "Update your profile details and email address."
+                            : "View your personal Votara account information."}
                     </p>
 
                 </div>
@@ -1466,6 +1467,52 @@ const Profile = ({
 
             </section>
             </>
+            )}
+
+            {showRemovePhotoWarning && (
+                <div
+                    className="profile-warning-overlay"
+                    role="presentation"
+                >
+                    <section
+                        className="profile-warning-modal"
+                        role="alertdialog"
+                        aria-modal="true"
+                        aria-labelledby="remove-photo-warning-title"
+                        aria-describedby="remove-photo-warning-description"
+                    >
+                        <div className="profile-warning-icon" aria-hidden="true">
+                            !
+                        </div>
+
+                        <h2 id="remove-photo-warning-title">
+                            Remove Profile Photo?
+                        </h2>
+
+                        <p id="remove-photo-warning-description">
+                            Are you sure you want to remove your current profile picture? You can upload a new one later.
+                        </p>
+
+                        <div className="profile-warning-actions">
+                            <button
+                                type="button"
+                                className="profile-warning-cancel"
+                                onClick={() => setShowRemovePhotoWarning(false)}
+                                disabled={uploadingPhoto}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                className="profile-warning-confirm"
+                                onClick={confirmRemovePhoto}
+                                disabled={uploadingPhoto}
+                            >
+                                {uploadingPhoto ? "Removing..." : "Remove Photo"}
+                            </button>
+                        </div>
+                    </section>
+                </div>
             )}
 
         </div>

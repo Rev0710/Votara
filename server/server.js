@@ -153,6 +153,7 @@ const resultsReportsRoutes =
 const studentRoutes =
 
     require("./src/routes/studentRoutes");
+const { protectStudent } = require("./src/middleware/authMiddleware");
 
 
 
@@ -160,7 +161,8 @@ const adminAuditLogsRoutes =
 
     require("./src/routes/adminAuditLogsRoutes");
 
-
+const studentIssueReportsRoutes = require("./src/routes/studentIssueReportsRoutes");
+const adminStudentIssueReportsRoutes = require("./src/routes/adminStudentIssueReportsRoutes");
 // =====================================================
 
 // EXPRESS APP
@@ -459,6 +461,8 @@ app.use(
 
 );
 
+app.use("/api/admin/student-issue-reports", adminStudentIssueReportsRoutes);
+
 
 
 
@@ -678,6 +682,8 @@ app.use(
     studentRoutes
 
 );
+
+app.use("/api/students/issues", protectStudent, studentIssueReportsRoutes);
 
 
 
