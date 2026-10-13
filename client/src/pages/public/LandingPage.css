@@ -1563,3 +1563,11 @@
     padding: 22px 2px;
   }
 }
+
+/* Remove the background behind feature icons */
+.feature-icon,
+.feature-icon-wrapper {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+}

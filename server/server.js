@@ -153,16 +153,12 @@ const resultsReportsRoutes =
 const studentRoutes =
 
     require("./src/routes/studentRoutes");
-const { protectStudent } = require("./src/middleware/authMiddleware");
 
 
 
 const adminAuditLogsRoutes =
 
     require("./src/routes/adminAuditLogsRoutes");
-
-const studentIssueReportsRoutes = require("./src/routes/studentIssueReportsRoutes");
-const adminStudentIssueReportsRoutes = require("./src/routes/adminStudentIssueReportsRoutes");
 // =====================================================
 
 // EXPRESS APP
@@ -349,7 +345,11 @@ app.use(
 
             "http://127.0.0.1:5173",
 
-            "https://votara-election-system.vercel.app",
+            "http://localhost:5174",
+
+            "http://127.0.0.1:5174",
+
+            "https://votara-election-system.vercel.app",
 
         ],
 
@@ -364,6 +364,25 @@ app.use(
 
 
 // =====================================================
+
+// Log API response duration without recording request bodies, credentials,
+// authorization headers, or query-string values. Useful for locating slow APIs.
+app.use((req, res, next) => {
+    if (!req.path.startsWith("/api")) {
+        return next();
+    }
+
+    const startedAt = process.hrtime.bigint();
+
+    res.on("finish", () => {
+        const elapsedMs = Number(process.hrtime.bigint() - startedAt) / 1e6;
+        const safePath = String(req.path || "/").slice(0, 180);
+        console.log(`[API] ${req.method} ${safePath} ${res.statusCode} ${elapsedMs.toFixed(1)}ms`);
+    });
+
+    next();
+});
+
 
 // BODY PARSER
 
@@ -460,8 +479,6 @@ app.use(
     adminAuditLogsRoutes
 
 );
-
-app.use("/api/admin/student-issue-reports", adminStudentIssueReportsRoutes);
 
 
 
@@ -682,8 +699,6 @@ app.use(
     studentRoutes
 
 );
-
-app.use("/api/students/issues", protectStudent, studentIssueReportsRoutes);
 
 
 

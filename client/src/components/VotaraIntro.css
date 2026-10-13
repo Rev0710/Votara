@@ -1,0 +1,89 @@
+
+.votara-intro {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    width: 100%;
+    height: 100%;
+    height: 100dvh;
+    overflow: hidden;
+    background: #080d25;
+    opacity: 1;
+    visibility: visible;
+    transition:
+        opacity 500ms ease,
+        visibility 500ms ease;
+}
+
+.votara-intro-video {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    background: #080d25;
+}
+
+.votara-intro--fade-out {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.votara-intro-fallback {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 24px;
+    color: #fff;
+    text-align: center;
+    font-family: Inter, Poppins, Arial, sans-serif;
+    background: radial-gradient(
+        ellipse at center,
+        #10245b 0%,
+        #080d25 75%
+    );
+}
+
+.votara-intro-fallback h1 {
+    margin: 0;
+    font-size: clamp(2rem, 6vw, 4rem);
+}
+
+.votara-intro-fallback p {
+    margin: 0;
+    color: #c7d6ff;
+}
+
+.votara-intro-fallback button {
+    margin-top: 12px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 24px;
+    background: #1455ff;
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.votara-intro-fallback button:hover {
+    background: #0645e8;
+}
+
+@media (max-width: 600px) {
+    .votara-intro-video {
+        object-fit: cover;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .votara-intro {
+        transition-duration: 150ms;
+    }
+}

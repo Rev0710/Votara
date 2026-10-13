@@ -159,6 +159,54 @@ const protectStudent = async (req, res, next) => {
                 studentId
             ).trim();
 
+        // Enforce the database-backed single active session for newly issued tokens.
+        if (!decoded.userId || !decoded.sid) {
+            return res.status(401).json({
+                success: false,
+                code: "STUDENT_SESSION_INVALID",
+                message: "Your session is no longer valid. Please log in again.",
+            });
+        }
+
+        const { data: activeSession, error: activeSessionError } = await supabase
+            .from("student_active_sessions")
+            .select("session_id, expires_at")
+            .eq("student_account_id", decoded.userId)
+            .eq("session_id", decoded.sid)
+            .maybeSingle();
+
+        if (activeSessionError) {
+            console.error("Student active-session verification failed:", activeSessionError.message);
+            return res.status(503).json({
+                success: false,
+                message: "Unable to verify your active session. Please try again.",
+            });
+        }
+
+        if (!activeSession || new Date(activeSession.expires_at).getTime() <= Date.now()) {
+            return res.status(401).json({
+                success: false,
+                code: "STUDENT_SESSION_EXPIRED",
+                message: "Your session has expired or is no longer active. Please log in again.",
+            });
+        }
+
+        // Extend the idle timeout when the session is actively used.
+        const refreshedExpiry = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+        const { error: refreshError } = await supabase
+            .from("student_active_sessions")
+            .update({ expires_at: refreshedExpiry, last_seen_at: new Date().toISOString() })
+            .eq("student_account_id", decoded.userId)
+            .eq("session_id", decoded.sid);
+
+        if (refreshError) {
+            console.error("Student session activity refresh failed:", refreshError.message);
+            return res.status(503).json({
+                success: false,
+                message: "Unable to refresh your session securely. Please try again.",
+            });
+        }
+
 
         // =================================================
         // FIND OFFICIAL STUDENT RECORD

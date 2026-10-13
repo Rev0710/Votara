@@ -563,3 +563,41 @@ button {
     font-size: 21px;
   }
 }
+
+/* =========================
+   MOBILE READABILITY BASELINE
+   Keeps body text and form controls readable on small screens without
+   changing desktop typography or overriding heading sizes.
+========================= */
+@media (max-width: 768px) {
+  body {
+    font-size: 16px;
+  }
+
+  p,
+  li,
+  label,
+  a,
+  small,
+  .form-description,
+  .helper-text,
+  .form-hint,
+  .error-message,
+  .success-message {
+    font-size: max(14px, 0.875em) !important;
+    line-height: 1.5;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+    min-height: 42px;
+  }
+
+  button:not([aria-label]) {
+    min-height: 40px;
+    font-size: max(14px, 0.875em) !important;
+  }
+}
+

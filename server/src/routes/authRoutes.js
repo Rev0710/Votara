@@ -2,6 +2,7 @@ const express = require("express");
 
 const {
     studentLogin,
+    studentLogout,
     changeTemporaryPassword,
 } = require("../controllers/studentAuthController");
 
@@ -29,6 +30,11 @@ const router =
 router.post(
     "/student-login",
     studentLogin
+);
+
+router.post(
+    "/student-logout",
+    studentLogout
 );
 
 

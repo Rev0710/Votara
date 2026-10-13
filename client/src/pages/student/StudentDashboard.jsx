@@ -1414,17 +1414,36 @@ const handleSettingsItemClick = (item) => {
     // LOGOUT
     // =================================================
 
-    const handleLogout = () => {
-        localStorage.removeItem(
-            "votaraToken"
-        );
+    
+const handleLogout = async () => {
+    const token = localStorage.getItem("votaraToken");
 
-        localStorage.removeItem(
-            "votaraStudent"
-        );
+    // Release the server-side session before leaving the dashboard.
+    if (token) {
+        try {
+            await api.post(
+                "/auth/student-logout",
+                {},
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                    timeout: 5000,
+                }
+            );
+        } catch (error) {
+            console.warn(
+                "Unable to release student session during logout:",
+                error?.message
+            );
+        }
+    }
 
-        window.location.href = "/";
-    };
+    localStorage.removeItem("votaraToken");
+    localStorage.removeItem("votaraStudent");
+    window.location.href = "/";
+};
+
 
     // =================================================
     // SEARCH
@@ -1688,19 +1707,6 @@ const loadStudentResults = async () => {
         window.clearInterval(timer);
     };
 }, [activeMenu]);
-
-    // =================================================
-    // LOADING SCREEN
-    // =================================================
-
-    if (loading) {
-        return (
-            <div className="dashboard-loading">
-                Loading...
-            </div>
-        );
-    }
-
 
 
 

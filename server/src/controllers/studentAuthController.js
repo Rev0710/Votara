@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const supabase = require("../config/supabase");
 
 
@@ -235,6 +236,39 @@ const studentLogin = async (req, res) => {
 
 
         // =================================================
+        // CLAIM THE SINGLE ACTIVE STUDENT SESSION
+        // =================================================
+        // The database RPC performs this atomically so two
+        // simultaneous login requests cannot both claim the account.
+        const sessionId = crypto.randomUUID();
+        const sessionExpiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+        const { data: sessionClaimed, error: sessionClaimError } = await supabase.rpc(
+            "claim_student_active_session",
+            {
+                p_student_account_id: account.id,
+                p_session_id: sessionId,
+                p_expires_at: sessionExpiresAt,
+            }
+        );
+
+        if (sessionClaimError) {
+            console.error("Student session claim failed:", sessionClaimError.message);
+            return res.status(503).json({
+                success: false,
+                code: "SESSION_SECURITY_UNAVAILABLE",
+                message: "Unable to verify active login sessions. Please try again shortly.",
+            });
+        }
+
+        if (sessionClaimed !== true) {
+            return res.status(409).json({
+                success: false,
+                code: "STUDENT_ALREADY_LOGGED_IN",
+                message: "This student account is already logged in on another device or browser. Please log out from that session or wait 30 minutes after its last activity before trying again.",
+            });
+        }
+
+        // =================================================
         // CREATE JWT
         // =================================================
 
@@ -244,6 +278,7 @@ const studentLogin = async (req, res) => {
                 {
                     userId:
                         account.id,
+                    sid: sessionId,
 
                     studentId:
                         account.student_id,
@@ -801,12 +836,55 @@ const changeTemporaryPassword = async (
 
 
 // =========================================================
+// STUDENT LOGOUT (releases only the caller's active session)
+// =========================================================
+const studentLogout = async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization || "";
+        const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+        if (!token) {
+            return res.status(401).json({ success: false, message: "Authentication token is required." });
+        }
+
+        let decoded;
+        try {
+            decoded = jwt.verify(token, process.env.JWT_SECRET);
+        } catch {
+            return res.status(401).json({ success: false, message: "Your session has expired. Please log in again." });
+        }
+
+        if (decoded.role !== "student" || !decoded.userId || !decoded.sid) {
+            return res.status(401).json({ success: false, message: "Invalid student session." });
+        }
+
+        const { error } = await supabase
+            .from("student_active_sessions")
+            .delete()
+            .eq("student_account_id", decoded.userId)
+            .eq("session_id", decoded.sid);
+
+        if (error) {
+            console.error("Student logout session release failed:", error.message);
+            return res.status(503).json({ success: false, message: "Unable to safely close your session. Please try again." });
+        }
+
+        return res.status(200).json({ success: true, message: "Logged out successfully." });
+    } catch (error) {
+        console.error("Student logout error:", error);
+        return res.status(500).json({ success: false, message: "Unable to log out safely." });
+    }
+};
+
+
+// =========================================================
 // EXPORT
 // =========================================================
 
 module.exports = {
 
     studentLogin,
+
+    studentLogout,
 
     changeTemporaryPassword,
 
