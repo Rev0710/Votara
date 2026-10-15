@@ -164,7 +164,7 @@ function EBCandidateManagement({ onOpenPartyList }) {
 
                 <section className="partylist-heading">
                     <div>
-                        <h1>Partylist Management</h1>
+                        <h1>Candidate Management</h1>
                         <p>Register party lists, verify their documents, and track every filing from submission to approval.</p>
                     </div>
                     <div className="partylist-controls">

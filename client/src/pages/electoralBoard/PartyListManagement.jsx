@@ -892,7 +892,7 @@ const PartyListManagement = () => {
         elections.length === 0
     ) {
         return (
-            <div style={styles.container}>
+            <div className="eb-page-party-lists" style={styles.container}>
                 <div
                     style={
                         styles.loadingCard
@@ -922,7 +922,7 @@ const PartyListManagement = () => {
     // =====================================================
 
     return (
-        <div style={styles.container}>
+        <div className="eb-page-party-lists" style={styles.container}>
 
             {/* =================================================
                 HEADER
@@ -1326,6 +1326,7 @@ const PartyListManagement = () => {
 
                         <input
                             type="text"
+                            className="plm-search-input"
                             placeholder="Search party list..."
                             value={search}
                             onChange={(
@@ -3095,8 +3096,8 @@ const styles = {
     },
 
     header: {
-        background: "#ffffff",
-        border: "1px solid #e7ebf2",
+        background: "var(--plm-glass-bg, rgba(19, 25, 52, 0.74))",
+        border: "1px solid rgba(151, 170, 220, 0.28)",
         borderRadius: "17px",
         padding: "25px",
         display: "flex",
@@ -3109,7 +3110,7 @@ const styles = {
         width: "55px",
         height: "55px",
         borderRadius: "14px",
-        background: "#edf3ff",
+        background: "rgba(38, 110, 255, 0.18)",
         color: "#266EFF",
         display: "flex",
         alignItems: "center",
@@ -3122,13 +3123,13 @@ const styles = {
         margin: 0,
         fontSize: "21px",
         fontWeight: "800",
-        color: "#172033",
+        color: "#f3f6ff",
     },
 
     description: {
         margin: "5px 0 0",
         fontSize: "12px",
-        color: "#7c8798",
+        color: "#aeb9d6",
     },
 
     primaryButton: {
@@ -3205,8 +3206,8 @@ const styles = {
     },
 
     electionCard: {
-        background: "#ffffff",
-        border: "1px solid #e7ebf2",
+        background: "var(--plm-glass-bg, rgba(19, 25, 52, 0.74))",
+        border: "1px solid rgba(151, 170, 220, 0.28)",
         borderRadius: "17px",
         padding: "20px 25px",
         marginBottom: "20px",
@@ -3221,16 +3222,16 @@ const styles = {
         marginBottom: "7px",
         fontSize: "11px",
         fontWeight: "800",
-        color: "#4b5563",
+        color: "#f3f6ff",
     },
 
     select: {
         minWidth: "330px",
-        border: "1px solid #dbe2ee",
+        border: "1px solid rgba(151, 170, 220, 0.28)",
         borderRadius: "9px",
-        background: "#ffffff",
+        background: "rgba(12, 18, 40, 0.72)",
         padding: "11px 13px",
-        color: "#172033",
+        color: "#f3f6ff",
         fontSize: "12px",
         outline: "none",
     },
@@ -3244,8 +3245,8 @@ const styles = {
     },
 
     statCard: {
-        background: "#ffffff",
-        border: "1px solid #e7ebf2",
+        background: "var(--plm-glass-bg, rgba(19, 25, 52, 0.74))",
+        border: "1px solid rgba(151, 170, 220, 0.28)",
         borderRadius: "14px",
         padding: "17px",
         display: "flex",
@@ -3257,7 +3258,7 @@ const styles = {
         width: "38px",
         height: "38px",
         borderRadius: "10px",
-        background: "#edf3ff",
+        background: "rgba(38, 110, 255, 0.18)",
         color: "#266EFF",
         display: "flex",
         alignItems: "center",
@@ -3267,21 +3268,21 @@ const styles = {
 
     statTitle: {
         margin: 0,
-        color: "#7c8798",
+        color: "#aeb9d6",
         fontSize: "10px",
         fontWeight: "700",
     },
 
     statValue: {
         margin: "3px 0 0",
-        color: "#172033",
+        color: "#f3f6ff",
         fontSize: "20px",
         fontWeight: "800",
     },
 
     card: {
-        background: "#ffffff",
-        border: "1px solid #e7ebf2",
+        background: "var(--plm-glass-bg, rgba(19, 25, 52, 0.74))",
+        border: "1px solid rgba(151, 170, 220, 0.28)",
         borderRadius: "17px",
         padding: "25px",
         marginBottom: "20px",
@@ -3295,12 +3296,12 @@ const styles = {
         margin: 0,
         fontSize: "16px",
         fontWeight: "800",
-        color: "#172033",
+        color: "#f3f6ff",
     },
 
     cardSubtitle: {
         margin: "5px 0 0",
-        color: "#7c8798",
+        color: "#aeb9d6",
         fontSize: "11px",
     },
 
@@ -3317,9 +3318,9 @@ const styles = {
         alignItems: "flex-start",
         gap: "13px",
         padding: "16px",
-        background: "#f8faff",
+        background: "var(--plm-feature-bg, rgba(26, 35, 70, 0.62))",
         borderRadius: "12px",
-        border: "1px solid #edf1f7",
+        border: "1px solid rgba(151, 170, 220, 0.28)",
         cursor: "pointer",
         textAlign: "left",
         fontFamily: "inherit",
@@ -3350,13 +3351,13 @@ const styles = {
         margin: "1px 0 5px",
         fontSize: "13px",
         fontWeight: "800",
-        color: "#172033",
+        color: "#f3f6ff",
     },
 
     featureDescription: {
         margin: 0,
         fontSize: "11px",
-        color: "#7c8798",
+        color: "#aeb9d6",
         lineHeight: 1.55,
     },
 
@@ -3392,28 +3393,30 @@ const styles = {
     searchInput: {
         width: "100%",
         boxSizing: "border-box",
-        border: "1px solid #dbe2ee",
+        border: "1px solid rgba(151, 170, 220, 0.28)",
         borderRadius: "9px",
         padding:
             "10px 12px 10px 32px",
         fontSize: "11px",
         outline: "none",
-    },
+
+        background: "rgba(12, 18, 40, 0.72)",    },
 
     partyListContainer: {
         display: "flex",
         flexDirection: "column",
         gap: "10px",
-    },
+
+        color: "#f3f6ff",    },
 
     partyRow: {
         display: "flex",
         alignItems: "center",
         gap: "14px",
         padding: "15px",
-        border: "1px solid #edf1f7",
+        border: "1px solid rgba(151, 170, 220, 0.28)",
         borderRadius: "12px",
-        background: "#fbfcff",
+        background: "var(--plm-feature-bg, rgba(26, 35, 70, 0.62))",
     },
 
     partyLogo: {
@@ -3426,7 +3429,7 @@ const styles = {
 
     partyLogoPlaceholder: {
         borderRadius: "12px",
-        background: "#edf3ff",
+        background: "rgba(38, 110, 255, 0.18)",
         color: "#266EFF",
         display: "flex",
         alignItems: "center",
@@ -3451,14 +3454,14 @@ const styles = {
     partyName: {
         margin: 0,
         fontSize: "13px",
-        color: "#172033",
+        color: "#f3f6ff",
         fontWeight: "800",
     },
 
     partyDescription: {
         margin: "6px 0 0",
         fontSize: "11px",
-        color: "#7c8798",
+        color: "#aeb9d6",
     },
 
     menuWrapper: {
@@ -3497,8 +3500,8 @@ const styles = {
         top: "calc(100% + 7px)",
         right: 0,
         width: "190px",
-        background: "#ffffff",
-        border: "1px solid #dbe2ee",
+        background: "rgba(19, 25, 52, 0.96)",
+        border: "1px solid rgba(151, 170, 220, 0.28)",
         borderRadius: "11px",
         padding: "6px",
         boxShadow:
@@ -3659,9 +3662,10 @@ const styles = {
     emptyState: {
         padding: "45px 20px",
         textAlign: "center",
-        border: "1px dashed #dbe2ee",
+        border: "1px solid rgba(151, 170, 220, 0.28)",
         borderRadius: "12px",
-    },
+
+        background: "rgba(19, 25, 52, 0.50)",    },
 
     emptyIcon: {
         width: "42px",
@@ -3678,7 +3682,7 @@ const styles = {
 
     emptyTitle: {
         margin: 0,
-        color: "#172033",
+        color: "#f3f6ff",
         fontSize: "14px",
         fontWeight: "800",
     },
@@ -3686,7 +3690,7 @@ const styles = {
     emptyText: {
         margin: "7px auto 16px",
         maxWidth: "430px",
-        color: "#7c8798",
+        color: "#aeb9d6",
         fontSize: "11px",
         lineHeight: 1.6,
     },
@@ -3701,7 +3705,7 @@ const styles = {
 
     loadingText: {
         margin: "12px 0 0",
-        color: "#7c8798",
+        color: "#f3f6ff",
         fontSize: "11px",
     },
 
@@ -3731,33 +3735,35 @@ const styles = {
     input: {
         width: "100%",
         boxSizing: "border-box",
-        border: "1px solid #dbe2ee",
+        border: "1px solid rgba(151, 170, 220, 0.28)",
         borderRadius: "9px",
         padding: "11px 12px",
         fontSize: "12px",
         outline: "none",
-        color: "#172033",
-    },
+        color: "#f3f6ff",
+
+        background: "rgba(12, 18, 40, 0.72)",    },
 
     textarea: {
         width: "100%",
         boxSizing: "border-box",
-        border: "1px solid #dbe2ee",
+        border: "1px solid rgba(151, 170, 220, 0.28)",
         borderRadius: "9px",
         padding: "11px 12px",
         fontSize: "12px",
         outline: "none",
         resize: "vertical",
-        color: "#172033",
+        color: "#f3f6ff",
         fontFamily: "inherit",
-    },
+
+        background: "rgba(12, 18, 40, 0.72)",    },
 
     logoPreviewBox: {
-        border: "1px solid #edf1f7",
+        border: "1px solid rgba(151, 170, 220, 0.28)",
         borderRadius: "12px",
         padding: "15px",
         marginBottom: "18px",
-        background: "#f8faff",
+        background: "rgba(26, 35, 70, 0.62)",
     },
 
     previewLabel: {
@@ -3794,7 +3800,7 @@ const styles = {
         maxWidth: "540px",
         maxHeight: "90vh",
         overflowY: "auto",
-        background: "#ffffff",
+        background: "var(--plm-glass-solid, rgba(19, 25, 52, 0.98))",
         borderRadius: "17px",
         boxShadow:
             "0 25px 70px rgba(15, 23, 42, 0.22)",
@@ -3816,7 +3822,7 @@ const styles = {
 
     modalTitle: {
         margin: 0,
-        color: "#172033",
+        color: "#f3f6ff",
         fontSize: "16px",
         fontWeight: "800",
     },
@@ -3826,8 +3832,8 @@ const styles = {
         height: "30px",
         border: "none",
         borderRadius: "8px",
-        background: "#f1f5f9",
-        color: "#64748b",
+        background: "rgba(151, 170, 220, 0.16)",
+        color: "#f3f6ff",
         fontSize: "20px",
         cursor: "pointer",
     },
@@ -3846,8 +3852,8 @@ const styles = {
     cancelButton: {
         border: "1px solid #dbe2ee",
         borderRadius: "9px",
-        background: "#ffffff",
-        color: "#475569",
+        background: "rgba(151, 170, 220, 0.12)",
+        color: "#f3f6ff",
         padding: "10px 15px",
         fontSize: "11px",
         fontWeight: "700",
@@ -3865,19 +3871,19 @@ const styles = {
         margin: "0 0 7px",
         fontSize: "16px",
         fontWeight: "800",
-        color: "#172033",
+        color: "#f3f6ff",
     },
 
     modalPartyDescription: {
         margin: 0,
-        color: "#7c8798",
+        color: "#aeb9d6",
         fontSize: "11px",
     },
 
     infoBox: {
         padding: "14px",
-        background: "#f8faff",
-        border: "1px solid #e7ebf2",
+        background: "rgba(26, 35, 70, 0.72)",
+        border: "1px solid rgba(151, 170, 220, 0.28)",
         borderRadius: "10px",
         marginBottom: "15px",
         color: "#475569",
@@ -3887,8 +3893,8 @@ const styles = {
 
     remarksBox: {
         padding: "14px",
-        background: "#fff8e7",
-        border: "1px solid #f4e0a8",
+        background: "rgba(26, 35, 70, 0.72)",
+        border: "1px solid rgba(151, 170, 220, 0.28)",
         borderRadius: "10px",
         marginBottom: "15px",
         color: "#6f6242",
@@ -4010,7 +4016,7 @@ const styles = {
 
     modalInstruction: {
         margin: "0 0 16px",
-        color: "#7c8798",
+        color: "#f3f6ff",
         fontSize: "11px",
         lineHeight: 1.6,
     },
@@ -4027,9 +4033,9 @@ const styles = {
         alignItems: "center",
         gap: "12px",
         padding: "13px",
-        border: "1px solid #e7ebf2",
+        border: "1px solid rgba(151, 170, 220, 0.28)",
         borderRadius: "11px",
-        background: "#fbfcff",
+        background: "rgba(26, 35, 70, 0.72)",
         cursor: "pointer",
         textAlign: "left",
         fontFamily: "inherit",
@@ -4045,13 +4051,13 @@ const styles = {
 
     partySelectionInfoName: {
         fontSize: "12px",
-        color: "#172033",
+        color: "#f3f6ff",
         fontWeight: "800",
     },
 
     partySelectionInfoStatus: {
         fontSize: "10px",
-        color: "#7c8798",
+        color: "#aeb9d6",
     },
 
     selectionArrow: {

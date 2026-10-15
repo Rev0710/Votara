@@ -71,15 +71,16 @@
 
 .rr-eyebrow {
     margin-bottom: 7px;
-    color: #1e3a8a;
+    color: #62a4ff;
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 1.4px;
 }
 
+
 .rr-header h1 {
     margin: 0;
-    color: #16213a;
+    color: #ffffff;
     font-size: 30px;
     line-height: 1.2;
     font-weight: 800;
@@ -136,7 +137,7 @@
 .rr-card-label {
     display: block;
     margin-bottom: 6px;
-    color: #64748b;
+    color: #62a4ff;
     font-size: 10px;
     font-weight: 800;
     letter-spacing: 1.1px;
@@ -541,7 +542,7 @@
 
 .rr-section-heading h2 {
     margin: 0;
-    color: #1e293b;
+    color: #ffffff;
     font-size: 20px;
     font-weight: 800;
 }
@@ -1187,5 +1188,206 @@
 
     .rr-vote-count {
         margin-left: auto;
+    }
+}
+
+/* RESULTS & REPORTS — VOTARA NAVY GLASS THEME
+   Append to the END of ResultsReports.css. */
+
+:root {
+    --rr-glass-opacity: 0.74; /* 0 = transparent, 1 = solid */
+    --rr-glass-blur: 16px;
+    --rr-glass-rgb: 19, 25, 52;
+    --rr-glass-border: rgba(112, 155, 255, 0.22);
+    --rr-text-primary: #f4f7ff;
+    --rr-text-secondary: #a9bbda;
+}
+
+.rr-selector-panel,
+.rr-election-card,
+.rr-stat-card,
+.rr-summary-panel,
+.rr-panel,
+.rr-position-card,
+.rr-empty,
+.rr-empty-results,
+.rr-loading {
+    background: rgba(var(--rr-glass-rgb), var(--rr-glass-opacity)) !important;
+    color: var(--rr-text-primary);
+    border: 1px solid var(--rr-glass-border) !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.035);
+    backdrop-filter: blur(var(--rr-glass-blur));
+    -webkit-backdrop-filter: blur(var(--rr-glass-blur));
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.rr-selector-panel:hover,
+.rr-election-card:hover,
+.rr-stat-card:hover,
+.rr-summary-panel:hover,
+.rr-panel:hover,
+.rr-position-card:hover {
+    border-color: rgba(112,165,255,.34) !important;
+}
+
+.rr-page { color: var(--rr-text-primary); }
+
+.rr-header p,
+.rr-selector-panel p,
+.rr-election-main p,
+.rr-election-meta span,
+.rr-stat-card span,
+.rr-summary-grid span,
+.rr-muted,
+.rr-section-heading p,
+.rr-position-header p,
+.rr-candidate-info span,
+.rr-vote-count span,
+.rr-generated,
+.rr-empty p,
+.rr-empty-results p,
+.rr-loading p {
+    color: var(--rr-text-secondary) !important;
+}
+
+.rr-selector-panel h2,
+.rr-election-main h2,
+.rr-election-meta strong,
+.rr-stat-card strong,
+.rr-summary-panel h2,
+.rr-summary-grid strong,
+.rr-panel-header h2,
+.rr-position-header h3,
+.rr-candidate-info strong,
+.rr-vote-count strong,
+.rr-empty h2,
+.rr-empty-results h3,
+.rr-loading h3 {
+    color: var(--rr-text-primary) !important;
+}
+
+.rr-selector-panel select {
+    background: rgba(9,15,35,.72) !important;
+    color: var(--rr-text-primary) !important;
+    border-color: rgba(139,184,255,.30) !important;
+}
+.rr-selector-panel select option { background: #131934; color: #f4f7ff; }
+.rr-selector-panel select:focus {
+    border-color: #70a5ff !important;
+    box-shadow: 0 0 0 3px rgba(59,130,246,.18);
+}
+
+.rr-election-icon,
+.rr-stat-icon,
+.rr-empty-icon,
+.rr-empty-results-icon {
+    background: rgba(67,117,214,.19) !important;
+    color: #a8caff !important;
+    border: 1px solid rgba(112,165,255,.18);
+}
+
+.rr-summary-grid {
+    background: rgba(112,155,255,.16) !important;
+    border-color: rgba(112,155,255,.18) !important;
+}
+.rr-summary-grid > div {
+    background: rgba(var(--rr-glass-rgb), var(--rr-glass-opacity)) !important;
+}
+
+.rr-position-header {
+    background: rgba(30,43,78,.54) !important;
+    border-bottom-color: rgba(148,175,225,.15) !important;
+}
+.rr-candidate-row { border-bottom-color: rgba(148,175,225,.13) !important; }
+.rr-candidate-row:hover { background: rgba(80,125,205,.12) !important; }
+.rr-candidate-winner { background: rgba(22,101,52,.13) !important; }
+.rr-candidate-rank {
+    background: rgba(148,163,184,.13) !important;
+    color: #c4d2ea !important;
+}
+.rr-candidate-photo { border-color: rgba(148,175,225,.25) !important; }
+.rr-candidate-placeholder {
+    background: rgba(148,163,184,.13) !important;
+    color: #c4d2ea !important;
+}
+
+/* Semantic result banners, adapted for dark glass */
+.rr-winner-banner {
+    background: rgba(20,100,55,.22) !important;
+    border-color: rgba(74,222,128,.32) !important;
+}
+.rr-winner-banner strong, .rr-winner-banner p { color: #b7f7cf !important; }
+.rr-winner-banner > span {
+    background: rgba(34,197,94,.18) !important;
+    color: #86efac !important;
+}
+.rr-tie-banner {
+    background: rgba(120,82,18,.22) !important;
+    border-color: rgba(251,191,36,.32) !important;
+}
+.rr-tie-banner strong, .rr-tie-banner p { color: #fde68a !important; }
+.rr-tie-banner > span {
+    background: rgba(245,158,11,.18) !important;
+    color: #fcd34d !important;
+}
+.rr-no-votes-banner {
+    background: rgba(71,85,105,.20) !important;
+    border-color: rgba(148,163,184,.24) !important;
+}
+.rr-no-votes-banner strong { color: #e2e8f0 !important; }
+.rr-no-votes-banner p { color: #b8c7dc !important; }
+.rr-no-votes-banner > span {
+    background: rgba(148,163,184,.16) !important;
+    color: #cbd5e1 !important;
+}
+
+.rr-empty, .rr-empty-results { border-style: dashed !important; }
+
+.rr-privacy-notice {
+    background: rgba(30,64,125,.30) !important;
+    border-color: rgba(112,165,255,.28) !important;
+    backdrop-filter: blur(var(--rr-glass-blur));
+    -webkit-backdrop-filter: blur(var(--rr-glass-blur));
+}
+.rr-privacy-icon { background: rgba(96,165,250,.18) !important; }
+.rr-privacy-notice strong { color: #c4dcff !important; }
+.rr-privacy-notice p { color: #b5c9e8 !important; }
+
+.rr-error {
+    background: rgba(127,29,29,.25) !important;
+    border-color: rgba(248,113,113,.32) !important;
+    backdrop-filter: blur(var(--rr-glass-blur));
+    -webkit-backdrop-filter: blur(var(--rr-glass-blur));
+}
+.rr-error strong, .rr-error p { color: #fecaca !important; }
+
+.rr-export-button, .rr-refresh-button {
+    background: rgba(37,75,155,.82) !important;
+    color: #f4f7ff !important;
+    border-color: rgba(139,184,255,.34) !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,.16);
+}
+.rr-export-button:hover:not(:disabled),
+.rr-refresh-button:hover:not(:disabled) {
+    background: rgba(49,95,185,.92) !important;
+}
+
+.rr-spinner {
+    border-color: rgba(112,165,255,.18) !important;
+    border-top-color: #70a5ff !important;
+}
+
+@media (max-width: 720px) {
+    .rr-selector-panel,
+    .rr-election-card,
+    .rr-stat-card,
+    .rr-summary-panel,
+    .rr-panel,
+    .rr-position-card,
+    .rr-empty,
+    .rr-empty-results,
+    .rr-loading {
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
     }
 }

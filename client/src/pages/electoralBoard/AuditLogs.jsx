@@ -7,7 +7,7 @@ import React, {
 
 import api from "../../services/api";
 
-import "./AuditLogs.css";
+import "./EBAuditLogs.css";
 
 
 // =========================================================

@@ -3,6 +3,7 @@ import React, {
     useMemo,
     useState,
 } from "react";
+import { createPortal } from "react-dom";
 
 import { useNavigate } from "react-router-dom";
 
@@ -653,6 +654,64 @@ function ElectionManagement({ onCreateElection }) {
         setActionMenuPosition,
     ] = useState(null);
 
+    // Keep the portaled menu attached to its three-dot trigger while
+    // the page or any scrollable container moves.
+    useEffect(() => {
+        if (openActionMenuId == null) return undefined;
+
+        const repositionMenu = () => {
+            const trigger = document.querySelector(
+                `[data-election-action-trigger="${String(openActionMenuId).replace(/"/g, '\\"')}"]`
+            );
+            if (!trigger) {
+                setOpenActionMenuId(null);
+                setActionMenuPosition(null);
+                return;
+            }
+
+            const rect = trigger.getBoundingClientRect();
+
+            // If the trigger has scrolled off-screen, close the menu rather
+            // than leaving it floating at the top or bottom of the viewport.
+            if (rect.bottom < 0 || rect.top > window.innerHeight) {
+                setOpenActionMenuId(null);
+                setActionMenuPosition(null);
+                return;
+            }
+
+            const popup = document.querySelector("[data-election-action-menu-popup]");
+            const menuWidth = 210;
+            const menuHeight = popup?.getBoundingClientRect().height || 220;
+            const gap = 7;
+            const pad = 10;
+            const spaceBelow = window.innerHeight - rect.bottom - gap - pad;
+            const spaceAbove = rect.top - gap - pad;
+
+            let top = spaceBelow >= menuHeight || spaceBelow >= spaceAbove
+                ? rect.bottom + gap
+                : rect.top - Math.min(menuHeight, spaceAbove) - gap;
+            let left = rect.right - menuWidth;
+            left = Math.max(pad, Math.min(left, window.innerWidth - menuWidth - pad));
+            top = Math.max(pad, Math.min(top, window.innerHeight - pad - 60));
+
+            setActionMenuPosition({
+                top,
+                left,
+                maxHeight: Math.max(60, window.innerHeight - top - pad),
+            });
+        };
+
+        // Capture scroll events from nested containers as well as the window.
+        document.addEventListener("scroll", repositionMenu, true);
+        window.addEventListener("resize", repositionMenu);
+        repositionMenu();
+
+        return () => {
+            document.removeEventListener("scroll", repositionMenu, true);
+            window.removeEventListener("resize", repositionMenu);
+        };
+    }, [openActionMenuId]);
+
 
     // Close the action menu when the EB clicks anywhere
     // outside the menu.
@@ -663,7 +722,7 @@ function ElectionManagement({ onCreateElection }) {
 
                 if (
                     !event.target.closest(
-                        "[data-election-action-menu]"
+                        "[data-election-action-menu], [data-election-action-menu-popup]"
                     )
                 ) {
                     setOpenActionMenuId(
@@ -3249,6 +3308,7 @@ function ElectionManagement({ onCreateElection }) {
 
                                                     <button
                                                         type="button"
+                                                        data-election-action-trigger={String(election.id)}
                                                         aria-label={`Open actions for ${election.name}`}
                                                         aria-haspopup="menu"
                                                         aria-expanded={
@@ -3300,38 +3360,33 @@ function ElectionManagement({ onCreateElection }) {
                                                                                 : 0
                                                                 );
 
+                                                            // Approximate menu height, then anchor it to the
+                                                            // clicked button. Never force it to the top of the
+                                                            // screen when neither side has enough space.
                                                             const menuHeight =
-                                                                actionItemCount *
-                                                                    34 +
-                                                                42;
-
-                                                            const gap =
-                                                                7;
-                                                            const viewportPadding =
-                                                                10;
+                                                                actionItemCount * 38 + 18;
+                                                            const gap = 7;
+                                                            const viewportPadding = 10;
+                                                            const spaceBelow =
+                                                                window.innerHeight -
+                                                                buttonRect.bottom -
+                                                                gap -
+                                                                viewportPadding;
+                                                            const spaceAbove =
+                                                                buttonRect.top -
+                                                                gap -
+                                                                viewportPadding;
 
                                                             let left =
-                                                                buttonRect.right -
-                                                                menuWidth;
+                                                                buttonRect.right - menuWidth;
 
-                                                            let top =
-                                                                buttonRect.bottom +
-                                                                gap;
-
-                                                            // Keep the complete menu inside the viewport.
-                                                            if (
-                                                                left <
-                                                                viewportPadding
-                                                            ) {
-                                                                left =
-                                                                    viewportPadding;
+                                                            if (left < viewportPadding) {
+                                                                left = viewportPadding;
                                                             }
 
                                                             if (
-                                                                left +
-                                                                    menuWidth >
-                                                                window.innerWidth -
-                                                                    viewportPadding
+                                                                left + menuWidth >
+                                                                window.innerWidth - viewportPadding
                                                             ) {
                                                                 left =
                                                                     window.innerWidth -
@@ -3339,31 +3394,71 @@ function ElectionManagement({ onCreateElection }) {
                                                                     viewportPadding;
                                                             }
 
-                                                            // If there is not enough room below the button,
-                                                            // open the menu above it instead.
-                                                            if (
-                                                                top +
-                                                                    menuHeight >
-                                                                window.innerHeight -
-                                                                    viewportPadding
-                                                            ) {
-                                                                top =
-                                                                    buttonRect.top -
-                                                                    menuHeight -
-                                                                    gap;
+                                                            const viewportHeight = window.innerHeight;
+                                                            const availableViewportHeight = Math.max(
+                                                                80,
+                                                                viewportHeight - viewportPadding * 2
+                                                            );
+
+                                                            let top;
+                                                            let maxHeight;
+
+                                                            if (spaceBelow >= menuHeight) {
+                                                                // Open directly below the three-dot button.
+                                                                top = buttonRect.bottom + gap;
+                                                                maxHeight = Math.min(
+                                                                    availableViewportHeight,
+                                                                    viewportHeight - top - viewportPadding
+                                                                );
+                                                            } else if (spaceAbove >= menuHeight) {
+                                                                // Open above the button when the menu fits there.
+                                                                top = buttonRect.top - menuHeight - gap;
+                                                                maxHeight = Math.min(
+                                                                    availableViewportHeight,
+                                                                    viewportHeight - viewportPadding * 2
+                                                                );
+                                                            } else if (spaceBelow >= spaceAbove) {
+                                                                // Not enough room either side: keep it under the button
+                                                                // and let the menu scroll within the remaining viewport.
+                                                                top = buttonRect.bottom + gap;
+                                                                maxHeight = Math.max(
+                                                                    60,
+                                                                    Math.min(
+                                                                        availableViewportHeight,
+                                                                        viewportHeight - top - viewportPadding
+                                                                    )
+                                                                );
+                                                            } else {
+                                                                // Keep the menu above the button and calculate its top
+                                                                // from the actual available space. Do not subtract the
+                                                                // available height twice (that pushed it to the screen top).
+                                                                maxHeight = Math.max(
+                                                                    60,
+                                                                    Math.min(
+                                                                        availableViewportHeight,
+                                                                        buttonRect.top - gap - viewportPadding
+                                                                    )
+                                                                );
+                                                                top = Math.max(
+                                                                    viewportPadding,
+                                                                    buttonRect.top - Math.min(menuHeight, maxHeight) - gap
+                                                                );
                                                             }
 
-                                                            if (
-                                                                top <
-                                                                viewportPadding
-                                                            ) {
-                                                                top =
-                                                                    viewportPadding;
-                                                            }
+                                                            // Clamp the menu inside the visible viewport while keeping
+                                                            // it as close as possible to the clicked three-dot button.
+                                                            top = Math.max(
+                                                                viewportPadding,
+                                                                Math.min(
+                                                                    top,
+                                                                    viewportHeight - viewportPadding - Math.min(menuHeight, maxHeight)
+                                                                )
+                                                            );
 
                                                             setActionMenuPosition({
                                                                 top,
                                                                 left,
+                                                                maxHeight,
                                                             });
 
                                                             setOpenActionMenuId(
@@ -3411,8 +3506,9 @@ function ElectionManagement({ onCreateElection }) {
 
 
                                                     {openActionMenuId ===
-                                                        election.id && (
+                                                        election.id && createPortal((
                                                         <div
+                                                            data-election-action-menu-popup
                                                             role="menu"
                                                             style={{
                                                                 position:
@@ -3426,17 +3522,26 @@ function ElectionManagement({ onCreateElection }) {
                                                                 width:
                                                                     "210px",
                                                                 maxHeight:
+                                                                    actionMenuPosition?.maxHeight ??
                                                                     "calc(100vh - 20px)",
-                                                                overflow:
-                                                                    "visible",
+                                                                overflowY:
+                                                                    "auto",
+                                                                overscrollBehavior:
+                                                                    "contain",
                                                                 background:
-                                                                    "#ffffff",
+                                                                    "rgba(19, 25, 52, 0.96)",
+                                                                color:
+                                                                    "#f4f7ff",
                                                                 border:
-                                                                    "1px solid #e2e8f0",
+                                                                    "1px solid rgba(112, 155, 255, 0.28)",
                                                                 borderRadius:
                                                                     "11px",
                                                                 boxShadow:
-                                                                    "0 14px 35px rgba(15,23,42,.16)",
+                                                                    "0 14px 35px rgba(0, 0, 0, 0.38)",
+                                                                backdropFilter:
+                                                                    "blur(16px)",
+                                                                WebkitBackdropFilter:
+                                                                    "blur(16px)",
                                                                 padding:
                                                                     "6px",
                                                                 zIndex:
@@ -3471,7 +3576,7 @@ function ElectionManagement({ onCreateElection }) {
                                                                 <span
                                                                     style={{
                                                                         color:
-                                                                            "#94a3b8",
+                                                                            "#a9bbda",
                                                                     }}
                                                                 >
                                                                     ›
@@ -3775,7 +3880,7 @@ function ElectionManagement({ onCreateElection }) {
                                                             </button>
 
                                                         </div>
-                                                    )}
+                                                    ), document.body)}
 
                                                 </div>
 
@@ -4407,7 +4512,7 @@ function ElectionManagement({ onCreateElection }) {
                         <div
                             style={{
                                 background:
-                                    "#f8fafc",
+                                    "#ffffff",
                                 border:
                                     "1px solid #e5eaf2",
                                 borderRadius:
@@ -4834,7 +4939,7 @@ function ElectionManagement({ onCreateElection }) {
                                 borderTop:
                                     "1px solid #edf0f5",
                                 background:
-                                    "#ffffff",
+                                    "#1a1f3d",
                                 display:
                                     "flex",
                                 gap:
@@ -5754,6 +5859,7 @@ const ModalActions = ({
 // =========================================================
 
 const electionMenuItemStyle = {
+    color: "#e7eeff",
     width:
         "100%",
     border:

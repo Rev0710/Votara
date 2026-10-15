@@ -1,479 +1,266 @@
-/* =========================================================
-   PARTY LIST MANAGEMENT — IMPROVED RESPONSIVE CSS
-   Scope: ONLY .eb-page-party-lists
-   ========================================================= */
-
-.eb-page-party-lists,
-.eb-page-party-lists * {
-    box-sizing: border-box;
-}
-
+/*
+ * Party List Management — navy glass theme
+ * Only affects the Party List Management page.
+ * Adjust --plm-glass-opacity and --plm-glass-blur to tune transparency.
+ */
 .eb-page-party-lists {
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    overflow-x: hidden !important;
+  --plm-glass-opacity: 0.74;
+  --plm-glass-blur: 16px;
+  --plm-glass-rgb: 19, 25, 52;
+  --plm-glass-bg: rgba(var(--plm-glass-rgb), var(--plm-glass-opacity));
+  --plm-glass-solid: rgba(19, 25, 52, 0.97);
+  --plm-feature-bg: rgba(26, 35, 70, 0.62);
+  color: #f3f6ff;
+  width: 100%;
+  min-width: 0;
 }
+.eb-page-party-lists,
+.eb-page-party-lists * { box-sizing: border-box; }
 
-/* Prevent text from being split into individual characters. */
-.eb-page-party-lists h1,
+.eb-page-party-lists .plm-header,
+.eb-page-party-lists > div[style*="styles.electionCard"],
+.eb-page-party-lists > div[style*="styles.statCard"],
+.eb-page-party-lists > div[style*="styles.card"] {
+  background: var(--plm-glass-bg) !important;
+  -webkit-backdrop-filter: blur(var(--plm-glass-blur));
+  backdrop-filter: blur(var(--plm-glass-blur));
+  border: 1px solid rgba(151, 170, 220, 0.28) !important;
+  box-shadow: 0 12px 32px rgba(0,0,0,.18);
+}
+.eb-page-party-lists .plm-title,
 .eb-page-party-lists h2,
 .eb-page-party-lists h3,
 .eb-page-party-lists h4,
-.eb-page-party-lists p,
-.eb-page-party-lists span,
-.eb-page-party-lists strong {
-    word-break: normal !important;
-    overflow-wrap: break-word !important;
+.eb-page-party-lists label,
+.eb-page-party-lists strong { color: #f3f6ff; }
+
+.eb-page-party-lists .plm-description,
+.eb-page-party-lists .plm-feature-description,
+.eb-page-party-lists .party-description { color: #aeb9d6 !important; }
+
+.eb-page-party-lists .plm-feature-card,
+.eb-page-party-lists .party-row {
+  background: var(--plm-feature-bg) !important;
+  -webkit-backdrop-filter: blur(var(--plm-glass-blur));
+  backdrop-filter: blur(var(--plm-glass-blur));
+  color: #f3f6ff !important;
+  border: 1px solid rgba(151, 170, 220, 0.22) !important;
 }
+.eb-page-party-lists .plm-feature-title,
+.eb-page-party-lists .party-name { color: #f3f6ff !important; }
+.eb-page-party-lists .plm-feature-number { color: #fff !important; }
+
+.eb-page-party-lists input,
+.eb-page-party-lists select,
+.eb-page-party-lists textarea,
+.eb-page-party-lists .plm-search-input {
+  background: rgba(10, 16, 37, 0.78) !important;
+  color: #f3f6ff !important;
+  border: 1px solid rgba(151, 170, 220, 0.32) !important;
+  caret-color: #fff;
+}
+.eb-page-party-lists input::placeholder,
+.eb-page-party-lists textarea::placeholder,
+.eb-page-party-lists .plm-search-input::placeholder {
+  color: #aebbd8 !important;
+  opacity: 1 !important;
+}
+.eb-page-party-lists select option {
+  background: #131934;
+  color: #f3f6ff;
+}
+.eb-page-party-lists input:focus,
+.eb-page-party-lists select:focus,
+.eb-page-party-lists textarea:focus {
+  outline: 2px solid rgba(38, 110, 255, .45);
+  outline-offset: 1px;
+}
+.eb-page-party-lists button:not(.plm-add-button):not(.plm-feature-card) {
+  color: inherit;
+}
+.eb-page-party-lists .plm-add-button,
+.eb-page-party-lists button[style*="styles.primaryButton"] {
+  background: #266eff !important;
+  color: #fff !important;
+}
+.eb-page-party-lists img { max-width: 100%; }
 
 /* =========================================================
-   PAGE HEADER
-   Add className="plm-page-header" to the header div.
+   MOBILE HEADER TEXT FIX
+   The header's icon and add button were squeezing the title
+   into a very narrow column, forcing words to break per letter.
+   Only affects Party List Management.
    ========================================================= */
-
-.eb-page-party-lists .plm-page-header {
-    display: grid !important;
-    grid-template-columns: 52px minmax(0, 1fr) auto !important;
-    align-items: center !important;
-    gap: 14px !important;
-
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-
-    padding: 20px !important;
-    margin: 0 0 18px !important;
-
-    background: #ffffff !important;
-    border: 1px solid #e5eaf2 !important;
-    border-radius: 16px !important;
-    box-shadow: 0 5px 18px rgba(24,39,75,.05) !important;
+.eb-page-party-lists .plm-header {
+  display: grid !important;
+  grid-template-columns: 38px minmax(0, 1fr) !important;
+  align-items: center !important;
+  column-gap: 12px !important;
+  row-gap: 12px !important;
+  width: 100% !important;
+  min-width: 0 !important;
 }
 
-.eb-page-party-lists .plm-page-header-icon {
-    width: 52px !important;
-    height: 52px !important;
-    min-width: 52px !important;
-
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-
-    border-radius: 12px !important;
-    background: #edf3ff !important;
-    color: #266eff !important;
-
-    font-size: 20px !important;
-    font-weight: 800 !important;
+.eb-page-party-lists .plm-header-icon {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  flex: none !important;
 }
 
-.eb-page-party-lists .plm-page-header-content {
-    min-width: 0 !important;
-    width: 100% !important;
+.eb-page-party-lists .plm-header-content {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  flex: none !important;
 }
 
-.eb-page-party-lists .plm-page-title {
-    margin: 0 !important;
-
-    font-size: 22px !important;
-    line-height: 1.2 !important;
-    font-weight: 800 !important;
-
-    color: #172033 !important;
-
-    white-space: normal !important;
-    word-break: normal !important;
-    overflow-wrap: break-word !important;
+.eb-page-party-lists .plm-title {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  line-height: 1.3 !important;
 }
 
-.eb-page-party-lists .plm-page-description {
-    margin: 6px 0 0 !important;
-
-    font-size: 11px !important;
-    line-height: 1.45 !important;
-
-    color: #8490a3 !important;
-
-    white-space: normal !important;
-    word-break: normal !important;
+.eb-page-party-lists .plm-description {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  line-height: 1.45 !important;
 }
 
 .eb-page-party-lists .plm-add-button {
-    flex: 0 0 auto !important;
-
-    min-width: 118px !important;
-    height: 38px !important;
-
-    padding: 0 15px !important;
-
-    border: 0 !important;
-    border-radius: 9px !important;
-
-    background: #266eff !important;
-    color: #ffffff !important;
-
-    font-size: 10px !important;
-    font-weight: 800 !important;
-
-    cursor: pointer !important;
-    white-space: nowrap !important;
-
-    box-shadow: 0 5px 14px rgba(38,110,255,.20) !important;
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  justify-self: start !important;
+  width: auto !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  white-space: nowrap !important;
 }
-
-.eb-page-party-lists .plm-add-button:hover {
-    filter: brightness(.96);
-}
-
-/* =========================================================
-   FEATURE CARDS
-   Add className="plm-feature-card" to Feature button.
-   ========================================================= */
-
-.eb-page-party-lists .plm-feature-card {
-    display: grid !important;
-
-    grid-template-columns: 34px minmax(0, 1fr) auto !important;
-    align-items: start !important;
-
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-
-    gap: 10px !important;
-
-    padding: 14px !important;
-
-    border: 1px solid #e3e9f2 !important;
-    border-radius: 11px !important;
-
-    background: #f8faff !important;
-    color: #172033 !important;
-
-    text-align: left !important;
-    cursor: pointer !important;
-
-    overflow: hidden !important;
-}
-
-.eb-page-party-lists .plm-feature-number {
-    width: 34px !important;
-    height: 34px !important;
-    min-width: 34px !important;
-
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-
-    border-radius: 50% !important;
-
-    background: #266eff !important;
-    color: #ffffff !important;
-
-    font-size: 10px !important;
-    font-weight: 800 !important;
-}
-
-.eb-page-party-lists .plm-feature-content {
-    width: 100% !important;
-    min-width: 0 !important;
-}
-
-.eb-page-party-lists .plm-feature-title {
-    margin: 0 !important;
-
-    font-size: 11px !important;
-    line-height: 1.3 !important;
-    font-weight: 800 !important;
-
-    color: #172033 !important;
-
-    white-space: normal !important;
-    word-break: normal !important;
-    overflow-wrap: break-word !important;
-}
-
-.eb-page-party-lists .plm-feature-description {
-    margin: 5px 0 0 !important;
-
-    font-size: 8px !important;
-    line-height: 1.4 !important;
-
-    color: #7b8799 !important;
-
-    white-space: normal !important;
-    word-break: normal !important;
-    overflow-wrap: break-word !important;
-}
-
-.eb-page-party-lists .plm-feature-arrow {
-    align-self: center !important;
-
-    font-size: 16px !important;
-    font-weight: 800 !important;
-
-    color: #266eff !important;
-}
-
-/* =========================================================
-   REGISTERED PARTY ROW
-   ========================================================= */
-
-.eb-page-party-lists .party-row {
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-
-    display: grid !important;
-    grid-template-columns: 52px minmax(0, 1fr) auto !important;
-    align-items: start !important;
-
-    gap: 12px !important;
-
-    padding: 14px !important;
-
-    border: 1px solid #e4e9f1 !important;
-    border-radius: 12px !important;
-
-    background: #ffffff !important;
-
-    overflow: hidden !important;
-}
-
-.eb-page-party-lists .party-main {
-    min-width: 0 !important;
-    width: 100% !important;
-}
-
-.eb-page-party-lists .party-name-row {
-    display: flex !important;
-    align-items: center !important;
-    flex-wrap: wrap !important;
-    gap: 5px !important;
-
-    min-width: 0 !important;
-}
-
-.eb-page-party-lists .party-name,
-.eb-page-party-lists .party-description {
-    min-width: 0 !important;
-    max-width: 100% !important;
-
-    white-space: normal !important;
-    word-break: normal !important;
-    overflow-wrap: break-word !important;
-}
-
-.eb-page-party-lists .party-name {
-    margin: 0 !important;
-    font-size: 13px !important;
-    line-height: 1.3 !important;
-}
-
-.eb-page-party-lists .party-description {
-    margin: 6px 0 0 !important;
-    font-size: 10px !important;
-    line-height: 1.45 !important;
-    color: #7b8799 !important;
-}
-
-.eb-page-party-lists .party-actions {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    justify-content: flex-end !important;
-    align-items: center !important;
-
-    gap: 5px !important;
-    min-width: 0 !important;
-}
-
-.eb-page-party-lists .party-actions button {
-    flex: 0 0 auto !important;
-
-    min-width: max-content !important;
-    width: auto !important;
-
-    padding: 6px 8px !important;
-
-    font-size: 9px !important;
-    line-height: 1.2 !important;
-
-    white-space: nowrap !important;
-}
-
-/* =========================================================
-   PHONE
-   ========================================================= */
 
 @media (max-width: 600px) {
+  .eb-page-party-lists .plm-header {
+    grid-template-columns: 34px minmax(0, 1fr) !important;
+    column-gap: 10px !important;
+    row-gap: 10px !important;
+    padding: 14px !important;
+  }
 
-    .eb-page-party-lists {
-        padding: 0 !important;
-    }
+  .eb-page-party-lists .plm-title {
+    font-size: 16px !important;
+    line-height: 1.3 !important;
+    letter-spacing: normal !important;
+  }
 
-    /* PAGE HEADER — fixes the screenshot */
-    .eb-page-party-lists .plm-page-header {
-        grid-template-columns: 36px minmax(0, 1fr) auto !important;
-        gap: 9px !important;
+  .eb-page-party-lists .plm-description {
+    font-size: 11px !important;
+    line-height: 1.45 !important;
+  }
 
-        padding: 13px !important;
-        margin-bottom: 12px !important;
+  .eb-page-party-lists .plm-add-button {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    padding: 9px 12px !important;
+    font-size: 10px !important;
+  }
 
-        border-radius: 13px !important;
-    }
+  /* Prevent feature-card copy from breaking letter by letter too. */
+  .eb-page-party-lists .plm-feature-grid {
+    width: 100% !important;
+    min-width: 0 !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
 
-    .eb-page-party-lists .plm-page-header-icon {
-        width: 36px !important;
-        height: 36px !important;
-        min-width: 36px !important;
+  .eb-page-party-lists .plm-feature-card {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
 
-        border-radius: 9px !important;
-        font-size: 15px !important;
-    }
+  .eb-page-party-lists .plm-feature-content {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
 
-    .eb-page-party-lists .plm-page-title {
-        font-size: 15px !important;
-        line-height: 1.2 !important;
-    }
+  .eb-page-party-lists .plm-feature-title,
+  .eb-page-party-lists .plm-feature-description {
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+  }
+}
+/* =========================================================
+   PARTY LIST MANAGEMENT — MOBILE ELECTION DROPDOWN FIX
+   Keeps the dropdown inside the phone viewport.
+   Native select menus are OS/browser-controlled; these rules
+   size the select control itself and improve mobile rendering.
+   ========================================================= */
 
-    .eb-page-party-lists .plm-page-description {
-        margin-top: 4px !important;
-        font-size: 8px !important;
-        line-height: 1.35 !important;
-    }
+.eb-page-party-lists select {
+    box-sizing: border-box !important;
+    max-width: 100% !important;
+}
 
-    .eb-page-party-lists .plm-add-button {
-        min-width: 78px !important;
-        width: auto !important;
-        height: 31px !important;
-
-        padding: 0 8px !important;
-
-        border-radius: 7px !important;
-
-        font-size: 7px !important;
-    }
-
-    /* Feature grid: one card per row on phones. */
-    .eb-page-party-lists .plm-feature-grid {
-        display: grid !important;
-
-        grid-template-columns: 1fr !important;
-
+@media (max-width: 600px) {
+    .eb-page-party-lists select {
         width: 100% !important;
         min-width: 0 !important;
         max-width: 100% !important;
-
-        gap: 8px !important;
-    }
-
-    .eb-page-party-lists .plm-feature-card {
-        grid-template-columns: 32px minmax(0, 1fr) auto !important;
-
-        min-height: 56px !important;
-
-        padding: 11px !important;
-        gap: 9px !important;
-
-        border-radius: 10px !important;
-    }
-
-    .eb-page-party-lists .plm-feature-number {
-        width: 32px !important;
-        height: 32px !important;
-        min-width: 32px !important;
-
-        font-size: 9px !important;
-    }
-
-    .eb-page-party-lists .plm-feature-title {
-        font-size: 10px !important;
-        line-height: 1.3 !important;
-    }
-
-    .eb-page-party-lists .plm-feature-description {
-        font-size: 7.5px !important;
-        line-height: 1.35 !important;
-    }
-
-    .eb-page-party-lists .plm-feature-arrow {
-        font-size: 13px !important;
-    }
-
-    /* Registered party rows become vertical cards. */
-    .eb-page-party-lists .party-row {
-        grid-template-columns: 44px minmax(0, 1fr) !important;
-        grid-template-rows: auto auto !important;
-
-        column-gap: 10px !important;
-        row-gap: 9px !important;
-
-        padding: 11px !important;
-    }
-
-    .eb-page-party-lists .party-row > .party-logo,
-    .eb-page-party-lists .party-row > img,
-    .eb-page-party-lists .party-row > div:first-child {
-        grid-column: 1 !important;
-        grid-row: 1 !important;
-
-        width: 44px !important;
-        height: 44px !important;
-        min-width: 44px !important;
-    }
-
-    .eb-page-party-lists .party-main {
-        grid-column: 2 !important;
-        grid-row: 1 !important;
-    }
-
-    .eb-page-party-lists .party-actions {
-        grid-column: 1 / -1 !important;
-        grid-row: 2 !important;
-
-        justify-content: flex-start !important;
-    }
-
-    .eb-page-party-lists .party-name {
+        height: 38px !important;
+        padding: 0 28px 0 10px !important;
         font-size: 11px !important;
+        line-height: 1.2 !important;
+        border-radius: 7px !important;
     }
 
-    .eb-page-party-lists .party-description {
-        font-size: 8px !important;
+    .eb-page-party-lists option {
+        font-size: 12px !important;
     }
 
-    .eb-page-party-lists .party-actions button {
-        padding: 6px 7px !important;
-        font-size: 8px !important;
+    /* Election selector + Refresh button should share the card width. */
+    .eb-page-party-lists > div[style*="styles.electionCard"] {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        align-items: end !important;
+        gap: 8px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        padding: 10px !important;
+    }
+
+    .eb-page-party-lists > div[style*="styles.electionCard"] > div {
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+
+    .eb-page-party-lists > div[style*="styles.electionCard"] button {
+        min-width: 64px !important;
+        max-width: 78px !important;
+        min-height: 38px !important;
+        padding: 6px 8px !important;
+        font-size: 10px !important;
+        white-space: normal !important;
     }
 }
 
-/* =========================================================
-   VERY SMALL PHONES
-   ========================================================= */
-
 @media (max-width: 380px) {
-
-    .eb-page-party-lists .plm-page-header {
-        grid-template-columns: 32px minmax(0, 1fr) auto !important;
-        gap: 7px !important;
-        padding: 11px !important;
+    .eb-page-party-lists > div[style*="styles.electionCard"] {
+        grid-template-columns: minmax(0, 1fr) 64px !important;
+        gap: 6px !important;
     }
 
-    .eb-page-party-lists .plm-page-header-icon {
-        width: 32px !important;
-        height: 32px !important;
-        min-width: 32px !important;
-    }
-
-    .eb-page-party-lists .plm-page-title {
-        font-size: 13px !important;
-    }
-
-    .eb-page-party-lists .plm-add-button {
-        min-width: 72px !important;
-        height: 29px !important;
-        font-size: 6.5px !important;
+    .eb-page-party-lists select {
+        font-size: 10px !important;
+        padding-left: 8px !important;
+        padding-right: 22px !important;
     }
 }

@@ -2,12 +2,6 @@
    VOTARA KIOSK MANAGEMENT
    ========================================================= */
 
-.kiosk-page {
-    padding: 28px;
-    min-height: 100%;
-    background: #f8fafc;
-}
-
 
 /* =========================================================
    HEADER
@@ -42,12 +36,12 @@
     margin: 0;
     font-size: 27px;
     font-weight: 700;
-    color: #0f172a;
+    color: #ffffff;
 }
 
 .kiosk-header p {
     margin: 5px 0 0;
-    color: #64748b;
+    color: #95a6be;
     font-size: 14px;
 }
 
@@ -280,13 +274,13 @@
 .kiosk-section-heading h2 {
     margin: 0;
     font-size: 19px;
-    color: #0f172a;
+    color: #ffffff;
 }
 
 .kiosk-section-heading p {
     margin: 4px 0 0;
     font-size: 13px;
-    color: #64748b;
+    color: #95a6be;
 }
 
 
@@ -380,8 +374,8 @@
    ========================================================= */
 
 .empty-kiosk-card {
-    background: white;
-    border: 1px dashed #cbd5e1;
+    background: rgba(255, 255, 255);
+    border: 1px #cbd5e1;
     border-radius: 16px;
     padding: 50px 25px;
     text-align: center;
@@ -401,13 +395,13 @@
 
 .empty-kiosk-card h3 {
     margin: 0;
-    color: #0f172a;
+    color: #ffffff;
 }
 
 .empty-kiosk-card p {
     max-width: 430px;
     margin: 8px auto 20px;
-    color: #64748b;
+    color: #95a6be;
     font-size: 14px;
 }
 
@@ -741,4 +735,164 @@
 .kiosk-launch-btn:disabled {
     opacity: 0.55;
     cursor: not-allowed;
+}
+
+/* =========================================================
+   GLASS NAVY THEME OVERRIDES
+   Adjust these two values to control the glass effect.
+   Opacity: 0.90 = solid, 0.72 = balanced, 0.50 = more transparent.
+   ========================================================= */
+:root {
+    --kiosk-glass-opacity: 0.74;
+    --kiosk-glass-blur: 16px;
+    --kiosk-panel-border: rgba(148, 163, 220, 0.34);
+    --kiosk-panel-text: #f4f7ff;
+    --kiosk-panel-muted: #aab8d3;
+}
+
+/* Main session and empty-state cards */
+.active-kiosk-card,
+.empty-kiosk-card,
+.history-empty,
+.kiosk-table-wrapper {
+    background: rgba(16, 24, 49, var(--kiosk-glass-opacity)) !important;
+    border: 1px solid var(--kiosk-panel-border) !important;
+    color: var(--kiosk-panel-text) !important;
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
+    -webkit-backdrop-filter: blur(var(--kiosk-glass-blur));
+    backdrop-filter: blur(var(--kiosk-glass-blur));
+}
+
+.active-kiosk-top h3,
+.active-kiosk-card h3,
+.active-kiosk-card h4,
+.active-kiosk-card strong,
+.empty-kiosk-card h3,
+.history-empty h3,
+.election-name {
+    color: var(--kiosk-panel-text) !important;
+}
+
+.active-kiosk-card p,
+.active-kiosk-card small,
+.empty-kiosk-card p,
+.history-empty p {
+    color: var(--kiosk-panel-muted) !important;
+}
+
+/* Stat tiles inside the active session card */
+.kiosk-stat {
+    background: rgba(35, 47, 82, 0.72) !important;
+    border: 1px solid rgba(148, 163, 220, 0.20) !important;
+}
+
+.kiosk-stat span {
+    color: #aab8d3 !important;
+}
+
+.kiosk-stat strong {
+    color: #f4f7ff !important;
+}
+
+.kiosk-stat .student-count {
+    color: #75a7ff !important;
+}
+
+/* Session history table */
+.kiosk-table {
+    background: transparent !important;
+}
+
+.kiosk-table thead,
+.kiosk-table th {
+    background: rgba(30, 42, 75, 0.88) !important;
+    color: #b8c8e8 !important;
+    border-bottom: 1px solid rgba(148, 163, 220, 0.24) !important;
+}
+
+.kiosk-table td {
+    background: transparent !important;
+    color: #e8eeff !important;
+    border-bottom: 1px solid rgba(148, 163, 220, 0.16) !important;
+}
+
+.kiosk-table tbody tr:hover td {
+    background: rgba(72, 102, 170, 0.14) !important;
+}
+
+.kiosk-table small {
+    color: #9aabd0 !important;
+}
+
+/* Keep status pills readable on the darker table */
+.status-closed {
+    background: rgba(148, 163, 184, 0.20) !important;
+    color: #dbe6f8 !important;
+}
+
+.status-active {
+    background: rgba(34, 197, 94, 0.16) !important;
+    color: #86efac !important;
+}
+
+.status-expired {
+    background: rgba(245, 158, 11, 0.17) !important;
+    color: #fcd34d !important;
+}
+
+/* Dark glass modal to match the panel palette */
+.kiosk-modal {
+    background: rgba(16, 24, 49, 0.96) !important;
+    border: 1px solid var(--kiosk-panel-border) !important;
+    -webkit-backdrop-filter: blur(var(--kiosk-glass-blur));
+    backdrop-filter: blur(var(--kiosk-glass-blur));
+}
+
+.kiosk-modal-header,
+.kiosk-modal-actions {
+    border-color: rgba(148, 163, 220, 0.22) !important;
+}
+
+.kiosk-modal-header h2,
+.kiosk-modal-body label {
+    color: #f4f7ff !important;
+}
+
+.kiosk-modal-header p {
+    color: #aab8d3 !important;
+}
+
+.kiosk-modal-body select,
+.modal-secondary-btn {
+    background: rgba(27, 38, 69, 0.92) !important;
+    border-color: rgba(148, 163, 220, 0.32) !important;
+    color: #f4f7ff !important;
+}
+
+.selected-election-info {
+    background: rgba(37, 99, 235, 0.16) !important;
+    border: 1px solid rgba(96, 165, 250, 0.25) !important;
+    color: #dbeafe !important;
+}
+
+.selected-election-info strong {
+    color: #93c5fd !important;
+}
+
+/* Reduce overly bright pale icon tiles without changing action buttons */
+.kiosk-title-icon,
+.empty-kiosk-icon {
+    background: rgba(59, 130, 246, 0.18) !important;
+    color: #bfdbfe !important;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+    .active-kiosk-card,
+    .empty-kiosk-card,
+    .history-empty,
+    .kiosk-table-wrapper {
+        background: #111a35 !important;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+    }
 }

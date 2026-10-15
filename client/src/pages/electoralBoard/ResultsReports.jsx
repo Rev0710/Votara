@@ -484,7 +484,7 @@ const ResultsReports = () => {
                         ELECTORAL BOARD
                     </div>
 
-                    <h1>
+                    <h1 >
                         Results & Reports
                     </h1>
 
