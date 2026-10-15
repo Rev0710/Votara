@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import "./StudentDashboard.css";
 import Profile from "./Profile";
+import api from "../../services/api";
+import {
+    getPartyListsForElection,
+    getPartyListCandidates,
+} from "../../services/partyListService";
 
 import {
     getActiveElection,
@@ -16,29 +21,34 @@ import {
     checkVoteStatus,
 } from "../../services/votingService";
 
+
 import {
     getStudentProfile,
+    getPublishedStudentResults,
+    changeStudentPassword,
 } from "../../services/studentService";
 
-// =====================================================
-// LOGO
-// =====================================================
 
-const votaraLogoSrc = "/src/images/Votara.png";
 
 // =====================================================
-// SIDEBAR ICONS
+// VITE ASSET IMPORTS
+// Keep images in client/src/images and import them so Vite
+// bundles them correctly for both local development and Vercel.
 // =====================================================
 
-import dashboardIcon from "/src/images/homealt.png";
-import voteIcon from "/src/images/votealt.png";
-import guidelinesIcon from "/src/images/guidelinesalt.png";
-import settingsIcon from "/src/images/settingalt.png";
-
-import dashboardActiveIcon from "/src/images/home.png";
-import voteActiveIcon from "/src/images/review.png";
-import guidelinesActiveIcon from "/src/images/guidelines.png";
-import settingsActiveIcon from "/src/images/setting.png";
+import votaraLogoSrc from "../../images/Votara.png";
+import dashboardIcon from "../../images/homealt.png";
+import dashboardActiveIcon from "../../images/home.png";
+import voteIcon from "../../images/votealt.png";
+import voteActiveIcon from "../../images/review.png";
+import candidatesIcon from "../../images/Candidates.png";
+import resultsIcon from "../../images/Results.png";
+import guidelinesIcon from "../../images/guidelinesalt.png";
+import guidelinesActiveIcon from "../../images/guidelines.png";
+import settingsIcon from "../../images/settingalt.png";
+import settingsActiveIcon from "../../images/setting.png";
+import logoutIcon from "../../images/logoutalt.png";
+import bellIcon from "../../images/bell.png";
 
 // =====================================================
 // HELPERS
@@ -111,9 +121,12 @@ const formatTime = (value) => {
 };
 
 
-const API_BASE_URL =
-    import.meta.env.VITE_API_URL ||
-    "http://localhost:5000";
+const API_BASE_URL = (
+    import.meta.env.VITE_API_BASE_URL ||
+    (import.meta.env.PROD
+        ? "https://votara-api-olij.onrender.com/api"
+        : "http://localhost:5000/api")
+).replace(/\/api\/?$/, "");
 
 const resolveImageUrl = (value) => {
     if (!value) return "";
@@ -163,9 +176,13 @@ const getProfilePictureValue = (studentData) => {
 
     return (
         studentData.profilePicture ||
-        studentData.profile_picture ||
-        studentData.profile_picture_url ||
         studentData.profilePictureUrl ||
+        studentData.profile_picture_url ||
+        studentData.profile_picture ||
+        studentData.profilePhotoUrl ||
+        studentData.profile_photo_url ||
+        studentData.profilePhotoStoragePath ||
+        studentData.profile_photo_storage_path ||
         studentData.avatar ||
         studentData.avatar_url ||
         studentData.photo ||
@@ -202,8 +219,36 @@ function StudentDashboard() {
     // GENERAL DASHBOARD STATE
     // =================================================
 
-    const [sidebarOpen, setSidebarOpen] = useState(true);
+const [partyLists, setPartyLists] = useState([]);
+const [partyListsLoading, setPartyListsLoading] = useState(false);
+const [partyListsError, setPartyListsError] = useState("");
+const [studentResults, setStudentResults] = useState(null);
+const [resultsLoading, setResultsLoading] = useState(false);
+const [resultsError, setResultsError] = useState("");
+
+const [selectedPartyList, setSelectedPartyList] = useState(null);
+const [partyRoster, setPartyRoster] = useState([]);
+const [partyRosterLoading, setPartyRosterLoading] = useState(false);
+const [partyRosterError, setPartyRosterError] = useState("");
+
+
+    const [sidebarOpen, setSidebarOpen] = useState(
+    () => window.matchMedia("(min-width: 721px)").matches
+);
+
+useEffect(() => {
+    const handleResize = () => {
+        setSidebarOpen(window.matchMedia("(min-width: 721px)").matches);
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+        window.removeEventListener("resize", handleResize);
+    };
+}, []);
     const [activeMenu, setActiveMenu] = useState("dashboard");
+    const [activeSidebarItem, setActiveSidebarItem] = useState("dashboard");
 
     const [student, setStudent] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -213,6 +258,29 @@ function StudentDashboard() {
     const [selectedFaq, setSelectedFaq] = useState(null);
 
     const [settingsModal, setSettingsModal] = useState(null);
+
+    const [passwordForm, setPasswordForm] = useState({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+    });
+    const [passwordError, setPasswordError] = useState("");
+    const [passwordLoading, setPasswordLoading] = useState(false);
+    const [passwordChangeSuccess, setPasswordChangeSuccess] = useState(false);
+
+    // Student issue reports
+    const [reportView, setReportView] = useState("");
+    const [reportDraft, setReportDraft] = useState({ category: "", subject: "", description: "", contactEmail: "", attachment: null });
+    const [reportHistory, setReportHistory] = useState([]);
+    const [selectedReport, setSelectedReport] = useState(null);
+    const [reportHistoryTimeline, setReportHistoryTimeline] = useState([]);
+    const [reportLoading, setReportLoading] = useState(false);
+    const [reportSubmitting, setReportSubmitting] = useState(false);
+    const [reportError, setReportError] = useState("");
+    const [submittedReport, setSubmittedReport] = useState(null);
+
+
+    const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
     const [profileImageError, setProfileImageError] = useState(false);
     const [profileImageVersion, setProfileImageVersion] = useState(0);
 
@@ -227,6 +295,8 @@ function StudentDashboard() {
     // Stores selections as:
     // { positionId: candidateId }
     const [selectedVotes, setSelectedVotes] = useState({});
+    const [selectedCandidateDetails, setSelectedCandidateDetails] =
+    useState(null);
 
     const [electionLoading, setElectionLoading] = useState(true);
     const [electionError, setElectionError] = useState("");
@@ -240,260 +310,327 @@ function StudentDashboard() {
     // =================================================
 
     useEffect(() => {
-        const fetchStudent = async () => {
+        let cancelled = false;
+
+        const readStoredStudent = () => {
             try {
-                const token = localStorage.getItem("votaraToken");
+                const stored = localStorage.getItem("votaraStudent");
+                return stored ? JSON.parse(stored) : null;
+            } catch (storageError) {
+                console.warn("Unable to read stored student profile:", storageError);
+                return null;
+            }
+        };
 
-                if (!token) {
-                    setStudent(null);
-                    return;
+        const mergeStudentProfile = (storedStudent, serverStudent) => {
+            const stored = storedStudent || {};
+            const server = serverStudent || {};
+
+            // Do not let an empty API photo field erase the saved image.
+            const storedPhoto = getProfilePictureValue(stored);
+            const serverPhoto = getProfilePictureValue(server);
+
+            const merged = {
+                ...stored,
+                ...server,
+            };
+
+            if (serverPhoto) {
+                merged.profilePicture = serverPhoto;
+            } else if (storedPhoto) {
+                merged.profilePicture = storedPhoto;
+            }
+
+            // Normalize common backend field names without replacing valid values.
+            merged.fullName =
+                server.fullName || server.full_name ||
+                stored.fullName || stored.full_name || "Student";
+            merged.yearLevel =
+                server.yearLevel ?? server.year_level ??
+                stored.yearLevel ?? stored.year_level ?? "";
+
+            return merged;
+        };
+
+        const fetchStudent = async () => {
+            const storedStudent = readStoredStudent();
+            const token =
+                localStorage.getItem("votaraToken") ||
+                localStorage.getItem("votaraStudentToken") ||
+                localStorage.getItem("studentToken") ||
+                "";
+
+            // Show the saved account immediately while the server refresh runs.
+            if (!cancelled && storedStudent) {
+                setStudent(storedStudent);
+            }
+
+            if (!token) {
+                if (!cancelled) {
+                    setStudent(storedStudent || null);
+                    setLoading(false);
                 }
+                return;
+            }
 
-                const response = await fetch(
-                    "http://localhost:5000/api/auth/me",
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
+            try {
+                let serverStudent = null;
 
-                const data = await response.json();
-
-                let storedStudent = null;
-
+                // Use the configured API service first. It has the correct
+                // production URL and attaches the current student token.
                 try {
-                    const stored =
-                        localStorage.getItem("votaraStudent");
-
-                    if (stored) {
-                        storedStudent = JSON.parse(stored);
+                    const profileResponse = await getStudentProfile();
+                    if (profileResponse?.success && profileResponse?.student) {
+                        serverStudent = profileResponse.student;
                     }
-                } catch (storageError) {
+                } catch (profileError) {
                     console.warn(
-                        "Unable to read stored student profile:",
-                        storageError
+                        "Unable to refresh student profile from /students/profile:",
+                        profileError
                     );
                 }
 
-                if (data.success && data.student) {
-
-                    let mergedStudent = {
-                        ...(storedStudent || {}),
-                        ...data.student,
-                    };
-
-                    /*
-                     * The authentication endpoint may not return the
-                     * saved profile picture. When that happens, load
-                     * the existing student profile record so the
-                     * dashboard can immediately show the photo that
-                     * was already saved.
-                     */
-                    if (
-                        !getProfilePictureValue(
-                            mergedStudent
-                        )
-                    ) {
-
-                        try {
-
-                            const profileResponse =
-                                await getStudentProfile();
-
-                            if (
-                                profileResponse?.success &&
-                                profileResponse?.student
-                            ) {
-
-                                mergedStudent = {
-                                    ...mergedStudent,
-                                    ...profileResponse.student,
-                                };
-
-                            }
-
-                        } catch (profileError) {
-
-                            console.warn(
-                                "Unable to load saved student profile picture:",
-                                profileError
-                            );
-
+                // Legacy fallback, using the configured API host rather than
+                // localhost so deployed mobile browsers do not call themselves.
+                if (!serverStudent) {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                            },
+                        });
+                        const data = await response.json().catch(() => ({}));
+                        if (response.ok && data?.success && data?.student) {
+                            serverStudent = data.student;
                         }
+                    } catch (authError) {
+                        console.warn("Unable to refresh student from /auth/me:", authError);
                     }
+                }
 
+                if (cancelled) return;
+
+                if (serverStudent) {
+                    const mergedStudent = mergeStudentProfile(storedStudent, serverStudent);
                     setStudent(mergedStudent);
-
-                    // Keep the newest profile data available to the
-                    // rest of the student application.
-                    localStorage.setItem(
-                        "votaraStudent",
-                        JSON.stringify(mergedStudent)
-                    );
-
-                } else if (storedStudent) {
-
-                    let restoredStudent =
-                        storedStudent;
-
-                    if (
-                        !getProfilePictureValue(
-                            restoredStudent
-                        )
-                    ) {
-
-                        try {
-
-                            const profileResponse =
-                                await getStudentProfile();
-
-                            if (
-                                profileResponse?.success &&
-                                profileResponse?.student
-                            ) {
-
-                                restoredStudent = {
-                                    ...restoredStudent,
-                                    ...profileResponse.student,
-                                };
-
-                            }
-
-                        } catch (profileError) {
-
-                            console.warn(
-                                "Unable to restore saved student profile picture:",
-                                profileError
-                            );
-
-                        }
+                    try {
+                        localStorage.setItem("votaraStudent", JSON.stringify(mergedStudent));
+                    } catch (storageError) {
+                        console.warn("Unable to cache refreshed student profile:", storageError);
                     }
-
-                    setStudent(restoredStudent);
+                } else if (storedStudent) {
+                    // Keep the cached profile visible during temporary API failures.
+                    setStudent(storedStudent);
+                } else {
+                    setStudent(null);
                 }
             } catch (error) {
-                console.error(
-                    "Unable to load student:",
-                    error
-                );
+                console.error("Unable to load student:", error);
+                if (!cancelled) {
+                    setStudent(storedStudent || null);
+                }
             } finally {
-                setLoading(false);
+                if (!cancelled) setLoading(false);
             }
         };
 
         fetchStudent();
+
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
     // =================================================
     // LOAD ACTIVE ELECTION
     // =================================================
 
-    useEffect(() => {
-        let mounted = true;
+    
+useEffect(() => {
+    let mounted = true;
+    let requestInFlight = false;
+    let refreshTimer;
 
-        const loadElectionData = async () => {
-            try {
-                setElectionLoading(true);
-                setElectionError("");
+    const loadElectionData = async (silent = false) => {
+        if (requestInFlight) return;
 
-                const electionResponse =
-                    await getActiveElection();
+        requestInFlight = true;
 
-                if (!mounted) return;
+        if (!silent) {
+            setElectionLoading(true);
+        }
 
-                const activeElection =
-                    extractElection(electionResponse);
+        try {
+            setElectionError("");
 
-                if (!activeElection?.id) {
-                    setElection(null);
-                    setPositions([]);
-                    setCandidates([]);
-                    setHasVoted(false);
-                    return;
-                }
+            const electionResponse = await getActiveElection();
 
-                setElection(activeElection);
+            if (!mounted) return;
 
-                const [
-                    configurationResponse,
-                    candidateResponse,
-                ] = await Promise.all([
-                    getElectionConfiguration(
-                        activeElection.id
-                    ),
-                    getApprovedCandidatesForElection(
-                        activeElection.id
-                    ),
-                ]);
+            const activeElection = extractElection(electionResponse);
 
-                if (!mounted) return;
-
-                setPositions(
-                    extractArray(
-                        configurationResponse,
-                        "positions"
-                    )
-                );
-
-                setCandidates(
-                    extractArray(
-                        candidateResponse,
-                        "candidates"
-                    )
-                );
-
-                // Check whether this student already voted.
-                try {
-                    const voteStatus =
-                        await checkVoteStatus(
-                            activeElection.id
-                        );
-
-                    if (!mounted) return;
-
-                    setHasVoted(
-                        Boolean(
-                            voteStatus?.hasVoted ??
-                            voteStatus?.data?.hasVoted
-                        )
-                    );
-                } catch (statusError) {
-                    console.warn(
-                        "Unable to check vote status:",
-                        statusError
-                    );
-                }
-            } catch (error) {
-                console.error(
-                    "Unable to load election data:",
-                    error
-                );
-
-                if (!mounted) return;
-
+            if (!activeElection?.id) {
                 setElection(null);
                 setPositions([]);
                 setCandidates([]);
+                setHasVoted(false);
+                return;
+            }
 
-                setElectionError(
-                    error?.response?.data?.message ||
-                    error?.message ||
-                    "Unable to load the current election."
+            setElection(activeElection);
+
+            const [
+                configurationResponse,
+                candidateResponse,
+            ] = await Promise.all([
+                getElectionConfiguration(activeElection.id),
+                getApprovedCandidatesForElection(activeElection.id),
+            ]);
+
+            if (!mounted) return;
+
+            setPositions(
+                extractArray(configurationResponse, "positions")
+            );
+
+            setCandidates(
+                extractArray(candidateResponse, "candidates")
+            );
+
+            try {
+                const voteStatus = await checkVoteStatus(
+                    activeElection.id
                 );
-            } finally {
-                if (mounted) {
-                    setElectionLoading(false);
+
+                if (!mounted) return;
+
+                setHasVoted(
+                    Boolean(
+                        voteStatus?.hasVoted ??
+                        voteStatus?.data?.hasVoted
+                    )
+                );
+            } catch (statusError) {
+                console.warn(
+                    "Unable to check vote status:",
+                    statusError
+                );
+            }
+        } catch (error) {
+            if (!mounted) return;
+
+            // No active election is a normal state.
+            if (error?.response?.status === 404) {
+                setElection(null);
+                setPositions([]);
+                setCandidates([]);
+                setHasVoted(false);
+                setElectionError("");
+            } else {
+                console.error(
+                    "Unable to refresh election data:",
+                    error
+                );
+
+                // Keep previously loaded data during temporary
+                // network failures instead of blanking the dashboard.
+                if (!silent) {
+                    setElectionError(
+                        error?.response?.data?.message ||
+                        error?.message ||
+                        "Unable to load the current election."
+                    );
                 }
             }
-        };
+        } finally {
+            requestInFlight = false;
 
-        loadElectionData();
+            if (mounted && !silent) {
+                setElectionLoading(false);
+            }
+        }
+    };
 
-        return () => {
-            mounted = false;
-        };
-    }, []);
+    const refreshElection = () => {
+        if (document.visibilityState === "visible") {
+            loadElectionData(true);
+        }
+    };
+
+    // Load immediately when the dashboard opens.
+    loadElectionData(false);
+
+    // Check for EB election changes every 15 seconds.
+    refreshTimer = window.setInterval(() => {
+        refreshElection();
+    }, 15000);
+
+    // Refresh immediately when the student returns to this tab.
+    document.addEventListener("visibilitychange", refreshElection);
+
+    return () => {
+        mounted = false;
+        window.clearInterval(refreshTimer);
+        document.removeEventListener(
+            "visibilitychange",
+            refreshElection
+        );
+    };
+}, []);
+
+// =================================================
+// LOAD EB-APPROVED PARTY LISTS FOR THE ACTIVE ELECTION
+// =================================================
+
+useEffect(() => {
+    let cancelled = false;
+
+    const loadPartyLists = async () => {
+        if (!election?.id) {
+            setPartyLists([]);
+            return;
+        }
+
+        setPartyListsLoading(true);
+        setPartyListsError("");
+
+        try {
+            const response = await getPartyListsForElection(election.id);
+
+            const rows = Array.isArray(response?.data)
+                ? response.data
+                : [];
+
+            const approvedLists = rows.filter(
+                (party) =>
+                    String(party.approval_status || "").toLowerCase() === "approved" &&
+                    party.is_active === true
+            );
+
+            if (!cancelled) {
+                setPartyLists(approvedLists);
+            }
+        } catch (error) {
+            if (!cancelled) {
+                setPartyLists([]);
+                setPartyListsError(
+                    error?.response?.data?.message ||
+                    "Unable to load approved party lists."
+                );
+            }
+        } finally {
+            if (!cancelled) {
+                setPartyListsLoading(false);
+            }
+        }
+    };
+
+    loadPartyLists();
+
+    return () => {
+        cancelled = true;
+    };
+}, [election?.id]);
 
     // =================================================
     // STUDENT INFORMATION
@@ -513,22 +650,27 @@ function StudentDashboard() {
         .slice(0, 2)
         .toUpperCase();
 
-    const profilePictureValue =
-        getProfilePictureValue(student);
+            
+        const profilePictureValue = getProfilePictureValue(student);
 
-    const resolvedProfilePicture =
-        resolveImageUrl(profilePictureValue);
+        const resolvedProfilePicture = resolveImageUrl(profilePictureValue);
 
-    const profilePicture =
-        resolvedProfilePicture &&
-        !resolvedProfilePicture.startsWith("data:") &&
-        !resolvedProfilePicture.startsWith("blob:")
-            ? `${resolvedProfilePicture}${
-                resolvedProfilePicture.includes("?")
-                    ? "&"
-                    : "?"
-            }v=${profileImageVersion}`
-            : resolvedProfilePicture;
+        const isEmbeddedImage =
+            resolvedProfilePicture.startsWith("data:image/") ||
+            resolvedProfilePicture.startsWith("blob:");
+
+        const isSignedStorageUrl =
+            resolvedProfilePicture.includes("/storage/v1/object/sign/");
+
+        const profilePicture =
+            resolvedProfilePicture &&
+            !isEmbeddedImage &&
+            !isSignedStorageUrl
+                ? `${resolvedProfilePicture}${
+                    resolvedProfilePicture.includes("?") ? "&" : "?"
+                }v=${profileImageVersion}`
+                : resolvedProfilePicture;
+
 
     useEffect(() => {
         setProfileImageError(false);
@@ -578,32 +720,46 @@ function StudentDashboard() {
     // SIDEBAR ITEMS
     // =================================================
 
-    const sidebarItems = [
-        {
-            id: "dashboard",
-            label: "Dashboard",
-            icon: dashboardIcon,
-            activeIcon: dashboardActiveIcon,
-        },
-        {
-            id: "vote",
-            label: "Vote",
-            icon: voteIcon,
-            activeIcon: voteActiveIcon,
-        },
-        {
-            id: "guidelines",
-            label: "VOTERS GUIDELINES",
-            icon: guidelinesIcon,
-            activeIcon: guidelinesActiveIcon,
-        },
-        {
-            id: "settings",
-            label: "Settings",
-            icon: settingsIcon,
-            activeIcon: settingsActiveIcon,
-        },
-    ];
+    
+const sidebarItems = [
+    {
+        id: "dashboard",
+        label: "Dashboard",
+        icon: dashboardIcon,
+        activeIcon: dashboardActiveIcon,
+    },
+    {
+        id: "vote",
+        label: "Vote",
+        icon: voteIcon,
+        activeIcon: voteActiveIcon,
+    },
+    {
+        id: "candidates",
+        label: "Candidates",
+        icon: candidatesIcon,
+        activeIcon: candidatesIcon,
+    },
+    {
+        id: "results",
+        label: "Results",
+        icon: resultsIcon,
+        activeIcon: resultsIcon,
+    },
+    {
+        id: "guidelines",
+        label: "Voters Guidelines",
+        icon: guidelinesIcon,
+        activeIcon: guidelinesActiveIcon,
+    },
+    {
+        id: "settings",
+        label: "Settings",
+        icon: settingsIcon,
+        activeIcon: settingsActiveIcon,
+    },
+];
+
 
     // =================================================
     // ELIGIBLE POSITIONS
@@ -708,16 +864,57 @@ const candidatesByPosition = useMemo(() => {
     // MENU CHANGE
     // =================================================
 
-    const handleMenuClick = (id) => {
-        if (id === activeMenu) return;
+        
+const handleMenuClick = (id) => {
+    setActiveSidebarItem(id);
+    setActiveMenu(id);
 
-        setActiveMenu(id);
+    if (window.matchMedia("(max-width: 720px)").matches) {
+        setSidebarOpen(false);
+    }
 
-        window.scrollTo({
-            top: 0,
-            behavior: "smooth",
-        });
-    };
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+    });
+};
+
+
+// =================================================
+// OPEN PARTY LIST AND LOAD ITS CANDIDATES
+// =================================================
+
+const handleOpenPartyList = async (partyList) => {
+    setSelectedPartyList(partyList);
+    setPartyRoster([]);
+    setPartyRosterError("");
+    setPartyRosterLoading(true);
+
+    try {
+        const response = await getPartyListCandidates(partyList.id);
+
+        const rows = Array.isArray(response?.data)
+            ? response.data
+            : [];
+
+        const approvedCandidates = rows.filter(
+            (candidate) =>
+                candidate.is_active === true &&
+                String(candidate.approval_status || "").toLowerCase() === "approved" &&
+                String(candidate.election_id) === String(election?.id)
+        );
+
+        setPartyRoster(approvedCandidates);
+    } catch (error) {
+        setPartyRosterError(
+            error?.response?.data?.message ||
+            "Unable to load candidates for this party list."
+        );
+    } finally {
+        setPartyRosterLoading(false);
+    }
+};
+
 
     // =================================================
     // FAQ
@@ -725,19 +922,29 @@ const candidatesByPosition = useMemo(() => {
 
     const faqs = [
         {
-            question: "QUESTION 1",
+            question: "Where can I see historical results?",
             answer:
                 "You can participate in the election by selecting the Vote section from the sidebar.",
         },
         {
-            question: "QUESTION 2",
+            question: "Can I view results without logging in?",
             answer:
                 "Review the available candidates and select your preferred candidate before submitting your vote.",
         },
         {
-            question: "QUESTION 3",
+            question: "How is my vote protected?",
             answer:
                 "Once your vote is submitted and confirmed, your participation will be recorded.",
+        },
+        {
+            question: "Can I change my vote after submitting?",
+            answer:
+                "Once your vote is submitted and confirmed, you won't be able to change it.",
+        },
+         {
+            question: "Who can create an election?",
+            answer:
+                "Those Electoral Board.",
         },
     ];
 
@@ -754,6 +961,221 @@ const candidatesByPosition = useMemo(() => {
         "Privacy Policy",
         "Contact us",
     ];
+
+    // =================================================
+    // CHANGE PASSWORD
+    // =================================================
+
+    const passwordRequirements = [
+        {
+            label: "At least 8 characters",
+            valid: passwordForm.newPassword.length >= 8,
+        },
+        {
+            label: "At least one uppercase letter",
+            valid: /[A-Z]/.test(passwordForm.newPassword),
+        },
+        {
+            label: "At least one lowercase letter",
+            valid: /[a-z]/.test(passwordForm.newPassword),
+        },
+        {
+            label: "At least one number",
+            valid: /\d/.test(passwordForm.newPassword),
+        },
+        {
+            label: "At least one special character",
+            valid: /[^A-Za-z0-9]/.test(passwordForm.newPassword),
+        },
+    ];
+
+    const closePasswordModal = () => {
+        if (passwordLoading) return;
+        setSettingsModal(null);
+        setPasswordForm({
+            currentPassword: "",
+            newPassword: "",
+            confirmPassword: "",
+        });
+        setPasswordError("");
+        setPasswordChangeSuccess(false);
+    };
+
+    const handlePasswordChange = async (event) => {
+        event.preventDefault();
+        setPasswordError("");
+
+        if (!passwordForm.currentPassword) {
+            setPasswordError("Enter your current password.");
+            return;
+        }
+
+        if (!passwordRequirements.every((item) => item.valid)) {
+            setPasswordError("Please meet all the password requirements.");
+            return;
+        }
+
+        if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+            setPasswordError("Your new passwords do not match.");
+            return;
+        }
+
+        if (passwordForm.currentPassword === passwordForm.newPassword) {
+            setPasswordError("Your new password must differ from your current password.");
+            return;
+        }
+
+        try {
+            setPasswordLoading(true);
+            const result = await changeStudentPassword({
+                currentPassword: passwordForm.currentPassword,
+                newPassword: passwordForm.newPassword,
+                confirmPassword: passwordForm.confirmPassword,
+            });
+
+            if (result?.success === false) {
+                throw new Error(result.message || "Unable to update your password.");
+            }
+
+            setPasswordChangeSuccess(true);
+        } catch (error) {
+            setPasswordError(
+                error?.response?.data?.message ||
+                error?.message ||
+                "Unable to update your password. Please try again."
+            );
+        } finally {
+            setPasswordLoading(false);
+        }
+    };
+
+
+    // =================================================
+    // STUDENT ISSUE REPORTS
+    // =================================================
+
+    const reportCategories = [
+        "Voting issue",
+        "Account or profile",
+        "Candidate information",
+        "Election results",
+        "Other",
+    ];
+
+    const openReportCategory = () => {
+        const currentEmail = student?.email || student?.email_address || student?.contactEmail || "";
+        setReportDraft((current) => ({ ...current, contactEmail: current.contactEmail || currentEmail }));
+        setReportError("");
+        setSubmittedReport(null);
+        setReportView("category");
+        setSettingsModal("Report an Issue");
+    };
+
+    const loadReportHistory = async () => {
+        setReportLoading(true);
+        setReportError("");
+        try {
+            const response = await api.get("/students/issues");
+            setReportHistory(response.data?.reports || []);
+            setReportView("history");
+        } catch (error) {
+            setReportError(error?.response?.data?.message || error?.message || "Unable to load report history.");
+            setReportView("history");
+        } finally {
+            setReportLoading(false);
+        }
+    };
+
+    const openReportHistoryDetail = async (report) => {
+        setSelectedReport(report);
+        setReportHistoryTimeline([]);
+        setReportError("");
+        setReportView("history-detail");
+        try {
+            const response = await api.get(`/students/issues/${report.id}/history`);
+            setReportHistoryTimeline(response.data?.history || []);
+        } catch (error) {
+            setReportError(error?.response?.data?.message || error?.message || "Unable to load report updates.");
+        }
+    };
+
+    const handleReportAttachment = (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        const allowed = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+        if (!allowed.includes(file.type)) {
+            setReportError("Choose a JPG, PNG, WEBP, or PDF file.");
+            event.target.value = "";
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            setReportError("Attachment must be 5 MB or smaller.");
+            event.target.value = "";
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+            setReportDraft((current) => ({ ...current, attachment: { name: file.name, type: file.type, data: reader.result } }));
+            setReportError("");
+        };
+        reader.onerror = () => setReportError("Unable to read the selected attachment.");
+        reader.readAsDataURL(file);
+    };
+
+    const submitIssueReport = async (event) => {
+        event.preventDefault();
+        setReportSubmitting(true);
+        setReportError("");
+        try {
+            const response = await api.post("/students/issues", reportDraft);
+            const report = response.data?.report;
+            if (!response.data?.success || !report) throw new Error(response.data?.message || "The report was not saved.");
+            setSubmittedReport(report);
+            setReportView("submitted");
+        } catch (error) {
+            setReportError(error?.response?.data?.message || error?.message || "Unable to submit your report.");
+        } finally {
+            setReportSubmitting(false);
+        }
+    };
+
+    const closeReportFlow = () => {
+        if (reportSubmitting) return;
+        setReportView("");
+        setReportError("");
+        setSubmittedReport(null);
+        setSelectedReport(null);
+        setReportDraft({ category: "", subject: "", description: "", contactEmail: student?.email || student?.email_address || student?.contactEmail || "", attachment: null });
+        setSettingsModal(null);
+    };
+
+    
+    
+const handleSettingsItemClick = (item) => {
+    if (item === "Report an Issue") {
+        openReportCategory();
+        return;
+    }
+
+    const pageMap = {
+        "Privacy Policy": "privacy",
+        "Terms of Service": "terms",
+        "Contact us": "contact",
+        "About us": "about",
+    };
+
+    if (pageMap[item]) {
+        setSettingsModal(null);
+        setActiveMenu(pageMap[item]);
+        setActiveSidebarItem("settings");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+    }
+
+    setSettingsModal(item);
+};
+
+
 
     // =================================================
     // SELECT CANDIDATE
@@ -782,14 +1204,15 @@ const candidatesByPosition = useMemo(() => {
     // VIEW CANDIDATE DETAILS
     // =================================================
 
-    const handleViewDetails = (candidate) => {
+        const handleViewDetails = (candidate) => {
+            setSelectedCandidateDetails(candidate);
+
         const name =
             candidate?.full_name ||
             candidate?.fullName ||
             candidate?.name ||
             "Candidate";
 
-        alert(`Candidate: ${name}`);
     };
 
     // =================================================
@@ -951,37 +1374,34 @@ const candidatesByPosition = useMemo(() => {
     // PROFILE UPDATE
     // =================================================
 
-    const handleProfileUpdated = (updatedStudent) => {
+    const handleProfileUpdated = async (updatedStudent) => {
+        if (!updatedStudent) return;
 
-        if (!updatedStudent) {
-            return;
+        let mergedStudent = {
+            ...(student || {}),
+            ...updatedStudent,
+        };
+
+        // Refresh the private photo URL after upload; the upload response may
+        // contain only a storage path, which is not directly displayable.
+        try {
+            const profileResponse = await getStudentProfile();
+            if (profileResponse?.success && profileResponse?.student) {
+                mergedStudent = {
+                    ...mergedStudent,
+                    ...profileResponse.student,
+                };
+            }
+        } catch (profileError) {
+            console.warn("Unable to refresh the updated student profile:", profileError);
         }
 
-        setStudent((previous) => ({
-            ...(previous || {}),
-            ...updatedStudent,
-        }));
-
-        // Force the browser to refresh an unchanged image URL.
+        setStudent(mergedStudent);
         setProfileImageVersion(Date.now());
         setProfileImageError(false);
 
         try {
-            const storedStudent =
-                localStorage.getItem("votaraStudent");
-
-            const parsedStudent =
-                storedStudent
-                    ? JSON.parse(storedStudent)
-                    : {};
-
-            localStorage.setItem(
-                "votaraStudent",
-                JSON.stringify({
-                    ...parsedStudent,
-                    ...updatedStudent,
-                })
-            );
+            localStorage.setItem("votaraStudent", JSON.stringify(mergedStudent));
         } catch (storageError) {
             console.warn(
                 "Unable to synchronize updated profile with local storage:",
@@ -994,17 +1414,36 @@ const candidatesByPosition = useMemo(() => {
     // LOGOUT
     // =================================================
 
-    const handleLogout = () => {
-        localStorage.removeItem(
-            "votaraToken"
-        );
+    
+const handleLogout = async () => {
+    const token = localStorage.getItem("votaraToken");
 
-        localStorage.removeItem(
-            "votaraStudent"
-        );
+    // Release the server-side session before leaving the dashboard.
+    if (token) {
+        try {
+            await api.post(
+                "/auth/student-logout",
+                {},
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                    timeout: 5000,
+                }
+            );
+        } catch (error) {
+            console.warn(
+                "Unable to release student session during logout:",
+                error?.message
+            );
+        }
+    }
 
-        window.location.href = "/";
-    };
+    localStorage.removeItem("votaraToken");
+    localStorage.removeItem("votaraStudent");
+    window.location.href = "/";
+};
+
 
     // =================================================
     // SEARCH
@@ -1085,7 +1524,7 @@ const candidatesByPosition = useMemo(() => {
                         candidate.profilePicture ||
                         candidate.profile_picture_url ||
                         candidate.profilePictureUrl
-                    ) || "/src/images/candidate.png";
+                    ) || candidatesIcon;
 
                 const isSelected =
                     selectedVotes[
@@ -1141,17 +1580,29 @@ const candidatesByPosition = useMemo(() => {
                                     : "VOTE"}
                             </button>
 
+                            
                             <button
                                 type="button"
                                 className="candidate-details-button"
-                                onClick={() =>
-                                    handleViewDetails(
-                                        candidate
-                                    )
-                                }
+                                aria-label={`View campaign platform for ${candidateName}`}
+                                title="View campaign platform"
+                                onClick={() => handleViewDetails(candidate)}
                             >
-                                View Details
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    width="17"
+                                    height="17"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="1.8"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    aria-hidden="true"
+                                >
+                                    <path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5z" />
+                                </svg>
                             </button>
+
                         </div>
                     </article>
                 );
@@ -1160,22 +1611,312 @@ const candidatesByPosition = useMemo(() => {
     };
 
     // =================================================
-    // LOADING SCREEN
+    // STUDENT RESULTS LOADER
     // =================================================
 
-    if (loading) {
-        return (
-            <div className="dashboard-loading">
-                Loading...
-            </div>
+const loadStudentResults = async () => {
+    try {
+        setResultsLoading(true);
+        setResultsError("");
+
+        const response = await getPublishedStudentResults();
+
+        if (!response?.success) {
+            throw new Error(
+                response?.message ||
+                "Unable to load election results."
+            );
+        }
+
+        // Always replace the previous response, including when
+        // results are no longer published or the election is open.
+        setStudentResults(response);
+    } catch (error) {
+        setStudentResults(null);
+
+        setResultsError(
+            error?.response?.data?.message ||
+            error?.message ||
+            "Unable to load election results."
         );
+    } finally {
+        setResultsLoading(false);
     }
+};
+
+
+    // =================================================
+    // AUTO-REFRESH PUBLISHED RESULTS
+    // =================================================
+
+    useEffect(() => {
+    if (activeMenu !== "results") return;
+
+    let cancelled = false;
+    let requestInFlight = false;
+
+    const refreshResults = async () => {
+        if (
+            cancelled ||
+            requestInFlight ||
+            document.visibilityState !== "visible"
+        ) {
+            return;
+        }
+
+        requestInFlight = true;
+
+        try {
+            setResultsLoading(true);
+            setResultsError("");
+
+            const response = await getPublishedStudentResults();
+
+            if (!response?.success) {
+                throw new Error(
+                    response?.message || "Unable to load election results."
+                );
+            }
+
+            if (!cancelled) {
+                setStudentResults(response);
+            }
+        } catch (error) {
+            if (!cancelled) {
+                setResultsError(
+                    error?.response?.data?.message ||
+                    error?.message ||
+                    "Unable to load election results."
+                );
+            }
+        } finally {
+            requestInFlight = false;
+
+            if (!cancelled) {
+                setResultsLoading(false);
+            }
+        }
+    };
+
+    refreshResults();
+
+    const timer = window.setInterval(refreshResults, 15000);
+
+    return () => {
+        cancelled = true;
+        window.clearInterval(timer);
+    };
+}, [activeMenu]);
+
+
+
+
+
+
+
+
+
 
     // =================================================
     // MAIN PAGE CONTENT
     // =================================================
 
     const renderMainContent = () => {
+
+        
+    if (activeMenu === "results") {
+        const electionResults = studentResults?.positions || [];
+
+const resultStatus = String(
+    studentResults?.election?.status || ""
+).trim().toLowerCase();
+
+const electionFinished = [
+    "closed",
+    "completed",
+    "finished",
+].includes(resultStatus);
+
+const resultsAreVisible =
+    studentResults?.published === true &&
+    electionFinished;
+
+        return (
+            <main className="dashboard-main content-page-animation">
+                <section className="student-results-page">
+                    <div className="student-results-heading">
+                        <div>
+                            <h1>Election Results</h1>
+                            <p>
+                                Official results published by the Electoral Board.
+                            </p>
+                        </div>
+
+                        <button
+                            type="button"
+                            className="student-results-refresh"
+                            onClick={loadStudentResults}
+                            disabled={resultsLoading}
+                        >
+                            {resultsLoading ? "Refreshing..." : "Refresh"}
+                        </button>
+                    </div>
+
+                    {resultsError ? (
+                        <div className="student-results-message error">
+                            <h2>Unable to load results</h2>
+                            <p>{resultsError}</p>
+                            <button
+                                type="button"
+                                onClick={loadStudentResults}
+                            >
+                                Try Again
+                            </button>
+                        </div>
+                    ) : resultsLoading && !studentResults ? (
+                        <div className="student-results-message">
+                            Loading election results...
+                        </div>
+                    ) : !resultsAreVisible ? (
+                        
+
+<div className="student-results-message">
+    <h2>
+        {electionFinished
+            ? "Election Finished"
+            : "Election is still ongoing"}
+    </h2>
+
+    <p>
+        {electionFinished
+            ? "The election has finished. Please wait until the Electoral Board releases the official results."
+            : "Please wait until the election has finished and the Electoral Board releases the official results."}
+    </p>
+</div>
+
+
+                    ) : electionResults.length === 0 ? (
+                        <div className="student-results-message">
+                            <h2>No position results available</h2>
+                            <p>
+                                No position results were returned for this election.
+                            </p>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="student-results-election">
+                                <span>Published Election</span>
+                                <h2>
+                                    {studentResults.election?.title ||
+                                        "VOTARA Election"}
+                                </h2>
+                                {studentResults.election?.published_at && (
+                                    <p>
+                                        Published:{" "}
+                                        {new Date(
+                                            studentResults.election.published_at
+                                        ).toLocaleString()}
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="student-results-grid">
+                                {electionResults.map((position) => (
+                                    <article
+                                        className="student-result-card"
+                                        key={position.id}
+                                    >
+                                        <div className="student-result-card-heading">
+                                            <h2>{position.name}</h2>
+
+                                            <span
+                                                className={`student-result-status ${position.resultStatus}`}
+                                            >
+                                                {position.resultStatus === "winner"
+                                                    ? "Winner declared"
+                                                    : position.resultStatus === "tie"
+                                                    ? "Tied"
+                                                    : "No votes"}
+                                            </span>
+                                        </div>
+
+                                        {position.description && (
+                                            <p className="student-result-description">
+                                                {position.description}
+                                            </p>
+                                        )}
+
+                                        {position.resultStatus === "tie" && (
+                                            <p className="student-result-notice">
+                                                This position has tied candidates.
+                                            </p>
+                                        )}
+
+                                        {position.resultStatus === "no_votes" && (
+                                            <p className="student-result-notice">
+                                                No votes were recorded for this position.
+                                            </p>
+                                        )}
+
+                                        <div className="student-result-candidates">
+                                            {position.candidates.map((candidate) => (
+                                                <div
+                                                    className={`student-result-candidate ${
+                                                        position.winner?.id === candidate.id
+                                                            ? "is-winner"
+                                                            : ""
+                                                    }`}
+                                                    key={candidate.id}
+                                                >
+                                                    <div className="student-result-candidate-info">
+                                                        {candidate.profilePicture ? (
+                                                            <img
+                                                                src={candidate.profilePicture}
+                                                                alt={candidate.fullName}
+                                                            />
+                                                        ) : (
+                                                            <div className="student-result-avatar">
+                                                                {(candidate.fullName || "C")
+                                                                    .charAt(0)
+                                                                    .toUpperCase()}
+                                                            </div>
+                                                        )}
+
+                                                        <div>
+                                                            <strong>
+                                                                {candidate.fullName}
+                                                            </strong>
+                                                            <span>
+                                                                {candidate.partyListName ||
+                                                                    "Independent"}
+                                                            </span>
+                                                            {position.winner?.id === candidate.id && (
+                                                                <span className="student-result-winner-label">
+                                                                    Official winner
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    <strong className="student-result-votes">
+                                                        {candidate.voteCount}{" "}
+                                                        {candidate.voteCount === 1
+                                                            ? "vote"
+                                                            : "votes"}
+                                                    </strong>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </article>
+                                ))}
+                            </div>
+                        </>
+                    )}
+                </section>
+            </main>
+        );
+    }
+
         // =================================================
         // DASHBOARD
         // =================================================
@@ -1186,19 +1927,6 @@ const candidatesByPosition = useMemo(() => {
         ) {
             return (
                 <main className="dashboard-main content-page-animation">
-                    <section className="welcome-section">
-                        <h1>
-                            Hello{" "}
-                            <strong>
-                                {firstName}!
-                            </strong>
-                        </h1>
-
-                        <p>
-                            Welcome to Votara
-                        </p>
-                    </section>
-
                     <div className="dashboard-grid">
                         {/* LEFT COLUMN */}
 
@@ -1208,28 +1936,35 @@ const candidatesByPosition = useMemo(() => {
                                     electionStatusClass
                                 }`}
                             >
-                                <div className="election-card-header">
-                                    <div>
-                                        <h2>
-                                            {electionIsOpen
-                                                ? "Ongoing Elections"
-                                                : electionIsScheduled
-                                                ? "Upcoming Election"
-                                                : "Election Status"}
-                                        </h2>
+                                
+<div className="election-card-header">
+    <div className="election-card-heading">
+        <span className="election-eyebrow">
+            {electionIsOpen
+                ? "ACTIVE NOW"
+                : electionIsScheduled
+                ? "UPCOMING ELECTION"
+                : "ELECTION STATUS"}
+                        </span>
 
-                                        <h3>
-                                            {election?.title ||
-                                                "No election currently available"}
-                                        </h3>
-                                    </div>
+                        <h3>
+                            {election?.title || "PSITS Election"}
+                        </h3>
 
-                                    <span
-                                        className={`election-status-badge ${electionStatusClass}`}
-                                    >
-                                        {electionStatusLabel}
-                                    </span>
-                                </div>
+                        <p className="election-banner-subtitle">
+                            Your vote shapes the future of campus life.
+                            Review the candidates and cast your digital
+                            ballot before voting closes.
+                        </p>
+                    </div>
+
+                    <span
+                        className={`election-status-badge ${electionStatusClass}`}
+                    >
+                        {electionStatusLabel}
+                    </span>
+                </div>
+
 
                                 {election ? (
                                     <div className="election-card-meta">
@@ -1290,9 +2025,7 @@ const candidatesByPosition = useMemo(() => {
                                     type="button"
                                     className="vote-button"
                                     disabled={!studentCanVote}
-                                    onClick={() =>
-                                        handleMenuClick("vote")
-                                    }
+                                    onClick={() => handleMenuClick("vote")}
                                     title={
                                         hasVoted
                                             ? "You already voted in this election."
@@ -1305,79 +2038,44 @@ const candidatesByPosition = useMemo(() => {
                                 >
                                     {hasVoted
                                         ? "VOTE SUBMITTED"
-                                        : electionIsOpen &&
-                                          studentEligible
+                                        : electionIsOpen && studentEligible
                                         ? "Vote Now"
                                         : electionIsScheduled
                                         ? "NOT OPEN YET"
                                         : "VOTING CLOSED"}
                                 </button>
+
+                                <button
+                                    type="button"
+                                    className="view-candidates-button"
+                                    onClick={() => handleMenuClick("candidates")}
+                                >
+                                    View Candidates
+                                </button>
                             </section>
 
-                            <section className="results-card main-hover-card">
-                                <div className="results-header">
-                                    <h3>
-                                        Election Information
-                                    </h3>
+                            <section className="results-card live-results-card main-hover-card">
+                                <div className="results-header live-results-header">
+                                    <div>
+                                        <h3>Live result</h3>
+                                        <p>Election results overview</p>
+                                    </div>
+                                    <span className="live-results-badge">
+                                        <span className="live-results-dot" />
+                                        Awaiting data
+                                    </span>
                                 </div>
 
-                                <div className="position-title">
-                                    <h2>
-                                        {election?.title ||
-                                            "No active election"}
-                                    </h2>
-                                </div>
-
-                                <div className="chart">
-                                    <div className="chart-row">
-                                        <span className="candidate-name">
-                                            Election
-                                        </span>
-
-                                        <div className="bar-area">
-                                            <div
-                                                className="bar"
-                                                style={{
-                                                    width:
-                                                        election
-                                                            ? "100%"
-                                                            : "0%",
-                                                }}
-                                            />
-                                        </div>
-
-                                        <span
-                                            className={`vote-count status-text ${electionStatusClass}`}
-                                        >
-                                            {election
-                                                ? electionStatusLabel
-                                                : "Inactive"}
-                                        </span>
+                                <div className="live-results-empty-state">
+                                    <div className="live-results-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <rect x="5" y="5" width="38" height="38" rx="12" fill="#EEF4FF" />
+                                            <path d="M14 32V25M24 32V17M34 32V21" stroke="#2563EB" strokeWidth="4" strokeLinecap="round" />
+                                        </svg>
                                     </div>
-
-                                    <div className="chart-row">
-                                        <span className="candidate-name">
-                                            Your Status
-                                        </span>
-
-                                        <div className="bar-area">
-                                            <div
-                                                className="bar"
-                                                style={{
-                                                    width:
-                                                        hasVoted
-                                                            ? "100%"
-                                                            : "50%",
-                                                }}
-                                            />
-                                        </div>
-
-                                        <span className="vote-count">
-                                            {hasVoted
-                                                ? "Voted"
-                                                : "Not Voted"}
-                                        </span>
-                                    </div>
+                                    <h4>Election results will appear here</h4>
+                                    <p>Candidate standings and vote percentages will be displayed here when results are connected to the Electoral Board.</p>
+                                    <span className="live-results-note">Results are not available yet.</span>
                                 </div>
                             </section>
 
@@ -1402,10 +2100,13 @@ const candidatesByPosition = useMemo(() => {
                             </section>
 
                             <section className="faq-section">
-                                <h3>
-                                    FAQs
-                                </h3>
-
+                            <div className="faq-intro">
+                                <h3>FAQs</h3>
+                                <p>
+                                    Answer the questions voters ask before they
+                                    register, vote or check results.
+                                </p>
+                                </div>
                                 <div className="faq-list">
                                     {faqs.map(
                                         (
@@ -1605,6 +2306,11 @@ const candidatesByPosition = useMemo(() => {
                                             "Submit and confirm",
                                             "Get a confirmation once your vote is recorded",
                                         ],
+                                        [
+                                            "5",
+                                            "Waiting for election result",
+                                            "Results will appear after they become available",
+                                        ],
                                     ].map(
                                         (
                                             [
@@ -1617,18 +2323,20 @@ const candidatesByPosition = useMemo(() => {
                                             <div
                                                 className={`process-item ${
                                                     index ===
-                                                    3
-                                                        ? "last"
+                                                    4
+                                                        ? "last process-item-pending"
                                                         : ""
                                                 }`}
                                                 key={
                                                     number
                                                 }
                                             >
-                                                <div className="process-number">
-                                                    {
-                                                        number
-                                                    }
+                                                <div
+                                                    className={`process-number ${
+                                                        index === 4 ? "inactive" : ""
+                                                    }`}
+                                                >
+                                                    {number}
                                                 </div>
 
                                                 <div className="process-text">
@@ -1654,6 +2362,128 @@ const candidatesByPosition = useMemo(() => {
                 </main>
             );
         }
+
+
+        if (activeMenu === "candidates") {
+    return (
+        <main className="dashboard-main content-page-animation">
+            <section className="welcome-section">
+                <h1>
+                    Candidate Directory
+                </h1>
+                <p>
+                    Review the candidates, their positions,
+                    party lists, and campaign platforms.
+                </p>
+            </section>
+
+            {!election ? (
+                <section className="candidates-empty-state">
+                    <h2>No election available</h2>
+                    <p>
+                        Candidate information will appear when
+                        an election is available.
+                    </p>
+                </section>
+            ) : (
+                <>
+                    <section className="candidates-election-banner">
+                        <span>Current Election</span>
+                        <h2>
+                            {election.title || "VOTARA Election"}
+                        </h2>
+                        <p>
+                            {electionStatusLabel}
+                        </p>
+                    </section>
+
+                    {eligiblePositions.map((position) => {
+                        const positionCandidates =
+                            candidatesByPosition[position.id] || [];
+
+                        return (
+                            <section
+                                className="directory-position"
+                                key={position.id}
+                            >
+                                <div className="directory-position-heading">
+                                    <div>
+                                        <h2>{position.name}</h2>
+                                        <p>
+                                            {positionCandidates.length} candidate
+                                            {positionCandidates.length !== 1
+                                                ? "s"
+                                                : ""}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {positionCandidates.length === 0 ? (
+                                    <div className="candidates-empty-state">
+                                        No active candidates are listed
+                                        for this position yet.
+                                    </div>
+                                ) : (
+                                    <div className="directory-candidate-grid">
+                                        {positionCandidates.map((candidate) => (
+                                            <article
+                                                className="directory-candidate-card"
+                                                key={candidate.id}
+                                            >
+                                                <div className="directory-candidate-photo">
+                                                    {candidate.profile_picture ? (
+                                                        <img
+                                                            src={candidate.profile_picture}
+                                                            alt={candidate.full_name || "Candidate"}
+                                                        />
+                                                    ) : (
+                                                        <span>
+                                                            {(candidate.full_name || "C")
+                                                                .charAt(0)
+                                                                .toUpperCase()}
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                <div className="directory-candidate-info">
+                                                    <h3>
+                                                        {candidate.full_name ||
+                                                            candidate.fullName ||
+                                                            "Unnamed Candidate"}
+                                                    </h3>
+
+                                                    <span className="directory-position-badge">
+                                                        {position.name}
+                                                    </span>
+
+                                                    <p className="directory-party-name">
+                                                        Party List:{" "}
+                                                        {candidate.party_list?.name ||
+                                                            candidate.partyList?.name ||
+                                                            "Independent"}
+                                                    </p>
+
+                                                    <div className="directory-platform">
+                                                        <h4>Campaign Platform</h4>
+                                                        <p>
+                                                            {candidate.platform?.trim()
+                                                                ? candidate.platform
+                                                                : "No campaign platform provided."}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </article>
+                                        ))}
+                                    </div>
+                                )}
+                            </section>
+                        );
+                    })}
+                </>
+            )}
+        </main>
+    );
+}
 
         // =================================================
         // VOTE PAGE
@@ -1936,6 +2766,553 @@ const candidatesByPosition = useMemo(() => {
             );
         }
 
+
+        // =================================================
+        // ABOUT VOTARA PAGE
+        // =================================================
+
+        if (activeMenu === "about") {
+            return (
+                <main className="about-votara-page content-page-animation">
+                    <div className="about-votara-topline">
+                        <span>ABOUT VOTARA</span>
+                    </div>
+
+                    <div className="about-votara-sheet">
+                        <button
+                            type="button"
+                            className="about-votara-back"
+                            onClick={() => handleMenuClick("settings")}
+                        >
+                            <span aria-hidden="true">←</span>
+                            Back to Settings
+                        </button>
+
+                        <section className="about-votara-hero">
+                            <div className="about-votara-hero-copy">
+                                <span className="about-votara-eyebrow">
+                                    A BETTER WAY TO VOTE
+                                </span>
+
+                                <h1>
+                                    Voting brings
+                                    <br />
+                                    us together.
+                                </h1>
+
+                                <p>
+                                    Building the Future of Modern Democracy
+                                </p>
+
+                                <div className="about-votara-hero-actions">
+                                    <button
+                                        type="button"
+                                        className="about-votara-primary"
+                                        onClick={() => handleMenuClick("candidates")}
+                                    >
+                                        Explore candidates
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        className="about-votara-secondary"
+                                        onClick={() => handleSettingsItemClick("Contact us")}
+                                    >
+                                        Contact us
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="about-votara-brand-panel">
+                                <div className="about-votara-logo-frame">
+                                    <img
+                                        src={votaraLogoSrc}
+                                        alt="VOTARA logo"
+                                    />
+                                </div>
+
+                                <h2>Boto + tara.</h2>
+                                <p>
+                                    From <strong>boto</strong> (vote) and
+                                    <strong> tara</strong> (let's go),
+                                    VOTARA is an invitation to participate
+                                    together. Tara, bumoto na tayo. The name
+                                    carries the spirit of bayanihan into
+                                    student elections.
+                                </p>
+                            </div>
+                        </section>
+
+                        <section className="about-votara-mission">
+                            <div className="about-votara-section-heading">
+                                <span>WHY VOTARA EXISTS</span>
+                                <h2>Our Mission</h2>
+                            </div>
+
+                            <p>
+                                VOTARA is an online and multi-target
+                                electronic voting platform designed for
+                                modern academic institutions. We aim to
+                                minimize verification delays and manual
+                                overhead while supporting an organized,
+                                accessible, and reliable student election
+                                experience.
+                            </p>
+                        </section>
+
+                        <section className="about-votara-architecture">
+                            <div className="about-votara-section-heading">
+                                <span>BUILT AROUND TRUST</span>
+                                <h2>Core Architecture</h2>
+                            </div>
+
+                            <div className="about-votara-architecture-grid">
+                                <article className="about-votara-info-card">
+                                    <span className="about-votara-card-number">
+                                        01
+                                    </span>
+                                    <h3>Identity Integrity</h3>
+                                    <p>
+                                        Student verification, documented
+                                        records, and access controls help
+                                        support legitimate voter
+                                        participation.
+                                    </p>
+                                </article>
+
+                                <article className="about-votara-info-card">
+                                    <span className="about-votara-card-number">
+                                        02
+                                    </span>
+                                    <h3>Ballot Security</h3>
+                                    <p>
+                                        A structured voting workflow helps
+                                        protect ballot handling and support
+                                        reliable election records.
+                                    </p>
+                                </article>
+
+                                <article className="about-votara-info-card">
+                                    <span className="about-votara-card-number">
+                                        03
+                                    </span>
+                                    <h3>Hybrid Accessibility</h3>
+                                    <p>
+                                        A responsive interface supports
+                                        student access across desktop,
+                                        tablet, and mobile devices.
+                                    </p>
+                                </article>
+                            </div>
+                        </section>
+
+                        <section className="about-votara-capabilities">
+                            <div className="about-votara-section-heading">
+                                <span>DESIGNED FOR STUDENT ELECTIONS</span>
+                                <h2>Platform Capabilities</h2>
+                            </div>
+
+                            <div className="about-votara-capability-list">
+                                <div className="about-votara-capability-row">
+                                    <strong>Feature Matrix</strong>
+                                    <span>Purpose-built election workflows</span>
+                                </div>
+
+                                <div className="about-votara-capability-row">
+                                    <strong>Eligibility & Governance</strong>
+                                    <span>Student access and election controls</span>
+                                </div>
+
+                                <div className="about-votara-capability-row">
+                                    <strong>Verification Support</strong>
+                                    <span>Account-based voter participation</span>
+                                </div>
+
+                                <div className="about-votara-capability-row">
+                                    <strong>Ballot Handling</strong>
+                                    <span>Structured submission and vote records</span>
+                                </div>
+
+                                <div className="about-votara-capability-row">
+                                    <strong>Election Monitoring</strong>
+                                    <span>Election status and available results</span>
+                                </div>
+
+                                <div className="about-votara-capability-row">
+                                    <strong>Deployment</strong>
+                                    <span>Web-based access across supported devices</span>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section className="about-votara-cta">
+                            <div>
+                                <span>YOUR VOICE MATTERS</span>
+                                <h2>Make your voice part of the campus.</h2>
+                                <p>
+                                    Stay informed and prepare for your
+                                    student election.
+                                </p>
+                            </div>
+
+                            <div className="about-votara-cta-actions">
+                                <button
+                                    type="button"
+                                    onClick={() => handleMenuClick("guidelines")}
+                                >
+                                    Voting guidelines
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => handleMenuClick("settings")}
+                                >
+                                    Back to Settings
+                                </button>
+                            </div>
+                        </section>
+                    </div>
+                </main>
+            );
+        }
+
+
+
+        // =================================================
+        // PRIVACY POLICY PAGE
+        // =================================================
+
+        if (activeMenu === "privacy") {
+            const sections = [
+                ["Information we collect", "information"],
+                ["How information is used", "usage"],
+                ["Secret ballots", "ballots"],
+                ["Data sharing", "sharing"],
+                ["Security", "security"],
+                ["Retention & deletion", "retention"],
+                ["Your rights", "rights"],
+                ["Contact & support", "support"],
+            ];
+
+            return (
+                <main className="policy-page content-page-animation">
+                    <span className="policy-eyebrow">PRIVACY AND POLICY</span>
+
+                    <div className="policy-sheet">
+                        <button className="policy-back" type="button"
+                            onClick={() => handleMenuClick("settings")}>
+                            ← Back to Settings
+                        </button>
+
+                        <div className="policy-layout">
+                            <aside className="policy-contents">
+                                <h2>Contents</h2>
+                                {sections.map(([label, id]) => (
+                                    <a key={id} href={`#privacy-${id}`}>{label}</a>
+                                ))}
+                                <button type="button"
+                                    onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+                                    Back to beginning
+                                </button>
+                                <p>You can read the full policy by scrolling through the reading area.</p>
+                            </aside>
+
+                            <article className="policy-document">
+                                <h1>Privacy Policy</h1>
+                                <p className="policy-subtitle">
+                                    How your information is handled, protected, and kept separate from your ballot.
+                                </p>
+
+                                <div className="policy-notice">
+                                    VOTARA is designed to support student election participation while respecting
+                                    voter privacy. This policy explains the information handled by the platform.
+                                </div>
+
+                                <section id="privacy-information">
+                                    <h2>1. Information We Collect</h2>
+                                    <p>Information may include the details required to register, authenticate, and support your student account.</p>
+                                    <h3>Account information</h3>
+                                    <p>Student identification details, name, contact information, and profile information provided during registration.</p>
+                                    <h3>Technical information</h3>
+                                    <p>Relevant session and system records used to operate the platform and investigate technical issues.</p>
+                                </section>
+
+                                <section id="privacy-usage">
+                                    <h2>2. How We Use Your Information</h2>
+                                    <p>Information is used to manage student accounts, support voter eligibility checks, operate election workflows, and respond to support requests.</p>
+                                </section>
+
+                                <section id="privacy-ballots">
+                                    <h2>3. Secret Ballots</h2>
+                                    <p>VOTARA should handle ballot data according to its implemented voting and database controls. Do not treat anonymity guarantees as verified unless the backend architecture enforces them.</p>
+                                </section>
+
+                                <section id="privacy-sharing">
+                                    <h2>4. Data Sharing</h2>
+                                    <p>Access to student information should be limited to authorized purposes and personnel according to institutional requirements.</p>
+                                </section>
+
+                                <section id="privacy-security">
+                                    <h2>5. Security</h2>
+                                    <p>Users should protect their credentials and report suspicious activity or technical problems through the available support channels.</p>
+                                </section>
+
+                                <section id="privacy-retention">
+                                    <h2>6. Retention and Deletion</h2>
+                                    <p>Account and election records should be retained and removed according to applicable institutional rules and data-retention requirements.</p>
+                                </section>
+
+                                <section id="privacy-rights">
+                                    <h2>7. Your Rights</h2>
+                                    <p>Students may contact the appropriate administrator to ask questions about their information or request assistance with their account.</p>
+                                </section>
+
+                                <section id="privacy-support">
+                                    <h2>8. Contact and Support</h2>
+                                    <p>For privacy concerns, use the Contact Us page or the available Report an Issue feature.</p>
+                                    <button type="button" className="policy-inline-button"
+                                        onClick={() => handleSettingsItemClick("Contact us")}>
+                                        Contact support
+                                    </button>
+                                </section>
+                            </article>
+                        </div>
+                    </div>
+                </main>
+            );
+        }
+
+        // =================================================
+        // TERMS OF SERVICE PAGE
+        // =================================================
+
+        if (activeMenu === "terms") {
+            const sections = [
+                ["Acceptance of terms", "acceptance"],
+                ["Service & institutions", "service"],
+                ["Account registration", "registration"],
+                ["Voting rules", "voting"],
+                ["Acceptable use", "acceptable"],
+                ["Governance", "governance"],
+                ["Intellectual property", "property"],
+                ["Audit logs & uptime", "audit"],
+                ["Disclaimers & updates", "disclaimers"],
+                ["Contact & support", "contact"],
+            ];
+
+            return (
+                <main className="policy-page content-page-animation">
+                    <span className="policy-eyebrow">TERMS OF SERVICE</span>
+
+                    <div className="policy-sheet">
+                        <button className="policy-back" type="button"
+                            onClick={() => handleMenuClick("settings")}>
+                            ← Back to Settings
+                        </button>
+
+                        <div className="policy-layout">
+                            <aside className="policy-contents">
+                                <h2>Contents</h2>
+                                {sections.map(([label, id]) => (
+                                    <a key={id} href={`#terms-${id}`}>{label}</a>
+                                ))}
+                                <button type="button"
+                                    onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+                                    Back to beginning
+                                </button>
+                                <p>Scroll through the reading area to review the terms.</p>
+                            </aside>
+
+                            <article className="policy-document">
+                                <h1>Terms &amp; Conditions</h1>
+                                <p className="policy-subtitle">
+                                    The rules that guide participation and help protect the integrity of student elections.
+                                </p>
+
+                                <div className="policy-notice">
+                                    IMPORTANT: By accessing or using VOTARA, you agree to follow the applicable
+                                    election rules, institutional requirements, and platform instructions.
+                                </div>
+
+                                <section id="terms-acceptance">
+                                    <h2>1. Acceptance of Terms</h2>
+                                    <p>These terms govern use of VOTARA by students and authorized election personnel.</p>
+                                </section>
+
+                                <section id="terms-service">
+                                    <h2>2. Service and Institutions</h2>
+                                    <p>VOTARA provides online tools to support student election workflows within the institution.</p>
+                                </section>
+
+                                <section id="terms-registration">
+                                    <h2>3. User Eligibility and Account Registration</h2>
+                                    <h3>3.1 Account information</h3>
+                                    <p>Users must provide accurate information and follow the account-registration instructions.</p>
+                                    <h3>3.2 Credentials and security</h3>
+                                    <p>Users are responsible for keeping their passwords and authentication codes confidential.</p>
+                                </section>
+
+                                <section id="terms-voting">
+                                    <h2>4. Voting Rules</h2>
+                                    <p>Students must follow the official voting schedule, review their selections, and submit their ballot through the authorized workflow.</p>
+                                </section>
+
+                                <section id="terms-acceptable">
+                                    <h2>5. Acceptable Use</h2>
+                                    <p>Users must not attempt unauthorized access, interfere with election operations, or misuse another person's account.</p>
+                                </section>
+
+                                <section id="terms-governance">
+                                    <h2>6. Governance</h2>
+                                    <p>Election activities remain subject to the rules and procedures established by the responsible institution and Electoral Board.</p>
+                                </section>
+
+                                <section id="terms-property">
+                                    <h2>7. Intellectual Property</h2>
+                                    <p>VOTARA branding and platform materials should be used only in accordance with applicable permissions.</p>
+                                </section>
+
+                                <section id="terms-audit">
+                                    <h2>8. Audit Logs and Availability</h2>
+                                    <p>System availability may depend on maintenance, network conditions, and the availability of supporting services.</p>
+                                </section>
+
+                                <section id="terms-disclaimers">
+                                    <h2>9. Disclaimers and Updates</h2>
+                                    <p>Platform procedures and these terms may be updated when required by the institution.</p>
+                                </section>
+
+                                <section id="terms-contact">
+                                    <h2>10. Contact and Support</h2>
+                                    <p>For questions about these terms, contact the appropriate support channel.</p>
+                                    <button type="button" className="policy-inline-button"
+                                        onClick={() => handleSettingsItemClick("Contact us")}>
+                                        Contact support
+                                    </button>
+                                </section>
+                            </article>
+                        </div>
+                    </div>
+                </main>
+            );
+        }
+
+        // =================================================
+        // CONTACT US PAGE
+        // =================================================
+
+        if (activeMenu === "contact") {
+            return (
+                <main className="contact-page content-page-animation">
+                    <span className="policy-eyebrow">CONTACT US</span>
+
+                    <div className="contact-sheet">
+                        <button className="policy-back" type="button"
+                            onClick={() => handleMenuClick("settings")}>
+                            ← Back to Settings
+                        </button>
+
+                        <section className="contact-hero">
+                            <div>
+                                <h1>Let’s get you<br />back to voting.</h1>
+                                <p>
+                                    Choose the right support channel for your account,
+                                    election, or privacy questions.
+                                </p>
+                                <div className="contact-actions">
+                                    <button type="button"
+                                        onClick={() => handleSettingsItemClick("Report an Issue")}>
+                                        Report an issue
+                                    </button>
+                                    <button type="button"
+                                        onClick={() => handleMenuClick("guidelines")}>
+                                        Voting guidelines
+                                    </button>
+                                </div>
+                            </div>
+
+                            <aside className="contact-hours">
+                                <h2>Support Hours &amp; Response</h2>
+                                <strong>Standard Operations</strong>
+                                <p>Monday–Friday, 8:00 AM–6:00 PM (local time)</p>
+                                <strong>Average Response</strong>
+                                <p>Response times depend on issue type and availability.</p>
+                                <strong>Election Coverage</strong>
+                                <p>Check the official election instructions for support availability during voting.</p>
+                            </aside>
+                        </section>
+
+                        <section className="contact-departments">
+                            <h2>Contact by Department</h2>
+                            <p>Route your request to the appropriate support area.</p>
+
+                            <div className="contact-department-grid">
+                                <article>
+                                    <h3>Technical Support</h3>
+                                    <p>Account access, registration issues, and technical problems.</p>
+                                    <a href="mailto:support@votara.app">support@votara.app</a>
+                                </article>
+                                <article>
+                                    <h3>Privacy &amp; Security</h3>
+                                    <p>Questions about personal information or security concerns.</p>
+                                    <a href="mailto:privacy@votara.app">privacy@votara.app</a>
+                                </article>
+                                <article>
+                                    <h3>Legal &amp; Compliance</h3>
+                                    <p>Questions about terms, policies, or institutional requirements.</p>
+                                    <a href="mailto:legal@votara.app">legal@votara.app</a>
+                                </article>
+                            </div>
+                        </section>
+
+                        <section className="contact-eb-support">
+                            <h2>Electoral Board Support</h2>
+                            <p>For election-specific assistance, use the official channel provided by your Electoral Board.</p>
+                            <div>Dashboard assistance: Use Report an Issue in Settings.</div>
+                            <div>Voting assistance: Follow the official campus election instructions.</div>
+                        </section>
+
+                        <section className="contact-self-service">
+                            <h2>Self-Service Support</h2>
+                            <details open>
+                                <summary>Help Center</summary>
+                                <p>Review voter guidelines, account instructions, and the steps available in your dashboard.</p>
+                                <button type="button" onClick={() => handleMenuClick("guidelines")}>
+                                    View voter guidelines
+                                </button>
+                            </details>
+                            <details>
+                                <summary>In-App Ticket</summary>
+                                <p>Submit a report through Settings → Report an Issue to document a technical problem.</p>
+                                <button type="button" onClick={() => handleSettingsItemClick("Report an Issue")}>
+                                    Create a report
+                                </button>
+                            </details>
+                            <details>
+                                <summary>System Status</summary>
+                                <p>If a page is unavailable, refresh the dashboard and retry. For persistent issues, submit a report.</p>
+                            </details>
+                        </section>
+
+                        <section className="contact-cta">
+                            <h2>Ready to continue?</h2>
+                            <p>Return to your account or send a support report if you need assistance.</p>
+                            <div className="contact-actions">
+                                <button type="button" onClick={() => handleSettingsItemClick("Report an Issue")}>
+                                    Report an issue
+                                </button>
+                                <button type="button" onClick={() => handleMenuClick("settings")}>
+                                    Back to Settings
+                                </button>
+                            </div>
+                        </section>
+                    </div>
+                </main>
+            );
+        }
+
+
+        
         // =================================================
         // SETTINGS PAGE
         // =================================================
@@ -1968,11 +3345,7 @@ const candidatesByPosition = useMemo(() => {
                                                 key={
                                                     item
                                                 }
-                                                onClick={() =>
-                                                    setSettingsModal(
-                                                        item
-                                                    )
-                                                }
+                                                onClick={() => handleSettingsItemClick(item)}
                                             >
                                                 <span className="settings-left">
                                                     <span className="settings-dot">
@@ -2007,11 +3380,7 @@ const candidatesByPosition = useMemo(() => {
                                                 key={
                                                     item
                                                 }
-                                                onClick={() =>
-                                                    setSettingsModal(
-                                                        item
-                                                    )
-                                                }
+                                                onClick={() => handleSettingsItemClick(item)}
                                             >
                                                 <span className="settings-left">
                                                     <span className="settings-dot">
@@ -2047,17 +3416,13 @@ const candidatesByPosition = useMemo(() => {
         <div className="student-dashboard">
             {/* ================= NAVBAR ================= */}
 
+            
             <header className="top-navbar">
                 <div className="nav-left">
                     <button
                         type="button"
                         className="menu-toggle"
-                        onClick={() =>
-                            setSidebarOpen(
-                                (previous) =>
-                                    !previous
-                            )
-                        }
+                        onClick={() => setSidebarOpen((previous) => !previous)}
                         aria-label="Toggle sidebar"
                     >
                         <span />
@@ -2065,44 +3430,22 @@ const candidatesByPosition = useMemo(() => {
                         <span />
                     </button>
 
-                    <div className="brand">
-                        <img
-                            src={
-                                votaraLogoSrc
-                            }
-                            alt="Votara"
-                            className="votara-logo"
-                        />
-
-                        <span>
-                            Votara
-                        </span>
+                    <div className="header-greeting">
+                        <h1>
+                            Hello <strong>{firstName}!</strong>
+                        </h1>
+                        <p>Welcome to Votara</p>
                     </div>
                 </div>
-
-                {/* SEARCH */}
 
                 <div className="search-container">
                     <input
                         type="text"
                         placeholder="Search"
-                        value={
-                            searchValue
-                        }
-                        onChange={(
-                            event
-                        ) =>
-                            setSearchValue(
-                                event.target.value
-                            )
-                        }
-                        onKeyDown={(
-                            event
-                        ) => {
-                            if (
-                                event.key ===
-                                "Enter"
-                            ) {
+                        value={searchValue}
+                        onChange={(event) => setSearchValue(event.target.value)}
+                        onKeyDown={(event) => {
+                            if (event.key === "Enter") {
                                 handleSearch();
                             }
                         }}
@@ -2112,72 +3455,28 @@ const candidatesByPosition = useMemo(() => {
                         type="button"
                         className="search-button"
                         aria-label="Search"
-                        onClick={
-                            handleSearch
-                        }
+                        onClick={handleSearch}
                     >
                         ⌕
                     </button>
                 </div>
-
-                {/* RIGHT NAV */}
 
                 <div className="nav-right">
                     <button
                         type="button"
                         className="nav-icon-button"
                         aria-label="Notifications"
-                        onClick={() =>
-                            alert(
-                                "You have no new notifications."
-                            )
-                        }
+                        onClick={() => alert("You have no new notifications.")}
                     >
                         <img
-                            src="/src/images/bell.png"
+                            src={bellIcon}
                             alt="Notifications"
                             className="nav-icon-image"
                         />
                     </button>
-
-                    <button
-                        type="button"
-                        className="help-button"
-                        aria-label="Help"
-                        onClick={() =>
-                            handleMenuClick(
-                                "guidelines"
-                            )
-                        }
-                    >
-                        ?
-                    </button>
-
-                    <div className="nav-profile">
-                        {profilePicture &&
-                        !profileImageError ? (
-                            <img
-                                src={profilePicture}
-                                alt={fullName}
-                                className="nav-profile-image"
-                                onError={() =>
-                                    setProfileImageError(true)
-                                }
-                            />
-                        ) : (
-                            <div className="nav-profile-placeholder">
-                                {initials}
-                            </div>
-                        )}
-
-                        <span>
-                            {
-                                firstName
-                            }
-                        </span>
-                    </div>
                 </div>
             </header>
+
 
             <div className="dashboard-body">
                 {/* ================= SIDEBAR ================= */}
@@ -2189,16 +3488,23 @@ const candidatesByPosition = useMemo(() => {
                             : "sidebar-collapsed"
                     }`}
                 >
+                    <div className="sidebar-brand">
+                        <img
+                            src={votaraLogoSrc}
+                            alt=""
+                            className="sidebar-brand-logo"
+                        />
+                        <span>Votara</span>
+                    </div>
+
+                    
                     <div className="sidebar-profile">
-                        {profilePicture &&
-                        !profileImageError ? (
+                        {profilePicture && !profileImageError ? (
                             <img
                                 src={profilePicture}
                                 alt={fullName}
                                 className="profile-picture"
-                                onError={() =>
-                                    setProfileImageError(true)
-                                }
+                                onError={() => setProfileImageError(true)}
                             />
                         ) : (
                             <div className="profile-placeholder">
@@ -2206,32 +3512,27 @@ const candidatesByPosition = useMemo(() => {
                             </div>
                         )}
 
-                        <div className="profile-details">
-                            <h3>
-                                {
-                                    fullName
-                                }
-                            </h3>
+                        <div className="sidebar-profile-info">
+                            <h3>{fullName}</h3>
 
                             <button
                                 type="button"
-                                onClick={() =>
-                                    setSettingsModal(
-                                        "Edit profile"
-                                    )
-                                }
+                                className="sidebar-edit-profile"
+                                onClick={() => setSettingsModal("Edit profile")}
                             >
-                                Show Profile
+                                Edit Profile
                             </button>
                         </div>
+
+                        <span className="sidebar-online-badge">Online</span>
                     </div>
+
 
                     <nav className="sidebar-menu">
                         {sidebarItems.map(
                             (item) => {
                                 const isActive =
-                                    activeMenu ===
-                                    item.id;
+                                    activeSidebarItem === item.id;
 
                                 return (
                                     <button
@@ -2288,16 +3589,18 @@ const candidatesByPosition = useMemo(() => {
                     </nav>
 
                     <div className="sidebar-bottom">
+                        <div className="sidebar-help-card">
+                            <strong>Need help?</strong>
+                            <p>Use the dashboard to review your voting status, candidate information, and voter guidelines.</p>
+                        </div>
                         <button
                             type="button"
                             className="logout-button"
-                            onClick={
-                                handleLogout
-                            }
+                            onClick={() => setShowLogoutConfirmation(true)}
                         >
                             <img
-                                src="/src/images/logoutalt.png"
-                                alt="Log out"
+                                src={logoutIcon}
+                                alt=""
                                 className="logout-image"
                             />
 
@@ -2312,6 +3615,155 @@ const candidatesByPosition = useMemo(() => {
 
                 {renderMainContent()}
             </div>
+            
+            
+
+{/* ================= CANDIDATE CAMPAIGN PLATFORM ================= */}
+
+{selectedCandidateDetails && (
+    <div
+        className="candidate-platform-overlay"
+        onClick={() => setSelectedCandidateDetails(null)}
+    >
+        <section
+            className="candidate-platform-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="candidate-platform-title"
+            onClick={(event) => event.stopPropagation()}
+        >
+            <button
+                type="button"
+                className="candidate-platform-close"
+                aria-label="Close campaign platform"
+                onClick={() => setSelectedCandidateDetails(null)}
+            >
+                ×
+            </button>
+
+            <div className="candidate-platform-profile">
+                <img
+                    src={
+                        resolveImageUrl(
+                            selectedCandidateDetails.profile_picture ||
+                            selectedCandidateDetails.profilePicture ||
+                            selectedCandidateDetails.profile_picture_url ||
+                            selectedCandidateDetails.profilePictureUrl
+                        ) || candidatesIcon
+                    }
+                    alt={
+                        selectedCandidateDetails.full_name ||
+                        selectedCandidateDetails.fullName ||
+                        selectedCandidateDetails.name ||
+                        "Candidate"
+                    }
+                    className="candidate-platform-image"
+                />
+
+                <div className="candidate-platform-identity">
+                    <span className="candidate-platform-kicker">
+                        Candidate Profile
+                    </span>
+
+                    <h2 id="candidate-platform-title">
+                        {selectedCandidateDetails.full_name ||
+                            selectedCandidateDetails.fullName ||
+                            selectedCandidateDetails.name ||
+                            "Candidate"}
+                    </h2>
+
+                    <p>
+                        For{" "}
+                        <strong>
+                            {selectedCandidateDetails.position_name ||
+                                selectedCandidateDetails.positionName ||
+                                selectedCandidateDetails.position?.name ||
+                                selectedCandidateDetails.position ||
+                                "Student Officer"}
+                        </strong>
+                    </p>
+                </div>
+            </div>
+
+            <div className="candidate-platform-content">
+                <h3>Campaign Platform</h3>
+
+                {(() => {
+                    const platform =
+                        selectedCandidateDetails.campaign_platform ||
+                        selectedCandidateDetails.campaignPlatform ||
+                        selectedCandidateDetails.platform ||
+                        selectedCandidateDetails.manifesto ||
+                        selectedCandidateDetails.platform_statement ||
+                        selectedCandidateDetails.platformStatement ||
+                        selectedCandidateDetails.description ||
+                        "";
+
+                    if (Array.isArray(platform)) {
+                        return platform.length > 0 ? (
+                            <ol>
+                                {platform.map((item, index) => (
+                                    <li key={index}>
+                                        {typeof item === "string"
+                                            ? item
+                                            : item?.description ||
+                                              item?.text ||
+                                              JSON.stringify(item)}
+                                    </li>
+                                ))}
+                            </ol>
+                        ) : (
+                            <p className="candidate-platform-empty">
+                                This candidate has not provided a campaign
+                                platform yet.
+                            </p>
+                        );
+                    }
+
+                    if (typeof platform === "object" && platform !== null) {
+                        const entries = Object.values(platform).filter(
+                            (item) => typeof item === "string" && item.trim()
+                        );
+
+                        return entries.length > 0 ? (
+                            <ul>
+                                {entries.map((item, index) => (
+                                    <li key={index}>{item}</li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="candidate-platform-empty">
+                                This candidate has not provided a campaign
+                                platform yet.
+                            </p>
+                        );
+                    }
+
+                    return platform.trim() ? (
+                        <p className="candidate-platform-text">
+                            {platform}
+                        </p>
+                    ) : (
+                        <p className="candidate-platform-empty">
+                            This candidate has not provided a campaign
+                            platform yet.
+                        </p>
+                    );
+                })()}
+            </div>
+
+            <div className="candidate-platform-footer">
+                <button
+                    type="button"
+                    onClick={() => setSelectedCandidateDetails(null)}
+                >
+                    Close
+                </button>
+            </div>
+        </section>
+    </div>
+)}
+
 
             {/* ================= SETTINGS / PROFILE MODAL ================= */}
 
@@ -2351,29 +3803,167 @@ const candidatesByPosition = useMemo(() => {
                 </div>
             )}
 
+            {/* ================= CHANGE PASSWORD MODAL ================= */}
+
+            {settingsModal === "Change password" && (
+                <div
+                    className="settings-modal-overlay password-modal-overlay"
+                    onClick={closePasswordModal}
+                >
+                    <section
+                        className="password-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="password-modal-title"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        {!passwordChangeSuccess ? (
+                            <>
+                                <div className="password-modal-heading">
+                                    <span className="password-modal-eyebrow">
+                                        STUDENT / SETTINGS
+                                    </span>
+                                    <h2 id="password-modal-title">Change password</h2>
+                                    <p>
+                                        Enter your current password and confirm your new password.
+                                    </p>
+                                </div>
+
+                                <form className="password-change-form" onSubmit={handlePasswordChange}>
+                                    <label>
+                                        Current password
+                                        <input
+                                            type="password"
+                                            autoComplete="current-password"
+                                            placeholder="Enter current password"
+                                            value={passwordForm.currentPassword}
+                                            onChange={(event) => setPasswordForm((previous) => ({
+                                                ...previous,
+                                                currentPassword: event.target.value,
+                                            }))}
+                                            required
+                                        />
+                                    </label>
+
+                                    <label>
+                                        New password
+                                        <input
+                                            type="password"
+                                            autoComplete="new-password"
+                                            placeholder="Enter new password"
+                                            value={passwordForm.newPassword}
+                                            onChange={(event) => setPasswordForm((previous) => ({
+                                                ...previous,
+                                                newPassword: event.target.value,
+                                            }))}
+                                            required
+                                        />
+                                    </label>
+
+                                    <div className="password-requirements">
+                                        <h3>Password requirements</h3>
+                                        {passwordRequirements.map((requirement) => (
+                                            <div
+                                                className={`password-requirement ${requirement.valid ? "is-valid" : ""}`}
+                                                key={requirement.label}
+                                            >
+                                                <span aria-hidden="true">
+                                                    {requirement.valid ? "✓" : "○"}
+                                                </span>
+                                                {requirement.label}
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <label>
+                                        Confirm new password
+                                        <input
+                                            type="password"
+                                            autoComplete="new-password"
+                                            placeholder="Confirm new password"
+                                            value={passwordForm.confirmPassword}
+                                            onChange={(event) => setPasswordForm((previous) => ({
+                                                ...previous,
+                                                confirmPassword: event.target.value,
+                                            }))}
+                                            required
+                                        />
+                                    </label>
+
+                                    {passwordForm.confirmPassword && (
+                                        <p className={`password-match-message ${
+                                            passwordForm.newPassword === passwordForm.confirmPassword
+                                                ? "is-valid"
+                                                : "is-invalid"
+                                        }`}>
+                                            {passwordForm.newPassword === passwordForm.confirmPassword
+                                                ? "Passwords match."
+                                                : "Passwords do not match."}
+                                        </p>
+                                    )}
+
+                                    {passwordError && (
+                                        <p className="password-error" role="alert">
+                                            {passwordError}
+                                        </p>
+                                    )}
+
+                                    <div className="password-modal-actions">
+                                        <button
+                                            type="button"
+                                            className="password-cancel-button"
+                                            onClick={closePasswordModal}
+                                            disabled={passwordLoading}
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            className="password-submit-button"
+                                            disabled={passwordLoading}
+                                        >
+                                            {passwordLoading ? "Updating..." : "Update password"}
+                                        </button>
+                                    </div>
+                                </form>
+                            </>
+                        ) : (
+                            <div className="password-success-content">
+                                <div className="password-success-icon" aria-hidden="true">✓</div>
+                                <h2 id="password-modal-title">Password updated</h2>
+                                <p>Use your new password the next time you sign in.</p>
+                                <button
+                                    type="button"
+                                    className="password-submit-button password-done-button"
+                                    onClick={closePasswordModal}
+                                >
+                                    Done
+                                </button>
+                            </div>
+                        )}
+                    </section>
+                </div>
+            )}
+
             {/* ================= OTHER SETTINGS MODALS ================= */}
 
             {settingsModal &&
-                settingsModal !== "Edit profile" && (
+                settingsModal !== "Edit profile" &&
+                settingsModal !== "Change password" &&
+                settingsModal !== "Report an Issue" && (
                     <div
                         className="settings-modal-overlay"
-                        onClick={() =>
-                            setSettingsModal(null)
-                        }
+                        onClick={() => setSettingsModal(null)}
                     >
                         <div
                             className="settings-modal"
-                            onClick={(event) =>
-                                event.stopPropagation()
-                            }
+                            onClick={(event) => event.stopPropagation()}
                         >
                             <button
                                 type="button"
                                 className="modal-close"
                                 aria-label="Close settings"
-                                onClick={() =>
-                                    setSettingsModal(null)
-                                }
+                                onClick={() => setSettingsModal(null)}
                             >
                                 ×
                             </button>
@@ -2390,15 +3980,101 @@ const candidatesByPosition = useMemo(() => {
                             <button
                                 type="button"
                                 className="modal-confirm-button"
-                                onClick={() =>
-                                    setSettingsModal(null)
-                                }
+                                onClick={() => setSettingsModal(null)}
                             >
                                 Close
                             </button>
                         </div>
                     </div>
                 )}
+
+            {settingsModal === "Report an Issue" && reportView && (
+                <div className="student-report-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !reportSubmitting) closeReportFlow(); }}>
+                    <section className="student-report-modal" role="dialog" aria-modal="true" aria-labelledby="student-report-title">
+                        <button type="button" className="student-report-close" aria-label="Close report dialog" onClick={closeReportFlow} disabled={reportSubmitting}>×</button>
+                        {reportView === "category" && <>
+                            <div className="student-report-kicker">STUDENT / SETTINGS · REPORT AN ISSUE</div>
+                            <h2 id="student-report-title">Issue category</h2>
+                            <p className="student-report-intro">Choose the category that best describes your issue.</p>
+                            <div className="student-report-category-list">{reportCategories.map((category) => <button type="button" key={category} onClick={() => { setReportDraft((current) => ({ ...current, category, contactEmail: current.contactEmail || student?.email || student?.email_address || student?.contactEmail || "" })); setReportError(""); setReportView("form"); }}>{category}<span>›</span></button>)}</div>
+                            <div className="student-report-modal-footer"><button type="button" className="student-report-secondary" onClick={loadReportHistory} disabled={reportLoading}>{reportLoading ? "Loading history…" : "View report history"}</button><button type="button" className="student-report-quiet" onClick={closeReportFlow}>Cancel</button></div>
+                        </>}
+                        {reportView === "form" && <>
+                            <div className="student-report-kicker">STUDENT / SETTINGS · NEW REPORT</div>
+                            <h2 id="student-report-title">Report an issue</h2>
+                            <p className="student-report-intro">Provide the details below. Your report will be sent to the VOTARA administrator.</p>
+                            <div className="student-report-selected-category"><span>Issue category</span><strong>{reportDraft.category}</strong><button type="button" onClick={() => setReportView("category")}>Change</button></div>
+                            <form className="student-report-form" onSubmit={submitIssueReport}>
+                                <label>Subject <span>*</span><input required minLength={4} maxLength={160} value={reportDraft.subject} onChange={(event) => setReportDraft((current) => ({ ...current, subject: event.target.value }))} placeholder="Briefly describe the issue" /></label>
+                                <label>Description <span>*</span><textarea required minLength={10} maxLength={5000} rows={5} value={reportDraft.description} onChange={(event) => setReportDraft((current) => ({ ...current, description: event.target.value }))} placeholder="Explain what happened and include any useful details." /></label>
+                                <label>Contact email <span>*</span><input type="email" required value={reportDraft.contactEmail} onChange={(event) => setReportDraft((current) => ({ ...current, contactEmail: event.target.value }))} placeholder="name@example.com" /></label>
+                                <label>Attachment <small>Optional · JPG, PNG, WEBP, or PDF · Max 5 MB</small><input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" onChange={handleReportAttachment} /></label>
+                                {reportDraft.attachment && <div className="student-report-attachment-name">Attached: {reportDraft.attachment.name}<button type="button" onClick={() => setReportDraft((current) => ({ ...current, attachment: null }))}>Remove</button></div>}
+                                {reportError && <div className="student-report-error" role="alert">{reportError}</div>}
+                                <div className="student-report-modal-footer"><button type="button" className="student-report-secondary" onClick={() => setReportView("category")} disabled={reportSubmitting}>Back</button><button type="submit" className="student-report-primary" disabled={reportSubmitting}>{reportSubmitting ? "Submitting…" : "Submit report"}</button></div>
+                            </form>
+                        </>}
+                        {reportView === "submitted" && submittedReport && <div className="student-report-submitted">
+                            <div className="student-report-success-icon">✓</div><div className="student-report-kicker">STUDENT / SETTINGS · REPORT SUBMITTED</div><h2 id="student-report-title">Report submitted</h2><p>Your issue has been recorded. You can review its status in your report history.</p>
+                            <div className="student-report-reference"><span>Report reference</span><strong>{submittedReport.reference}</strong></div><p className="student-report-contact">Updates will be associated with {submittedReport.contact_email || reportDraft.contactEmail}.</p>
+                            <div className="student-report-modal-footer"><button type="button" className="student-report-secondary" onClick={loadReportHistory}>View report history</button><button type="button" className="student-report-primary" onClick={closeReportFlow}>Done</button></div>
+                        </div>}
+                        {reportView === "history" && <>
+                            <div className="student-report-kicker">STUDENT / SETTINGS</div><h2 id="student-report-title">My report history</h2><p className="student-report-intro">Review the reports you have submitted and their latest status.</p>
+                            {reportError && <div className="student-report-error" role="alert">{reportError}</div>}
+                            {reportLoading ? <div className="student-report-empty">Loading your reports…</div> : reportHistory.length ? <div className="student-report-history-list">{reportHistory.map((report) => <button type="button" className="student-report-history-item" key={report.id} onClick={() => openReportHistoryDetail(report)}><span className="student-report-history-copy"><strong>{report.subject}</strong><small>{report.reference} · {report.category} · {new Date(report.created_at).toLocaleDateString()}</small></span><span className={`student-report-status status-${report.status}`}>{String(report.status).replace("_", " ")}</span><b>›</b></button>)}</div> : <div className="student-report-empty">You have not submitted any reports yet.</div>}
+                            <div className="student-report-modal-footer"><button type="button" className="student-report-secondary" onClick={openReportCategory}>New report</button><button type="button" className="student-report-primary" onClick={closeReportFlow}>Done</button></div>
+                        </>}
+                        {reportView === "history-detail" && selectedReport && <>
+                            <div className="student-report-kicker">STUDENT / SETTINGS · REPORT DETAILS</div><h2 id="student-report-title">{selectedReport.reference}</h2>
+                            <div className="student-report-detail-card"><div><span>Status</span><strong className={`student-report-status status-${selectedReport.status}`}>{String(selectedReport.status).replace("_", " ")}</strong></div><div><span>Category</span><strong>{selectedReport.category}</strong></div><div><span>Subject</span><strong>{selectedReport.subject}</strong></div><div><span>Description</span><p>{selectedReport.description}</p></div>{selectedReport.admin_response && <div><span>Administrator response</span><p>{selectedReport.admin_response}</p></div>}{selectedReport.attachment_url && <div><span>Attachment</span><a href={selectedReport.attachment_url} target="_blank" rel="noreferrer">View attachment</a></div>}</div>
+                            <h3 className="student-report-timeline-title">Report updates</h3>{reportHistoryTimeline.length ? <div className="student-report-timeline">{reportHistoryTimeline.map((item) => <div key={item.id}><strong>{String(item.status).replace("_", " ")}</strong><span>{item.note || "Status updated"}</span><small>{new Date(item.created_at).toLocaleString()}</small></div>)}</div> : <div className="student-report-empty">No status updates are available yet.</div>}
+                            {reportError && <div className="student-report-error" role="alert">{reportError}</div>}
+                            <div className="student-report-modal-footer"><button type="button" className="student-report-secondary" onClick={loadReportHistory}>Back to history</button><button type="button" className="student-report-primary" onClick={closeReportFlow}>Done</button></div>
+                        </>}
+                    </section>
+                </div>
+            )}
+
+            {showLogoutConfirmation && (
+                <div
+                    className="logout-confirmation-overlay"
+                    onClick={() => setShowLogoutConfirmation(false)}
+                >
+                    <section
+                        className="logout-confirmation-dialog"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="logout-confirmation-title"
+                        aria-describedby="logout-confirmation-description"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <div className="logout-confirmation-symbol" aria-hidden="true">
+                            ?
+                        </div>
+                        <h2 id="logout-confirmation-title">Log out of VOTARA?</h2>
+                        <p id="logout-confirmation-description">
+                            Are you sure you want to log out of your student account?
+                        </p>
+                        <div className="logout-confirmation-actions">
+                            <button
+                                type="button"
+                                className="logout-cancel-button"
+                                onClick={() => setShowLogoutConfirmation(false)}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                className="logout-confirm-button"
+                                onClick={handleLogout}
+                            >
+                                Yes, log out
+                            </button>
+                        </div>
+                    </section>
+                </div>
+            )}
 
             </div>
     );

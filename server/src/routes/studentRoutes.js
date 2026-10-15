@@ -8,7 +8,9 @@ const {
     removeStudentProfilePicture,
     deactivateStudentAccount,
     requestStudentAccountDeletion,
+     getPublishedStudentResults,
 } = require("../controllers/studentController");
+
 
 
 // =========================================================
@@ -45,6 +47,10 @@ router.use(
     protectStudent
 );
 
+router.get(
+    "/results",
+    getPublishedStudentResults
+);
 
 // =========================================================
 // STUDENT PROFILE

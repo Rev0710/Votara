@@ -1,5 +1,10 @@
 import api from "./api";
 
+export const getPublishedStudentResults = async () => {
+    const response = await api.get("/students/results");
+    return response.data;
+};
+
 // =========================================================
 // VOTARA STUDENT SERVICE
 // =========================================================

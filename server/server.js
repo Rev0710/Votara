@@ -345,7 +345,11 @@ app.use(
 
             "http://127.0.0.1:5173",
 
-            "https://votara-election-system.vercel.app",
+            "http://localhost:5174",
+
+            "http://127.0.0.1:5174",
+
+            "https://votara-election-system.vercel.app",
 
         ],
 
@@ -360,6 +364,25 @@ app.use(
 
 
 // =====================================================
+
+// Log API response duration without recording request bodies, credentials,
+// authorization headers, or query-string values. Useful for locating slow APIs.
+app.use((req, res, next) => {
+    if (!req.path.startsWith("/api")) {
+        return next();
+    }
+
+    const startedAt = process.hrtime.bigint();
+
+    res.on("finish", () => {
+        const elapsedMs = Number(process.hrtime.bigint() - startedAt) / 1e6;
+        const safePath = String(req.path || "/").slice(0, 180);
+        console.log(`[API] ${req.method} ${safePath} ${res.statusCode} ${elapsedMs.toFixed(1)}ms`);
+    });
+
+    next();
+});
+
 
 // BODY PARSER
 

@@ -1,3 +1,26 @@
 #root {
   min-height: 100vh;
 }
+
+
+.page-transition {
+    animation: votara-page-enter 450ms ease both;
+}
+
+@keyframes votara-page-enter {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .page-transition {
+        animation: none;
+    }
+}

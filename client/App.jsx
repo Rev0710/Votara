@@ -1,4 +1,6 @@
 import { Routes, Route, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import VotaraIntro from "./src/components/VotaraIntro";
 
 // =====================================================
 // PUBLIC / AUTH PAGES
@@ -79,6 +81,19 @@ const LoginPage = () => {
 
 const App = () => {
     const location = useLocation();
+    // Play the intro only on the initial visit to the public root URL.
+    // Route changes later in this SPA do not restart the intro.
+   const [showInitialIntro, setShowInitialIntro] = useState(
+    () => location.pathname === "/"
+);
+
+if (showInitialIntro) {
+    return (
+        <VotaraIntro
+            onComplete={() => setShowInitialIntro(false)}
+        />
+    );
+}
 
     return (
         <div

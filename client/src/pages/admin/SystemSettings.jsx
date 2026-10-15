@@ -164,6 +164,11 @@ const SystemSettings = () => {
     const [securityNotice, setSecurityNotice] = useState("");
     const [securityEvents, setSecurityEvents] = useState([]);
     const [securityEventsLoading, setSecurityEventsLoading] = useState(false);
+    const [studentIssueReports, setStudentIssueReports] = useState([]);
+    const [studentIssueReportsLoading, setStudentIssueReportsLoading] = useState(false);
+    const [studentIssueReportError, setStudentIssueReportError] = useState("");
+    const [studentIssueReportFilter, setStudentIssueReportFilter] = useState("all");
+    const [studentIssueReportSaving, setStudentIssueReportSaving] = useState("");
     const [diagnosticSnapshot, setDiagnosticSnapshot] = useState({ database: "Checking", api: "Checking", kiosk: "Unknown" });
 
     const loadSecurityAndDiagnostics = async () => {
@@ -194,6 +199,33 @@ const SystemSettings = () => {
             console.error("Unable to load configuration diagnostics:", error);
         } finally {
             setSecurityEventsLoading(false);
+        }
+    };
+
+    const loadStudentIssueReports = async () => {
+        setStudentIssueReportsLoading(true);
+        setStudentIssueReportError("");
+        try {
+            const response = await api.get("/admin/student-issue-reports");
+            setStudentIssueReports(response.data?.reports || []);
+        } catch (error) {
+            setStudentIssueReportError(error.response?.data?.message || error.message || "Unable to load student reports.");
+        } finally {
+            setStudentIssueReportsLoading(false);
+        }
+    };
+
+    const updateStudentIssueReport = async (report, status) => {
+        setStudentIssueReportSaving(report.id);
+        setStudentIssueReportError("");
+        try {
+            const response = await api.patch(`/admin/student-issue-reports/${report.id}`, { status, adminResponse: report.admin_response || "" });
+            if (!response.data?.success) throw new Error(response.data?.message || "Unable to update report status.");
+            await loadStudentIssueReports();
+        } catch (error) {
+            setStudentIssueReportError(error.response?.data?.message || error.message || "Unable to update report status.");
+        } finally {
+            setStudentIssueReportSaving("");
         }
     };
 
@@ -248,6 +280,10 @@ const SystemSettings = () => {
             setSecuritySaving(false);
         }
     };
+
+    useEffect(() => {
+        if (configSection === "security") loadStudentIssueReports();
+    }, [configSection]);
 
     useEffect(() => {
 
@@ -1049,6 +1085,12 @@ const SystemSettings = () => {
                             {securityEventsLoading ? <div className="security-event-empty">Loading security events...</div> : securityEvents.length ? securityEvents.map((log) => (
                                 <div className="security-event" key={log.id}><div><strong>{log.description || log.action || "Security event"}</strong><span>{log.actor_role === "electoral_board" ? "Electoral Board" : "Administrator"} · {log.action || "Recorded"}</span><small>{log.created_at ? new Date(log.created_at).toLocaleString() : "Recent"}</small></div><em className={/fail|reject|lock|suspicious|error/i.test(`${log.action} ${log.description}`) ? "security-event-warning" : "security-event-success"}>{/fail|reject|lock|suspicious|error/i.test(`${log.action} ${log.description}`) ? "Review" : "Recorded"}</em></div>
                             )) : <div className="security-event-empty">No security-related audit events were returned.</div>}
+                        </section>
+
+                        <section className="security-reference-card student-issue-admin-card">
+                            <div className="security-reference-card-header"><div><h2>Student issue reports</h2><p>Reports submitted through Student Settings → Report an Issue.</p></div><div className="student-issue-admin-tools"><select aria-label="Filter student reports" value={studentIssueReportFilter} onChange={(event) => setStudentIssueReportFilter(event.target.value)}><option value="all">All statuses</option><option value="submitted">Submitted</option><option value="in_review">In review</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select><button type="button" className="security-log-button" onClick={loadStudentIssueReports} disabled={studentIssueReportsLoading}>{studentIssueReportsLoading ? "Refreshing…" : "Refresh reports"}</button></div></div>
+                            {studentIssueReportError && <div className="student-issue-admin-error" role="alert">{studentIssueReportError}</div>}
+                            {studentIssueReportsLoading ? <div className="security-event-empty">Loading student issue reports…</div> : (() => { const visibleReports = studentIssueReports.filter((report) => studentIssueReportFilter === "all" || report.status === studentIssueReportFilter); if (!visibleReports.length) return <div className="security-event-empty">No student reports match this filter.</div>; return <div className="student-issue-admin-list">{visibleReports.map((report) => <article className="student-issue-admin-item" key={report.id}><div className="student-issue-admin-item-head"><div><strong>{report.subject}</strong><span>{report.reference} · {report.category}</span><small>{report.student_name} · Student ID {report.student_number || "Not available"} · {new Date(report.created_at).toLocaleString()}</small></div><em className={`student-report-status status-${report.status}`}>{String(report.status).replace("_", " ")}</em></div><p>{report.description}</p><div className="student-issue-admin-meta"><span>Contact: {report.contact_email}</span>{report.attachment_url && <a href={report.attachment_url} target="_blank" rel="noreferrer">View attachment</a>}</div><label className="student-issue-admin-response">Administrator response <textarea rows="2" maxLength="2000" value={report.admin_response || ""} onChange={(event) => setStudentIssueReports((current) => current.map((item) => item.id === report.id ? { ...item, admin_response: event.target.value } : item))} placeholder="Optional update for the student" /></label><div className="student-issue-admin-actions"><span>Current status: {String(report.status).replace("_", " ")}</span><select aria-label={`Update status for ${report.reference}`} value={report.status} onChange={(event) => updateStudentIssueReport(report, event.target.value)} disabled={studentIssueReportSaving === report.id}><option value="submitted">Submitted</option><option value="in_review">In review</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select><button type="button" className="security-log-button" onClick={() => updateStudentIssueReport(report, report.status)} disabled={studentIssueReportSaving === report.id}>{studentIssueReportSaving === report.id ? "Saving…" : "Save response"}</button>{studentIssueReportSaving === report.id && <small>Saving…</small>}</div></article>)}</div>; })()}
                         </section>
 
                         <section className="security-reference-card security-sessions-card">
