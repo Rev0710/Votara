@@ -4,6 +4,21 @@ const crypto = require("crypto");
 const supabase = require("../config/supabase");
 const auditLogsService = require("../services/auditLogsService");
 
+
+const DOCUMENT_TYPES = [
+    "image/jpeg",
+    "image/png",
+    "application/pdf"
+];
+
+const IMAGE_TYPES = [
+    "image/jpeg",
+    "image/png"
+];
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+
 // =========================================================
 // KIOSK AUDIT LOG HELPERS
 // =========================================================
