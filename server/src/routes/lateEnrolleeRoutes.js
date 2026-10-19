@@ -1,6 +1,7 @@
 const express = require("express");
 
 const router = express.Router();
+router.use(require("../middleware/requireStaff")("admin"));
 
 const lateEnrolleeController =
     require("../controllers/lateEnrolleeController");

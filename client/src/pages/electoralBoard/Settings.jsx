@@ -31,7 +31,7 @@ import api from "../../services/api";
 // api.js supplies the votaraEBToken automatically.
 // =====================================================
 
-const Settings = () => {
+const Settings = ({ onBack }) => {
     const navigate = useNavigate();
 
     const [loading, setLoading] = useState(true);
@@ -87,7 +87,8 @@ const Settings = () => {
     const handleBack = () => {
         // Return to the EB dashboard without changing
         // EBDashboard.jsx.
-        navigate("/electoral-board/dashboard");
+        if (onBack) return onBack();
+        navigate("/electoral-board/dashboard", {state:{returnToSection:"dashboard"}});
     };
 
     const handleLogout = () => {

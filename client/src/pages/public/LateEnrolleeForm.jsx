@@ -1,7 +1,9 @@
+import { registrationHeaders, saveRegistrationToken } from "../../services/registrationSession";
+import api from "../../services/api";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = api.defaults.baseURL;
 
 const VALID_YEAR_LEVELS = [
     "1st Year",
@@ -94,6 +96,7 @@ const LateEnrolleeForm = () => {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
+                        ...registrationHeaders(studentId, email),
                     },
                     body: JSON.stringify({
                         studentId,
@@ -113,6 +116,7 @@ const LateEnrolleeForm = () => {
                 );
             }
 
+            saveRegistrationToken(studentId, email, data.registrationToken);
             sessionStorage.setItem(
                 "votara_full_name",
                 cleanFullName
@@ -128,7 +132,8 @@ const LateEnrolleeForm = () => {
                 "late_enrollee"
             );
 
-            navigate("/verify-otp");
+            navigate(data.isLateEnrollee && data.registrationToken
+                ? "/registration-requirements" : "/verify-otp");
         } catch (error) {
             console.error(
                 "❌ Late enrollee registration error:",
@@ -184,7 +189,7 @@ const LateEnrolleeForm = () => {
                 <p style={{ color: "#667085", lineHeight: 1.6 }}>
                     We could not find your Student ID in the current
                     enrollment database. Complete the information below.
-                    Your registration will be subject to Electoral Board
+                    Your registration will be subject to Administrator
                     verification before you can vote.
                 </p>
 

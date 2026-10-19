@@ -338,7 +338,7 @@ const loginEB = async (req, res) => {
             return res.status(423).json({
                 success: false,
                 message:
-                    "Your account is temporarily locked. Please try again later."
+                    `Your account is temporarily locked. Try again in ${Math.max(1, Math.ceil((new Date(user.locked_until).getTime() - Date.now()) / 1000))} seconds.`
             });
         }
 
@@ -355,7 +355,7 @@ const loginEB = async (req, res) => {
         if (!passwordMatches) {
 
             const failedAttempts =
-                (user.failed_login_attempts || 0) + 1;
+                (user.locked_until && new Date(user.locked_until) <= new Date() ? 0 : (user.failed_login_attempts || 0)) + 1;
 
             // ---------------------------------------------
             // Lock after 5 failed attempts
@@ -363,7 +363,7 @@ const loginEB = async (req, res) => {
 
             if (failedAttempts >= 5) {
 
-                lockedUntil = new Date(
+                const lockedUntil = new Date(
                 Date.now() + 2 * 60 * 1000
             );
 
@@ -384,7 +384,7 @@ const loginEB = async (req, res) => {
                 return res.status(423).json({
                     success: false,
                     message:
-                        "Too many failed login attempts. Your account is locked for 15 minutes."
+                        "Too many failed login attempts. Your account is locked for 2 minutes."
                 });
             }
 
@@ -410,7 +410,7 @@ const loginEB = async (req, res) => {
         // Successful login
         // -------------------------------------------------
 
-        await supabase
+        const loginUpdate = supabase
             .from("staff_users")
             .update({
                 failed_login_attempts: 0,
@@ -421,6 +421,10 @@ const loginEB = async (req, res) => {
                     new Date().toISOString()
             })
             .eq("id", user.id);
+        const loginWrite = Number(user.failed_login_attempts || 0) > 0 || user.locked_until
+            ? await loginUpdate
+            : (loginUpdate.then(({error})=>{if(error)console.error('Unable to save last login:',error.message);}).catch(error=>console.error('Unable to save last login:',error.message)), {error:null});
+        
 
         // =================================================
         // CREATE EB JWT

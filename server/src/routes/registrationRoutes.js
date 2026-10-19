@@ -1,6 +1,8 @@
 const express = require("express");
 
 const router = express.Router();
+const prepareRegistrationSession = require("../middleware/registrationSession");
+const { requireRegistrationSession } = require("../services/registrationSessionService");
 
 const {
     checkStudent,
@@ -37,6 +39,7 @@ router.post(
 
 router.post(
     "/send-otp",
+    prepareRegistrationSession,
     sendRegistrationOTP
 );
 
@@ -57,6 +60,7 @@ router.post(
 
 router.post(
     "/resend-otp",
+    prepareRegistrationSession,
     resendRegistrationOTP
 );
 
@@ -76,6 +80,7 @@ router.post(
 
 router.post(
     "/submit",
+    requireRegistrationSession,
     submitRegistration
 );
 

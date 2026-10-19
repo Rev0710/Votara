@@ -169,6 +169,7 @@ function EBCandidateManagement({ onOpenPartyList }) {
                     </div>
                     <div className="partylist-controls">
                         <select
+                            title={selectedElection?.title || selectedElection?.name || "Election"}
                             value={selectedElectionId}
                             onChange={(e) => setSelectedElectionId(e.target.value)}
                             aria-label="Election"
@@ -246,7 +247,7 @@ function EBCandidateManagement({ onOpenPartyList }) {
                                             : "June 21, 2026"}
                                     </span>
                                     <span className="partylist-actions">
-                                        <span className="partylist-action-dots">•••</span>
+                                        <span className="partylist-action-dots">Manage →</span>
                                     </span>
                                 </button>
                             ))

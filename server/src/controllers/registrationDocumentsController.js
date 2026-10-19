@@ -1,3 +1,4 @@
+const { ownsRegistration } = require("../services/registrationSessionService");
 const supabase = require("../config/supabase");
 
 
@@ -337,6 +338,10 @@ const uploadRegistrationRequirements = async (
         // =====================================================
         // DETERMINE REGISTRATION TYPE
         // =====================================================
+
+        if (!ownsRegistration(req, registration)) {
+            return res.status(401).json({ success: false, message: "Please verify your registration email again before continuing." });
+        }
 
         const isLateEnrollee =
             registration.registration_type ===

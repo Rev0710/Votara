@@ -76,9 +76,10 @@ const createRawEmail = ({
     to,
     subject,
     html,
+    fromName,
 }) => {
     const message = [
-        `From: "VOTARA Electoral Board" <${EMAIL_USER}>`,
+        `From: "${fromName === "VOTARA Administration" ? fromName : "VOTARA Electoral Board"}" <${EMAIL_USER}>`,
         `To: ${to}`,
         `Subject: ${subject}`,
         "MIME-Version: 1.0",
@@ -104,6 +105,7 @@ const sendEmail = async ({
     to,
     subject,
     html,
+    fromName,
 }) => {
 
     if (!to) {
@@ -128,6 +130,7 @@ const sendEmail = async ({
         to,
         subject,
         html,
+        fromName,
     });
 
     const response = await gmail.users.messages.send({
@@ -522,8 +525,10 @@ const sendRegistrationApprovalEmail = async (
     studentId,
     fullName,
     yearLevel,
-    temporaryPassword
+    temporaryPassword,
+    approvedBy = "Electoral Board"
 ) => {
+    const reviewerLabel = approvedBy === "Administrator" ? "Administrator" : "Electoral Board";
 
     try {
 
@@ -602,7 +607,7 @@ const sendRegistrationApprovalEmail = async (
                     color: #555;
                     margin-top: 0;
                 ">
-                    Electoral Board Registration Confirmation
+                    ${reviewerLabel} Registration Confirmation
                 </p>
 
                 <p>
@@ -619,7 +624,7 @@ const sendRegistrationApprovalEmail = async (
                     ">
                         approved
                     </strong>
-                    by the Electoral Board.
+                    by the ${reviewerLabel}.
                 </p>
 
                 <!-- STUDENT INFORMATION -->
@@ -804,7 +809,7 @@ const sendRegistrationApprovalEmail = async (
                     line-height: 1.6;
                 ">
 
-                    VOTARA Electoral Board<br>
+                    VOTARA ${reviewerLabel}<br>
                     Western Institute of Technology
 
                 </p>
@@ -818,6 +823,7 @@ const sendRegistrationApprovalEmail = async (
 
         const info = await sendEmail({
             to: email,
+            fromName: reviewerLabel === "Administrator" ? "VOTARA Administration" : undefined,
             subject:
                 "VOTARA Registration Approved - Login Credentials",
             html,
@@ -1025,7 +1031,9 @@ const sendForgotPasswordOTPEmail = async (
 // EXPORT
 // =====================================================
 
+const sendAdminEmailChangeCode = (email, code) => sendEmail({to:email,fromName:'VOTARA Administration',subject:'Verify your VOTARA administrator email',html:'<p>Your administrator email verification code is <strong>'+code+'</strong>.</p><p>This code expires in 10 minutes. If you did not request this change, ignore this email.</p>'});
 module.exports = {
+    sendAdminEmailChangeCode,
     sendOTPEmail,
     sendForgotPasswordOTPEmail,
     sendRegistrationApprovalEmail,

@@ -1,0 +1,395 @@
+/* Student-only viewport, glass surfaces, and theme. Existing brand blue and font stay intact. */
+.page-transition:has(> .student-dashboard) { animation: none; transform: none; }
+.student-dashboard {
+    --student-sidebar: 248px;
+    --student-bg: #f8faff;
+    --student-surface: rgba(255, 255, 255, .82);
+    --student-solid: #ffffff;
+    --student-text: #242b3b;
+    --student-muted: #586981;
+    --student-border: rgba(155, 175, 215, .3);
+    --student-dot: rgba(57, 105, 210, .2);
+    --student-blue: #155dfb;
+    --student-soft: #edf3ff;
+    --student-shadow: 0 8px 28px rgba(26, 42, 76, .06);
+    position: fixed; inset: 0; width: 100%; height: 100vh; height: 100dvh;
+    min-height: 0; overflow: hidden; color: var(--student-text);
+    background: var(--student-bg); color-scheme: light;
+}
+.student-dashboard[data-student-theme="dark"] {
+    --student-bg: #101725;
+    --student-surface: rgba(27, 38, 58, .84);
+    --student-solid: #1b263a;
+    --student-text: #f0f4ff;
+    --student-muted: #b5c2db;
+    --student-border: rgba(157, 182, 230, .22);
+    --student-dot: rgba(117, 155, 236, .23);
+    --student-soft: #253752;
+    --student-shadow: 0 8px 28px rgba(0, 0, 0, .16);
+    color-scheme: dark;
+}
+.student-dashboard.is-sidebar-collapsed { --student-sidebar: 84px; }
+.student-dashboard .dashboard-body {
+    display: grid; grid-template-columns: var(--student-sidebar) minmax(0, 1fr);
+    width: 100%; height: 100%; min-height: 0; margin: 0; padding: 0; overflow: hidden;
+}
+.student-dashboard .student-content-scroll {
+    grid-column: 2; grid-row: 1; min-width: 0; height: 100%; overflow: auto;
+    overscroll-behavior: contain; scrollbar-gutter: stable;
+    padding: 124px 0 0; scroll-padding-top: 126px;
+    background-color: var(--student-bg);
+    background-image: radial-gradient(circle, var(--student-dot) 1px, transparent 1.3px);
+    background-size: 22px 22px;
+}
+.student-dashboard .student-content-scroll > main {
+    width: 100%; max-width: none; min-width: 0; min-height: 100%; margin: 0;
+    padding: clamp(18px, 2.5vw, 38px); box-sizing: border-box;
+    background-color: transparent !important; background-image: none !important;
+}
+.student-dashboard .student-content-scroll:focus-visible { outline: 2px solid var(--student-blue); outline-offset: -3px; }
+.student-dashboard .sidebar {
+    grid-column: 1; grid-row: 1; position: relative; inset: auto;
+    display: flex; flex-direction: column; align-self: stretch;
+    width: var(--student-sidebar); min-width: 0; max-width: none;
+    height: 100%; min-height: 0; max-height: none;
+    margin: 0; padding: 18px 14px; border-radius: 0; overflow: hidden;
+    background: #111827; color: #f7f9ff; z-index: 40; transform: none;
+    border-right: 1px solid rgba(255, 255, 255, .07);
+}
+.student-dashboard .sidebar-brand { flex: 0 0 38px; margin: 0 0 16px; font-size: 19px; }
+.student-dashboard .sidebar-profile { flex: 0 0 auto; margin: 0 0 16px; padding: 12px 10px; }
+.student-dashboard .sidebar-profile-info h3 { font-size: 12px; line-height: 1.45; }
+.student-dashboard .sidebar-edit-profile { font-size: 11px; }
+.student-dashboard .sidebar-online-badge { font-size: 10px; }
+.student-dashboard .sidebar-menu {
+    display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0;
+    width: 100%; gap: 7px; padding: 0; overflow: hidden auto; overscroll-behavior: contain;
+    scrollbar-width: thin;
+}
+.student-dashboard .sidebar-item {
+    display: flex; flex: 0 0 auto; align-items: center; justify-content: flex-start;
+    width: 100%; min-height: 48px; height: auto; padding: 12px; margin: 0;
+    gap: 12px; border-radius: 13px; color: #f7f9ff; font-size: 14px; line-height: 1.4;
+}
+.student-dashboard .sidebar-item.active,
+.student-dashboard .sidebar-item.active:hover { background: #155dfb; color: #ffffff; border-radius: 13px; }
+.student-dashboard .sidebar-label { display: block; overflow: visible; text-overflow: clip; white-space: normal; text-align: left; }
+.student-dashboard .sidebar-icon-wrapper { display: flex; align-items: center; width: 24px; height: 24px; flex: 0 0 24px; }
+.student-dashboard .student-dot-icon { display: block; width: 24px; height: 24px; }
+.student-dashboard .sidebar-bottom { flex: 0 0 auto; margin: 0; padding: 14px 0 0; gap: 12px; }
+.student-dashboard .sidebar-help-card { margin: 0; padding: 12px; }
+.student-dashboard .sidebar-help-card strong { color: #ffffff; font-size: 12px; }
+.student-dashboard .sidebar-help-card p { color: #c1cde3; font-size: 11px; line-height: 1.55; }
+.student-dashboard .logout-button { width: 100%; min-height: 46px; font-size: 13px; }
+.student-dashboard .sidebar-collapsed .sidebar-brand span,
+.student-dashboard .sidebar-collapsed .sidebar-profile,
+.student-dashboard .sidebar-collapsed .sidebar-label,
+.student-dashboard .sidebar-collapsed .sidebar-help-card,
+.student-dashboard .sidebar-collapsed .logout-text { display: none; }
+.student-dashboard .sidebar-collapsed .sidebar-item,
+.student-dashboard .sidebar-collapsed .logout-button { justify-content: center; padding: 12px 0; }
+.student-dashboard .sidebar-collapsed .sidebar-menu,
+.student-dashboard .sidebar-collapsed .sidebar-bottom { padding-left: 0; padding-right: 0; }
+.student-dashboard .top-navbar {
+    position: absolute; top: 16px; right: 24px; left: calc(var(--student-sidebar) + 24px);
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(130px, 240px) 44px;
+    align-items: center; gap: 16px; width: auto; height: 92px; min-height: 0;
+    margin: 0; padding: 16px 24px; z-index: 30;
+    background: var(--student-surface); border: 1px solid var(--student-border);
+    border-radius: 20px; box-shadow: var(--student-shadow);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+}
+.student-dashboard .top-navbar .nav-left { min-width: 0; gap: 14px; }
+.student-dashboard .top-navbar .menu-toggle { display: flex; width: 32px; height: 40px; flex: 0 0 32px; }
+.student-dashboard .top-navbar .menu-toggle span { background: var(--student-text); }
+.student-dashboard .header-greeting h1 { color: var(--student-text); font-size: clamp(21px, 2vw, 30px); line-height: 1.2; }
+.student-dashboard .header-greeting p { color: var(--student-muted); font-size: 12px; }
+.student-dashboard .top-navbar .search-container {
+    display: flex; width: 100%; min-width: 0; height: 42px; flex: none;
+    margin: 0; background: var(--student-solid); border: 1px solid var(--student-border);
+}
+.student-dashboard .top-navbar .search-container input { width: 100%; min-width: 0; color: var(--student-text); background: transparent; font-size: 13px; }
+.student-dashboard .top-navbar .search-button { color: var(--student-text); }
+.student-dashboard .top-navbar .nav-right { display: none; }
+.student-dashboard .student-theme-toggle {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px; padding: 0; border: 1px solid var(--student-border);
+    border-radius: 50%; color: var(--student-text); background: var(--student-solid);
+    cursor: pointer; font-size: 19px; transition: background .2s, border-color .2s;
+}
+.student-dashboard .student-theme-toggle:hover { background: var(--student-soft); border-color: #155dfb; }
+.student-dashboard :is(button, a, input, select, textarea):focus-visible { outline: 3px solid #6d9bff; outline-offset: 3px; }
+.student-dashboard .student-sidebar-scrim { display: none; }
+.student-dashboard :is(.results-card, .calendar-card, .process-card, .directory-candidate-card,
+    .student-result-card, .candidate-card, .settings-item, .faq-item, .student-guidelines-card,
+    .student-guidelines-support, .about-votara-sheet, .policy-sheet, .contact-sheet, .contact-info-card,
+    .contact-support-card, .about-votara-principle, .student-results-election) {
+    background: var(--student-surface); border-color: var(--student-border);
+    color: var(--student-text); box-shadow: var(--student-shadow);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.student-dashboard .student-content-scroll :is(h1, h2, h3, h4, h5) { color: var(--student-text); }
+.student-dashboard .student-content-scroll :is(p, small) { color: var(--student-muted); }
+.student-dashboard .student-content-scroll :is(.election-card, .announcement-card, .candidates-election-banner) :is(h1,h2,h3,p,strong,small) { color: #f7f9ff; }
+.student-dashboard .student-content-scroll .directory-candidate-info { background: transparent; }
+.student-dashboard .student-content-scroll :is(.directory-position-badge, .live-results-note, .live-results-badge) { background: var(--student-soft); color: var(--student-muted); }
+.student-dashboard .guidelines-container { width: 100%; max-width: 1360px; margin: 0 auto; padding: 0; }
+.student-dashboard .student-guidelines-heading { max-width: 720px; margin: 0 0 32px; }
+.student-dashboard .student-guidelines-eyebrow { color: #2463ff; font-size: 11px; font-weight: 700; letter-spacing: .16em; }
+.student-dashboard .student-guidelines-heading h1 { margin: 12px 0; text-align: left; font-size: clamp(28px, 3vw, 40px); letter-spacing: -.04em; line-height: 1.2; }
+.student-dashboard .student-guidelines-heading p { font-size: 14px; line-height: 1.75; }
+.student-dashboard .student-guidelines-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.student-dashboard .student-guidelines-card { min-width: 0; padding: 26px; border: 1px solid var(--student-border); border-radius: 20px; }
+.student-dashboard .student-guidelines-number { display: inline-grid; place-items: center; width: 42px; height: 42px; border-radius: 12px; background: var(--student-soft); color: #2463ff; font-size: 14px; font-weight: 700; }
+.student-dashboard .student-guidelines-card h2 { margin: 24px 0 6px; font-size: 19px; line-height: 1.4; }
+.student-dashboard .student-guidelines-card > p { margin: 0 0 24px; font-size: 12px; }
+.student-dashboard .student-guidelines-card ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 20px; }
+.student-dashboard .student-guidelines-card li { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; line-height: 1.75; color: var(--student-text); }
+.student-dashboard .student-guidelines-card .guideline-dot { flex: 0 0 6px; width: 6px; height: 6px; margin-top: 8px; background: #2463ff; }
+.student-dashboard .student-guidelines-support { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 22px; padding: 22px 26px; border: 1px solid var(--student-border); border-radius: 18px; }
+.student-dashboard .student-guidelines-support strong { color: var(--student-text); font-size: 15px; }
+.student-dashboard .student-guidelines-support p { margin: 5px 0 0; font-size: 13px; line-height: 1.6; }
+.student-dashboard .student-guidelines-support button { flex-shrink: 0; padding: 12px 18px; background: #155dfb; color: white; border: 0; border-radius: 10px; font: inherit; font-size: 13px; cursor: pointer; }
+.student-dashboard :is(.policy-contents, .policy-document) { min-width: 0; }
+.student-dashboard .policy-contents { top: 8px; }
+.student-dashboard .policy-document section { scroll-margin-top: 120px; }
+.student-dashboard :is(.student-report-overlay, .settings-modal-overlay, .password-modal-overlay, .profile-modal-overlay) { position: fixed; inset: 0; z-index: 100; overflow: auto; overscroll-behavior: contain; padding: 20px; }
+.student-dashboard :is(.student-report-modal, .settings-modal, .password-modal, .candidate-platform-modal) {
+    max-width: min(100%, 760px); max-height: calc(100dvh - 40px); overflow-y: auto;
+    color: var(--student-text); background: var(--student-surface);
+    border-color: var(--student-border); backdrop-filter: blur(24px);
+}
+.student-dashboard .student-report-modal { margin: auto; }
+.student-dashboard :is(.student-report-modal, .password-modal) :is(h2,h3,label,strong) { color: var(--student-text); }
+.student-dashboard :is(.student-report-modal, .password-modal) :is(p,small) { color: var(--student-muted); }
+.student-dashboard :is(input, textarea, select) { font-family: inherit; }
+.student-dashboard[data-student-theme="dark"] :is(input, textarea, select) { background: var(--student-solid); color: var(--student-text); border-color: var(--student-border); }
+.student-dashboard[data-student-theme="dark"] :is(.faq-button, .faq-answer, .calendar-tabs button, .calendar-day, .countdown, .time-row, .process-text, .student-result-candidate, .directory-candidate-info, .settings-left, .policy-document, .policy-contents, .contact-support-list, .about-votara-capabilities, .about-votara-principles) { color: var(--student-text); }
+.student-dashboard[data-student-theme="dark"] :is(.policy-notice, .student-report-selected-category, .student-report-reference, .student-report-history-item, .student-report-timeline > div, .about-votara-principle, .contact-note, .student-report-category-list button) { background: var(--student-soft); color: var(--student-text); border-color: var(--student-border); }
+.student-dashboard[data-student-theme="dark"] :is(.about-votara-sheet, .policy-sheet, .contact-sheet, .settings-modal, .password-modal, .student-report-modal, .profile-modal) { background: var(--student-surface) !important; color: var(--student-text); }
+.student-dashboard[data-student-theme="dark"] :is(.student-report-close, .modal-close, .student-report-quiet) { color: var(--student-text); }
+.student-dashboard[data-student-theme="dark"] :is(.student-report-secondary, .student-report-selected-category button) { background: var(--student-soft); color: var(--student-text); border-color: var(--student-border); }
+.student-dashboard[data-student-theme="dark"] :is(.student-report-error, .password-error) { color: #ffb7c2; background: #452333; }
+@media (max-width: 1100px) {
+    .student-dashboard .student-guidelines-grid { grid-template-columns: 1fr; }
+    .student-dashboard .student-guidelines-card ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 721px) and (max-height: 720px) {
+    .student-dashboard .sidebar { padding-top: 10px; padding-bottom: 10px; }
+    .student-dashboard .sidebar-brand { margin-bottom: 8px; }
+    .student-dashboard .sidebar-profile { margin-bottom: 10px; padding: 8px; }
+    .student-dashboard .sidebar-item { min-height: 42px; padding-top: 9px; padding-bottom: 9px; }
+    .student-dashboard .sidebar-help-card { display: none; }
+}
+@media (max-width: 720px) {
+    .student-dashboard, .student-dashboard.is-sidebar-collapsed { --student-sidebar: 0px; }
+    .student-dashboard .dashboard-body { grid-template-columns: minmax(0, 1fr); }
+    .student-dashboard .student-content-scroll { grid-column: 1; padding-top: 126px; scrollbar-gutter: auto; }
+    .student-dashboard .student-content-scroll > main { padding: 18px 14px 28px; }
+    .student-dashboard .top-navbar {
+        left: 10px; right: 10px; top: 10px; height: 106px; padding: 10px 14px; gap: 6px 12px;
+        grid-template-columns: minmax(0, 1fr) 40px; grid-template-rows: 38px 38px; border-radius: 16px;
+    }
+    .student-dashboard .top-navbar .nav-left { grid-column: 1 / -1; grid-row: 1; gap: 10px; }
+    .student-dashboard .top-navbar .search-container { grid-column: 1; grid-row: 2; height: 36px; width: 100%; min-width: 0; }
+    .student-dashboard .student-theme-toggle { grid-column: 2; grid-row: 2; width: 38px; height: 38px; }
+    .student-dashboard .header-greeting h1 { font-size: 19px; }
+    .student-dashboard .header-greeting p { font-size: 11px; margin-top: 2px; }
+    .student-dashboard .sidebar, .student-dashboard .sidebar.sidebar-open, .student-dashboard .sidebar.sidebar-collapsed {
+        position: absolute; inset: 0 auto 0 0; width: min(280px, 88vw); min-width: 0;
+        height: 100%; min-height: 0; max-height: none; padding: 18px 14px;
+        border-radius: 0; z-index: 60; overflow: hidden; transition: transform .2s ease, visibility .2s ease;
+    }
+    .student-dashboard .sidebar.sidebar-open { transform: translateX(0); visibility: visible; }
+    .student-dashboard .sidebar.sidebar-collapsed { transform: translateX(-100%); visibility: hidden; }
+    .student-dashboard .student-sidebar-scrim { display: block; position: absolute; inset: 0; z-index: 50; border: 0; background: rgba(10, 18, 34, .56); backdrop-filter: blur(3px); cursor: pointer; }
+    .student-dashboard .sidebar-menu { flex: 1 1 auto; overflow-y: auto; }
+    .student-dashboard .sidebar-label { display: block; white-space: normal; }
+    .student-dashboard .sidebar-bottom { margin-top: 0; }
+    .student-dashboard .student-guidelines-card { padding: 22px; }
+    .student-dashboard .student-guidelines-card ul { grid-template-columns: 1fr; }
+    .student-dashboard .student-guidelines-support { align-items: flex-start; flex-direction: column; padding: 22px; }
+    .student-dashboard :is(.student-report-overlay, .settings-modal-overlay, .password-modal-overlay) { padding: 12px; }
+    .student-dashboard :is(.student-report-modal, .password-modal) { max-height: calc(100dvh - 24px); }
+}
+@media (max-height: 620px) { .student-dashboard .sidebar-help-card { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+    .student-dashboard *, .student-dashboard *::before, .student-dashboard *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+
+/* Readable supporting text in the existing compact dashboard cards. */
+.student-dashboard :is(.results-card, .calendar-card, .process-card) h3 { font-size: 15px; }
+.student-dashboard .process-text strong { font-size: 12px; color: var(--student-text); line-height: 1.5; }
+.student-dashboard .process-text span { font-size: 11px; color: var(--student-muted); line-height: 1.6; }
+.student-dashboard .process-item { min-height: 56px; }
+.student-dashboard .process-number { width: 24px; height: 24px; flex-basis: 24px; font-size: 11px; }
+.student-dashboard .process-item:not(.last)::after { left: 11px; top: 23px; }
+.student-dashboard .calendar-tabs button { font-size: 11px; padding: 8px 5px; color: #d6e0f5; }
+.student-dashboard .calendar-tabs .selected-tab { color: #ffffff; }
+.student-dashboard .countdown { color: #eef4ff; }
+.student-dashboard .countdown small { color: #c5d2ec !important; font-size: 11px; line-height: 1.5; }
+.student-dashboard .countdown-values > span { color: #c5d2ec; font-size: 9px; }
+.student-dashboard .countdown-values strong { color: #ffffff; font-size: 11px; }
+.student-dashboard .live-results-header p, .student-dashboard .live-results-empty-state p { font-size: 12px; }
+.student-dashboard .live-results-empty-state h4 { font-size: 14px; }
+.student-dashboard .student-content-scroll .faq-answer { font-size: 13px; line-height: 1.7; }
+.student-dashboard[data-student-theme="dark"] .student-content-scroll :is(.process-text strong, .directory-party-name, .directory-platform p, .student-result-candidate-info strong) { color: var(--student-text); }
+
+.student-dashboard { --student-link: #2455bc; }
+.student-dashboard[data-student-theme="dark"] { --student-link: #9fbcff; }
+.student-dashboard :is(.student-guidelines-eyebrow, .student-guidelines-number, .settings-item, .settings-item > span:last-child) { color: var(--student-link); }
+.student-dashboard .student-guidelines-card .guideline-dot { display: block; min-width: 6px; max-width: 6px; min-height: 6px; max-height: 6px; border-radius: 50%; }
+.student-dashboard[data-student-theme="dark"] .student-content-scroll :is(.policy-contents a, .about-votara-sheet strong, .policy-document strong, .contact-sheet strong) { color: var(--student-text); }
+
+.student-dashboard .directory-candidate-photo { background: var(--student-soft); color: var(--student-link); }
+.student-dashboard .directory-candidate-photo span { color: var(--student-link); }
+
+/* Card surfaces must also win over legacy compound hover selectors. */
+.student-dashboard .student-content-scroll :is(.results-card, .calendar-card, .process-card, .directory-candidate-card, .student-result-card, .candidate-card, .faq-item, .student-guidelines-card, .student-guidelines-support) { background: var(--student-surface) !important; border-color: var(--student-border); }
+.student-dashboard .calendar-card .date :is(strong, span) { color: var(--student-text); }
+@media (min-width: 721px) and (max-width: 1000px) {
+    .student-dashboard .top-navbar { top: 12px; left: calc(var(--student-sidebar) + 16px); right: 16px; height: 106px; padding: 10px 16px; gap: 6px 12px; grid-template-columns: minmax(0, 1fr) 44px; grid-template-rows: 38px 38px; }
+    .student-dashboard .top-navbar .nav-left { grid-column: 1 / -1; grid-row: 1; gap: 12px; }
+    .student-dashboard .header-greeting h1 { font-size: 21px; }
+    .student-dashboard .header-greeting p { font-size: 11px; }
+    .student-dashboard .top-navbar .search-container { grid-column: 1; grid-row: 2; width: 100%; height: 38px; }
+    .student-dashboard .student-theme-toggle { grid-column: 2; grid-row: 2; width: 38px; height: 38px; }
+    .student-dashboard .student-content-scroll { padding-top: 134px; }
+}
+
+.student-dashboard .candidate-card-bottom { background: transparent; }
+.student-dashboard .candidate-card.selected { background: var(--student-soft) !important; border-color: #155dfb; box-shadow: 0 0 0 2px #155dfb; }
+.student-dashboard[data-student-theme="dark"] .student-content-scroll :is(.vote-status-panel, .vote-confirmation-panel) { background: var(--student-surface); color: var(--student-text); border-color: var(--student-border); }
+
+/* Theme corrections for legacy information cards and controls. */
+.student-dashboard .student-content-scroll :is(.about-votara-info-card, .contact-hours, .contact-department-grid article, .student-results-message, .contact-self-service details) {
+    background: var(--student-surface) !important;
+    border: 1px solid var(--student-border);
+    color: var(--student-text);
+    box-shadow: var(--student-shadow);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+.student-dashboard .student-content-scroll :is(.about-votara-info-card, .contact-hours, .contact-department-grid article, .student-results-message) :is(h2,h3,h4,strong) { color: var(--student-text); }
+.student-dashboard .student-content-scroll :is(.about-votara-info-card, .contact-hours, .contact-department-grid article, .student-results-message) p { color: var(--student-muted); }
+.student-dashboard .contact-department-grid a { color: var(--student-link); }
+.student-dashboard .student-content-scroll .policy-contents a:is(:hover, :focus-visible, :active) { background: var(--student-soft); color: var(--student-link); }
+.student-dashboard :is(.student-guidelines-number, .about-votara-card-number) { background: transparent !important; border: 0; box-shadow: none; border-radius: 0; padding: 0; width: auto; min-width: 0; height: auto; color: var(--student-link); }
+.student-dashboard .student-report-modal :is(.student-report-close, .student-report-quiet, .student-report-secondary) { background: var(--student-soft); color: var(--student-text); border: 1px solid var(--student-border); }
+.student-dashboard .student-report-modal .student-report-primary { background: #155dfb; color: #fff; border: 1px solid #155dfb; }
+.student-dashboard .top-navbar .search-container input,
+.student-dashboard .top-navbar .search-container input:focus-visible { border: 0 !important; outline: none !important; box-shadow: none !important; background: transparent; min-width: 0; color: var(--student-text); }
+.student-dashboard .top-navbar .search-container:focus-within { outline: 2px solid #6d9bff; outline-offset: 3px; }
+.student-dashboard .directory-candidate-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 360px)); justify-content: start; }
+.student-dashboard .directory-candidate-photo { height: 180px; }
+.student-dashboard .directory-candidate-info { padding: 18px; }
+.student-dashboard .directory-candidate-info h3 { font-size: 18px; line-height: 1.4; }
+@media (max-width: 420px) { .student-dashboard .directory-candidate-grid { grid-template-columns: minmax(0, 1fr); } }
+.student-dashboard .top-navbar .search-container:focus-within { background: var(--student-solid); border-color: var(--student-border); }
+.student-dashboard .top-navbar .search-container .search-button { color: var(--student-text); }
+.student-dashboard .student-content-scroll .about-votara-capability-row span { color: var(--student-muted); }
+.student-dashboard .student-report-modal .student-report-kicker,
+.student-dashboard .student-report-category-list button > span:last-child { color: var(--student-link); }
+.student-dashboard .student-report-detail-card { background: var(--student-soft); border-color: var(--student-border); }
+.student-dashboard .student-report-detail-card :is(strong,p) { color: var(--student-text); }
+.student-dashboard .student-report-modal :is(.student-report-empty, .student-report-timeline span, .student-report-detail-card > div > span) { color: var(--student-muted); }
+.student-dashboard :is(.about-votara-topline, .policy-eyebrow) { color: var(--student-text); }
+.student-dashboard :is(.about-votara-eyebrow, .about-votara-section-label) { color: var(--student-link); }
+
+/* Profile, support, and password fields share the dashboard theme. */
+.student-dashboard .settings-modal-overlay .settings-modal.profile-settings-modal {
+    background: var(--student-solid) !important;
+    color: var(--student-text);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    overscroll-behavior: contain;
+    max-height: calc(100dvh - 40px) !important;
+}
+.student-dashboard .profile-settings-modal::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.student-dashboard .profile-settings-modal .votara-profile-page { background: transparent; color: var(--student-text); }
+.student-dashboard .profile-settings-modal :is(.profile-card, .profile-error-card, .profile-warning-modal) {
+    background: var(--student-surface); border-color: var(--student-border); color: var(--student-text);
+}
+.student-dashboard .profile-settings-modal :is(.profile-info-item, .security-summary) { background: var(--student-soft); border-color: var(--student-border); }
+.student-dashboard .profile-settings-modal :is(h1,h2,h3,strong, .profile-form label > span, .password-form label > span) { color: var(--student-text) !important; overflow-wrap: anywhere; }
+.student-dashboard .profile-settings-modal :is(p,small,.profile-info-item > span) { color: var(--student-muted); }
+.student-dashboard .profile-settings-modal :is(.profile-eyebrow,.security-icon) { color: var(--student-link); }
+.student-dashboard .profile-settings-modal :is(.profile-back-btn,.profile-outline-btn,.profile-secondary-btn,.profile-link-btn,.profile-warning-cancel,.profile-modal-close) {
+    background: var(--student-solid); color: var(--student-text); border-color: var(--student-border);
+}
+.student-dashboard .profile-settings-modal :is(input,select,textarea),
+.student-dashboard .password-change-form input,
+.student-dashboard .password-change-form input:focus {
+    background: var(--student-solid) !important;
+    color: var(--student-text) !important;
+    -webkit-text-fill-color: var(--student-text);
+    caret-color: var(--student-text);
+    border-color: var(--student-border);
+    font-size: 16px;
+}
+.student-dashboard .password-change-form input::placeholder { color: var(--student-muted); -webkit-text-fill-color: var(--student-muted); opacity: 1; }
+.student-dashboard .password-requirements { background: var(--student-soft); border-color: var(--student-border); }
+.student-dashboard .password-requirements h3 { color: var(--student-text); }
+.student-dashboard .password-requirement,
+.student-dashboard .password-requirement > span { color: var(--student-muted); }
+.student-dashboard[data-student-theme="dark"] :is(.password-requirement.is-valid, .password-requirement.is-valid > span, .password-match-message.is-valid) { color: #80e0a7; }
+.student-dashboard .password-modal-eyebrow { color: var(--student-link); }
+.student-dashboard .student-content-scroll :is(.contact-eb-support > div, .contact-self-service summary) { color: var(--student-text); }
+.student-dashboard .contact-self-service details button { background: var(--student-soft); color: var(--student-link); }
+.student-dashboard .profile-settings-modal :is(.profile-identity,.profile-info-item,.profile-photo-actions) { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 760px) {
+    .student-dashboard .settings-modal-overlay .settings-modal.profile-settings-modal { width: calc(100vw - 24px) !important; max-height: calc(100dvh - 24px) !important; margin: 0 auto !important; }
+    .student-dashboard .settings-modal-overlay .settings-modal.profile-settings-modal .votara-profile-page { padding: 18px !important; }
+    .student-dashboard .settings-modal-overlay .settings-modal.profile-settings-modal .profile-hero-card,
+    .student-dashboard .settings-modal-overlay .settings-modal.profile-settings-modal :is(.profile-info-grid,.profile-form-grid,.password-form) { grid-template-columns: minmax(0,1fr) !important; }
+    .student-dashboard .profile-settings-modal .profile-header { padding-right: 36px; }
+}
+/* Smaller screens and accessibility preferences use inexpensive opaque surfaces. */
+@media (max-width: 720px), (prefers-reduced-transparency: reduce), (prefers-reduced-motion: reduce) {
+    .student-dashboard :is(.top-navbar,.student-report-modal,.password-modal,.settings-modal,.student-sidebar-scrim,.profile-warning-overlay,.student-report-overlay,.settings-modal-overlay),
+    .student-dashboard .student-content-scroll :is(.results-card,.calendar-card,.process-card,.directory-candidate-card,.student-result-card,.candidate-card,.faq-item,.student-guidelines-card,.student-guidelines-support,.about-votara-info-card,.contact-hours,.contact-department-grid article,.student-results-message,.contact-self-service details) {
+        backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+    }
+    .student-dashboard :is(.top-navbar,.student-report-modal,.password-modal,.settings-modal) { background: var(--student-solid) !important; }
+}
+.student-dashboard .settings-modal-overlay:has(.profile-settings-modal) { overflow: hidden; }
+.student-dashboard .profile-settings-modal .profile-section-header > div > span { color: var(--student-link); }
+.student-dashboard .profile-settings-modal .profile-modal-close { background: var(--student-solid) !important; color: var(--student-text) !important; border-color: var(--student-border) !important; }
+.student-dashboard:has(.profile-settings-modal) .student-content-scroll { scrollbar-width: none; }
+.student-dashboard:has(.profile-settings-modal) .student-content-scroll::-webkit-scrollbar { display: none; width: 0; }
+@media (max-width: 720px), (prefers-reduced-transparency: reduce), (prefers-reduced-motion: reduce) {
+    .student-dashboard[data-student-theme] :is(.top-navbar,.student-report-modal,.password-modal,.settings-modal) { background: var(--student-solid) !important; }
+}
+
+.student-dashboard .student-content-scroll .faq-item button { background: var(--student-surface) !important; color: var(--student-text) !important; }
+.student-dashboard .student-content-scroll .faq-item button span { color: inherit; }
+
+/* Keep notification controls beside the theme switch in every header layout. */
+.student-dashboard .top-navbar { grid-template-columns:minmax(0,1fr) minmax(130px,240px) 44px 44px; }
+.student-dashboard .top-navbar .nav-left { grid-column:1; grid-row:1; }
+.student-dashboard .top-navbar .search-container { grid-column:2; grid-row:1; }
+.student-dashboard .top-navbar .student-theme-toggle { grid-column:3; grid-row:1; }
+.student-dashboard .top-navbar .student-platform-bell { grid-column:4; grid-row:1; display:flex;align-items:center;justify-content:center;color:var(--student-text);margin:0; }
+.student-dashboard .platform-bell { width:42px;height:42px;border-color:var(--student-border);background:var(--student-surface);color:var(--student-text); }
+.student-dashboard .platform-notification-panel { background:var(--student-solid);color:var(--student-text);border-color:var(--student-border); }
+.student-dashboard .platform-notification-panel :is(p,strong,button) { color:var(--student-text); }
+.student-dashboard .student-content-scroll .faq-item .faq-answer { background:var(--student-surface)!important;color:var(--student-text)!important;border-color:var(--student-border); }
+.student-dashboard .student-content-scroll .faq-item .faq-answer :is(p,span,strong,a) { color:var(--student-text)!important; }
+.student-dashboard .announcement-card { display:flex;flex-direction:column;align-items:flex-start;gap:8px; }
+.student-dashboard .announcement-card :is(h3,p) { margin:0;white-space:pre-line;overflow-wrap:anywhere; }
+@media(max-width:1000px) {
+ .student-dashboard .top-navbar {grid-template-columns:minmax(0,1fr) 40px 40px;}
+ .student-dashboard .top-navbar .nav-left {grid-column:1/-1;grid-row:1;}
+ .student-dashboard .top-navbar .search-container {grid-column:1;grid-row:2;}
+ .student-dashboard .top-navbar .student-theme-toggle {grid-column:2;grid-row:2;}
+ .student-dashboard .top-navbar .student-platform-bell {grid-column:3;grid-row:2;}
+ .student-dashboard .platform-bell {width:38px;height:38px;}
+}
+.student-dashboard .candidate-platform-modal{background:var(--student-solid)!important;color:var(--student-text)!important;max-width:min(720px,calc(100vw - 32px));max-height:calc(100dvh - 40px);overflow:auto}
+.student-dashboard .candidate-platform-modal :is(h2,h3,p,li,strong,span){color:var(--student-text)!important}
+.student-dashboard .candidate-platform-content{white-space:pre-wrap;overflow-wrap:anywhere;font-size:16px;line-height:1.65}
+.student-dashboard .ballot-review-modal ul{list-style:none;padding:0;margin:18px 0;display:grid;gap:12px}
+.student-dashboard .ballot-review-modal li{display:grid;gap:4px;padding:12px;border:1px solid var(--student-border);border-radius:12px;font-size:15px}
+.student-dashboard .ballot-review-modal footer{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:12px;margin-top:20px}
+.student-dashboard .ballot-review-modal button{padding:12px 18px;border-radius:10px;background:var(--student-surface);color:var(--student-text);border:1px solid var(--student-border);font:inherit;min-height:44px}
+.student-dashboard .ballot-review-modal button.primary{background:#155dfb;color:#fff}

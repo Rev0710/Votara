@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import votaraLogo from "../../assets/images/votara-logo.png";
 import votaraOrbit from "../../assets/images/votara-orbit.png";
 
@@ -240,6 +240,7 @@ const AccountSelection = () => {
         setRegisterError("");
 
     };
+useEffect(()=>{const controller=new AbortController();api.get('/system/maintenance-status',{signal:controller.signal,timeout:10000}).catch(()=>{});return()=>controller.abort();},[]);
 const handleAdminLogin = async (event) => {
 
         event.preventDefault();
@@ -324,7 +325,7 @@ const handleAdminLogin = async (event) => {
 
             setError(
 
-                requestError.response?.data?.message ||
+                (requestError.code === "ECONNABORTED" ? "Sign-in is taking longer than 10 seconds. Please try again; the server may still be starting." : requestError.response?.data?.message) ||
 
                 "Unable to connect to the VOTARA server. Please check your internet connection or try again."
 
@@ -372,7 +373,7 @@ const handleAdminLogin = async (event) => {
 
                 password: ebFormData.password,
 
-            });
+            }, { timeout: 10000 });
 
 
 
@@ -410,11 +411,7 @@ const handleAdminLogin = async (event) => {
 
 
 
-            window.setTimeout(() => {
-
-                navigate("/electoral-board/dashboard", { replace: true });
-
-            }, 500);
+            navigate("/electoral-board/dashboard", { replace: true });
 
         } catch (requestError) {
 

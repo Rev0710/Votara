@@ -2251,3 +2251,23 @@
 
 
 
+.register-page { padding:clamp(12px,3vw,40px); overflow:auto; }
+.register-page .register-card { width:min(1200px,100%); height:auto; min-height:680px; overflow:hidden; }
+.register-page .register-right { min-width:0; padding:clamp(20px,3vw,44px); height:auto; overflow:visible; }
+.register-page :is(.register-form-card,.register-form-container) { width:100%; max-width:540px; height:auto; padding:clamp(24px,3vw,44px); }
+.register-page :is(label,.register-form p,.register-description) { font-size:15px; line-height:1.6; }
+.register-page input { font-size:16px; min-height:48px; width:100%; }
+.register-page .register-submit { font-size:16px; min-height:46px; }
+.register-page :is(.register-links button,.register-links a,.register-back-button,.register-eyebrow) { font-size:13px; }
+.register-page .register-left-copy p { font-size:16px; line-height:1.6; }
+.register-page .register-steps { font-size:14px; line-height:1.8; }
+@media(max-width:760px) { .register-page .register-card { grid-template-columns:1fr; min-height:0; } .register-page .register-left { min-height:280px; padding:28px; } .register-page .register-left-copy h2 { font-size:38px; } .register-page .register-right { padding:20px 12px; min-height:0; } .register-page .register-orbit { opacity:.3; } }
+.register-page .register-content { width:100%; max-width:540px; height:auto; min-height:0; padding:clamp(24px,3vw,44px); }
+.register-page .register-heading p { font-size:15px; line-height:1.6; }
+.register-page .register-heading h1 { font-size:clamp(28px,3vw,38px); line-height:1.2; }
+.register-page :is(.register-kicker,.register-back-top) { font-size:13px; }
+.register-page .register-form { margin-top:24px; gap:20px; }
+.register-page .register-content { display:flex!important; flex-direction:column!important; align-items:stretch; }
+.register-page .register-heading h1 { white-space:normal; }
+.register-page .register-links { margin-top:28px; }
+.register-page .register-links a { font-size:13px; line-height:1.6; }

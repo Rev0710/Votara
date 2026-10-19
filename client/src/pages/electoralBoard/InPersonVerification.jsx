@@ -14,7 +14,6 @@ import {
 } from "react-icons/fi";
 
 import api from "../../services/api";
-import "./InPersonVerification.css";
 
 // =========================================================
 // IN-PERSON VERIFICATION

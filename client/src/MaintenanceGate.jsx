@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { FiTool, FiRefreshCw, FiShield } from "react-icons/fi";
-import api from "../services/api";
+import api from "./services/api";
 import "./MaintenanceGate.css";
 
 const ADMIN_ALLOWED_PATHS = [
     "/admin",
     "/admin-login",
+    "/admin-dashboard",
 ];
 
 const isAdminAllowedPath = (pathname) =>
@@ -33,6 +34,7 @@ const MaintenanceGate = ({ children }) => {
             setStatus({
                 loading: false,
                 enabled: Boolean(data.maintenance?.enabled),
+                ...data.maintenance,
                 message:
                     data.maintenance?.message ||
                     "The system is under maintenance. Please check back later.",
@@ -49,13 +51,14 @@ const MaintenanceGate = ({ children }) => {
 
     useEffect(() => {
         loadMaintenanceStatus();
+        window.addEventListener("votara-platform-update", loadMaintenanceStatus);
 
         const interval = window.setInterval(
             loadMaintenanceStatus,
             15000
         );
 
-        return () => window.clearInterval(interval);
+        return () => { window.clearInterval(interval); window.removeEventListener("votara-platform-update", loadMaintenanceStatus); };
     }, []);
 
     if (
@@ -63,7 +66,7 @@ const MaintenanceGate = ({ children }) => {
         status.loading ||
         !status.enabled
     ) {
-        return children;
+        return <>{status.enabled && isAdminAllowedPath(location.pathname) && <div className="platform-admin-maintenance" role="status">Under maintenance — {status.message}. Admin recovery access remains available.</div>}{status.upcoming && <div className="platform-admin-maintenance" role="status">Scheduled maintenance: {new Date(status.startsAt).toLocaleString()} — {status.message}</div>}{children}</>;
     }
 
     return (

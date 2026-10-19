@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
     FiBell,
     FiCheck,
@@ -72,12 +72,12 @@ const defaultSettings = {
     twoStepVerification: true,
     kioskRestrictions: true,
     maintenanceMode: false,
-    scheduledStart: "Jun 1, 10:00 PM",
-    scheduledEnd: "Jun 2, 6:00 AM",
+    scheduledStart: "",
+    scheduledEnd: "",
     adminAccess: true,
     votingSafeguard: true,
     maintenanceMessage: "The system is under maintenance. Please check back later.",
-    platformNotice: "Scheduled maintenance: Jun 1, 10:00 PM to Jun 2, 6:00 AM (Asia/Manila). Please return after maintenance ends.",
+    platformNotice: "",
     emailNotifications: true,
     electionNotifications: true,
     securityNotifications: true,
@@ -143,6 +143,10 @@ const ConfigCard = ({ icon, title, description, children, className = "" }) => (
 
 const SystemSettings = () => {
     const navigate = useNavigate();
+    const settingsLocation=useLocation();
+    useEffect(()=>{const section=new URLSearchParams(settingsLocation.search).get('section');if(section)setConfigSection(section);},[settingsLocation.search]);
+    const [reportPage,setReportPage]=useState(1);
+
     const [admin, setAdmin] = useState(null);
     const [settings, setSettings] = useState(defaultSettings);
     const [saved, setSaved] = useState(false);
@@ -151,9 +155,13 @@ const SystemSettings = () => {
     const [saveError, setSaveError] = useState("");
     // Page transition loader used for navigation between admin pages.
     const [isPageTransitioning, setIsPageTransitioning] = useState(false);
-    const [configSection, setConfigSection] = useState("configuration");
+    const [configSection, setConfigSection] = useState(()=>new URLSearchParams(window.location.search).get('section')||'configuration');
+    useEffect(()=>{const update=()=>setConfigSection(new URLSearchParams(window.location.search).get('section')||'configuration');window.addEventListener('popstate',update);window.addEventListener('votara-report-navigation',update);return()=>{window.removeEventListener('popstate',update);window.removeEventListener('votara-report-navigation',update);};},[]);
     const [showNoticeReview, setShowNoticeReview] = useState(false);
     const [restoreReviewOpen, setRestoreReviewOpen] = useState(false);
+    const [maintenanceReview,setMaintenanceReview]=useState(false);
+    const [maintenanceAcknowledged,setMaintenanceAcknowledged]=useState(false);
+    const [diagnosticReview,setDiagnosticReview]=useState(false);
     const [diagnosticNotice, setDiagnosticNotice] = useState("");
     const [diagnosticsRunning, setDiagnosticsRunning] = useState(false);
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -202,12 +210,16 @@ const SystemSettings = () => {
         }
     };
 
+    useEffect(()=>setReportPage(1),[studentIssueReportFilter]);
+    useEffect(()=>{const id=new URLSearchParams(settingsLocation.search).get("report");if(!id)return;const index=studentIssueReports.findIndex(report=>report.id===id);if(index>=0){setStudentIssueReportFilter("all");setReportPage(Math.floor(index/5)+1);window.requestAnimationFrame(()=>document.getElementById(`admin-issue-${id}`)?.scrollIntoView({block:"center"}));}},[studentIssueReports.map(report=>report.id).join(","),settingsLocation.search]);
     const loadStudentIssueReports = async () => {
         setStudentIssueReportsLoading(true);
         setStudentIssueReportError("");
         try {
-            const response = await api.get("/admin/student-issue-reports");
-            setStudentIssueReports(response.data?.reports || []);
+            const responses = await Promise.allSettled([api.get("/admin/student-issue-reports"),api.get("/admin/staff-issue-reports")]);
+            const reports=responses.flatMap((r,index)=>r.status==="fulfilled"?(r.value.data?.reports||[]).map(report=>({...report,source:index?"electoral_board":"student"})):[]);
+            setStudentIssueReports(reports.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)));
+            const failed=responses.find(r=>r.status==="rejected");if(failed)setStudentIssueReportError(failed.reason?.response?.data?.message||"Some reports could not be loaded.");
         } catch (error) {
             setStudentIssueReportError(error.response?.data?.message || error.message || "Unable to load student reports.");
         } finally {
@@ -219,9 +231,10 @@ const SystemSettings = () => {
         setStudentIssueReportSaving(report.id);
         setStudentIssueReportError("");
         try {
-            const response = await api.patch(`/admin/student-issue-reports/${report.id}`, { status, adminResponse: report.admin_response || "" });
+            const response = await api.patch(`/admin/${report.source === "electoral_board" ? "staff-issue-reports" : "student-issue-reports"}/${report.id}`, { status, adminResponse: report.admin_response || "" });
             if (!response.data?.success) throw new Error(response.data?.message || "Unable to update report status.");
             await loadStudentIssueReports();
+            window.dispatchEvent(new Event("votara-platform-update"));
         } catch (error) {
             setStudentIssueReportError(error.response?.data?.message || error.message || "Unable to update report status.");
         } finally {
@@ -267,6 +280,7 @@ const SystemSettings = () => {
             if (!data.success) throw new Error(data.message || "Unable to save security policy.");
             const savedSettings = { ...defaultSettings, ...(data.settings || nextSettings) };
             setSettings(savedSettings);
+            window.dispatchEvent(new Event("votara-platform-update"));
             const savedSecurity = getSecurityDraftFromSettings(savedSettings);
             setSecurityDraft(savedSecurity);
             setSecurityOriginal(savedSecurity);
@@ -282,7 +296,7 @@ const SystemSettings = () => {
     };
 
     useEffect(() => {
-        if (configSection === "security") loadStudentIssueReports();
+        if (configSection === "student-reports") loadStudentIssueReports();
     }, [configSection]);
 
     useEffect(() => {
@@ -463,7 +477,7 @@ const SystemSettings = () => {
         setSaveError("");
     };
 
-    const handleSave = async () => {
+    const handleSave = async (overrides = {}) => {
 
         if (saving) {
             return;
@@ -479,7 +493,8 @@ const SystemSettings = () => {
                 await api.put(
                     "/admin/settings",
                     {
-                        settings,
+                        settings: { ...settings, ...(overrides && !overrides.nativeEvent ? overrides : {}) },
+                        acknowledgeActiveElection: overrides?.acknowledgeActiveElection === true,
                     }
                 );
 
@@ -520,6 +535,7 @@ const SystemSettings = () => {
                 )
             );
 
+            window.dispatchEvent(new Event("votara-platform-update"));
             setSaved(true);
 
             window.setTimeout(
@@ -726,6 +742,7 @@ const SystemSettings = () => {
                     >
                         Security
                     </button>
+<button type="button" className={configSection==='student-reports'?'active':''} onClick={()=>{setConfigSection('student-reports');setMobileSidebarOpen(false);}}>Issue reports</button>
                 </nav>
 
                 <div className="system-config-sidebar-footer">
@@ -770,15 +787,15 @@ const SystemSettings = () => {
                                 <div>
                                     <h2>Compose a platform notice</h2>
                                     <p>Website · All signed-in users</p>
-                                    <span className="platform-notice-reference-draft-state">{settings.platformNotice?.trim() ? "Unsaved draft" : "No draft"}</span>
+                                    <span className="platform-notice-reference-draft-state">{(settings.platformNoticeDraft ?? settings.platformNotice)?.trim() ? "Notice draft" : "No draft"}</span>
                                 </div>
                             </div>
                             <div className="platform-notice-reference-body">
                                 <label htmlFor="platform-notice-message">Notice message</label>
-                                <textarea id="platform-notice-message" value={settings.platformNotice || ""} onChange={(e) => handleChange("platformNotice", e.target.value)} placeholder="Write the notice users should see..." rows={3} />
+                                <textarea id="platform-notice-message" value={settings.platformNoticeDraft ?? settings.platformNotice ?? ""} onChange={(e) => handleChange("platformNoticeDraft", e.target.value)} placeholder="Write the notice users should see..." rows={3} />
                                 <div className="platform-notice-reference-template-row">
-                                    <button type="button" onClick={() => handleChange("platformNotice", `Scheduled maintenance: ${settings.scheduledStart || "scheduled start"} to ${settings.scheduledEnd || "scheduled end"} (${settings.timezone || "Asia/Manila"}). Please return after maintenance ends.`)}>Choose notice template</button>
-                                    <button type="button" className="platform-notice-reference-clear" onClick={() => handleChange("platformNotice", "")}>Clear</button>
+                                    <button type="button" onClick={() => handleChange("platformNoticeDraft", `Scheduled maintenance: ${settings.scheduledStart || "scheduled start"} to ${settings.scheduledEnd || "scheduled end"} (${settings.timezone || "Asia/Manila"}). Please return after maintenance ends.`)}>Choose notice template</button>
+                                    <button type="button" className="platform-notice-reference-clear" onClick={() => handleChange("platformNoticeDraft", "")}>Clear</button>
                                 </div>
                                 <div className="platform-notice-reference-review-row">
                                     <button type="button" className="system-config-reference-discard" onClick={handleReset} disabled={saving || loadingSettings}>Discard draft</button>
@@ -793,9 +810,9 @@ const SystemSettings = () => {
                             </div>
                             <div className="platform-notice-reference-preview-box">
                                 <strong>Service notice</strong>
-                                <p>{settings.platformNotice || "No platform notice is currently configured."}</p>
+                                <p>{settings.platformNoticeDraft ?? settings.platformNotice ?? "No notice drafted."}</p>
                             </div>
-                            <button type="button" className="platform-notice-reference-review" onClick={() => setShowNoticeReview(true)} disabled={!settings.platformNotice?.trim()}>Review &amp; publish</button>
+                            <button type="button" className="platform-notice-reference-review" onClick={() => setShowNoticeReview(true)} disabled={!(settings.platformNoticeDraft ?? settings.platformNotice)?.trim() && !settings.platformNotice?.trim()}>Review &amp; publish</button>
                         </section>
 
                         <section className="platform-notice-reference-card platform-notice-published-card">
@@ -805,6 +822,7 @@ const SystemSettings = () => {
                             <div className="platform-notice-published-status">
                                 {settings.platformNotice?.trim() ? <><span className="platform-notice-published-dot" /> Active platform notice</> : "No active platform notice"}
                             </div>
+                            <p className="platform-published-message">{settings.platformNotice?.trim() || "Publish a notice above to display it to signed-in users."}</p>
                             <small>Publishing and withdrawal are recorded in the audit log.</small>
                         </section>
 
@@ -815,10 +833,10 @@ const SystemSettings = () => {
                                         <div><span>System messaging</span><h2 id="platform-notice-review-title">Review &amp; publish</h2><p>Confirm the notice before saving it as the current platform notice.</p></div>
                                         <button type="button" onClick={() => setShowNoticeReview(false)} aria-label="Close review">×</button>
                                     </div>
-                                    <div className="platform-notice-review-preview"><strong>Service notice</strong><p>{settings.platformNotice}</p></div>
+                                    <div className="platform-notice-review-preview"><strong>Service notice</strong><p>{settings.platformNoticeDraft ?? settings.platformNotice}</p></div>
                                     <div className="platform-notice-review-actions">
                                         <button type="button" className="system-config-reference-discard" onClick={() => setShowNoticeReview(false)}>Cancel</button>
-                                        <button type="button" className="system-config-reference-primary" onClick={async () => { setShowNoticeReview(false); await handleSave(); }} disabled={saving}>{saving ? "Publishing..." : "Confirm & publish"}</button>
+                                        <button type="button" className="system-config-reference-primary" onClick={async () => { setShowNoticeReview(false); await handleSave({platformNotice: settings.platformNoticeDraft ?? settings.platformNotice ?? ""}); }} disabled={saving}>{saving ? "Publishing..." : "Confirm & publish"}</button>
                                     </div>
                                 </section>
                             </div>
@@ -853,7 +871,7 @@ const SystemSettings = () => {
                                     <button
                                         type="button"
                                         className="system-config-reference-primary"
-                                        onClick={handleSave}
+                                        onClick={()=>{setMaintenanceAcknowledged(false);setMaintenanceReview(true);}}
                                         disabled={saving || loadingSettings}
                                     >
                                         {saving ? "Saving..." : saved ? "Changes saved" : "Review changes"}
@@ -888,7 +906,7 @@ const SystemSettings = () => {
                                             <strong>Enable schedule</strong>
                                             <span>
                                                 {settings.maintenanceMode
-                                                    ? "The maintenance schedule is enabled."
+                                                    ? "Maintenance is enabled. Leave dates blank to start immediately."
                                                     : "Off: the saved schedule will not run"}
                                             </span>
                                         </div>
@@ -906,7 +924,7 @@ const SystemSettings = () => {
                                         </div>
                                         <div className="maintenance-reference-control">
                                             <input
-                                                value={settings.scheduledStart}
+                                                type="datetime-local" value={/^\d{4}-\d{2}-\d{2}T/.test(settings.scheduledStart||'') ? settings.scheduledStart : ''}
                                                 onChange={(e) => handleChange("scheduledStart", e.target.value)}
                                                 aria-label="Scheduled start"
                                             />
@@ -921,7 +939,7 @@ const SystemSettings = () => {
                                         </div>
                                         <div className="maintenance-reference-control">
                                             <input
-                                                value={settings.scheduledEnd}
+                                                type="datetime-local" value={/^\d{4}-\d{2}-\d{2}T/.test(settings.scheduledEnd||'') ? settings.scheduledEnd : ''}
                                                 onChange={(e) => handleChange("scheduledEnd", e.target.value)}
                                                 aria-label="Scheduled end"
                                             />
@@ -932,13 +950,9 @@ const SystemSettings = () => {
                                     <div className="maintenance-reference-row">
                                         <div className="maintenance-reference-copy">
                                             <strong>Admin recovery access</strong>
-                                            <span>Keep admin access available during downtime</span>
+                                            <span>Administrators retain access to recover the system during downtime.</span>
                                         </div>
-                                        <Toggle
-                                            checked={settings.adminAccess}
-                                            onChange={() => handleChange("adminAccess", !settings.adminAccess)}
-                                            label="Toggle admin recovery access"
-                                        />
+                                        <span className="system-config-reference-badge">Always available</span>
                                     </div>
 
                                     <div className="maintenance-reference-row last">
@@ -975,6 +989,11 @@ const SystemSettings = () => {
                             </div>
                         </section>
                     </>
+                ) : configSection === "student-reports" ? (<><div className="admin-feature-heading"><h1>Student & Electoral Board reports</h1><p>Review student and Electoral Board concerns and send a response to their report history.</p></div>                        <section className="security-reference-card student-issue-admin-card">
+                            <div className="security-reference-card-header"><div><h2>Student & Electoral Board reports</h2><p>Reports submitted by students and Electoral Board members.</p></div><div className="student-issue-admin-tools"><select aria-label="Filter issue reports" value={studentIssueReportFilter} onChange={(event) => setStudentIssueReportFilter(event.target.value)}><option value="all">All statuses</option><option value="submitted">Submitted</option><option value="in_review">In review</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select><button type="button" className="security-log-button" onClick={loadStudentIssueReports} disabled={studentIssueReportsLoading}>{studentIssueReportsLoading ? "Refreshing…" : "Refresh reports"}</button></div></div>
+                            {studentIssueReportError && <div className="student-issue-admin-error" role="alert">{studentIssueReportError}</div>}
+                            {studentIssueReportsLoading ? <div className="security-event-empty">Loading student issue reports…</div> : (() => { const visibleReports = studentIssueReports.filter((report) => studentIssueReportFilter === "all" || report.status === studentIssueReportFilter); if (!visibleReports.length) return <div className="security-event-empty">No student reports match this filter.</div>; return <div className="student-issue-admin-list">{visibleReports.slice((Math.min(reportPage,Math.max(1,Math.ceil(visibleReports.length/5)))-1)*5,Math.min(reportPage,Math.max(1,Math.ceil(visibleReports.length/5)))*5).map((report) => <article id={`admin-issue-${report.id}`} className="student-issue-admin-item" key={report.id}><div className="student-issue-admin-item-head"><div><strong>{report.subject}</strong><span>{report.reference} · {report.category}</span><small>{report.student_name} · {report.source === "electoral_board" ? "Electoral Board" : `Student ID ${report.student_number || "Not available"}`} · {new Date(report.created_at).toLocaleString()}</small></div><em className={`student-report-status status-${report.status}`}>{String(report.status).replace("_", " ")}</em></div><p>{report.description}</p><div className="student-issue-admin-meta"><span>Contact: {report.contact_email}</span>{report.attachment_url && <a href={report.attachment_url} target="_blank" rel="noreferrer">View attachment</a>}</div><label className="student-issue-admin-response">Administrator response <textarea rows="2" maxLength="2000" value={report.admin_response || ""} onChange={(event) => setStudentIssueReports((current) => current.map((item) => item.id === report.id ? { ...item, admin_response: event.target.value } : item))} placeholder="Update for the reporter" /></label><div className="student-issue-admin-actions"><span>Current status: {String(report.status).replace("_", " ")}</span><select aria-label={`Update status for ${report.reference}`} value={report.status} onChange={(event) => updateStudentIssueReport(report, event.target.value)} disabled={studentIssueReportSaving === report.id}><option value="submitted">Submitted</option><option value="in_review">In review</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select><button type="button" className="security-log-button" onClick={() => updateStudentIssueReport(report, report.status)} disabled={studentIssueReportSaving === report.id}>{studentIssueReportSaving === report.id ? "Saving…" : "Save response"}</button>{studentIssueReportSaving === report.id && <small>Saving…</small>}</div></article>)}</div>; })()}
+                        </section><div className="admin-pagination"><span>Page {reportPage}</span><button type="button" disabled={reportPage<=1} onClick={()=>setReportPage(p=>Math.max(1,p-1))}>Previous</button><button type="button" disabled={reportPage*5>=studentIssueReports.filter(r=>studentIssueReportFilter==='all'||r.status===studentIssueReportFilter).length} onClick={()=>setReportPage(p=>p+1)}>Next</button></div></>
                 ) : configSection === "backup" ? (
                     <>
                         <div className="backup-reference-header">
@@ -1006,7 +1025,7 @@ const SystemSettings = () => {
                             {settings.lastBackupAt ? (
                                 <div className="backup-reference-recovery-point"><div className="backup-reference-recovery-icon"><FiDatabase size={14} /></div><div className="backup-reference-recovery-copy"><strong>{settings.lastBackupAt}</strong><span>{settings.lastBackupStatus || "Verified · Encryption enabled · Integrity status available from the backup service."}</span></div><span className="backup-reference-status-good">Verified</span><button type="button" className="backup-reference-review-button" onClick={() => setRestoreReviewOpen(true)}>Review restore</button></div>
                             ) : (
-                                <div className="backup-reference-empty"><FiDatabase size={18} /><strong>No restore point is recorded yet</strong><span>The current backend stores backup policy metadata, but it does not expose a database-backup job or recovery-point table. No fake recovery point is created.</span></div>
+                                <div className="backup-reference-empty"><FiDatabase size={18} /><strong>No restore point is recorded yet</strong><span>Live backup setup is awaiting approval. No recovery point has been created.</span></div>
                             )}
                             <p className="backup-reference-review-note">Restore requires a scheduled maintenance window, impact acknowledgement and a verified safety backup.</p>
                         </section>
@@ -1048,7 +1067,7 @@ const SystemSettings = () => {
                                 ))}
                                 {!securityEvents.length && <div className="troubleshooting-reference-empty"><FiCheck size={16} /><span>{securityEventsLoading ? "Loading recent events..." : "No matching technical incidents were returned by the current audit log."}</span></div>}
                             </div>
-                            <div className="troubleshooting-reference-card-actions"><button type="button" className="troubleshooting-reference-primary" disabled={diagnosticsRunning} onClick={async () => { setDiagnosticsRunning(true); setDiagnosticNotice(""); await loadSecurityAndDiagnostics(); setDiagnosticNotice("Diagnostic checks refreshed from the existing Admin API and audit-log services. No election or ballot data was changed."); setDiagnosticsRunning(false); }}> {diagnosticsRunning ? "Running..." : "Run diagnostics"}</button><button type="button" className="troubleshooting-reference-secondary" onClick={() => goTo("/admin/audit-logs")}>View incident history</button></div>
+                            <div className="troubleshooting-reference-card-actions"><button type="button" className="troubleshooting-reference-primary" disabled={diagnosticsRunning} onClick={()=>setDiagnosticReview(true)}> {diagnosticsRunning ? "Running..." : "Run diagnostics"}</button><button type="button" className="troubleshooting-reference-secondary" onClick={() => goTo("/admin/audit-logs")}>View incident history</button></div>
                         </section>
 
                         <section className="troubleshooting-reference-card otp-card">
@@ -1087,11 +1106,7 @@ const SystemSettings = () => {
                             )) : <div className="security-event-empty">No security-related audit events were returned.</div>}
                         </section>
 
-                        <section className="security-reference-card student-issue-admin-card">
-                            <div className="security-reference-card-header"><div><h2>Student issue reports</h2><p>Reports submitted through Student Settings → Report an Issue.</p></div><div className="student-issue-admin-tools"><select aria-label="Filter student reports" value={studentIssueReportFilter} onChange={(event) => setStudentIssueReportFilter(event.target.value)}><option value="all">All statuses</option><option value="submitted">Submitted</option><option value="in_review">In review</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select><button type="button" className="security-log-button" onClick={loadStudentIssueReports} disabled={studentIssueReportsLoading}>{studentIssueReportsLoading ? "Refreshing…" : "Refresh reports"}</button></div></div>
-                            {studentIssueReportError && <div className="student-issue-admin-error" role="alert">{studentIssueReportError}</div>}
-                            {studentIssueReportsLoading ? <div className="security-event-empty">Loading student issue reports…</div> : (() => { const visibleReports = studentIssueReports.filter((report) => studentIssueReportFilter === "all" || report.status === studentIssueReportFilter); if (!visibleReports.length) return <div className="security-event-empty">No student reports match this filter.</div>; return <div className="student-issue-admin-list">{visibleReports.map((report) => <article className="student-issue-admin-item" key={report.id}><div className="student-issue-admin-item-head"><div><strong>{report.subject}</strong><span>{report.reference} · {report.category}</span><small>{report.student_name} · Student ID {report.student_number || "Not available"} · {new Date(report.created_at).toLocaleString()}</small></div><em className={`student-report-status status-${report.status}`}>{String(report.status).replace("_", " ")}</em></div><p>{report.description}</p><div className="student-issue-admin-meta"><span>Contact: {report.contact_email}</span>{report.attachment_url && <a href={report.attachment_url} target="_blank" rel="noreferrer">View attachment</a>}</div><label className="student-issue-admin-response">Administrator response <textarea rows="2" maxLength="2000" value={report.admin_response || ""} onChange={(event) => setStudentIssueReports((current) => current.map((item) => item.id === report.id ? { ...item, admin_response: event.target.value } : item))} placeholder="Optional update for the student" /></label><div className="student-issue-admin-actions"><span>Current status: {String(report.status).replace("_", " ")}</span><select aria-label={`Update status for ${report.reference}`} value={report.status} onChange={(event) => updateStudentIssueReport(report, event.target.value)} disabled={studentIssueReportSaving === report.id}><option value="submitted">Submitted</option><option value="in_review">In review</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select><button type="button" className="security-log-button" onClick={() => updateStudentIssueReport(report, report.status)} disabled={studentIssueReportSaving === report.id}>{studentIssueReportSaving === report.id ? "Saving…" : "Save response"}</button>{studentIssueReportSaving === report.id && <small>Saving…</small>}</div></article>)}</div>; })()}
-                        </section>
+
 
                         <section className="security-reference-card security-sessions-card">
                             <div className="security-reference-card-header"><div><h2>Staff sessions</h2><p>Current administrator identity and recent staff access state.</p></div></div>
@@ -1105,6 +1120,8 @@ const SystemSettings = () => {
                         )}
                     </>
                 )}
+{maintenanceReview&&<div className="admin-modal-overlay"><section className="admin-profile-modal" role="dialog" aria-modal="true" aria-labelledby="maintenance-review-title"><h2 id="maintenance-review-title">Review maintenance changes</h2><p>{settings.maintenanceMode?'Maintenance will pause student and Electoral Board access during the selected window.':'Maintenance will be disabled.'}</p><p>Start: {settings.scheduledStart||'Immediately'} · End: {settings.scheduledEnd||'Until disabled'}</p><p>{settings.maintenanceMessage}</p><label className="admin-acknowledgement"><input type="checkbox" checked={maintenanceAcknowledged} onChange={e=>setMaintenanceAcknowledged(e.target.checked)}/>I understand this can interrupt voting and registration.</label><footer><button type="button" onClick={()=>setMaintenanceReview(false)}>Cancel</button><button type="button" disabled={saving||!maintenanceAcknowledged} onClick={async()=>{await handleSave({acknowledgeActiveElection:maintenanceAcknowledged});setMaintenanceReview(false);}}>Confirm maintenance changes</button></footer></section></div>}
+{diagnosticReview&&<div className="admin-modal-overlay"><section className="admin-profile-modal" role="dialog" aria-modal="true" aria-labelledby="diagnostic-review-title"><h2 id="diagnostic-review-title">Run system diagnostics?</h2><p>This checks API availability and recent audit events. It does not change student records, election settings, or ballots.</p><footer><button type="button" onClick={()=>setDiagnosticReview(false)}>Cancel</button><button type="button" disabled={diagnosticsRunning} onClick={async()=>{setDiagnosticReview(false);setDiagnosticsRunning(true);setDiagnosticNotice('');await loadSecurityAndDiagnostics();setDiagnosticNotice('Diagnostics finished. Review the availability results above.');setDiagnosticsRunning(false);}}>Confirm checks</button></footer></section></div>}
             </main>
         </div>
     );

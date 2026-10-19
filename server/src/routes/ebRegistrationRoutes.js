@@ -7,6 +7,8 @@ const {
 } = require("../controllers/ebRegistrationController");
 
 const router = express.Router();
+router.use(require('../middleware/requireStaff')('electoral_board'));
+router.use(require('../middleware/auditEBRequest')('Registration'));
 
 // =========================================================
 // GET ALL STUDENT REGISTRATION APPLICATIONS

@@ -1,3 +1,5 @@
+import { registrationHeaders } from "../../services/registrationSession";
+import api from "../../services/api";
 import React, {
     useEffect,
     useRef,
@@ -628,13 +630,14 @@ const StudentRegistration = () => {
 
             const response =
                 await fetch(
-                    "http://localhost:5000/api/registration/submit",
+                    `${api.defaults.baseURL}/registration/submit`,
                     {
                         method: "POST",
 
                         headers: {
                             "Content-Type":
                                 "application/json",
+                            ...registrationHeaders(studentId, email),
                         },
 
                         body: JSON.stringify({

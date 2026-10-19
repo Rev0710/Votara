@@ -276,6 +276,7 @@ function AdminDataManagement() {
     const navigate = useNavigate();
     const fileInputRef = useRef(null);
 
+    const [registryPage,setRegistryPage]=useState(1);
     const [students, setStudents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -370,6 +371,10 @@ function AdminDataManagement() {
         });
     }, [students, search, statusFilter, yearFilter]);
 
+    useEffect(()=>setRegistryPage(1),[search,statusFilter,yearFilter]);
+    const totalRegistryPages=Math.max(1,Math.ceil(filteredStudents.length/10));
+    const currentRegistryPage=Math.min(registryPage,totalRegistryPages);
+    const visibleStudents=filteredStudents.slice((currentRegistryPage-1)*10,currentRegistryPage*10);
     const handleFileSelected = async (event) => {
         const file = event.target.files?.[0];
         if (!file) return;
@@ -393,7 +398,10 @@ function AdminDataManagement() {
 
         try {
             const text = await file.text();
-            const records = parseStudentCSV(text);
+            const allRecords = parseStudentCSV(text);
+            const records=allRecords.filter(record=>!/^(?:(?:1|1st|first)(?:year|yr)?|year1)$/.test(String(record.year_level).toLowerCase().replace(/[^a-z0-9]/g,"")));
+            if(!records.length)throw new Error("No eligible records remain. 1st Year students are excluded.");
+            setMessage(`${allRecords.length-records.length} first-year record(s) excluded. ${records.length} eligible record(s) ready to synchronize.`);
 
             setSelectedFile(file);
             setImportRecords(records);
@@ -704,7 +712,7 @@ function AdminDataManagement() {
                                 <span className="dm-kicker">STUDENT REGISTRY</span>
                                 <h2>Import Dataset CSV</h2>
                                 <p>
-                                    Upload the official student dataset. Existing Student IDs are updated and new Student IDs are inserted into the Supabase <code>students</code> table.
+                                    Choose a new CSV to replace the selected file. 1st Year rows are excluded. Existing Student IDs are updated and new Student IDs are inserted into the Supabase <code>students</code> table.
                                 </p>
                             </div>
                             <div className="dm-panel-icon blue"><FiUploadCloud /></div>
@@ -872,7 +880,7 @@ function AdminDataManagement() {
                                 ) : filteredStudents.length === 0 ? (
                                     <tr><td colSpan="5" className="dm-empty">No student records match the selected filters.</td></tr>
                                 ) : (
-                                    filteredStudents.map((student) => (
+                                    visibleStudents.map((student) => (
                                         <tr key={student.id || student.student_id}>
                                             <td><strong>{student.student_id}</strong></td>
                                             <td>{student.full_name}</td>
@@ -902,6 +910,7 @@ function AdminDataManagement() {
                     </div>
                 </section>
 
+                <div className="admin-pagination"><span>{filteredStudents.length} records · Page {currentRegistryPage} of {totalRegistryPages}</span><button type="button" disabled={currentRegistryPage===1} onClick={()=>setRegistryPage(currentRegistryPage-1)}>Previous</button><button type="button" disabled={currentRegistryPage===totalRegistryPages} onClick={()=>setRegistryPage(currentRegistryPage+1)}>Next</button></div>
                 <footer className="dm-footer">
                     <span>VOTARA Data Management</span>
                     <span><FiSettings /> Collections, database controls, and system cleanup remain under System Configuration.</span>

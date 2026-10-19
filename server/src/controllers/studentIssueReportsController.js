@@ -1,3 +1,4 @@
+const {assertReportQuota}=require('../services/reportQuota');
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const supabase = require("../config/supabase");
@@ -78,9 +79,9 @@ const authenticateAdmin = async (req) => {
 
 const handleError = (res, error, fallback) => {
     console.error("Student issue report error:", error);
-    return res.status(error.statusCode || 500).json({
+    return res.status(error.message?.includes('REPORT_LIMIT_REACHED') ? 429 : (error.statusCode || 500)).json({
         success: false,
-        message: error.message || fallback,
+        message: error.message?.includes('REPORT_LIMIT_REACHED') ? 'You have reached the limit of 5 reports for this account.' : (error.message || fallback),
     });
 };
 
@@ -113,6 +114,7 @@ exports.createStudentIssueReport = async (req, res) => {
         if (description.length < 10 || description.length > 5000) return res.status(400).json({ success: false, message: "Description must contain 10–5,000 characters." });
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) return res.status(400).json({ success: false, message: "Enter a valid contact email." });
 
+        await assertReportQuota('student_issue_reports','student_id',studentId);
         let attachmentName = null;
         let attachmentPath = null;
         const attachment = req.body?.attachment;

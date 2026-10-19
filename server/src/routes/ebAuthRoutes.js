@@ -11,6 +11,7 @@ const router = express.Router();
 router.post("/register", registerEB);
 
 // EB Login
-router.post("/login", loginEB);
+router.post("/login", require("../middleware/auditStaffLogin"),
+    loginEB);
 
 module.exports = router;

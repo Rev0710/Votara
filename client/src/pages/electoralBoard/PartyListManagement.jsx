@@ -933,12 +933,7 @@ const PartyListManagement = () => {
     style={styles.header}
 >
 
-<div
-    className="plm-header-icon"
-    style={styles.icon}
->
-    ▰
-</div>
+
                 <div
     className="plm-header-content"
     style={{ flex: 1 }}
@@ -1121,10 +1116,7 @@ const PartyListManagement = () => {
                 STATISTICS
             ================================================= */}
 
-            <div
-                style={
-                    styles.statsGrid
-                }
+            <div className="plm-stats-grid" style={styles.statsGrid}
             >
 
                 <StatCard
@@ -2420,10 +2412,7 @@ const StatCard = ({
     icon,
 }) => {
     return (
-        <div
-            style={
-                styles.statCard
-            }
+        <div className="plm-stat-card" style={styles.statCard}
         >
 
             <div

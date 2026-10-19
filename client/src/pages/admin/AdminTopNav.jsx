@@ -1,3 +1,6 @@
+import PlatformNotifications from '../../components/PlatformNotifications';
+import AdminProfileModal from './AdminProfileModal';
+import {FiMoon,FiSun} from 'react-icons/fi';
 import React, { useState } from "react";
 import {
     useLocation,
@@ -50,6 +53,7 @@ const ADMIN_NAVIGATION = [
         label: "Reports & Analytics",
         path: "/admin/reports",
     },
+    { key: "late", label: "Late Enrollees", path: "/admin/late-enrollees" },
 ];
 
 
@@ -64,6 +68,10 @@ const AdminTopNav = ({
     const navigate = useNavigate();
     const location = useLocation();
 
+    const [profileOpen,setProfileOpen]=useState(false);
+    const [profileAdmin,setProfileAdmin]=useState(()=>{try{return admin || JSON.parse(localStorage.getItem('votaraAdminUser')||'null');}catch{return admin;}});
+    const [theme,setTheme]=useState(()=>localStorage.getItem('votaraAdminTheme')||'dark');
+    const toggleTheme=()=>{const next=theme==='dark'?'light':'dark';setTheme(next);localStorage.setItem('votaraAdminTheme',next);window.dispatchEvent(new Event('votara-admin-theme'));};
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -128,7 +136,7 @@ const AdminTopNav = ({
     // ========================================================
 
     return (
-        <header className="votara-admin-topbar">
+        <><header className="votara-admin-topbar">
 
             {/* BRAND */}
             <button
@@ -194,32 +202,10 @@ const AdminTopNav = ({
                     <span>Production</span>
                 </button>
 
-                <button
-                    type="button"
-                    className="votara-notification-button"
-                    onClick={() =>
-                        handleNavigation("/admin/audit-logs")
-                    }
-                    title="Monitoring & Logs"
-                    aria-label="Monitoring & Logs"
-                >
-                    <span className="notification-dot" />
-                    <FiBell size={16} />
-                </button>
-
-                <div className="votara-admin-user">
-                    <span className="votara-admin-user-avatar">
-                        {admin?.full_name
-                            ?.charAt(0)
-                            ?.toUpperCase() || "A"}
-                    </span>
-
-                    <span className="votara-admin-user-name">
-                        {admin?.full_name || "Administrator"}
-                    </span>
-                </div>
-
-                <button
+                                <div className="admin-header-tools"><button type="button" className="admin-theme-button" aria-label={theme==='dark'?'Switch to light mode':'Switch to dark mode'} onClick={toggleTheme}>{theme==='dark'?<FiSun/>:<FiMoon/>}</button><PlatformNotifications admin/>
+                <button type="button" className="admin-profile-trigger" onClick={()=>setProfileOpen(true)} aria-label="Open administrator profile">{(profileAdmin?.profile_photo_url || profileAdmin?.profilePhotoUrl)?<img src={profileAdmin.profile_photo_url || profileAdmin.profilePhotoUrl} alt=""/>:<span>{(profileAdmin?.full_name||profileAdmin?.fullName||'A').charAt(0)}</span>}<span className="admin-profile-name">{profileAdmin?.full_name||profileAdmin?.fullName||'Administrator'}</span></button></div>
+                
+<button
                     type="button"
                     className="votara-admin-logout"
                     onClick={requestLogout}
@@ -255,52 +241,7 @@ const AdminTopNav = ({
 
             {/* COMPACT NAVIGATION */}
             {/* LOGOUT CONFIRMATION */}
-            {showLogoutConfirm && (
-                <div
-                    className="votara-logout-modal-backdrop"
-                    role="presentation"
-                    onMouseDown={(event) => {
-                        if (event.target === event.currentTarget) {
-                            setShowLogoutConfirm(false);
-                        }
-                    }}
-                >
-                    <div
-                        className="votara-logout-modal"
-                        role="dialog"
-                        aria-modal="true"
-                        aria-labelledby="votara-logout-title"
-                    >
-                        <div className="votara-logout-modal-icon">
-                            <FiLogOut size={20} />
-                        </div>
 
-                        <div className="votara-logout-modal-content">
-                            <h2 id="votara-logout-title">Sign out?</h2>
-                            <p>Are you sure you want to sign out of your VOTARA Admin account?</p>
-                        </div>
-
-                        <div className="votara-logout-modal-actions">
-                            <button
-                                type="button"
-                                className="votara-logout-cancel"
-                                onClick={() => setShowLogoutConfirm(false)}
-                            >
-                                Cancel
-                            </button>
-
-                            <button
-                                type="button"
-                                className="votara-logout-confirm"
-                                onClick={confirmLogout}
-                            >
-                                <FiLogOut size={15} />
-                                Sign Out
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             <div
                 className={`votara-admin-mobile-menu ${
@@ -347,7 +288,52 @@ const AdminTopNav = ({
                     })}
                 </nav>
             </div>
-        </header>
+        </header>            {showLogoutConfirm && (
+                <div
+                    className="votara-logout-modal-backdrop"
+                    role="presentation"
+                    onMouseDown={(event) => {
+                        if (event.target === event.currentTarget) {
+                            setShowLogoutConfirm(false);
+                        }
+                    }}
+                >
+                    <div
+                        className="votara-logout-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="votara-logout-title"
+                    >
+                        <div className="votara-logout-modal-icon">
+                            <FiLogOut size={20} />
+                        </div>
+
+                        <div className="votara-logout-modal-content">
+                            <h2 id="votara-logout-title">Sign out?</h2>
+                            <p>Are you sure you want to sign out of your VOTARA Admin account?</p>
+                        </div>
+
+                        <div className="votara-logout-modal-actions">
+                            <button
+                                type="button"
+                                className="votara-logout-cancel"
+                                onClick={() => setShowLogoutConfirm(false)}
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                type="button"
+                                className="votara-logout-confirm"
+                                onClick={confirmLogout}
+                            >
+                                <FiLogOut size={15} />
+                                Sign Out
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}{profileOpen&&<AdminProfileModal onClose={()=>setProfileOpen(false)} onUpdated={setProfileAdmin}/>}</>
     );
 };
 

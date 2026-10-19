@@ -1,3 +1,5 @@
+import { registrationHeaders, saveRegistrationToken } from "../../services/registrationSession";
+import api from "../../services/api";
 import { useEffect, useRef, useState } from "react";
 
 
@@ -2280,7 +2282,7 @@ const OTPVerification = () => {
 
 
 
-          "http://localhost:5000/api/registration/verify-otp",
+          `${api.defaults.baseURL}/registration/verify-otp`,
 
 
 
@@ -2329,6 +2331,7 @@ const OTPVerification = () => {
 
 
                 "application/json",
+              ...registrationHeaders(studentId, email),
 
 
 
@@ -2912,6 +2915,7 @@ const OTPVerification = () => {
 
 
 
+      saveRegistrationToken(studentId, email, data.registrationToken);
       sessionStorage.setItem(
 
 
@@ -3120,7 +3124,7 @@ const OTPVerification = () => {
 
 
 
-        registrationType
+        data.student?.registrationType || registrationType
 
 
 
@@ -3321,6 +3325,7 @@ const OTPVerification = () => {
 
 
       );
+      if (data.registrationStatus === "needs_correction") sessionStorage.setItem("votara_registration_status", "needs_correction");
 
 
 
@@ -3353,6 +3358,7 @@ const OTPVerification = () => {
 
 
       );
+      if (data.correctionMessage) sessionStorage.setItem("votara_correction_message", data.correctionMessage);
 
 
 
@@ -4458,7 +4464,7 @@ const OTPVerification = () => {
 
 
 
-          "http://localhost:5000/api/registration/resend-otp",
+          `${api.defaults.baseURL}/registration/resend-otp`,
 
 
 
@@ -4507,6 +4513,7 @@ const OTPVerification = () => {
 
 
                 "application/json",
+              ...registrationHeaders(studentId, email),
 
 
 

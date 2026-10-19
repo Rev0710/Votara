@@ -218,6 +218,7 @@ const ALLOWED_SETTINGS = [
     "lastBackupAt",
     "lastBackupStatus",
     "platformNotice",
+    "platformNoticeDraft",
 ];
 
 
@@ -578,6 +579,20 @@ const updateAdminSystemSettings = async (
         };
 
 
+        const {scheduleTime, invalidate} = require('../services/platformStatus');
+        if (mergedSettings.maintenanceMode === true) {
+            const start = scheduleTime(mergedSettings.scheduledStart), end = scheduleTime(mergedSettings.scheduledEnd);
+            if ((start !== null && !Number.isFinite(start)) || (end !== null && !Number.isFinite(end)) || (start !== null && end !== null && end <= start)) {
+                return res.status(400).json({success:false,message:'Enter valid maintenance dates; the end must follow the start. Leave both empty for immediate maintenance.'});
+            }
+        }
+        const { statusFromSettings } = require('../services/platformStatus');
+        if (statusFromSettings(mergedSettings).enabled && !statusFromSettings(currentSettings).enabled && mergedSettings.votingSafeguard !== false) {
+            const {data: activeElections,error: activeError}=await supabase.from('elections').select('id').eq('status','open').limit(1);
+            if(activeError)return res.status(503).json({success:false,message:'Unable to check active elections. Maintenance was not changed.'});
+            if(activeElections?.length && req.body.acknowledgeActiveElection !== true)return res.status(409).json({success:false,message:'An election is open. Confirm that maintenance can interrupt voting before saving.'});
+        }
+        invalidate();
         const changedKeys =
             ALLOWED_SETTINGS.filter(
                 (key) =>

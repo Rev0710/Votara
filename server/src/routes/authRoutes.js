@@ -29,6 +29,7 @@ const router =
 
 router.post(
     "/student-login",
+    require("../middleware/studentLoginGuard"),
     studentLogin
 );
 

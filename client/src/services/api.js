@@ -1,3 +1,4 @@
+import { registrationHeaders } from "./registrationSession";
 import axios from "axios";
 
 // =====================================================
@@ -165,6 +166,12 @@ const isKioskRequest = (url = "") => {
 api.interceptors.request.use(
 
     (config) => {
+
+        const registrationInput = config.data || config.params || {};
+        if (String(config.url || "").startsWith("/registration")) {
+            config.headers = config.headers || {};
+            Object.assign(config.headers, registrationHeaders(registrationInput.studentId, registrationInput.email));
+        }
 
         const requestUrl =
             config.url || "";

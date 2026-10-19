@@ -1,3 +1,4 @@
+import { registrationHeaders, saveRegistrationToken } from "../../services/registrationSession";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import votaraLogo from "../../assets/images/votara-logo.png";
@@ -92,6 +93,7 @@ const Register = () => {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
+                            ...registrationHeaders(cleanStudentId, cleanEmail),
                         },
                         body: JSON.stringify({
                             studentId: cleanStudentId,
@@ -121,6 +123,9 @@ const Register = () => {
 
             console.log("📋 Registration server response:", data);
 
+            if (response.ok && data.success) {
+                saveRegistrationToken(cleanStudentId, cleanEmail, data.registrationToken);
+            }
             const studentNotFound =
                 data?.studentFound === false ||
                 data?.code === "STUDENT_NOT_FOUND" ||

@@ -220,6 +220,92 @@ const authenticateEB = async (req) => {
 };
 
 
+const authenticateReviewer = async (req) => {
+    const authHeader =
+        req.headers.authorization;
+
+    if (
+        !authHeader ||
+        !authHeader.startsWith("Bearer ")
+    ) {
+        throw new Error(
+            "Authentication token is required."
+        );
+    }
+
+    const token =
+        authHeader.split(" ")[1];
+
+    if (!token) {
+        throw new Error(
+            "Authentication token is missing."
+        );
+    }
+
+    const decoded = jwt.verify(
+        token,
+        process.env.JWT_SECRET
+    );
+
+    if (
+        !decoded ||
+        decoded.role !== "admin"
+    ) {
+        throw new Error(
+            "Administrator access is required."
+        );
+    }
+
+    if (!decoded.userId) {
+        throw new Error(
+            "Invalid Administrator account."
+        );
+    }
+
+    const {
+        data: staff,
+        error,
+    } = await supabase
+        .from("staff_users")
+        .select(`
+            id,
+            full_name,
+            email,
+            role,
+            is_active
+        `)
+        .eq(
+            "id",
+            decoded.userId
+        )
+        .eq(
+            "role",
+            "admin"
+        )
+        .maybeSingle();
+
+    if (error) {
+        throw new Error(
+            `Unable to verify Administrator account: ${error.message}`
+        );
+    }
+
+    if (!staff) {
+        throw new Error(
+            "Administrator account was not found."
+        );
+    }
+
+    if (!staff.is_active) {
+        throw new Error(
+            "Administrator account is inactive."
+        );
+    }
+
+    return staff;
+};
+
+
 // ============================================================
 // FIND STUDENT
 // ============================================================
@@ -1119,7 +1205,7 @@ const getLateEnrolleeApplications =
         res
     ) => {
         try {
-            await authenticateEB(req);
+            await authenticateReviewer(req);
 
             const {
                 status,
@@ -1268,7 +1354,7 @@ const getLateEnrolleeDocuments =
         res
     ) => {
         try {
-            await authenticateEB(req);
+            await authenticateReviewer(req);
 
             const {
                 id,
@@ -1653,7 +1739,7 @@ const approveLateEnrollee =
     ) => {
         try {
             const eb =
-                await authenticateEB(req);
+                await authenticateReviewer(req);
 
             const {
                 id,
@@ -2287,7 +2373,8 @@ const approveLateEnrollee =
                             studentId,
                             fullName,
                             yearLevel,
-                            temporaryPassword
+                            temporaryPassword,
+                            "Administrator"
                         );
 
                     if (
@@ -2552,7 +2639,7 @@ const rejectLateEnrollee =
     ) => {
         try {
             const eb =
-                await authenticateEB(req);
+                await authenticateReviewer(req);
 
             const {
                 id,
@@ -2700,7 +2787,7 @@ const requestCorrection =
     ) => {
         try {
             const eb =
-                await authenticateEB(req);
+                await authenticateReviewer(req);
 
             const {
                 id,

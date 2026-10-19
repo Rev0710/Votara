@@ -1,3 +1,4 @@
+const { issueRegistrationToken, ownsRegistration } = require("../services/registrationSessionService");
 const bcrypt = require("bcryptjs");
 
 const supabase = require("../config/supabase");
@@ -1285,7 +1286,7 @@ const sendRegistrationOTP = async (
                         "ALREADY_PENDING",
 
                     message:
-                        "This late enrollee registration is already pending Electoral Board review.",
+                        "This late enrollee registration is already pending Administrator review.",
 
                 });
             }
@@ -1540,51 +1541,8 @@ const sendRegistrationOTP = async (
         // ALREADY OTP VERIFIED
         // =================================================
 
-        if (
-            existingRegistration &&
-            existingRegistration.application_status ===
-                "otp_verified"
-        ) {
+        // Always send a fresh OTP for the existing verification screen.
 
-            return res.status(200).json({
-
-                success: true,
-
-                alreadyVerified: true,
-
-                studentFound: true,
-
-                exists: true,
-
-                isLateEnrollee: false,
-
-                registrationType:
-                    "normal",
-
-                registrationId:
-                    existingRegistration.id,
-
-                student: {
-
-                    studentId:
-                        normalizedStudentId,
-
-                    fullName:
-                        finalFullName,
-
-                    yearLevel:
-                        finalYearLevel,
-
-                    email:
-                        normalizedEmail,
-
-                },
-
-                message:
-                    "Your email has already been verified. Please continue your registration.",
-
-            });
-        }
 
 
         // =================================================
@@ -2157,6 +2115,18 @@ const verifyRegistrationOTP = async (
         // OTP VERIFIED
         // =================================================
 
+        // An old OTP must not authorize a different email or reopen a submitted application.
+        const { data: currentRegistration, error: currentError } = await supabase
+            .from("registration_applications").select("*").eq("id", otpRecord.registration_id).maybeSingle();
+        if (currentError) throw currentError;
+        if (!currentRegistration || String(currentRegistration.email || "").trim().toLowerCase() !== normalizedEmail
+            || String(currentRegistration.student_id) !== String(otpRecord.student_id)
+            || !["draft", "otp_verified", "needs_correction"].includes(currentRegistration.application_status)) {
+            return res.status(400).json({ success: false, message: "This verification code no longer matches an editable registration." });
+        }
+        const nextRegistrationStatus = currentRegistration.application_status === "needs_correction"
+            ? "needs_correction" : "otp_verified";
+
         const verifiedAt =
             new Date();
 
@@ -2166,6 +2136,7 @@ const verifyRegistrationOTP = async (
         // -------------------------------------------------
 
         const {
+            data: consumedOTP,
             error:
                 otpUpdateError,
         } = await supabase
@@ -2182,13 +2153,13 @@ const verifyRegistrationOTP = async (
             .eq(
                 "id",
                 otpRecord.id
-            );
+            ).eq("verification_status", "active").select("id").maybeSingle();
 
-        if (otpUpdateError) {
+        if (otpUpdateError || !consumedOTP) {
 
             console.error(
                 "❌ OTP update error:",
-                otpUpdateError.message
+                otpUpdateError?.message || "OTP already consumed"
             );
 
             return res.status(500).json({
@@ -2223,8 +2194,7 @@ const verifyRegistrationOTP = async (
             )
             .update({
 
-                application_status:
-                    "otp_verified",
+                application_status: nextRegistrationStatus,
 
                 otp_verified_at:
                     verifiedAt.toISOString(),
@@ -2236,7 +2206,8 @@ const verifyRegistrationOTP = async (
             .eq(
                 "id",
                 otpRecord.registration_id
-            )
+            ).eq("email", currentRegistration.email)
+            .eq("application_status", currentRegistration.application_status)
             .select()
             .single();
 
@@ -2266,6 +2237,8 @@ const verifyRegistrationOTP = async (
         return res.status(200).json({
 
             success: true,
+            registrationToken: issueRegistrationToken(updatedRegistration),
+            correctionMessage: updatedRegistration.correction_message || "",
 
             alreadyVerified:
                 false,
@@ -2276,8 +2249,7 @@ const verifyRegistrationOTP = async (
             otpVerified:
                 true,
 
-            registrationStatus:
-                "otp_verified",
+            registrationStatus: nextRegistrationStatus,
 
             message:
                 "OTP verified successfully. Please continue your registration.",
@@ -2591,26 +2563,8 @@ const resendRegistrationOTP = async (
         // ALREADY OTP VERIFIED
         // =================================================
 
-        if (
-            registration.application_status ===
-            "otp_verified"
-        ) {
+        // Always send a fresh OTP for the existing verification screen.
 
-            return res.status(200).json({
-
-                success: true,
-
-                alreadyVerified:
-                    true,
-
-                otpVerified:
-                    true,
-
-                message:
-                    "Your email has already been verified. Please continue your registration.",
-
-            });
-        }
 
 
         // =================================================
@@ -2998,6 +2952,10 @@ const submitRegistration = async (
         // DETERMINE REGISTRATION TYPE
         // =================================================
 
+        if (!ownsRegistration(req, registration)) {
+            return res.status(401).json({ success: false, message: "Please verify your registration email again before continuing." });
+        }
+
         const isLateEnrollee =
             registration.registration_type ===
             "late";
@@ -3313,7 +3271,7 @@ const submitRegistration = async (
 
             message:
                 isLateEnrollee
-                    ? "Late enrollee registration submitted successfully. Your application is now pending review by the Electoral Board."
+                    ? "Late enrollee registration submitted successfully. Your application is now pending review by the Administrator."
                     : "Registration submitted successfully. Your application is now pending review by the Electoral Board/Admin.",
 
             registration: {

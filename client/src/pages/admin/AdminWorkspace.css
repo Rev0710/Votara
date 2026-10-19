@@ -1,0 +1,221 @@
+.admin-workspace{--aw-bg:#0b1020;--aw-surface:rgba(27,38,58,.84);--aw-solid:#1b263a;--aw-text:#f0f4ff;--aw-muted:#b5c2db;--aw-border:rgba(157,182,230,.25);--aw-soft:#253752;--aw-link:#9fbcff;min-height:100dvh;color:var(--aw-text);background:var(--aw-bg);color-scheme:dark;overflow-wrap:anywhere}
+.admin-workspace[data-admin-theme=light]{--aw-bg:#f8faff;--aw-surface:rgba(255,255,255,.84);--aw-solid:#fff;--aw-text:#242b3b;--aw-muted:#52637a;--aw-border:rgba(118,143,190,.3);--aw-soft:#edf3ff;--aw-link:#2455bc;color-scheme:light}
+.admin-workspace{--admin-bg:var(--aw-bg);--admin-card:var(--aw-solid);--admin-card-soft:var(--aw-surface);--admin-text:var(--aw-text);--admin-text-secondary:var(--aw-text);--admin-text-muted:var(--aw-muted);--admin-border:var(--aw-border);--admin-input-bg:var(--aw-solid);--admin-topbar-bg:var(--aw-surface);--admin-hover:var(--aw-soft)}
+.admin-workspace *{box-sizing:border-box;min-width:0}.admin-workspace :is(.admin-dashboard,.votara-data-page,.reports-page,.system-config-page,.admin-audit-page,.admin-user-access-page,.lrm-page){background-color:var(--aw-bg)!important;color:var(--aw-text)!important;min-height:100dvh}.admin-workspace main{width:100%;max-width:1600px;margin-inline:auto}.admin-workspace :is(h1,h2,h3,h4,strong,label,th,td){color:var(--aw-text)!important}.admin-workspace :is(p,small,[class*=subtitle],[class*=description]){color:var(--aw-muted)!important;line-height:1.65}.admin-workspace :is(small,label,[class*=subtitle],[class*=description]){font-size:13px!important}.admin-workspace a{color:var(--aw-link)}
+.admin-workspace :is(section[class*=card],article[class*=card],div[class$="-card"],.student-issue-admin-item,.lrm-application,.lrm-modal,.lrm-confirm-modal,.audit-filter-section,.audit-table-container){background:var(--aw-surface)!important;border:1px solid var(--aw-border)!important;box-shadow:0 8px 24px #0000000c;border-radius:18px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:var(--aw-text)!important}
+.admin-workspace :is(input,textarea,select){background:var(--aw-solid)!important;color:var(--aw-text)!important;caret-color:var(--aw-text);border:1px solid var(--aw-border)!important;font:inherit;font-size:14px!important;max-width:100%;border-radius:10px;padding:10px 12px}.admin-workspace :is(input,textarea)::placeholder{color:var(--aw-muted)!important;opacity:1}.admin-workspace :is(button,input,textarea,select):focus-visible{outline:2px solid #6d9bff;outline-offset:3px}.admin-workspace button{font-family:inherit;cursor:pointer}.admin-workspace button:disabled{cursor:not-allowed;opacity:.55}
+.admin-workspace :is(.votara-admin-topbar,.system-config-sidebar){background:var(--aw-surface)!important;border-color:var(--aw-border)!important;color:var(--aw-text)!important}.admin-workspace .votara-admin-topbar{position:sticky;top:0;z-index:1000;display:flex;gap:14px;align-items:center;flex-wrap:nowrap;width:100%;padding:14px 22px;min-height:80px;backdrop-filter:blur(16px)}.admin-workspace .votara-admin-topnav{flex:1;min-width:0;display:flex;justify-content:center;gap:4px}.admin-workspace .votara-admin-topnav-link{font-size:12px;color:var(--aw-muted)!important;padding:12px 10px;white-space:normal}.admin-workspace :is(.votara-admin-topnav-link.active,.votara-admin-mobile-link.active){background:#155dfb!important;color:white!important}.admin-workspace .votara-admin-topbar-actions{display:flex;gap:10px;align-items:center;margin-left:auto}.admin-workspace .admin-header-tools{display:flex;gap:10px;align-items:center}.admin-workspace :is(.admin-theme-button,.votara-admin-menu-button,.votara-admin-logout){display:grid;place-items:center;flex:none;width:40px;height:40px;min-width:40px;border:1px solid var(--aw-border);background:var(--aw-solid);color:var(--aw-text)!important;border-radius:12px}.admin-workspace .admin-profile-trigger{display:flex;gap:8px;align-items:center;background:transparent;border:0;color:var(--aw-text);padding:0}.admin-profile-trigger>img,.admin-profile-trigger>span:first-child{width:38px;height:38px;border-radius:50%;object-fit:cover;display:grid;place-items:center;background:#ffbe78;color:#18233b}.admin-workspace .admin-profile-name{font-size:12px;max-width:120px}.admin-workspace .votara-admin-brand{flex:none}.admin-workspace .votara-admin-menu-button{display:none}.admin-workspace .votara-admin-mobile-menu{background:var(--aw-solid)!important;color:var(--aw-text);max-height:calc(100dvh - 80px);overflow:auto}.admin-workspace .votara-admin-mobile-link{color:var(--aw-text)}.admin-workspace .votara-topbar-environment{display:none!important}
+.admin-feature-page{padding:clamp(18px,3vw,40px);max-width:1500px;margin:auto}.admin-pagination{display:flex;justify-content:flex-end;align-items:center;gap:12px;flex-wrap:wrap;padding:18px}.admin-pagination button{padding:10px 16px;border:1px solid var(--aw-border);background:var(--aw-solid);color:var(--aw-text);border-radius:10px}.admin-pagination span{margin-right:auto;color:var(--aw-muted);font-size:14px}.admin-workspace :is(.dm-table-wrap,.audit-table-wrapper,[class*=table-container]){max-width:100%;overflow-x:auto}.admin-workspace table{width:100%;border-collapse:collapse}.admin-workspace :is(th,td){padding:14px;text-align:left;border-color:var(--aw-border)!important;font-size:13px}.admin-workspace :is(thead,tr,tbody){background:transparent!important}
+.admin-workspace :is(.maintenance-reference-body,.troubleshooting-reference-review,.backup-reference-body,.security-reference-body){gap:24px;padding:24px}.admin-workspace :is(.maintenance-reference-row,.backup-reference-row,.security-reference-row,.security-session-row){display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px 0}.admin-workspace :is(.maintenance-reference-copy,.backup-reference-copy,.security-reference-copy){flex:1}.admin-workspace :is(.maintenance-reference-copy,.backup-reference-copy,.security-reference-copy) span{display:block;color:var(--aw-muted);font-size:13px;line-height:1.6}.admin-workspace :is(.troubleshooting-reference-card,.security-reference-card,.backup-reference-card,.platform-notice-reference-card){margin-bottom:22px}.admin-workspace :is(.troubleshooting-reference-card-header,.security-reference-card-header,.backup-reference-card-header,.platform-notice-reference-card-header){padding:22px;gap:18px;align-items:center}.admin-workspace .troubleshooting-reference-review{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}.admin-workspace .troubleshooting-reference-incidents{padding:22px;line-height:1.6;font-size:14px}.admin-workspace .student-issue-admin-list{display:grid;gap:18px;padding:18px}.admin-workspace .student-issue-admin-item{padding:22px}.admin-workspace .student-issue-admin-item-head{display:flex;justify-content:space-between;gap:16px}.admin-workspace .student-issue-admin-item-head :is(span,small){display:block;color:var(--aw-muted);margin-top:5px}.admin-workspace .student-issue-admin-response{display:grid;gap:8px}.admin-workspace .student-issue-admin-tools,.admin-workspace .student-issue-admin-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.admin-workspace .student-issue-admin-response textarea{width:100%;min-height:100px}.admin-workspace :is(.system-config-reference-discard,.security-log-button,.backup-reference-secondary){color:var(--aw-text)!important;background:var(--aw-solid)!important;border-color:var(--aw-border)!important;font-size:13px!important}.admin-workspace .audit-stat-card{display:flex;align-items:center;gap:12px;padding:20px}.admin-workspace .audit-stat-card :is(strong,span){display:block}
+.admin-modal-overlay{position:fixed;inset:0;z-index:15000;display:grid;place-items:center;background:#07101db3;padding:18px}.admin-profile-modal{background:var(--aw-solid);color:var(--aw-text);border:1px solid var(--aw-border);border-radius:20px;width:min(100%,600px);max-height:calc(100dvh - 36px);overflow:auto;padding:24px;box-shadow:0 24px 70px #0004}.admin-profile-modal header,.admin-profile-modal footer{display:flex;align-items:center;justify-content:space-between;gap:16px}.admin-profile-modal form,.admin-profile-modal label{display:grid;gap:10px}.admin-profile-modal form{gap:18px;margin-top:20px}.admin-profile-modal button{background:var(--aw-soft);color:var(--aw-text);border:1px solid var(--aw-border);border-radius:10px;padding:10px 16px}.admin-profile-modal .admin-primary{background:#155dfb;color:white}.admin-profile-preview{width:88px;height:88px;object-fit:cover;border-radius:50%}.platform-admin-maintenance{padding:12px 20px;background:#fff1c2;color:#594100;font:600 14px/1.6 Arial,sans-serif;position:relative;z-index:1001}
+.student-dashboard .top-navbar{grid-template-columns:minmax(0,1fr) minmax(130px,240px) 44px 40px}.student-dashboard .student-platform-bell{display:flex;color:var(--student-text)}.student-dashboard .top-navbar .student-platform-bell .platform-bell{border-color:var(--student-border)}
+@media(max-width:1500px){.admin-workspace .votara-admin-topnav{display:none!important}.admin-workspace .votara-admin-menu-button{display:grid!important}.admin-workspace .votara-admin-mobile-menu.open{display:block!important;position:absolute;top:100%;left:0;right:0;padding:18px}.admin-workspace .votara-admin-mobile-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}}
+@media(max-width:1000px){.admin-workspace :is(.system-config-shell,.system-config-layout){grid-template-columns:minmax(0,1fr)!important}.admin-workspace .system-config-sidebar{position:relative!important;width:100%!important;height:auto!important}.admin-workspace .system-config-sidebar nav{display:flex;overflow:auto;gap:8px}.admin-workspace .system-config-sidebar nav button{flex:none;white-space:nowrap}.admin-workspace .system-config-sidebar-footer{display:none}.admin-workspace .system-config-main{margin-left:0!important;width:100%!important;padding:22px!important}.admin-workspace :is(.maintenance-reference-body,.troubleshooting-reference-review,.backup-reference-body){grid-template-columns:minmax(0,1fr)!important}.student-dashboard .top-navbar{grid-template-columns:minmax(0,1fr) 40px 40px}.student-dashboard .top-navbar .student-platform-bell{grid-column:3;grid-row:2}.student-dashboard .top-navbar .nav-left{grid-column:1/-1}}
+@media(max-width:720px){.admin-workspace .votara-admin-topbar{padding:12px;gap:8px}.admin-workspace .votara-admin-brand{width:auto;min-width:0}.admin-workspace .votara-admin-brand-name{font-size:22px}.admin-workspace .admin-header-tools,.admin-workspace .votara-admin-topbar-actions{gap:7px}.admin-workspace .admin-profile-name{display:none}.admin-workspace .votara-admin-mobile-nav{grid-template-columns:1fr}.admin-workspace main{padding:18px!important}.admin-workspace :is(.votara-admin-stats,.admin-stats-grid,.dm-stats-grid,.reports-stats-grid,.audit-stats-grid,.troubleshooting-reference-status-grid){grid-template-columns:repeat(2,minmax(0,1fr))!important}.admin-workspace :is(.dm-overview-grid,.dm-analytics-grid,.reports-charts-grid,.admin-main-grid,.admin-dashboard-grid){grid-template-columns:minmax(0,1fr)!important}.admin-workspace :is(.maintenance-reference-row,.backup-reference-row,.security-reference-row){flex-wrap:wrap}.admin-workspace .system-config-main{padding:16px!important}.admin-workspace .admin-profile-modal :is(input,textarea){font-size:16px!important}.admin-workspace [class*=card]{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}.admin-workspace .votara-admin-topbar{background:var(--aw-solid)!important;backdrop-filter:none}}
+@media(max-width:430px){.admin-workspace .votara-admin-brand-name{display:none}.admin-workspace :is(.votara-admin-stats,.admin-stats-grid,.dm-stats-grid,.reports-stats-grid,.audit-stats-grid,.troubleshooting-reference-status-grid){grid-template-columns:minmax(0,1fr)!important}}
+@media(prefers-reduced-motion:reduce),(prefers-reduced-transparency:reduce){.admin-workspace *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;animation:none!important;transition:none!important}}
+.page-transition:has(.admin-workspace){animation:none;transform:none}
+.admin-workspace :is(.admin-system-dashboard-grid,.votara-dashboard-grid){gap:20px;align-items:start}
+.admin-workspace .admin-action-button,.admin-workspace .admin-recovery-point button{padding:10px 16px;margin:8px 8px 8px 0;border:1px solid var(--aw-border);background:var(--aw-solid);color:var(--aw-text);border-radius:10px}
+@media(max-width:1000px){.admin-workspace .admin-system-dashboard-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.admin-workspace .votara-dashboard-grid{grid-template-columns:minmax(0,1fr)!important}}
+@media(max-width:430px){.admin-workspace .admin-system-dashboard-grid{grid-template-columns:minmax(0,1fr)!important}}
+/* Override legacy canvas and fixed-width header rules in both themes. */
+.admin-workspace main { background-color:var(--aw-bg)!important; }
+.admin-workspace .votara-admin-topbar-actions { width:auto!important;min-width:max-content!important;flex:0 0 auto!important; }
+.admin-workspace .admin-header-tools { width:auto!important;min-width:max-content!important;flex:0 0 auto!important; }
+.admin-workspace .admin-profile-trigger { flex:none;white-space:nowrap; }
+.admin-workspace .admin-profile-name { width:auto;white-space:nowrap; }
+.admin-workspace :is(button[class*=card],.system-overview-row,.admin-live-metric,.live-metric) { background:var(--aw-surface)!important;color:var(--aw-text)!important;border-color:var(--aw-border)!important; }
+.admin-workspace .system-overview-row :is(strong,span) { color:var(--aw-text); }
+.admin-workspace .system-overview-row small { color:var(--aw-muted); }
+.admin-workspace .platform-bell { color:var(--aw-text);background:var(--aw-solid);border-color:var(--aw-border); }
+.admin-workspace .platform-notification-panel { background:var(--aw-solid);color:var(--aw-text); }
+.admin-workspace .platform-notification-panel :is(p,button,strong) { color:var(--aw-text)!important; }
+.admin-workspace { --system-config-bg:var(--aw-bg);--system-config-panel:var(--aw-surface);--system-config-panel-2:var(--aw-soft);--system-config-input:var(--aw-solid);--system-config-border:var(--aw-border);--system-config-text:var(--aw-text);--system-config-muted:var(--aw-muted);--audit-bg:var(--aw-bg);--audit-bg-2:var(--aw-bg);--audit-panel:var(--aw-surface);--audit-panel-soft:var(--aw-surface);--audit-text:var(--aw-text);--audit-text-soft:var(--aw-muted);--audit-text-muted:var(--aw-muted);--audit-border:var(--aw-border);--audit-border-soft:var(--aw-border);--dm-bg:var(--aw-bg);--dm-bg-deep:var(--aw-bg);--dm-card:var(--aw-surface);--dm-card-soft:var(--aw-surface);--dm-text:var(--aw-text);--dm-text-secondary:var(--aw-muted);--dm-text-muted:var(--aw-muted);--dm-text-dim:var(--aw-muted);--dm-border:var(--aw-border); }
+.admin-workspace .votara-admin-logout { background:var(--aw-solid)!important;color:var(--aw-text)!important; }
+.admin-workspace .dashboard-live-metrics > div { background:var(--aw-soft)!important;color:var(--aw-text);border-color:var(--aw-border)!important; }
+.admin-workspace .dashboard-live-metrics span { color:var(--aw-muted)!important; }
+.admin-workspace :is(.reports-toolbar,.reports-election-banner,.reports-panel,.reports-summary-card,.reports-stat-card) { background:var(--aw-surface)!important;border-color:var(--aw-border)!important;color:var(--aw-text); }
+.admin-workspace .system-config-sidebar { top:80px!important;width:224px!important;min-width:224px!important;height:calc(100dvh - 80px)!important;z-index:900!important; }
+.admin-workspace .system-config-reference-main { width:calc(100% - 224px)!important;margin-left:224px!important;max-width:none;padding:32px!important; }
+.admin-workspace .system-config-sidebar-nav button { min-height:44px;color:var(--aw-text);font-size:14px;cursor:pointer; }
+.admin-workspace .system-config-sidebar-nav button.active { background:#155dfb;color:#fff; }
+.admin-workspace .system-config-sidebar-title { color:var(--aw-muted); }
+.admin-workspace .lrm-overlay { z-index:12000; }
+.admin-workspace :is(.lrm-review-modal,.lrm-file-modal,.lrm-confirm,.lrm-list-panel,.lrm-empty-panel,.lrm-info-item,.lrm-file-card) { background:var(--aw-solid)!important;color:var(--aw-text);border-color:var(--aw-border); }
+.admin-workspace :is(.lrm-review-modal,.lrm-file-modal,.lrm-confirm) { max-height:calc(100dvh - 36px);overflow:auto; }
+.admin-workspace :is(.lrm-profile-name,.lrm-info-value,.lrm-doc-title,.lrm-modal-head,.lrm-profile-meta,.lrm-app-name,.lrm-app-id,.lrm-file-title,.lrm-checklist-row) { color:var(--aw-text)!important; }
+.admin-workspace :is(.lrm-app-card,.lrm-application-item,.lrm-doc-card,.lrm-selfie-card) { background:var(--aw-surface)!important;color:var(--aw-text);border-color:var(--aw-border); }
+@media(max-width:1000px){
+ .admin-workspace .system-config-sidebar { display:flex!important;position:relative!important;inset:auto!important;transform:none!important;visibility:visible!important;opacity:1!important;width:100%!important;min-width:0!important;height:auto!important;padding:14px!important; }
+ .admin-workspace .system-config-sidebar-nav { flex-direction:row; }
+ .admin-workspace .system-config-sidebar-nav button { width:auto;min-height:42px; }
+ .admin-workspace .system-config-reference-main { width:100%!important;margin-left:0!important;padding:20px!important; }
+}
+.admin-workspace p { font-size:14px!important; }
+.admin-workspace button { overflow-wrap:normal; }
+.admin-workspace :is(.admin-system-dashboard-refresh,.votara-refresh-button,.admin-system-refresh-btn) { min-width:105px;white-space:nowrap; }
+.admin-workspace .system-config-reference-main :is(.maintenance-reference-row strong,.backup-reference-row strong,.security-reference-row strong) { font-size:14px!important; }
+.admin-workspace .system-config-reference-main :is(.maintenance-reference-row span,.maintenance-reference-card-header p,.system-config-reference-title p) { font-size:13px!important; }
+@media(max-width:1000px){
+ .admin-workspace .system-config-sidebar-nav { display:flex!important;flex-direction:row!important;overflow:auto;gap:8px; }
+ .admin-workspace .system-config-sidebar-nav button { width:max-content!important;flex:0 0 auto!important; }
+ .admin-workspace :is(.system-config-mobile-menu-toggle,.system-config-mobile-backdrop) { display:none!important; }
+}
+.admin-workspace .admin-dashboard-refresh { min-width:110px;flex-shrink:0;white-space:nowrap; }
+.admin-workspace .admin-acknowledgement { display:flex;gap:12px;align-items:flex-start;font-size:14px;line-height:1.6;margin:20px 0; }
+.admin-workspace .admin-acknowledgement input { flex:none;width:18px;height:18px;padding:0; }
+.admin-workspace :is(.lrm-name,.lrm-info-box,.lrm-info-value,.lrm-doc-name,.lrm-file-name) { color:var(--aw-text)!important; }
+.admin-workspace .lrm-info-box { background:var(--aw-soft)!important; }
+.admin-workspace :is(.dm-panel,.dm-stat-card,.dm-module-card,.reports-toolbar,.reports-election-banner,.reports-panel,.audit-filter-card,.audit-table-card) { background:var(--aw-surface)!important;color:var(--aw-text);border-color:var(--aw-border)!important;backdrop-filter:blur(14px); }
+.admin-workspace select { min-height:44px;height:auto!important;line-height:1.4; }
+.admin-workspace :is(.dm-panel-heading,.dm-panel-header,.dm-year-label,.dm-stat-label,.dm-record-name,.dm-record-id,.reports-field-label,.reports-election-info > span) { color:var(--aw-text)!important; }
+.admin-workspace[data-admin-theme] .audit-page { background-color:var(--aw-bg)!important;color:var(--aw-text)!important;--audit-bg:var(--aw-bg);--audit-bg-2:var(--aw-bg);--audit-panel:var(--aw-surface);--audit-panel-soft:var(--aw-surface);--audit-text:var(--aw-text);--audit-text-soft:var(--aw-muted);--audit-text-muted:var(--aw-muted);--audit-border:var(--aw-border);--audit-border-soft:var(--aw-border); }
+.admin-workspace[data-admin-theme] .audit-page :is(h1,h2,h3,h4,strong,label,th,td) { color:var(--aw-text)!important; }
+.admin-workspace[data-admin-theme] .audit-page :is(input,select,textarea) { background:var(--aw-solid)!important;color:var(--aw-text)!important; }
+.admin-workspace[data-admin-theme] .audit-page :is(.audit-search-field,.audit-input-wrap,.audit-search-input){background:transparent!important;}
+.admin-workspace[data-admin-theme] .audit-page :is(.audit-stat-title,.audit-stat-label,.audit-stat-card p) { color:var(--aw-muted)!important;font-size:13px!important; }
+.admin-workspace[data-admin-theme] .audit-page :is(.audit-clear-btn,.audit-refresh-btn,.audit-secondary-btn,.audit-pagination-buttons button) { background:var(--aw-solid)!important;color:var(--aw-text)!important;border-color:var(--aw-border)!important; }
+.admin-workspace[data-admin-theme=light] .dm-status.active { color:#146b3b!important;background:#e7f6ee!important; }
+.admin-workspace[data-admin-theme=light] :is(.dm-status.late_enrollee,.lrm-status.pending) { color:#674b00!important;background:#fff2c8!important; }
+
+.admin-workspace .system-config-sidebar-nav button{color:var(--aw-text)!important;font-size:14px!important;line-height:1.4;min-height:44px}.admin-workspace .system-config-sidebar-nav button.active{color:#fff!important}
+@media(max-width:720px){.admin-workspace :is(section,article,div[class$="-card"]){backdrop-filter:none!important;-webkit-backdrop-filter:none!important}}
+
+.admin-workspace .lrm-review-modal :is(.lrm-section-heading,.lrm-section-heading span,.lrm-document-name,.lrm-file-name){color:var(--aw-text)!important}.admin-workspace .lrm-review-modal :is(.lrm-document-type,.lrm-section-count){color:var(--aw-muted)!important}.admin-workspace .lrm-document{background:var(--aw-soft)!important;border-color:var(--aw-border)!important}.admin-workspace .lrm-close{background:var(--aw-soft)!important;color:var(--aw-text)!important}
+/* Theme-safe configuration typography and nested surfaces. */
+.admin-workspace[data-admin-theme] .system-config-reference-main {font-size:15px;line-height:1.6}
+.admin-workspace[data-admin-theme] .system-config-reference-main :is(h2,h3,strong,label){color:var(--aw-text)!important}
+.admin-workspace[data-admin-theme] .system-config-reference-main h2{font-size:19px!important;line-height:1.35!important}
+.admin-workspace[data-admin-theme] .system-config-reference-main h3{font-size:15px!important;line-height:1.4!important}
+.admin-workspace[data-admin-theme] .system-config-reference-main :is(p,li,small){color:var(--aw-muted)!important;font-size:14px!important;line-height:1.65!important}
+.admin-workspace[data-admin-theme] .system-config-reference-main :is(.security-policy-row,.security-session-row) strong{font-size:15px!important}
+.admin-workspace[data-admin-theme] .system-config-reference-main :is(.security-policy-row,.security-session-row) span{font-size:14px!important;line-height:1.6!important;color:var(--aw-muted)!important}
+.admin-workspace[data-admin-theme] .system-config-reference-main :is(input,select,textarea){background:var(--aw-solid)!important;color:var(--aw-text)!important;border:1px solid var(--aw-border)!important;font-size:15px!important;min-height:44px}
+.admin-workspace[data-admin-theme] .system-config-reference-main button{font-size:14px!important;line-height:1.4!important;min-height:42px}
+.admin-workspace[data-admin-theme] .system-config-reference-main :is(.security-secondary-button,.security-log-button,.security-session-row button,.security-account-recovery button,.troubleshooting-reference-secondary,.troubleshooting-reference-side-actions button,.platform-notice-reference-clear){background:var(--aw-soft)!important;color:var(--aw-text)!important;border:1px solid var(--aw-border)!important}
+.admin-workspace[data-admin-theme] .system-config-reference-main :is(.security-primary-button,.troubleshooting-reference-primary,.system-config-reference-primary,.platform-notice-reference-review){background:#155dfb!important;color:#fff!important}
+.admin-workspace[data-admin-theme] .troubleshooting-reference-status-grid{background:var(--aw-soft)!important;border:1px solid var(--aw-border)!important;border-radius:14px;padding:18px!important;gap:18px!important}
+.admin-workspace[data-admin-theme] .troubleshooting-reference-status-grid > div{padding:0 16px!important;min-width:0}
+.admin-workspace[data-admin-theme] .troubleshooting-reference-status-grid span{display:block;color:var(--aw-muted)!important;font-size:13px!important;margin-bottom:5px}
+.admin-workspace[data-admin-theme] .troubleshooting-reference-status-grid strong{font-size:15px!important;color:var(--aw-text)!important}
+.admin-workspace[data-admin-theme] .troubleshooting-reference-status-grid .status-operational{color:#5de9ac!important}
+.admin-workspace[data-admin-theme=light] .troubleshooting-reference-status-grid .status-operational{color:#147443!important}
+.admin-workspace[data-admin-theme] .troubleshooting-reference-card.otp-card{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr)!important;gap:24px!important;padding:24px!important}
+.admin-workspace[data-admin-theme] .troubleshooting-reference-card.otp-card > *{width:auto!important;margin:0!important;padding:0!important;min-width:0}
+.admin-workspace[data-admin-theme] .troubleshooting-reference-impact{grid-column:2;grid-row:1 / span 2}
+.admin-workspace[data-admin-theme] .troubleshooting-reference-investigation{grid-column:1}
+.admin-workspace[data-admin-theme] .troubleshooting-reference-side-actions{grid-column:2;display:flex;flex-wrap:wrap;gap:12px!important;align-items:start}
+.admin-workspace[data-admin-theme] .troubleshooting-reference-side-actions button{flex:1 1 180px;padding:10px 16px!important}
+.admin-workspace[data-admin-theme] .troubleshooting-reference-footnote{grid-column:1/-1}
+.admin-workspace[data-admin-theme] :is(.maintenance-reference-preview,.maintenance-reference-preview-box,.platform-notice-reference-preview-box){background:var(--aw-soft)!important;color:var(--aw-text)!important;border:1px solid var(--aw-border)!important;padding:20px!important;border-radius:14px}
+.admin-workspace[data-admin-theme] :is(.maintenance-reference-preview,.maintenance-reference-preview-box,.platform-notice-reference-preview-box) :is(span,strong,p){color:var(--aw-text)!important;font-size:14px!important;line-height:1.6!important}
+.admin-workspace[data-admin-theme] .dm-search{height:44px!important;padding:0 12px!important;background:var(--aw-solid)!important;border:1px solid var(--aw-border)!important;color:var(--aw-muted)!important;border-radius:12px;gap:10px;flex:1 1 240px;min-width:0!important}
+.admin-workspace[data-admin-theme] .dm-search input{background:transparent!important;border:0!important;outline:0!important;box-shadow:none!important;border-radius:0!important;padding:0!important;height:100%;min-height:0!important}
+.admin-workspace[data-admin-theme] .dm-search:focus-within{outline:2px solid #6d9bff;outline-offset:2px}
+.admin-workspace[data-admin-theme] .dm-dropzone{background:var(--aw-soft)!important;border:1px dashed var(--aw-link)!important}
+.admin-workspace[data-admin-theme] .dm-dropzone span{color:var(--aw-muted)!important;font-size:13px!important;line-height:1.5!important}
+.admin-workspace[data-admin-theme] .dm-dropzone strong{font-size:15px!important}
+.admin-workspace[data-admin-theme] :is(.dm-format-row,.dm-format-list,.dm-protected-note) :is(span,small,code){font-size:13px!important;color:var(--aw-muted)!important;line-height:1.6}
+@media(max-width:760px){
+ .admin-workspace[data-admin-theme] .troubleshooting-reference-card.otp-card{grid-template-columns:minmax(0,1fr)!important;padding:20px!important;gap:20px!important}
+ .admin-workspace[data-admin-theme] .troubleshooting-reference-card.otp-card > *{grid-column:1!important;grid-row:auto!important}
+ .admin-workspace[data-admin-theme] .troubleshooting-reference-status-grid{grid-template-columns:1fr!important}
+ .admin-workspace[data-admin-theme] .troubleshooting-reference-status-grid > div{padding:0!important;border:0!important}
+ .admin-workspace[data-admin-theme] .security-policy-row{flex-direction:column!important;align-items:stretch!important;gap:12px!important}
+ .admin-workspace[data-admin-theme] .security-policy-row select{width:100%!important;max-width:none!important}
+}
+.admin-workspace[data-admin-theme] .maintenance-reference-alert{background:var(--aw-soft)!important;border:1px solid var(--aw-border)!important;color:var(--aw-text)!important;border-radius:14px;padding:18px!important}
+.admin-workspace[data-admin-theme] .maintenance-reference-alert :is(span,strong){color:var(--aw-text)!important;font-size:14px!important;line-height:1.6!important}
+/* One continuous admin canvas, including the gutters around constrained content. */
+.admin-workspace[data-admin-theme]{--aw-dot:rgba(100,144,224,.28);width:100%;max-width:none;min-height:100dvh;background-color:var(--aw-bg)!important;background-image:radial-gradient(circle,var(--aw-dot) 1px,transparent 1.2px)!important;background-size:24px 24px!important;background-position:0 0}
+.admin-workspace[data-admin-theme=light]{--aw-dot:rgba(94,131,200,.25)}
+.admin-workspace[data-admin-theme] > div,
+.admin-workspace[data-admin-theme] main,
+.admin-workspace[data-admin-theme] :is(.admin-dashboard,.votara-data-page,.reports-page,.system-config-page,.admin-audit-page,.audit-page,.admin-user-access-page,.lrm-page){background-color:transparent!important;background-image:none!important}
+.admin-workspace[data-admin-theme] main::before{background:none!important}
+.admin-workspace[data-admin-theme] .maintenance-reference-body{display:grid!important;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)!important;gap:24px!important;align-items:start!important;padding:24px!important}
+.admin-workspace[data-admin-theme] .maintenance-reference-preview{align-self:start!important;height:auto!important;min-height:0!important;padding:20px!important}
+.admin-workspace[data-admin-theme] .maintenance-reference-row{display:grid!important;grid-template-columns:minmax(0,1fr) auto;gap:16px!important;align-items:center!important;padding:18px 0!important}
+.admin-workspace[data-admin-theme] .maintenance-reference-row input[type=datetime-local]{width:210px;max-width:100%;min-height:44px}
+.admin-workspace[data-admin-theme] .system-config-reference-main .system-config-toggle{display:block!important;position:relative!important;width:46px!important;min-width:46px!important;max-width:46px!important;height:26px!important;min-height:26px!important;max-height:26px!important;padding:0!important;flex:none!important;border:0!important;border-radius:999px!important;background:#65718a!important;box-shadow:none!important;cursor:pointer}
+.admin-workspace[data-admin-theme] .system-config-reference-main .system-config-toggle span{position:absolute!important;display:block!important;top:3px!important;left:3px!important;width:20px!important;height:20px!important;min-width:20px!important;margin:0!important;border-radius:50%!important;background:#fff!important;transform:none!important;transition:transform .15s ease}
+.admin-workspace[data-admin-theme] .system-config-reference-main .system-config-toggle.active{background:#155dfb!important}
+.admin-workspace[data-admin-theme] .system-config-reference-main .system-config-toggle.active span{transform:translateX(20px)!important}
+.admin-workspace[data-admin-theme] .troubleshooting-reference-card.otp-card{grid-template-areas:"title impact" "investigation actions" "foot foot";grid-template-rows:auto auto auto!important;align-items:start!important}
+.admin-workspace[data-admin-theme] .otp-card .troubleshooting-reference-card-header{grid-area:title!important}
+.admin-workspace[data-admin-theme] .otp-card .troubleshooting-reference-impact{grid-area:impact!important}
+.admin-workspace[data-admin-theme] .otp-card .troubleshooting-reference-investigation{grid-area:investigation!important}
+.admin-workspace[data-admin-theme] .otp-card .troubleshooting-reference-side-actions{grid-area:actions!important;display:flex!important;flex-direction:row!important;align-items:start!important;align-content:start!important;align-self:start!important;justify-content:flex-start!important;height:auto!important;min-height:0!important;gap:12px!important}
+.admin-workspace[data-admin-theme] .otp-card .troubleshooting-reference-side-actions button{width:auto!important;height:auto!important;min-height:44px!important;max-height:none!important;flex:0 1 auto!important;padding:10px 16px!important;border-radius:10px!important;line-height:1.4!important}
+.admin-workspace[data-admin-theme] .otp-card .troubleshooting-reference-footnote{grid-area:foot!important}
+@media(max-width:1200px){.admin-workspace[data-admin-theme] .maintenance-reference-body{grid-template-columns:minmax(0,1fr)!important}.admin-workspace[data-admin-theme] .maintenance-reference-preview{width:100%!important}}
+@media(max-width:760px){
+ .admin-workspace[data-admin-theme] .troubleshooting-reference-card.otp-card{grid-template-areas:"title" "impact" "investigation" "actions" "foot"!important;grid-template-columns:minmax(0,1fr)!important}
+ .admin-workspace[data-admin-theme] .maintenance-reference-body{padding:18px!important;gap:18px!important}
+ .admin-workspace[data-admin-theme] .maintenance-reference-row:has(input[type=datetime-local]){grid-template-columns:minmax(0,1fr)!important}
+ .admin-workspace[data-admin-theme] .maintenance-reference-row input[type=datetime-local]{width:100%!important}
+ .admin-workspace[data-admin-theme] .maintenance-reference-row .system-config-reference-badge{font-size:12px;max-width:100px}
+ .admin-workspace[data-admin-theme] .otp-card .troubleshooting-reference-side-actions button{flex:1 1 160px!important}
+ .admin-workspace[data-admin-theme] *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;animation:none!important}
+}
+.admin-workspace[data-admin-theme] .maintenance-reference-control{width:240px!important;max-width:100%!important;min-width:0!important;background:transparent!important;border:0!important;padding:0!important}
+.admin-workspace[data-admin-theme] .maintenance-reference-control input[type=datetime-local]{width:100%!important;font-size:14px!important;padding:10px!important}
+.admin-workspace[data-admin-theme] .maintenance-reference-control > svg{display:none!important}
+@media(max-width:760px){.admin-workspace[data-admin-theme] .maintenance-reference-control{width:100%!important}}
+.admin-workspace[data-admin-theme]{font-size:15px;line-height:1.6}
+.admin-workspace[data-admin-theme] :is(.ua-page,.ua-main,.user-access-page){background:transparent!important;color:var(--aw-text)!important}
+.admin-workspace[data-admin-theme] :is(.ua-card,.ua-account-row,.ua-detail-modal,.ua-password-box){background:var(--aw-surface)!important;border-color:var(--aw-border)!important;color:var(--aw-text)!important}
+.admin-workspace[data-admin-theme] :is(.ua-card,.ua-main) :is(h1,h2,h3,strong,label){color:var(--aw-text)!important}
+.admin-workspace[data-admin-theme] :is(.ua-card,.ua-main) :is(p,small,.ua-account-email){color:var(--aw-muted)!important;font-size:14px!important}
+.admin-workspace[data-admin-theme] .ua-card :is(input,select,textarea){font-size:15px!important;min-height:44px}
+.admin-workspace[data-admin-theme] .audit-search-input-wrap{display:flex;align-items:center;background:var(--aw-solid)!important;border:1px solid var(--aw-border)!important;border-radius:10px}
+.admin-workspace[data-admin-theme] .audit-stat-icon{display:grid;place-items:center;width:34px;height:34px;flex:none;border:0!important;border-radius:10px;background:var(--aw-soft)!important}
+.admin-workspace[data-admin-theme] .audit-page :is(.audit-stat-title,.audit-stat-value){line-height:1.4}
+@media(max-width:760px){.admin-workspace[data-admin-theme] :is(.ua-create-grid,.ua-main-grid,.ua-role-switcher,.ua-account-sections){grid-template-columns:minmax(0,1fr)!important}.admin-workspace[data-admin-theme] .ua-account-row{flex-wrap:wrap;gap:12px}.admin-workspace[data-admin-theme] .ua-card{padding:18px!important}}
+@media(max-width:900px){.admin-workspace[data-admin-theme] :is(.admin-user-access-grid,.ua-role-switcher,.ua-account-sections){grid-template-columns:minmax(0,1fr)!important}.admin-workspace[data-admin-theme] .admin-user-access-shell{padding:18px!important;max-width:100%!important}.admin-workspace[data-admin-theme] .ua-role-card{min-width:0!important;width:100%!important}}
+/* Light-mode detail surfaces and glass navigation. */
+.admin-workspace[data-admin-theme] > div{overflow:visible!important}
+.admin-workspace[data-admin-theme] .votara-admin-topbar{position:sticky!important;top:0!important;z-index:1000!important;background:rgba(27,38,58,.76)!important;backdrop-filter:blur(12px)!important;-webkit-backdrop-filter:blur(12px)!important;border-bottom:1px solid var(--aw-border)!important}
+.admin-workspace[data-admin-theme=light] .votara-admin-topbar{background:rgba(255,255,255,.76)!important}
+.admin-workspace[data-admin-theme] :is(.admin-user-access-number,.dm-page-number,.dm-heading-number){background:transparent!important;box-shadow:none!important;border:0!important;color:var(--aw-link)!important}
+.admin-workspace[data-admin-theme] .dm-refresh{background:var(--aw-soft)!important;color:var(--aw-text)!important;border:1px solid var(--aw-border)!important;min-height:44px}
+.admin-workspace[data-admin-theme] .dm-refresh :is(span,svg){color:var(--aw-text)!important}
+.admin-workspace[data-admin-theme] .dm-donut::before{background:var(--aw-solid)!important}
+.admin-workspace[data-admin-theme] .dm-donut :is(strong,span){color:var(--aw-text)!important}
+.admin-workspace[data-admin-theme] .dm-legend :is(span,b){color:var(--aw-muted)!important;font-size:13px!important}
+.admin-workspace[data-admin-theme] :is(.ua-upload,.ua-modal-grid > div,.ua-modal-security-note){background:var(--aw-soft)!important;border-color:var(--aw-border)!important;color:var(--aw-text)!important}
+.admin-workspace[data-admin-theme] .ua-upload :is(strong,span,svg){color:var(--aw-text)!important}
+.admin-workspace[data-admin-theme] :is(.ua-secondary-button,.ua-icon-button,.ua-refresh-button){background:var(--aw-soft)!important;color:var(--aw-text)!important;border-color:var(--aw-border)!important}
+.admin-workspace[data-admin-theme] .ua-secondary-button:disabled{color:var(--aw-muted)!important;opacity:1!important;background:var(--aw-soft)!important}
+.admin-workspace[data-admin-theme] .ua-account-modal{background:var(--aw-solid)!important;color:var(--aw-text)!important;border-color:var(--aw-border)!important;max-height:calc(100dvh - 40px);overflow:auto}
+.admin-workspace[data-admin-theme] .ua-account-modal :is(h2,h3,strong){color:var(--aw-text)!important}
+.admin-workspace[data-admin-theme] .ua-account-modal :is(p,small,span){color:var(--aw-muted)!important;font-size:14px!important;line-height:1.6}
+.admin-workspace[data-admin-theme] .ua-modal-actions{background:var(--aw-solid)!important}
+.admin-workspace[data-admin-theme] .platform-notice-reference-template-row button{background:var(--aw-soft)!important;color:var(--aw-text)!important;border-color:var(--aw-border)!important}
+.admin-workspace[data-admin-theme] .platform-notice-published-status{background:var(--aw-soft)!important;color:var(--aw-text)!important;font-size:14px!important}
+.admin-workspace[data-admin-theme] .platform-published-message{padding:18px 24px;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--aw-text)!important;font-size:15px!important}
+.admin-workspace[data-admin-theme] .audit-page :is(tbody,.audit-table-body,.audit-row,.audit-table-row,.audit-description){background:var(--aw-solid)!important;border-color:var(--aw-border)!important;color:var(--aw-text)!important}
+.admin-workspace[data-admin-theme] .audit-page :is(.audit-action-badge,.audit-category-badge,.audit-severity-badge,.audit-module-badge,.audit-detail-button,.audit-view-button){background:var(--aw-soft)!important;color:var(--aw-text)!important;border-color:var(--aw-border)!important;font-size:13px!important;line-height:1.5}
+.admin-workspace[data-admin-theme] .audit-page .audit-description{color:var(--aw-muted)!important;font-size:14px!important}
+.admin-workspace[data-admin-theme] :is(.reports-results-panel,.reports-position-card,.reports-position-header,.reports-candidate-row){background:var(--aw-surface)!important;border:1px solid var(--aw-border)!important;color:var(--aw-text)!important}
+.admin-workspace[data-admin-theme] .reports-candidate-main :is(strong,span){color:var(--aw-text)!important;font-size:14px!important}
+.admin-workspace[data-admin-theme] :is(.reports-result-status,.reports-winner-badge){color:#6aefb0!important;background:#174a38!important;font-size:12px!important}
+.admin-workspace[data-admin-theme=light] :is(.reports-result-status,.reports-winner-badge){color:#146b3b!important;background:#e3f5eb!important}
+@media(max-width:760px){.admin-workspace[data-admin-theme] .votara-admin-topbar{background:var(--aw-solid)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}.admin-workspace[data-admin-theme] .ua-modal-backdrop{padding:12px!important}.admin-workspace[data-admin-theme] .ua-account-modal{max-width:100%;width:100%!important}.admin-workspace[data-admin-theme] .ua-modal-grid{grid-template-columns:1fr!important}}
+.admin-workspace[data-admin-theme] .reports-candidate-votes em{color:#6aefb0!important;background:#174a38!important;font-size:12px!important}
+.admin-workspace[data-admin-theme=light] .reports-candidate-votes em{color:#146b3b!important;background:#e3f5eb!important}
+.admin-workspace[data-admin-theme] .reports-candidate-votes :is(strong,span){color:var(--aw-text)!important}
+.admin-workspace[data-admin-theme] .audit-page :is(.audit-view-btn,.audit-category,.audit-severity,.audit-date,.audit-module){color:var(--aw-text)!important}
+.admin-workspace[data-admin-theme] .security-review-modal{background:var(--aw-solid)!important;color:var(--aw-text)!important;border-color:var(--aw-border)!important;max-height:calc(100dvh - 40px);overflow:auto}
+.admin-workspace[data-admin-theme] .security-review-modal :is(h2,h3,strong,span,p){color:var(--aw-text)!important;line-height:1.6}
+.admin-workspace[data-admin-theme] .security-review-changes :is(strong,span){font-size:14px!important}
+.admin-workspace[data-admin-theme] .security-review-modal-head button{color:var(--aw-text)!important;background:var(--aw-soft)!important}
+/* Keep the sign-out dialog outside the glass header and readable in each theme. */
+.votara-logout-modal-backdrop { position:fixed; inset:0; z-index:4000; padding:20px; display:grid; place-items:center; }
+.admin-workspace .votara-logout-modal { width:min(460px,100%); max-height:calc(100dvh - 40px); overflow:auto; background:var(--aw-solid); color:var(--aw-text); border:1px solid var(--aw-border); padding:28px; }
+.admin-workspace .votara-logout-modal h2 { color:var(--aw-text); font-size:24px; }
+.admin-workspace .votara-logout-modal p { color:var(--aw-muted); font-size:16px; line-height:1.6; }
+.admin-workspace .votara-logout-cancel { background:var(--aw-soft); color:var(--aw-text); border-color:var(--aw-border); }
+.admin-workspace .votara-logout-modal-actions button { min-height:44px; font-size:14px; }
+@media(max-width:480px) { .admin-workspace .votara-logout-modal-actions { display:grid; grid-template-columns:1fr 1fr; } }

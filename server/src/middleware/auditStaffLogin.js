@@ -1,0 +1,2 @@
+const {createAuditLog}=require('../services/auditLogsService');
+module.exports=(req,res,next)=>{const json=res.json.bind(res);res.json=body=>{if(res.statusCode<300&&body?.success&&body.user?.role==='electoral_board'){const user=body.user;createAuditLog({actorId:user.id,actorName:user.fullName,actorEmail:user.email,actorRole:'electoral_board',action:'Login',module:'Accounts',description:'Electoral Board sign-in succeeded.',ipAddress:req.ip,userAgent:req.get('user-agent')}).catch(e=>console.error('Unable to audit EB sign-in:',e.message));}return json(body)};next();};

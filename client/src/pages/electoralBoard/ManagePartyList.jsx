@@ -1839,20 +1839,7 @@ const deleteCandidate = async (
                     </div>
 
                     <div className="eb-hero-controls">
-                        <div className="eb-icon-actions" aria-label="Page tools">
-                            <button type="button" className="eb-icon-button" title="Information">
-                                ⓘ
-                            </button>
-                            <button type="button" className="eb-icon-button" title="Download">
-                                ↓
-                            </button>
-                            <button type="button" className="eb-icon-button" title="Display">
-                                ▣
-                            </button>
-                            <button type="button" className="eb-icon-button" title="More options">
-                                ⋯
-                            </button>
-                        </div>
+                        
 
                         <button
                             type="button"
@@ -2150,10 +2137,7 @@ const deleteCandidate = async (
 
             {showModal && (
                 <ModalOverlay>
-                    <div
-                        style={
-                            styles.largeModal
-                        }
+                    <div className="eb-candidate-dialog" role="dialog" aria-modal="true" aria-label="Candidate details" style={styles.largeModal}
                     >
                         {/* HEADER */}
 

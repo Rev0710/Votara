@@ -32,10 +32,9 @@ export const studentLogin = async (
         );
 
 
-        throw new Error(
-            error.response?.data?.message ||
-            "Unable to login."
-        );
+        const loginError=new Error(error.response?.data?.message || "Unable to login.");
+        loginError.retryAfter=error.response?.data?.retryAfter;
+        throw loginError;
 
     }
 

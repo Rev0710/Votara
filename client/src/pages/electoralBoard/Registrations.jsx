@@ -1022,26 +1022,7 @@ const Registrations = ({ onNavigate }) => {
                         <p>Check the submitted documents and selfie, then approve or reject the registration.</p>
                     </div>
 
-                    <select
-                        className="registration-enrollment-select"
-                        value={statusFilter === "late_enrolled" ? "late_enrolled" : "all"}
-                        onChange={(event) => {
-                            const value = event.target.value;
-
-                            if (value === "late_enrolled") {
-                                if (typeof onNavigate === "function") {
-                                    onNavigate("lateEnrollees");
-                                }
-                                return;
-                            }
-
-                            setStatusFilter("all");
-                        }}
-                        aria-label="Enrollment type"
-                    >
-                        <option value="all">Enrolled</option>
-                        <option value="late_enrolled">Late Enrolled</option>
-                    </select>
+<p>Late enrollee applications are reviewed by the Administrator.</p>
                 </div>
 
                 {success && (

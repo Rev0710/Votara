@@ -274,12 +274,16 @@ const getAuditLogs = async (req, res) => {
         // FILTER: MODULE
         // -------------------------------------------------
 
+        const category=String(req.query.category||'');
+        const conditions={overview:'module.eq.Overview',elections:'module.ilike.%election%',candidates:'module.ilike.%candidate%',parties:'module.ilike.%party%',accounts:'module.ilike.%account%,module.ilike.%auth%,module.ilike.%security%',kiosk:'module.ilike.%kiosk%',registration:'module.ilike.%registration%',reports:'module.ilike.%issue%,module.ilike.%support%',monitoring:'module.ilike.%monitoring%,module.ilike.%voting%',results:'module.ilike.%result%',profile:'module.eq.Profile',settings:'module.eq.Settings',logs:'module.eq.Audit Logs'};
+        if(category&&!Object.hasOwn(conditions,category))return res.status(400).json({success:false,message:'Select a valid audit category.'});
+        if(category)query=query.or(conditions[category]);
         if (module) {
 
             query =
-                query.eq(
+                query.ilike(
                     "module",
-                    module
+                    `%${module.replace(/[%_]/g, "")}%`
                 );
         }
 
@@ -429,37 +433,45 @@ const getAuditLogs = async (req, res) => {
         // the Admin dashboard shows the real totals.
         //
 
-        const {
+        let {
             data: summaryLogs,
             error: summaryError,
+            count: summaryTotal,
         } = await supabase
             .from("audit_logs")
             .select(`
                 action,
                 module,
                 actor_role
-            `)
-            .eq(
-                "actor_role",
-                "electoral_board"
-            );
+            `, {count:"exact"})
+            .eq("actor_role","electoral_board").order("id").range(0,999);
 
         if (summaryError) {
             throw summaryError;
         }
 
+        // Read every summary page; Supabase otherwise caps returned rows.
+        summaryLogs = summaryLogs || [];
+        while(summaryLogs.length < (summaryTotal || 0)) {
+            const {data: batch,error: batchError} = await supabase.from('audit_logs')
+                .select('action,module,actor_role').eq('actor_role','electoral_board')
+                .order('id').range(summaryLogs.length,summaryLogs.length+999);
+            if(batchError) throw batchError;
+            if(!batch?.length) break;
+            summaryLogs.push(...batch);
+        }
         const summary = {
-            total: total || 0,
+            total: summaryTotal || (summaryLogs||[]).length,
 
             categories: {
-                all: total || 0,
+                all: summaryTotal || (summaryLogs||[]).length,
                 authentication: 0,
                 elections: 0,
                 candidates: 0,
                 accounts: 0,
                 system: 0,
                 security: 0,
-                kiosk: 0,
+                kiosk: 0, registration:0, reports:0, overview:0, parties:0, monitoring:0, results:0, profile:0, settings:0, logs:0,
             },
 
             severity: {
@@ -481,7 +493,17 @@ const getAuditLogs = async (req, res) => {
 
             let category = "system";
 
-            if (
+            if(moduleName==='overview') category='overview';
+            else if(moduleName==='settings') category='settings';
+            else if(moduleName==='audit logs') category='logs';
+            else if(moduleName==='profile') category='profile';
+            else if(moduleName.includes('party')) category='parties';
+            else if(moduleName.includes('monitoring')||moduleName.includes('voting')) category='monitoring';
+            else if(moduleName.includes('result')) category='results';
+            else if(moduleName.includes('kiosk')) category='kiosk';
+            else if(moduleName.includes('registration')) category='registration';
+            else if(moduleName.includes('issue')||moduleName.includes('support')) category='reports';
+            else if (
                 actionName.includes("login") ||
                 actionName.includes("logout") ||
                 actionName.includes("password") ||
@@ -490,11 +512,11 @@ const getAuditLogs = async (req, res) => {
                 moduleName.includes("auth") ||
                 moduleName.includes("security")
             ) {
-                category = "authentication";
+                category = "accounts";
             } else if (
                 moduleName.includes("election") ||
                 moduleName.includes("result") ||
-                moduleName.includes("voting")
+                moduleName.includes("voting") || moduleName.includes("monitoring")
             ) {
                 category = "elections";
             } else if (
@@ -504,7 +526,7 @@ const getAuditLogs = async (req, res) => {
                 category = "candidates";
             } else if (
                 moduleName.includes("account") ||
-                moduleName.includes("admin")
+                moduleName.includes("admin") || moduleName.includes("profile")
             ) {
                 category = "accounts";
             } else if (

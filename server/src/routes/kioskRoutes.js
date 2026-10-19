@@ -49,6 +49,7 @@ router.post(
 router.use(
     authenticateElectoralBoard
 );
+router.use(require('../middleware/auditKioskActivity'));
 
 // =========================================================
 // KIOSK ELECTIONS

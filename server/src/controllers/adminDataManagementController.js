@@ -292,7 +292,10 @@ const importStudentDataset = async (req, res) => {
             });
         }
 
-        const records = students.map(normalizeStudentRecord);
+        const mappedRecords = students.map(normalizeStudentRecord);
+        const records = mappedRecords.filter(record=>!/^(?:(?:1|1st|first)(?:year|yr)?|year1)$/.test(String(record.year_level).toLowerCase().replace(/[^a-z0-9]/g,"")));
+        const excludedFirstYearCount = mappedRecords.length-records.length;
+        if(!records.length)return res.status(400).json({success:false,message:"No eligible records remain. 1st Year students are excluded from the voting registry."});
         const seen = new Set();
 
         for (const record of records) {
@@ -409,6 +412,7 @@ const importStudentDataset = async (req, res) => {
             count: records.length,
             insertedCount,
             updatedCount,
+            excludedFirstYearCount,
         });
     } catch (error) {
         console.error("Import student dataset error:", error);

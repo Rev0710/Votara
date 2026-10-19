@@ -791,16 +791,6 @@ const Profile = ({
 
                 </div>
 
-                {onClose && (
-                    <button
-                        type="button"
-                        className="profile-back-btn"
-                        onClick={onClose}
-                    >
-                        ← Back
-                    </button>
-                )}
-
             </div>
 
 

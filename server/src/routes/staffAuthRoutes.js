@@ -13,6 +13,7 @@ const router = express.Router();
 
 router.post(
     "/login",
+    require("../middleware/auditStaffLogin"),
     loginStaff
 );
 

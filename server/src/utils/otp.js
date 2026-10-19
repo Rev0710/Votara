@@ -1,7 +1,5 @@
 const generateOTP = () => {
-    return Math.floor(
-        100000 + Math.random() * 900000
-    ).toString();
+    return require("crypto").randomInt(100000, 1000000).toString();
 };
 
 module.exports = {

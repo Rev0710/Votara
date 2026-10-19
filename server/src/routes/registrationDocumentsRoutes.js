@@ -5,6 +5,7 @@ const {
 } = require("../controllers/registrationDocumentsController");
 
 const router = express.Router();
+const { requireRegistrationSession } = require("../services/registrationSessionService");
 
 
 // =========================================================
@@ -13,6 +14,7 @@ const router = express.Router();
 
 router.post(
     "/upload",
+    requireRegistrationSession,
     uploadRegistrationRequirements
 );
 

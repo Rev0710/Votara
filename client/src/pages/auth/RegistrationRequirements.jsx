@@ -1811,7 +1811,7 @@ const RegistrationRequirements = () => {
                         {isCorrectionMode
                             ? "Review the correction message, replace the requested items, and resubmit your registration for review."
                             : isLateEnrollee
-                            ? "Complete your student information and requirements so the Electoral Board can review your late enrollee application."
+                            ? "Complete your student information and requirements so the Administrator can review your late enrollee application."
                             : "Submit your required identification documents and complete your real-time identity verification."}
                     </p>
 
@@ -1907,8 +1907,7 @@ const RegistrationRequirements = () => {
                                     correct full name, selecting
                                     your year level, and submitting
                                     the required documents.
-                                    Your application will be reviewed
-                                    by the Electoral Board.
+                                    Your application will be reviewed by the Administrator.
                                 </div>
 
                             </div>
@@ -2008,7 +2007,7 @@ const RegistrationRequirements = () => {
                             >
                                 Enter your information exactly as it
                                 appears on your official school
-                                records. The Electoral Board will
+                                records. The {isLateEnrollee ? "Administrator" : "Electoral Board"} will
                                 verify this information.
                             </p>
 
@@ -2520,7 +2519,7 @@ const RegistrationRequirements = () => {
                             }}
                         >
                             {correctionMessage ||
-                                "The Electoral Board has requested a correction to your registration. Please replace the incorrect requirement(s) and resubmit."}
+                                `The ${isLateEnrollee ? "Administrator" : "Electoral Board"} has requested a correction to your registration. Please replace the incorrect requirement(s) and resubmit.`}
                         </div>
 
 

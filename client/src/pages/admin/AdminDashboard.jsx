@@ -1,3 +1,4 @@
+import AdminTopNav from './AdminTopNav';
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./AdminDashboard.css";
@@ -642,7 +643,7 @@ const checkSystem = async () => {
             description:
                 "View and manage registered students.",
             icon: FiUsers,
-            path: "/admin/students",
+            path: "/admin/data-management",
         },
 
         {
@@ -650,7 +651,7 @@ const checkSystem = async () => {
             description:
                 "Manage Electoral Board staff accounts.",
             icon: FiUserCheck,
-            path: "/admin/electoral-board",
+            path: "/admin/users",
         },
 
         {
@@ -658,23 +659,23 @@ const checkSystem = async () => {
             description:
                 "Create and manage administrator accounts.",
             icon: FiShield,
-            path: "/admin/admin-accounts",
+            path: "/admin/users",
         },
 
         {
-            title: "Candidate Management",
+            title: "Late Enrollee Review",
             description:
-                "Review and manage election candidates.",
+                "Review online and kiosk late enrollee applications.",
             icon: FiUserPlus,
-            path: "/admin/candidates",
+            path: "/admin/late-enrollees",
         },
 
         {
-            title: "Election Management",
+            title: "Election Overview",
             description:
-                "Configure election settings and status.",
+                "Review election status and participation reports.",
             icon: FiCalendar,
-            path: "/admin/election",
+            path: "/admin/reports",
         },
 
         {
@@ -708,7 +709,7 @@ const checkSystem = async () => {
             description:
                 "View election result information.",
             icon: FiFileText,
-            path: "/admin/results",
+            path: "/admin/reports",
         },
     ];
 
@@ -748,74 +749,7 @@ const checkSystem = async () => {
                 Shared VOTARA Admin navigation.
             ================================================= */}
 
-            <header className="votara-admin-topbar">
-                <button
-                    type="button"
-                    className="votara-admin-brand"
-                    onClick={() => goTo("/admin-dashboard")}
-                    aria-label="Votara System Dashboard"
-                >
-                    <span className="votara-admin-brand-mark" aria-hidden="true">
-                        <img
-                            src="/src/images/Votara.png"
-                            alt=""
-                            className="votara-admin-brand-logo"
-                        />
-                    </span>
-                    <span className="votara-admin-brand-name">Votara</span>
-                </button>
-
-                <nav className="votara-admin-topnav" aria-label="Admin navigation">
-                    <button type="button" className="votara-admin-topnav-link active" onClick={() => goTo("/admin-dashboard")}>
-                        System Dashboard
-                    </button>
-                    <button type="button" className="votara-admin-topnav-link" onClick={() => goTo("/admin/users")}>
-                        User &amp; Access Management
-                    </button>
-                    <button type="button" className="votara-admin-topnav-link" onClick={() => goTo("/admin/data-management")}>
-                        Data Management
-                    </button>
-                    <button type="button" className="votara-admin-topnav-link" onClick={() => goTo("/admin/settings")}>
-                        System Configuration
-                    </button>
-                    <button type="button" className="votara-admin-topnav-link" onClick={() => goTo("/admin/audit-logs")}>
-                        Monitoring &amp; Logs
-                    </button>
-                    <button type="button" className="votara-admin-topnav-link" onClick={() => goTo("/admin/reports")}>
-                        Reports &amp; Analytics
-                    </button>
-                </nav>
-
-                <div className="votara-admin-topbar-actions">
-                    <button
-                        type="button"
-                        className="votara-notification-button"
-                        onClick={() => goTo("/admin/audit-logs")}
-                        title="Notifications"
-                        aria-label="Notifications"
-                    >
-                        <span className="notification-dot"></span>
-                        <FiBell size={16} />
-                    </button>
-                    <div className="votara-admin-user">
-                        <span className="votara-admin-user-avatar">
-                            {admin.full_name?.charAt(0)?.toUpperCase() || "A"}
-                        </span>
-                        <span className="votara-admin-user-name">
-                            {admin.full_name || "Administrator"}
-                        </span>
-                    </div>
-                    <button
-                        type="button"
-                        className="votara-admin-logout"
-                        onClick={requestLogout}
-                        title="Logout"
-                        aria-label="Logout"
-                    >
-                        <FiLogOut size={17} />
-                    </button>
-                </div>
-            </header>
+            <AdminTopNav admin={admin} onLogout={confirmLogout}/>
 
             {/* LOGOUT CONFIRMATION */}
             {showLogoutConfirm && (
@@ -959,7 +893,7 @@ const checkSystem = async () => {
 
         <button
             type="button"
-            onClick={handleRefresh}
+            className="admin-dashboard-refresh" onClick={handleRefresh}
             disabled={dashboardLoading}
             style={{
                 display: "inline-flex",
@@ -1125,7 +1059,7 @@ const checkSystem = async () => {
             type="button"
             className="admin-total-users-card"
             onClick={() =>
-                goTo("/admin/students")
+                goTo("/admin/data-management")
             }
             style={{
                 textAlign: "left",
@@ -1231,7 +1165,7 @@ const checkSystem = async () => {
         <button
             type="button"
             onClick={() =>
-                goTo("/admin/election")
+                goTo("/admin/reports")
             }
             style={{
                 textAlign: "left",
@@ -1625,8 +1559,8 @@ const checkSystem = async () => {
                         {[
                             [FiDatabase, "Database Status", systemStatus.database, "/admin/settings"],
                             [FiUsers, "Staff Accounts", `${(stats.totalStaff ?? 0).toLocaleString()} total · ${(stats.activeUsers ?? 0).toLocaleString()} active`, "/admin/users"],
-                            [FiRefreshCw, "Automatic Backup", systemSettings.autoBackup ? `Enabled · ${systemSettings.backupFrequency || "scheduled"}` : "Disabled", "/admin/settings"],
-                            [FiShield, "Security", systemSettings.twoStepVerification ? "Two-step verification enabled" : "Review security settings", "/admin/settings"],
+                            [FiRefreshCw, "Automatic Backup", systemSettings.autoBackup ? `Enabled · ${systemSettings.backupFrequency || "scheduled"}` : "Disabled", "/admin/settings?section=backup"],
+                            [FiShield, "Security", systemSettings.twoStepVerification ? "Two-step verification enabled" : "Review security settings", "/admin/settings?section=security"],
                         ].map(([Icon, title, status, path]) => (
                             <button key={title} className="system-overview-row" onClick={() => goTo(path)}>
                                 <span className="row-icon"><Icon size={17} /></span>
@@ -1642,7 +1576,7 @@ const checkSystem = async () => {
                         <div className="feature-card-title-row"><h2>Elections</h2><span>{stats.totalStaff ?? 0} staff</span></div>
                         <div className="election-alert">
                             <FiAlertCircle size={18} />
-                            <div><strong>Election management</strong><p>Review election schedules, status, and configuration before opening the voting window.</p><button onClick={() => goTo("/admin/election")}>Open election settings</button></div>
+                            <div><strong>Election management</strong><p>Review election schedules, status, and configuration before opening the voting window.</p><button onClick={() => goTo("/admin/reports")}>View election reports</button></div>
                         </div>
                         {[
                             [
@@ -1661,16 +1595,16 @@ const checkSystem = async () => {
                                 "Pending review",
                             ],
                         ].map(([name, detail, status]) => (
-                            <button className="election-row" key={`${name}-${detail}`} onClick={() => goTo("/admin/election")}>
+                            <button className="election-row" key={`${name}-${detail}`} onClick={() => goTo("/admin/reports")}>
                                 <span className="election-dot"></span><span><b>{name}</b><small>{detail}</small></span><em>{status}</em>
                             </button>
                         ))}
                     </div>
 
                     <div className="votara-feature-card approval-card">
-                        <div className="feature-card-title-row"><h2>Voters Approval</h2><button onClick={() => goTo("/admin/students")}>Open queue</button></div>
+                        <div className="feature-card-title-row"><h2>Late Enrollee Approval</h2><button onClick={() => goTo("/admin/late-enrollees")}>Open queue</button></div>
                         <div className="approval-stat"><span></span><strong>{stats.totalStudents ?? "—"}</strong><p>registered students / voters</p></div>
-                        <div className="approval-stat"><span></span><strong>{stats.pendingRegistrations ?? "—"}</strong><p>awaiting eligibility review</p><button onClick={() => goTo("/admin/students")}>Review</button></div>
+                        <div className="approval-stat"><span></span><strong>{stats.pendingRegistrations ?? "—"}</strong><p>awaiting eligibility review</p><button onClick={() => goTo("/admin/late-enrollees")}>Review</button></div>
                         <div className="approval-stat"><span></span><strong>{stats.activeUsers ?? "—"}</strong><p>active staff accounts</p><button onClick={() => goTo("/admin/users")}>View</button></div>
                     </div>
 
@@ -1775,8 +1709,8 @@ const checkSystem = async () => {
                 </section>
 
                 <section className="votara-quick-actions">
-                    <button onClick={() => goTo("/admin/candidates")}><span><FiCheckCircle size={19} /></span>Review Candidates Approval</button>
-                    <button onClick={() => goTo("/admin/electoral-board")}><span><FiUserCheck size={19} /></span>Grant or revoke access</button>
+                    <button onClick={() => goTo("/admin/late-enrollees")}><span><FiCheckCircle size={19} /></span>Review Late Enrollees</button>
+                    <button onClick={() => goTo("/admin/users")}><span><FiUserCheck size={19} /></span>Grant or revoke access</button>
                     <button onClick={() => goTo("/admin/settings")}><span><FiSettings size={19} /></span>Open System Configuration</button>
                 </section>
 

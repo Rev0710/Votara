@@ -47,6 +47,9 @@ router.use(
     protectStudent
 );
 
+// Issue reports inherit the existing student session authentication above.
+router.use("/issues", require("./studentIssueReportsRoutes"));
+
 router.get(
     "/results",
     getPublishedStudentResults

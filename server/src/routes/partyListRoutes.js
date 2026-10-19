@@ -1,6 +1,14 @@
 const express = require("express");
 
 const router = express.Router();
+const requireStaff = require("../middleware/requireStaff");
+const managePartyList = requireStaff("admin", "electoral_board");
+router.use((req, res, next) => {
+    if (["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) {
+        return managePartyList(req, res, next);
+    }
+    return next();
+});
 
 const {
     getAllPartyLists,

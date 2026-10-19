@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiCheck, FiShield, FiUser } from "react-icons/fi";
 import { studentLogin } from "../../services/authService";
@@ -12,6 +12,8 @@ const StudentLogin = () => {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [retryAfter,setRetryAfter]=useState(0);
+    useEffect(()=>{if(!retryAfter)return;const timer=setInterval(()=>setRetryAfter(value=>Math.max(0,value-1)),1000);return()=>clearInterval(timer);},[retryAfter>0]);
 
     const getStudentFlag = (data, flagName) => (
         data?.[flagName] === true || data?.student?.[flagName] === true
@@ -19,6 +21,7 @@ const StudentLogin = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if(retryAfter>0)return;
         setError("");
 
         const normalizedStudentId = studentId.trim();
@@ -74,6 +77,7 @@ const StudentLogin = () => {
                 "Unable to login. Please check your Student ID and password.";
 
             setError(errorMessage);
+            setRetryAfter(Number(error.retryAfter)||0);
         } finally {
             setLoading(false);
         }
@@ -93,7 +97,7 @@ const StudentLogin = () => {
                         className="student-login-logo"
                         onClick={handleBack}
                         aria-label="Go to VOTARA home"
-                        disabled={loading}
+                        disabled={loading || retryAfter>0}
                     >
                         <img src={votaraLogo} alt="Votara" />
                     </button>
@@ -147,7 +151,7 @@ const StudentLogin = () => {
                                 type="button"
                                 className="student-login-back-button"
                                 onClick={handleBack}
-                                disabled={loading}
+                                disabled={loading || retryAfter>0}
                             >
                                 ← Back to VOTARA
                             </button>
@@ -159,6 +163,7 @@ const StudentLogin = () => {
                             password sent after your registration is approved.
                         </p>
 
+                        {retryAfter>0 && <p role="status">Please wait {retryAfter} seconds before trying again.</p>}
                         {error && (
                             <div className="login-error" role="alert">
                                 {error}
@@ -182,7 +187,7 @@ const StudentLogin = () => {
                                     inputMode="numeric"
                                     autoComplete="username"
                                     required
-                                    disabled={loading}
+                                    disabled={loading || retryAfter>0}
                                 />
                             </div>
 
@@ -200,7 +205,7 @@ const StudentLogin = () => {
                                     placeholder="Password"
                                     autoComplete="current-password"
                                     required
-                                    disabled={loading}
+                                    disabled={loading || retryAfter>0}
                                 />
                             </div>
 
@@ -208,7 +213,7 @@ const StudentLogin = () => {
                                 type="button"
                                 className="forgot-password-link"
                                 onClick={() => navigate("/forgot-password")}
-                                disabled={loading}
+                                disabled={loading || retryAfter>0}
                             >
                                 Forgot password
                             </button>
@@ -216,7 +221,7 @@ const StudentLogin = () => {
                             <button
                                 type="submit"
                                 className="student-login-button"
-                                disabled={loading}
+                                disabled={loading || retryAfter>0}
                             >
                                 {loading ? "Logging in..." : "Log in"}
                             </button>
@@ -225,7 +230,7 @@ const StudentLogin = () => {
                                 type="button"
                                 className="student-signup-button"
                                 onClick={() => navigate("/register")}
-                                disabled={loading}
+                                disabled={loading || retryAfter>0}
                             >
                                 Sign up
                             </button>

@@ -51,17 +51,7 @@ function KioskManagement() {
     // or closing a session is reflected on this page.
     // =====================================================
 
-    useEffect(() => {
 
-        const interval = setInterval(() => {
-
-            refreshActiveSession();
-
-        }, 10000);
-
-        return () => clearInterval(interval);
-
-    }, []);
 
 
     // =====================================================
@@ -441,7 +431,7 @@ function KioskManagement() {
 
                 <div>
 
-                    <div className="kiosk-title-row">
+                    <button type="button" className="eb-manual-refresh" onClick={loadKioskData}>Refresh kiosk</button><div className="kiosk-title-row">
 
                         <div className="kiosk-title-icon">
                             🖥️

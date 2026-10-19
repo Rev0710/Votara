@@ -1,3 +1,6 @@
+import EBAccountPanel from './EBAccountPanel';
+import IssueReports from "./IssueReports";
+import PlatformNotifications from '../../components/PlatformNotifications';
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -7,7 +10,7 @@ import api from "../../services/api";
 
 
 import Registrations from "./Registrations";
-import LateEnrolleeManagement from "./LateEnrolleeManagement";
+
 import PartyListManagement from "./PartyListManagement";
 import ElectionManagement from "./ElectionManagement";
 import CreateElection from "./CreateElection";
@@ -25,12 +28,16 @@ import Settings from "./Settings";
 const EBDashboard = () => {
 
     const navigate = useNavigate();
+ const [theme,setTheme]=useState(()=>localStorage.getItem('votaraEBTheme')||'dark');
+ const toggleTheme=()=>{const next=theme==='dark'?'light':'dark';setTheme(next);localStorage.setItem('votaraEBTheme',next);window.dispatchEvent(new Event('votara-eb-theme'));};
     const location = useLocation();
 
     const [ebUser, setEbUser] = useState(null);
 
+
     const [activeSection, setActiveSection] =
         useState("dashboard");
+ useEffect(()=>{api.post('/electoral-board/activity',{section:activeSection}).catch(()=>{});},[activeSection]);
 
     // Restore the dashboard section when returning from a standalone
     // page such as ManagePartyList.jsx.
@@ -107,6 +114,15 @@ const EBDashboard = () => {
     }, []);
 
 
+    useEffect(() => {
+        let mounted = true;
+        api.get('/electoral-board/profile').then(({data}) => {
+            if (!mounted || !data?.user) return;
+            setEbUser(data.user);
+            localStorage.setItem('votaraEBUser', JSON.stringify(data.user));
+        }).catch(() => {});
+        return () => { mounted = false; };
+    }, []);
     // =====================================================
     // LOAD DASHBOARD STATISTICS
     // =====================================================
@@ -194,16 +210,7 @@ const EBDashboard = () => {
 
         loadDashboardStats();
 
-        const refreshInterval =
-            setInterval(
-                loadDashboardStats,
-                30000
-            );
 
-        return () =>
-            clearInterval(
-                refreshInterval
-            );
 
     }, [activeSection]);
 
@@ -212,7 +219,8 @@ const EBDashboard = () => {
     // LOGOUT
     //=====================================================
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        try { await api.post('/electoral-board/activity',{section:'settings',event:'logout'},{timeout:2000}); } catch {} 
 
         localStorage.removeItem(
             "votaraStaffToken"
@@ -281,13 +289,7 @@ const EBDashboard = () => {
         setProfileOpen((current) => !current);
     };
 
-    const handleProfileAction = (action) => {
-        setProfileOpen(false);
-
-        if (action === "settings") {
-            handleNavigation("settings");
-        }
-    };
+    const handleProfileAction = action => {setProfileOpen(false);if(action==='notification'){window.dispatchEvent(new Event('votara-eb-open-notifications'));return;}handleNavigation(action==='profile'?'profile':'settings');};
 
 
     // =====================================================
@@ -348,8 +350,8 @@ const EBDashboard = () => {
             icon: "▥",
         },
 
-        {
-            id: "logs",
+        {id:"support",label:"Report an issue",icon:"?"},
+        {id: "logs",
             label: "Audit Logs",
             icon: "◌",
         },
@@ -584,7 +586,7 @@ const EBDashboard = () => {
 
                     <nav className="eb-top-nav" aria-label="Electoral Board navigation">
                         {menuItems
-                            .filter((item) => !["partyLists", "monitoring", "results"].includes(item.id))
+                            .filter((item) => !["lateEnrollees", "partyLists", "monitoring", "results"].includes(item.id))
                             .map((item) => (
                                 <button
                                     key={item.id}
@@ -597,14 +599,12 @@ const EBDashboard = () => {
                             ))}
                     </nav>
 
-                    <div className="eb-top-actions">
+                    <div className="eb-top-actions"><button type="button" className="eb-theme-toggle" onClick={toggleTheme} aria-label={theme==='dark'?'Switch to light mode':'Switch to dark mode'}>{theme==='dark'?'☀':'☾'}</button>
                         <div className="eb-duty-badge">
                             <span className="eb-duty-dot" />
                             On duty
                         </div>
-                        <button type="button" className="eb-icon-button" aria-label="Notifications">
-                            <img src="/src/images/bell.png" alt="eb-icon-button" />
-                        </button>
+                        <PlatformNotifications audience="eb" onAction={target=>handleNavigation(target === "reports" ? "support" : "dashboard")}/>
                         <div className="eb-profile-wrapper">
                             <button
                                 type="button"
@@ -697,7 +697,7 @@ const EBDashboard = () => {
 
                     {activeSection === "dashboard" && (
                         <div className="eb-dashboard-home">
-                            <div className="eb-dashboard-heading">
+                            <div className="eb-dashboard-heading"><button type="button" className="eb-manual-refresh" onClick={loadDashboardStats} disabled={dashboardLoading}>Refresh overview</button>
                                 <div>
                                     <h1>Election Operation Dashboard</h1>
                                     <p>Registration, verification, and election activity for the current VOTARA election.</p>
@@ -726,7 +726,7 @@ const EBDashboard = () => {
                                             <p>Live turnout and current election activity.</p>
                                         </div>
                                         <button type="button" className="eb-live-chip" onClick={() => handleNavigation("monitoring")}>
-                                            <span /> Live Monitoring
+                                            <span /> Open monitoring
                                         </button>
                                     </div>
 
@@ -753,18 +753,9 @@ const EBDashboard = () => {
                                                 <div className="eb-chart-grid-line line-1" />
                                                 <div className="eb-chart-grid-line line-2" />
                                                 <div className="eb-chart-grid-line line-3" />
-                                                <div className="eb-chart-bars">
-                                                    <span style={{height: "28%"}} />
-                                                    <span style={{height: "38%"}} />
-                                                    <span style={{height: "45%"}} />
-                                                    <span style={{height: "54%"}} />
-                                                    <span style={{height: "63%"}} />
-                                                    <span style={{height: "72%"}} />
-                                                    <span style={{height: "82%"}} />
-                                                    <span style={{height: `${Math.max(18, Math.min(94, turnoutPercent))}%`}} />
-                                                </div>
+                                                <div className="eb-chart-bars"><span title={`Recorded ballots: ${dashboardStats.votesCast}`} style={{height: `${turnoutPercent}%`, minHeight:dashboardStats.votesCast>0?2:0}} /></div>
                                             </div>
-                                            <div className="eb-chart-caption">Election activity overview · values update automatically</div>
+                                            <div className="eb-chart-caption">Current election turnout · refresh manually</div>
                                         </div>
                                     </div>
                                 </section>
@@ -870,14 +861,7 @@ const EBDashboard = () => {
                         LATE ENROLLEES
                     ================================================= */}
 
-                    {activeSection ===
-                        "lateEnrollees" && (
-
-                        <LateEnrolleeManagement
-                            onNavigate={handleNavigation}
-                        />
-
-                    )}
+                    
 
 
                     {/* =================================================
@@ -982,12 +966,14 @@ const EBDashboard = () => {
                     {activeSection ===
                         "settings" && (
 
-                        <Settings />
+                        <EBAccountPanel onBack={()=>handleNavigation("dashboard")} mode="settings" onUpdated={setEbUser} />
 
                     )}
 
                 </section>
 
+                {activeSection === "profile" && <EBAccountPanel onBack={()=>handleNavigation("dashboard")} mode="profile" onUpdated={setEbUser} />}
+{activeSection === "support" && <IssueReports />}
             </main>
 
         </div>

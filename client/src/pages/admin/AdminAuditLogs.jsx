@@ -256,7 +256,7 @@ function AdminAuditLogs() {
 
 
 
-        limit: 20,
+        limit: 10,
 
 
 
@@ -436,7 +436,7 @@ function AdminAuditLogs() {
 
 
 
-                    limit: 20
+                    limit: 10
 
 
 
@@ -656,7 +656,7 @@ function AdminAuditLogs() {
 
 
 
-                        limit: 20,
+                        limit: 10,
 
 
 
@@ -3333,15 +3333,7 @@ return (
 
 
 
-                        <span className="audit-filter-icon">
-
-
-
-                            ⌕
-
-
-
-                        </span>
+                        
 
 
 

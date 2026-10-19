@@ -21,6 +21,9 @@ function AuditLogs() {
     // -----------------------------------------------------
 
     const [logs, setLogs] = useState([]);
+    const [summary,setSummary]=useState({categories:{},severity:{}});
+    const [categoryFilter,setCategoryFilter]=useState('');
+    const [timeRange,setTimeRange]=useState('');
 
     const [loading, setLoading] = useState(true);
 
@@ -56,7 +59,7 @@ function AuditLogs() {
     // -----------------------------------------------------
 
     const loadLogs = useCallback(
-        async (requestedPage = page) => {
+        async (requestedPage = page, overrides = {}) => {
 
             try {
 
@@ -68,27 +71,28 @@ function AuditLogs() {
                     limit: 20
                 };
 
-                if (search.trim()) {
+                if (categoryFilter && !overrides.clear) params.category=categoryFilter;
+                if (!overrides.clear && search.trim()) {
                     params.search =
                         search.trim();
                 }
 
-                if (moduleFilter) {
+                if (!overrides.clear && moduleFilter) {
                     params.module =
                         moduleFilter;
                 }
 
-                if (actionFilter) {
+                if (!overrides.clear && actionFilter) {
                     params.action =
                         actionFilter;
                 }
 
-                if (dateFrom) {
+                if (!overrides.clear && dateFrom) {
                     params.date_from =
                         dateFrom;
                 }
 
-                if (dateTo) {
+                if (!overrides.clear && dateTo) {
                     params.date_to =
                         dateTo;
                 }
@@ -117,6 +121,7 @@ function AuditLogs() {
                         : []
                 );
 
+                setSummary(data.summary || {categories:{},severity:{}});
                 setPagination(
                     data.pagination || {
                         page: requestedPage,
@@ -160,7 +165,7 @@ function AuditLogs() {
             moduleFilter,
             actionFilter,
             dateFrom,
-            dateTo
+            dateTo, categoryFilter
         ]
     );
 
@@ -170,9 +175,9 @@ function AuditLogs() {
 
     useEffect(() => {
 
-        loadLogs(1);
+        loadLogs(page);
 
-    }, []);
+    }, [moduleFilter,page,categoryFilter,timeRange]);
 
     // -----------------------------------------------------
     // MODULE OPTIONS
@@ -233,6 +238,8 @@ function AuditLogs() {
     const handleClearFilters = () => {
 
         setSearch("");
+        setCategoryFilter("");
+        setTimeRange("");
 
         setModuleFilter("");
 
@@ -244,9 +251,7 @@ function AuditLogs() {
 
         setPage(1);
 
-        setTimeout(() => {
-            loadLogs(1);
-        }, 0);
+        loadLogs(1,{clear:true});
 
     };
 
@@ -714,61 +719,62 @@ function AuditLogs() {
 
                     <button
                         type="button"
-                        className={`audit-category-item ${!moduleFilter ? "active" : ""}`}
+                        className={`audit-category-item ${!categoryFilter ? "active" : ""}`}
                         onClick={handleClearFilters}
                     >
                         <span>All events</span>
-                        <strong>{pagination.total}</strong>
+                        <strong>{summary.categories?.all ?? pagination.total}</strong>
                     </button>
 
                     <button
                         type="button"
-                        className={`audit-category-item ${moduleFilter.toLowerCase().includes("election") ? "active" : ""}`}
+                        className={`audit-category-item ${categoryFilter === "elections" ? "active" : ""}`}
                         onClick={() => {
-                            setModuleFilter("Election");
+                            setModuleFilter(""); setCategoryFilter("elections");
                             setPage(1);
                         }}
                     >
                         <span>Elections</span>
-                        <strong>—</strong>
+                        <strong>{summary.categories?.elections || 0}</strong>
                     </button>
 
                     <button
                         type="button"
-                        className={`audit-category-item ${moduleFilter.toLowerCase().includes("candidate") ? "active" : ""}`}
+                        className={`audit-category-item ${categoryFilter === "candidates" ? "active" : ""}`}
                         onClick={() => {
-                            setModuleFilter("Candidate");
+                            setModuleFilter(""); setCategoryFilter("candidates");
                             setPage(1);
                         }}
                     >
                         <span>Candidates</span>
-                        <strong>—</strong>
+                        <strong>{summary.categories?.candidates || 0}</strong>
                     </button>
 
                     <button
                         type="button"
-                        className={`audit-category-item ${moduleFilter.toLowerCase().includes("account") ? "active" : ""}`}
+                        className={`audit-category-item ${categoryFilter === "accounts" ? "active" : ""}`}
                         onClick={() => {
-                            setModuleFilter("Account");
+                            setModuleFilter(""); setCategoryFilter("accounts");
                             setPage(1);
                         }}
                     >
                         <span>Accounts</span>
-                        <strong>—</strong>
+                        <strong>{summary.categories?.accounts || 0}</strong>
                     </button>
 
                     <button
                         type="button"
-                        className={`audit-category-item ${moduleFilter.toLowerCase().includes("kiosk") ? "active" : ""}`}
+                        className={`audit-category-item ${categoryFilter === "kiosk" ? "active" : ""}`}
                         onClick={() => {
-                            setModuleFilter("Kiosk");
+                            setModuleFilter(""); setCategoryFilter("kiosk");
                             setPage(1);
                         }}
                     >
                         <span>Kiosk</span>
-                        <strong>—</strong>
+                        <strong>{summary.categories?.kiosk || 0}</strong>
                     </button>
 
+                    {[['overview','Overview'],['parties','Party lists'],['registration','Registration'],['reports','Issue reports'],['monitoring','Voting monitoring'],['results','Results & reports'],['profile','Profile'],['settings','Settings'],['logs','Audit log access']].map(([category,label])=><button type="button" key={category} className={`audit-category-item ${categoryFilter===category?'active':''}`} onClick={()=>{setModuleFilter('');setCategoryFilter(category);setPage(1)}}><span>{label}</span><strong>{summary.categories?.[category]||0}</strong></button>)}
                     <div className="audit-category-note">
                         <span className="audit-category-note-icon">♢</span>
                         <p>
@@ -807,15 +813,15 @@ function AuditLogs() {
 
                         <select
                             className="audit-time-filter"
-                            value=""
-                            onChange={() => {}}
+                            value={timeRange}
+                            onChange={e=>{const value=e.target.value;setTimeRange(value);const end=new Date();const start=new Date();if(value==='today')start.setHours(0,0,0,0);else if(value==='7')start.setDate(start.getDate()-6);else if(value==='30')start.setDate(start.getDate()-29);const day=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');setDateFrom(value?day(start):'');setDateTo(value?day(end):'');setPage(1);}}
                             aria-label="Time filter"
                         >
-                            <option value="">All time</option>
+                            <option value="">All time</option><option value="today">Today</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option>
                         </select>
 
                         <div className="audit-live-status">
-                            <span>Live</span>
+                            <span>Manual refresh</span>
                             <i></i>
                             <b></b>
                         </div>
@@ -892,14 +898,14 @@ function AuditLogs() {
 
                     <div className="audit-event-summary">
                         <span><b>{pagination.total}</b> event shown</span>
-                        <span className="critical"><b>0</b> critical</span>
-                        <span className="warning"><b>0</b> warning</span>
-                        <span><b>0</b> security</span>
+                        <span className="critical"><b>{summary.severity?.critical||0}</b> critical</span>
+                        <span className="warning"><b>{summary.severity?.warning||0}</b> warning</span>
+                        <span><b>{summary.categories?.security||0}</b> security</span>
                     </div>
 
                     <div className="audit-activity-heading">
                         <div>
-                            <span>TODAY</span>
+                            <span>RECORDED ACTIVITY</span>
                             <h2>Electoral Board Activity</h2>
                         </div>
 
@@ -961,8 +967,7 @@ function AuditLogs() {
                                     </span>
 
                                     <span className="audit-activity-time">
-                                        {formatDateTime(log.created_at)
-                                            .split(", ")[1] || "—"}
+                                        {formatDateTime(log.created_at)}
                                     </span>
 
                                     <span className="audit-activity-arrow">›</span>

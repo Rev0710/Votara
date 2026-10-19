@@ -1571,3 +1571,18 @@
     box-shadow: none !important;
     border: none !important;
 }
+/* Public page theme and responsive navigation. */
+.votara-landing { --public-panel:rgba(255,255,255,.8); background:var(--v-bg); overflow-x:clip; }
+.votara-landing .landing-nav-wrap { position:fixed!important; inset:0 0 auto; transform:none!important; z-index:3000; }
+.votara-landing .landing-nav { background:var(--public-panel); border-color:var(--v-border); backdrop-filter:blur(20px); }
+.votara-landing #faq.faq-section { grid-template-columns:minmax(0,1fr) minmax(0,1.5fr); gap:clamp(28px,5vw,70px); scroll-margin-top:110px; }
+.votara-landing #faq .faq-heading { display:block; }
+.votara-landing #faq .faq-heading h2 { font-size:clamp(32px,3.5vw,52px); overflow-wrap:normal; }
+.votara-landing #faq .faq-list { padding:12px 24px; border:1px solid var(--v-border); border-radius:24px; background:var(--public-panel); backdrop-filter:blur(16px); box-shadow:0 12px 35px #14233b10; }
+.votara-landing #faq .faq-answer { padding:0; }
+.votara-landing #faq .faq-answer p { font-size:15px; }
+@media(max-width:768px) { .votara-landing #faq.faq-section { grid-template-columns:1fr; } .votara-landing #faq .faq-list { grid-column:1; grid-row:auto; padding:8px 18px; } .votara-landing .landing-nav { gap:10px; } }
+/* A completed page transition must not trap fixed navigation in the page. */
+.page-transition:has(.votara-landing) { transform:none!important; }
+.page-transition:has(.votara-landing) { animation:none!important; will-change:auto!important; perspective:none!important; }
+html:has(.votara-landing){scroll-padding-top:110px}.votara-landing section{scroll-margin-top:110px}.votara-landing .hero-content h1{line-height:1.12;letter-spacing:-.045em}

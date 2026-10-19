@@ -1,6 +1,8 @@
-require("dotenv").config();
+require("dotenv").config({ path: require("path").join(__dirname, ".env") });
 
 const rateLimit = require("express-rate-limit");
+const requireStaff = require("./src/middleware/requireStaff");
+const adminStudentIssueReportsRoutes = require("./src/routes/adminStudentIssueReportsRoutes");
 
 const express = require("express");
 
@@ -419,6 +421,8 @@ app.use(
 // =====================================================
 
 app.use("/api", generalRateLimiter);
+app.use("/api/system", require("./src/routes/maintenanceStatusRoutes"));
+app.use("/api", require("./src/middleware/platformAvailability"));
 
 
 
@@ -451,6 +455,13 @@ app.use(
 // =====================================================
 
 
+
+app.use("/api/admin/profile", require("./src/routes/adminProfileRoutes"));
+app.use("/api/admin/student-issue-reports", adminStudentIssueReportsRoutes);
+app.use("/api/admin/staff-issue-reports", require("./src/routes/staffIssueReportsRoutes"));
+app.use("/api/electoral-board/issues", require("./src/routes/staffIssueReportsRoutes"));
+app.use("/api/electoral-board/activity", require("./src/routes/ebActivityRoutes"));
+app.use("/api/electoral-board/profile", require("./src/routes/ebProfileRoutes"));
 
 app.use(
 
@@ -634,7 +645,7 @@ app.use(
 
 app.use(
 
-    "/api/electoral-board/late-enrollees",
+    "/api/admin/late-enrollees",
 
     lateEnrolleeRoutes
 
@@ -812,7 +823,8 @@ app.get(
 
     "/api/test-supabase",
 
-    async (req, res) => {
+    requireStaff("admin"),
+async (req, res) => {
 
 
 
@@ -942,7 +954,8 @@ app.get(
 
     "/api/test-supabase-student/:studentId",
 
-    async (req, res) => {
+    requireStaff("admin"),
+async (req, res) => {
 
 
 

@@ -781,3 +781,16 @@ to { opacity: 1; transform: translateY(0); }
         padding: 27px 20px 34px;
     }
 }
+.student-login-page { padding:clamp(12px,3vw,40px); overflow:auto; }
+.student-login-page .student-login-card { width:min(1200px,100%); height:auto; min-height:680px; }
+.student-login-page .student-login-form-card { width:100%; max-width:520px; padding:clamp(24px,3vw,48px); height:auto; }
+.student-login-page .student-login-right { padding:clamp(20px,3vw,48px); min-width:0; }
+.student-login-page :is(label,.login-description,.login-error) { font-size:15px; line-height:1.6; }
+.student-login-page input { font-size:16px; min-height:48px; width:100%; }
+.student-login-page :is(.student-login-button,.student-signup-button) { font-size:16px; min-height:46px; }
+.student-login-page :is(.student-login-back-button,.forgot-password-link,.student-login-label) { font-size:13px; }
+.student-login-page .student-login-copy p { font-size:16px; line-height:1.6; }
+.student-login-page .student-login-copy h2 { font-size:clamp(36px,4vw,56px); }
+@media(max-width:760px) { .student-login-page .student-login-card { grid-template-columns:1fr; min-height:0; } .student-login-page .student-login-left { min-height:260px; padding:28px; } .student-login-page .student-login-right { min-height:0; padding:20px 12px; } .student-login-page .student-login-orbit { opacity:.35; } }
+.student-login-page :is(.student-login-steps,.student-login-steps div,.student-login-steps span) { font-size:14px; line-height:1.7; }
+@media(max-width:760px) { .student-login-page .student-login-orbit { width:130px; height:130px; left:auto; right:12px; bottom:8px; opacity:.18; } }

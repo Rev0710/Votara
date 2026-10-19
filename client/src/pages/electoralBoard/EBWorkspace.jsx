@@ -1,0 +1,3 @@
+import React,{useState,useEffect} from 'react';
+import {useLocation} from 'react-router-dom';
+export default function EBWorkspace({children}){const {pathname}=useLocation();const [theme,setTheme]=useState(()=>localStorage.getItem('votaraEBTheme')||'dark');useEffect(()=>{const change=()=>setTheme(localStorage.getItem('votaraEBTheme')||'dark');window.addEventListener('votara-eb-theme',change);return()=>window.removeEventListener('votara-eb-theme',change)},[]);return pathname.startsWith('/electoral-board/')?<div className="eb-workspace" data-eb-theme={theme} data-eb-low-power={Boolean(navigator.connection?.saveData || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4))}>{children}</div>:children;}

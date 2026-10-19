@@ -722,10 +722,7 @@ const loginStaff = async (
         // The user starts fresh.
         // =================================================
 
-        const {
-            error:
-                updateError,
-        } = await supabase
+        const loginUpdate = supabase
             .from("staff_users")
             .update({
 
@@ -746,6 +743,10 @@ const loginStaff = async (
                 "id",
                 user.id
             );
+        const loginWrite = Number(user.failed_login_attempts || 0) > 0 || user.locked_until
+            ? await loginUpdate
+            : (loginUpdate.then(({error})=>{if(error)console.error('Unable to save last login:',error.message);}).catch(error=>console.error('Unable to save last login:',error.message)), {error:null});
+        const updateError = loginWrite.error;
 
 
         if (

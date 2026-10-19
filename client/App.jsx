@@ -1,5 +1,9 @@
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
+import MaintenanceGate from './src/MaintenanceGate';
+import EBWorkspace from './src/pages/electoralBoard/EBWorkspace';
+import AdminWorkspace from './src/pages/admin/AdminWorkspace';
+import AdminLateEnrollees from './src/pages/admin/AdminLateEnrollees';
 import VotaraIntro from "./src/components/VotaraIntro";
 
 // =====================================================
@@ -27,15 +31,10 @@ import StaffChangePassword from "./src/pages/auth/StaffChangePassword";
 // =====================================================
 
 import AdminDashboard from "./src/pages/admin/AdminDashboard";
-import ElectoralBoardManagement from "./src/pages/admin/ElectoralBoardManagement";
-import AdminAccountManagement from "./src/pages/admin/AdminAccountManagement";
 import RegistrationRequirements from "./src/pages/auth/RegistrationRequirements";
-import StudentManagement from "./src/pages/admin/StudentManagement";
 import AdminDataManagement from "./src/pages/admin/AdminDataManagement";
 import AdminUserAccessManagement from "./src/pages/admin/AdminUserAccessManagement";
 
-import CandidateManagement from "./src/pages/admin/CandidateManagement";
-import Election from "./src/pages/admin/Election";
 
 import EBCandidateManagement from "./src/pages/electoralBoard/EBCandidateManagement";
 import ManagePartyList from "./src/pages/electoralBoard/ManagePartyList";
@@ -46,7 +45,6 @@ import KioskVoting from "./src/pages/electoralBoard/KioskVoting";
 import ElectoralBoardAuditLogs from "./src/pages/electoralBoard/AuditLogs";
 import AdminAuditLogs from "./src/pages/admin/AdminAuditLogs";
 import Reports from "./src/pages/admin/Reports";
-import ElectionResults from "./src/pages/admin/ElectionResults";
 import SystemSettings from "./src/pages/admin/SystemSettings";
 
 import StudentDashboard from "./src/pages/student/StudentDashboard";
@@ -54,12 +52,11 @@ import Settings from "./src/pages/student/Settings";
 
 import ElectoralBoardLogin from "./src/pages/auth/ElectoralBoardLogin";
 
-import * as EBDashboardModule from "./src/pages/electoralBoard/EBDashboard";
-
-const EBDashboard =
-    EBDashboardModule.default || EBDashboardModule.EBDashboard;
+import EBDashboard from "./src/pages/electoralBoard/EBDashboard";
 
 import "./App.css";
+import "./src/pages/admin/AdminWorkspace.css";
+import "./src/pages/electoralBoard/EBWorkspace.css";
 
 
 const LoginPage = () => {
@@ -100,7 +97,8 @@ if (showInitialIntro) {
             className="page-transition"
             key={location.pathname}
         >
-            <Routes location={location}>
+            <MaintenanceGate><AdminWorkspace><EBWorkspace><Routes location={location}>
+<Route path="/admin/late-enrollees" element={<AdminLateEnrollees/>}/>
 
 
                 <Route
@@ -294,7 +292,7 @@ if (showInitialIntro) {
                 <Route
                     path="/admin/electoral-board"
                     element={
-                        <ElectoralBoardManagement />
+                        <Navigate to="/admin/users" replace />
                     }
                 />
                 <Route
@@ -304,7 +302,7 @@ if (showInitialIntro) {
                 <Route
                     path="/admin/students"
                     element={
-                        <StudentManagement />
+                        <Navigate to="/admin/users" replace />
                     }
                 />
                 <Route
@@ -320,7 +318,7 @@ if (showInitialIntro) {
 
                     path="/admin/election"
                     element={
-                        <Election />
+                        <Navigate to="/admin/reports" replace />
                     }
                 />
 
@@ -328,7 +326,7 @@ if (showInitialIntro) {
                     path="/admin/candidates"
 
                     element={
-                        <CandidateManagement />
+                        <Navigate to="/admin/data-management" replace />
                     }
                 />
                 <Route
@@ -360,7 +358,7 @@ if (showInitialIntro) {
                 <Route
                     path="/admin/results"
                     element={
-                        <ElectionResults />
+                        <Navigate to="/admin/reports" replace />
                     }
                 />
                 <Route
@@ -371,7 +369,7 @@ if (showInitialIntro) {
                 />
                 <Route
                     path="/admin/admin-accounts"
-                    element={<AdminAccountManagement />}
+                    element={<Navigate to="/admin/users" replace />}
                 />
                 <Route
                     path="/registration-requirements"
@@ -382,7 +380,7 @@ if (showInitialIntro) {
                     path="/vote"
                     element={<Vote />}
                 />
-            </Routes>
+            </Routes></EBWorkspace></AdminWorkspace></MaintenanceGate>
         </div>
     );
 };

@@ -1,6 +1,16 @@
 const express = require("express");
 
 const router = express.Router();
+const requireStaff = require("../middleware/requireStaff");
+const manageElection = requireStaff("admin", "electoral_board");
+
+// Public election reads stay available to students. Every write requires staff.
+router.use((req, res, next) => {
+  if (["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) {
+    return manageElection(req, res, next);
+  }
+  return next();
+});
 
 const {
   createElection,

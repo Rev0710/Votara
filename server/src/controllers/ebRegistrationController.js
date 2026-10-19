@@ -202,10 +202,10 @@ const getStudentRegistrations = async (
             success: true,
 
             applications:
-                applications || [],
+                (applications || []).filter(row => !["late","late_enrollee"].includes(row.registration_type)),
 
             count:
-                applications?.length || 0,
+                (applications || []).filter(row => !["late","late_enrollee"].includes(row.registration_type)).length,
 
         });
 
@@ -318,6 +318,9 @@ const getStudentRegistrationById = async (
                     "Student registration application not found.",
 
             });
+        }
+        if (['late','late_enrollee'].includes(application.registration_type)) {
+            return res.status(403).json({success:false,message:'Late enrollee applications must be reviewed by an Administrator.'});
         }
 
 
@@ -861,6 +864,9 @@ const reviewStudentRegistration = async (
                     "Student registration application not found.",
 
             });
+        }
+        if (['late','late_enrollee'].includes(application.registration_type)) {
+            return res.status(403).json({success:false,message:'Late enrollee applications must be reviewed by an Administrator.'});
         }
 
 

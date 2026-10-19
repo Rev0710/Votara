@@ -4,7 +4,8 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "test": "vitest run",
+    "test:security": "node --test test/security/*.test.cjs",
+    "test": "vitest run && node --test test/security/*.test.cjs",
     "test:watch": "vitest",
     "test:verbose": "vitest run --reporter=verbose",
     "test:coverage": "vitest run --coverage",

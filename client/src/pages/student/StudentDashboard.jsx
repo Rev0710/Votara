@@ -1,5 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import PlatformNotifications from '../../components/PlatformNotifications';
+import { useEffect, useMemo, useRef, useState } from "react";
 import "./StudentDashboard.css";
+import "./Settings.css";
+import "./StudentDashboard.workspace.css";
+import StudentDotIcon from "../../components/student/StudentDotIcon";
+import { FiMoon, FiSun } from "react-icons/fi";
 import Profile from "./Profile";
 import api from "../../services/api";
 import {
@@ -215,6 +220,16 @@ const ELECTION_STATUS_CLASSES = {
 // =====================================================
 
 function StudentDashboard() {
+    const contentScrollRef = useRef(null);
+    const [platformUpdate,setPlatformUpdate]=useState(null);
+    const [studentTheme, setStudentTheme] = useState(() => {
+        try { return localStorage.getItem("votaraStudentTheme") === "dark" ? "dark" : "light"; }
+        catch { return "light"; }
+    });
+    useEffect(() => {
+        try { localStorage.setItem("votaraStudentTheme", studentTheme); } catch { /* Storage may be disabled. */ }
+    }, [studentTheme]);
+
     // =================================================
     // GENERAL DASHBOARD STATE
     // =================================================
@@ -248,6 +263,12 @@ useEffect(() => {
     };
 }, []);
     const [activeMenu, setActiveMenu] = useState("dashboard");
+    useEffect(() => { contentScrollRef.current?.scrollTo({ top: 0, behavior: "instant" }); }, [activeMenu]);
+    useEffect(() => {
+        const closeDrawer = event => { if (event.key === "Escape") setSidebarOpen(false); };
+        window.addEventListener("keydown", closeDrawer);
+        return () => window.removeEventListener("keydown", closeDrawer);
+    }, []);
     const [activeSidebarItem, setActiveSidebarItem] = useState("dashboard");
 
     const [student, setStudent] = useState(null);
@@ -302,6 +323,8 @@ useEffect(() => {
     const [electionError, setElectionError] = useState("");
 
     const [voteLoading, setVoteLoading] = useState(false);
+    const [ballotReview,setBallotReview]=useState(false);
+    const [voteFeedback,setVoteFeedback]=useState("");
     const [hasVoted, setHasVoted] = useState(false);
     const [voteConfirmation, setVoteConfirmation] = useState(null);
 
@@ -873,7 +896,7 @@ const handleMenuClick = (id) => {
         setSidebarOpen(false);
     }
 
-    window.scrollTo({
+    contentScrollRef.current?.scrollTo({
         top: 0,
         behavior: "smooth",
     });
@@ -1072,6 +1095,8 @@ const handleOpenPartyList = async (partyList) => {
     };
 
     const loadReportHistory = async () => {
+        setSettingsModal("Report an Issue");
+        setReportView("history");
         setReportLoading(true);
         setReportError("");
         try {
@@ -1131,6 +1156,7 @@ const handleOpenPartyList = async (partyList) => {
             const report = response.data?.report;
             if (!response.data?.success || !report) throw new Error(response.data?.message || "The report was not saved.");
             setSubmittedReport(report);
+            window.dispatchEvent(new Event('votara-student-activity'));
             setReportView("submitted");
         } catch (error) {
             setReportError(error?.response?.data?.message || error?.message || "Unable to submit your report.");
@@ -1168,7 +1194,7 @@ const handleSettingsItemClick = (item) => {
         setSettingsModal(null);
         setActiveMenu(pageMap[item]);
         setActiveSidebarItem("settings");
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        contentScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
         return;
     }
 
@@ -1196,7 +1222,7 @@ const handleSettingsItemClick = (item) => {
 
         setSelectedVotes((previous) => ({
             ...previous,
-            [positionId]: candidateId,
+            [positionId]: previous[positionId] === candidateId ? null : candidateId,
         }));
     };
 
@@ -1219,16 +1245,18 @@ const handleSettingsItemClick = (item) => {
     // SUBMIT VOTE
     // =================================================
 
-    const handleSubmitVotes = async () => {
+    const handleSubmitVotes = async (confirmed = false) => {
+        if(voteLoading)return;
+        setVoteFeedback("");
         if (!election?.id) {
-            alert(
+            setVoteFeedback(
                 "There is no election currently available for voting."
             );
             return;
         }
 
         if (!electionIsOpen) {
-            alert(
+            setVoteFeedback(
                 electionIsScheduled
                     ? "The election has not been opened for voting by the Electoral Board yet."
                     : electionIsClosed
@@ -1241,47 +1269,16 @@ const handleSettingsItemClick = (item) => {
         }
 
         if (!studentEligible) {
-            alert(
+            setVoteFeedback(
                 "1st Year students are not eligible to vote in this election."
             );
             return;
         }
 
         if (hasVoted) {
-            alert(
+            setVoteFeedback(
                 "You have already submitted your vote for this election."
             );
-            return;
-        }
-
-        // Required positions must have a selection.
-        const requiredPositions =
-            eligiblePositions.filter(
-                (position) =>
-                    position.is_required !== false
-            );
-
-        const missingPositions =
-            requiredPositions.filter(
-                (position) =>
-                    !selectedVotes[
-                        position.id
-                    ]
-            );
-
-        if (missingPositions.length > 0) {
-            const missingNames =
-                missingPositions
-                    .map(
-                        (position) =>
-                            position.name
-                    )
-                    .join(", ");
-
-            alert(
-                `Please select a candidate for: ${missingNames}`
-            );
-
             return;
         }
 
@@ -1305,11 +1302,18 @@ const handleSettingsItemClick = (item) => {
                 }));
 
         if (selections.length === 0) {
-            alert(
-                "Please select your candidates before submitting."
+            setVoteFeedback(
+                "Select at least one candidate. You may leave other positions unselected."
             );
             return;
         }
+
+        const skipped = eligiblePositions.filter(position => !selectedVotes[position.id]);
+        const review = skipped.length
+            ? 'Unselected positions (no vote): ' + skipped.map(position => position.name).join(', ') + '. '
+            : '';
+        if (confirmed !== true) {setBallotReview(true);return;}
+        setBallotReview(false);
 
         try {
             setVoteLoading(true);
@@ -1328,6 +1332,7 @@ const handleSettingsItemClick = (item) => {
             }
 
             setHasVoted(true);
+            window.dispatchEvent(new Event('votara-student-activity'));
             setSelectedVotes({});
 
             const confirmationSource =
@@ -1360,7 +1365,7 @@ const handleSettingsItemClick = (item) => {
                 error
             );
 
-            alert(
+            setVoteFeedback(
                 error?.response?.data?.message ||
                 error?.message ||
                 "Unable to submit your vote. Please try again."
@@ -1450,39 +1455,30 @@ const handleLogout = async () => {
     // =================================================
 
     const handleSearch = () => {
-        const query =
-            searchValue.trim().toLowerCase();
-
+        const query = searchValue.trim().toLowerCase().replace(/[^a-z0-9]+/g, ' ');
         if (!query) return;
-
-        if (query.includes("vote")) {
-            handleMenuClick("vote");
-        } else if (
-            query.includes("guideline") ||
-            query.includes("voter")
-        ) {
-            handleMenuClick(
-                "guidelines"
-            );
-        } else if (
-            query.includes("setting")
-        ) {
-            handleMenuClick(
-                "settings"
-            );
-        } else if (
-            query.includes("dashboard")
-        ) {
-            handleMenuClick(
-                "dashboard"
-            );
-        } else {
-            alert(
-                `No page found for "${searchValue}"`
-            );
-        }
-
-        setSearchValue("");
+        const features = [
+            ['guidelines', ['voters guidelines', 'voter guidelines', 'guidelines', 'guideline', 'how to vote']],
+            ['candidates', ['candidate directory', 'candidates', 'candidate', 'campaign']],
+            ['results', ['election results', 'results', 'result']],
+            ['terms', ['terms and conditions', 'terms of service', 'terms', 'conditions']],
+            ['privacy', ['privacy policy', 'privacy']],
+            ['about', ['about us', 'about', 'mission']],
+            ['contact', ['contact us', 'contact', 'support']],
+            ['report', ['report an issue', 'report', 'issue', 'concern']],
+            ['settings', ['settings', 'setting', 'account']],
+            ['dashboard', ['dashboard', 'home']],
+            ['vote', ['voting', 'vote', 'ballot']],
+        ];
+        const match = features.find(([, labels]) => labels.some(label => label === query))
+            || features.find(([, labels]) => labels.some(label => label.includes(query) || query.includes(label)));
+        if (!match) { alert('No feature found. Try candidates, results, guidelines, settings, or report an issue.'); return; }
+        const settingsPages = {about: 'About us', contact: 'Contact us', terms: 'Terms of Service', privacy: 'Privacy Policy', report: 'Report an Issue'};
+        if (settingsPages[match[0]]) {
+            handleSettingsItemClick(settingsPages[match[0]]);
+            if (window.matchMedia('(max-width: 720px)').matches) setSidebarOpen(false);
+        } else handleMenuClick(match[0]);
+        setSearchValue('');
     };
 
     // =================================================
@@ -1562,6 +1558,7 @@ const handleLogout = async () => {
                             <button
                                 type="button"
                                 className="candidate-vote-button"
+                                aria-pressed={isSelected}
                                 disabled={
                                     hasVoted ||
                                     voteLoading ||
@@ -1576,7 +1573,7 @@ const handleLogout = async () => {
                                 }
                             >
                                 {isSelected
-                                    ? "SELECTED"
+                                    ? "SELECTED · CLEAR"
                                     : "VOTE"}
                             </button>
 
@@ -2079,7 +2076,7 @@ const resultsAreVisible =
                                 </div>
                             </section>
 
-                            <section className="announcement-card main-hover-card">
+                            <section id="student-announcements" className="announcement-card main-hover-card">
                                 <h3>
                                     Announcements
                                 </h3>
@@ -2091,12 +2088,8 @@ const resultsAreVisible =
                                           )}`
                                         : "No active election announcement."}
                                 </p>
-
-                                <div className="announcement-line" />
-
-                                <button type="button">
-                                    See all ›
-                                </button>
+                                {platformUpdate?.notice && <p className="student-admin-announcement">{platformUpdate.notice}</p>}
+                                {platformUpdate?.upcoming && <p className="student-admin-announcement">Maintenance is scheduled for {new Date(platformUpdate.startsAt).toLocaleString()}. {platformUpdate.message}</p>}
                             </section>
 
                             <section className="faq-section">
@@ -2670,9 +2663,7 @@ const resultsAreVisible =
                                     <div className="vote-position-heading">
                                         <h2>{position.name}</h2>
                                         <p>
-                                            {position.is_required !== false
-                                                ? "You must select one candidate for this position."
-                                                : "This position is optional."}
+                                            Choose one candidate, or leave this position unselected to abstain. Select a chosen candidate again to clear your choice.
                                         </p>
                                         {position.description && <p>{position.description}</p>}
                                     </div>
@@ -2689,7 +2680,7 @@ const resultsAreVisible =
                                         type="button"
                                         className="submit-vote-button"
                                         disabled={voteLoading}
-                                        onClick={handleSubmitVotes}
+                                        onClick={() => handleSubmitVotes()}
                                     >
                                         {voteLoading ? "SUBMITTING..." : "SUBMIT VOTE"}
                                     </button>
@@ -2725,42 +2716,30 @@ const resultsAreVisible =
                 "Log out of your account after successfully submitting your ballot to protect your privacy.",
             ];
 
+            const groups = [
+                { title: "Before you vote", subtitle: "Prepare for election day", items: [0, 1, 2, 4] },
+                { title: "Cast your ballot", subtitle: "Review, choose, and confirm", items: [3, 6, 7, 8] },
+                { title: "Protect your account", subtitle: "Vote responsibly and get support", items: [5, 9, 10, 11] },
+            ];
             return (
                 <main className="guidelines-main content-page-animation">
                     <section className="guidelines-container">
-                        <h1>
-                            Voters Guidelines
-                        </h1>
-
-                        <div className="guidelines-list">
-                            {guidelines.map(
-                                (
-                                    guideline,
-                                    index
-                                ) => (
-                                    <button
-                                        type="button"
-                                        className="guideline-item"
-                                        key={
-                                            index
-                                        }
-                                        onClick={() =>
-                                            alert(
-                                                guideline
-                                            )
-                                        }
-                                    >
-                                        <span className="guideline-dot" />
-
-                                        <span>
-                                            {
-                                                guideline
-                                            }
-                                        </span>
-                                    </button>
-                                )
-                            )}
+                        <div className="student-guidelines-heading">
+                            <span className="student-guidelines-eyebrow">VOTER RESOURCES</span>
+                            <h1>Voters Guidelines</h1>
+                            <p>A little preparation makes every vote count. Follow these guidelines for a smooth and secure voting experience.</p>
                         </div>
+                        <div className="student-guidelines-grid">
+                            {groups.map((group, groupIndex) => (
+                                <section className="student-guidelines-card" key={group.title} aria-labelledby={"guidelines-group-" + groupIndex}>
+                                    <span className="student-guidelines-number">0{groupIndex + 1}</span>
+                                    <h2 id={"guidelines-group-" + groupIndex}>{group.title}</h2>
+                                    <p>{group.subtitle}</p>
+                                    <ul>{group.items.map(index => <li key={index}><span className="guideline-dot" aria-hidden="true" /><span>{guidelines[index]}</span></li>)}</ul>
+                                </section>
+                            ))}
+                        </div>
+                        <div className="student-guidelines-support"><div><strong>Need a hand?</strong><p>If something goes wrong, send a concern to your administrator.</p></div><button type="button" onClick={() => handleSettingsItemClick("Report an Issue")}>Report an issue <span aria-hidden="true">↗</span></button></div>
                     </section>
                 </main>
             );
@@ -3011,7 +2990,7 @@ const resultsAreVisible =
                                     <a key={id} href={`#privacy-${id}`}>{label}</a>
                                 ))}
                                 <button type="button"
-                                    onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+                                    onClick={() => contentScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" })}>
                                     Back to beginning
                                 </button>
                                 <p>You can read the full policy by scrolling through the reading area.</p>
@@ -3117,7 +3096,7 @@ const resultsAreVisible =
                                     <a key={id} href={`#terms-${id}`}>{label}</a>
                                 ))}
                                 <button type="button"
-                                    onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+                                    onClick={() => contentScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" })}>
                                     Back to beginning
                                 </button>
                                 <p>Scroll through the reading area to review the terms.</p>
@@ -3413,7 +3392,7 @@ const resultsAreVisible =
     // =================================================
 
     return (
-        <div className="student-dashboard">
+        <div className={`student-dashboard ${sidebarOpen ? "is-sidebar-expanded" : "is-sidebar-collapsed"}`} data-student-theme={studentTheme}>
             {/* ================= NAVBAR ================= */}
 
             
@@ -3424,6 +3403,8 @@ const resultsAreVisible =
                         className="menu-toggle"
                         onClick={() => setSidebarOpen((previous) => !previous)}
                         aria-label="Toggle sidebar"
+                        aria-expanded={sidebarOpen}
+                        aria-controls="student-sidebar"
                     >
                         <span />
                         <span />
@@ -3461,27 +3442,27 @@ const resultsAreVisible =
                     </button>
                 </div>
 
-                <div className="nav-right">
-                    <button
-                        type="button"
-                        className="nav-icon-button"
-                        aria-label="Notifications"
-                        onClick={() => alert("You have no new notifications.")}
-                    >
-                        <img
-                            src={bellIcon}
-                            alt="Notifications"
-                            className="nav-icon-image"
-                        />
-                    </button>
-                </div>
-            </header>
+                <button type="button" className="student-theme-toggle"
+                    aria-label={studentTheme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+                    title={studentTheme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+                    aria-pressed={studentTheme === "dark"}
+                    onClick={() => setStudentTheme(value => value === "light" ? "dark" : "light")}>
+                    {studentTheme === "light" ? <FiMoon aria-hidden="true" /> : <FiSun aria-hidden="true" />}
+                </button>
+                <div className="student-platform-bell"><PlatformNotifications onStatus={setPlatformUpdate} onAction={target => {
+                    if (target === "reports") { loadReportHistory(); return; }
+                    handleMenuClick(target === "vote" ? "vote" : "dashboard");
+                    if (target === "announcement") window.requestAnimationFrame(() => document.getElementById("student-announcements")?.scrollIntoView({block:"center",behavior:"smooth"}));
+                }}/></div>
+                    </header>
 
 
             <div className="dashboard-body">
+                {sidebarOpen && <button className="student-sidebar-scrim" type="button" aria-label="Close navigation" onClick={() => setSidebarOpen(false)} />}
                 {/* ================= SIDEBAR ================= */}
 
-                <aside
+                <aside id="student-sidebar" aria-label="Student navigation"
+                    inert={!sidebarOpen && window.matchMedia("(max-width: 720px)").matches}
                     className={`sidebar ${
                         sidebarOpen
                             ? "sidebar-open"
@@ -3545,37 +3526,15 @@ const resultsAreVisible =
                                                 ? "active"
                                                 : ""
                                         }`}
+                                        aria-current={isActive ? "page" : undefined}
+                                        title={item.label}
                                         onClick={() =>
                                             handleMenuClick(
                                                 item.id
                                             )
                                         }
                                     >
-                                        <span className="sidebar-icon-wrapper">
-                                            <img
-                                                src={
-                                                    item.icon
-                                                }
-                                                alt=""
-                                                className={`sidebar-menu-icon normal-icon ${
-                                                    isActive
-                                                        ? "hide-icon"
-                                                        : ""
-                                                }`}
-                                            />
-
-                                            <img
-                                                src={
-                                                    item.activeIcon
-                                                }
-                                                alt=""
-                                                className={`sidebar-menu-icon active-icon ${
-                                                    isActive
-                                                        ? "show-icon"
-                                                        : ""
-                                                }`}
-                                            />
-                                        </span>
+                                        <span className="sidebar-icon-wrapper"><StudentDotIcon name={item.id} /></span>
 
                                         <span className="sidebar-label">
                                             {
@@ -3613,13 +3572,16 @@ const resultsAreVisible =
 
                 {/* ================= CONTENT ================= */}
 
-                {renderMainContent()}
+                <div className="student-content-scroll" ref={contentScrollRef} tabIndex={0} aria-label="Student dashboard content">
+                    {renderMainContent()}
+                </div>
             </div>
             
             
 
 {/* ================= CANDIDATE CAMPAIGN PLATFORM ================= */}
 
+{(ballotReview || voteFeedback) && <div className="candidate-platform-overlay"><section className="candidate-platform-modal ballot-review-modal" role="dialog" aria-modal="true" aria-labelledby="ballot-review-title"><h2 id="ballot-review-title">{voteFeedback?"Voting update":"Review your ballot"}</h2>{voteFeedback?<p role="alert">{voteFeedback}</p>:<><p>Unselected positions count as abstentions. You can submit only the candidates you chose.</p><ul>{eligiblePositions.map(position=><li key={position.id}><strong>{position.name}</strong><span>{selectedVotes[position.id]?(candidates.find(candidate=>candidate.id===selectedVotes[position.id])?.full_name||candidates.find(candidate=>candidate.id===selectedVotes[position.id])?.fullName||"Candidate selected"):"No vote — abstain"}</span></li>)}</ul><p>Your choices cannot be changed after submission.</p></>}<footer><button type="button" onClick={()=>{setBallotReview(false);setVoteFeedback("");}}> {voteFeedback?"Close":"Back to ballot"}</button>{!voteFeedback&&<button type="button" className="primary" disabled={voteLoading} onClick={()=>handleSubmitVotes(true)}>Confirm & submit</button>}</footer></section></div>}
 {selectedCandidateDetails && (
     <div
         className="candidate-platform-overlay"
@@ -4011,7 +3973,7 @@ const resultsAreVisible =
                                 <label>Attachment <small>Optional · JPG, PNG, WEBP, or PDF · Max 5 MB</small><input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" onChange={handleReportAttachment} /></label>
                                 {reportDraft.attachment && <div className="student-report-attachment-name">Attached: {reportDraft.attachment.name}<button type="button" onClick={() => setReportDraft((current) => ({ ...current, attachment: null }))}>Remove</button></div>}
                                 {reportError && <div className="student-report-error" role="alert">{reportError}</div>}
-                                <div className="student-report-modal-footer"><button type="button" className="student-report-secondary" onClick={() => setReportView("category")} disabled={reportSubmitting}>Back</button><button type="submit" className="student-report-primary" disabled={reportSubmitting}>{reportSubmitting ? "Submitting…" : "Submit report"}</button></div>
+                                <p>Each account may submit up to 5 reports. Your history and administrator replies remain available.</p><div className="student-report-modal-footer"><button type="button" className="student-report-secondary" onClick={() => setReportView("category")} disabled={reportSubmitting}>Back</button><button type="submit" className="student-report-primary" disabled={reportSubmitting}>{reportSubmitting ? "Submitting…" : "Submit report"}</button></div>
                             </form>
                         </>}
                         {reportView === "submitted" && submittedReport && <div className="student-report-submitted">
