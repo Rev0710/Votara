@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import "./PlatformNotifications.css";
 
-export default function PlatformNotifications({ admin = false, audience = "student", onStatus, onAction }) {
+export default function PlatformNotifications({ admin = false, audience = "student", onStatus, onAction, iconSrc }) {
     const role=admin?"admin":audience;
     let account={};try{account=JSON.parse(localStorage.getItem(admin?"votaraAdminUser":audience==="eb"?"votaraEBUser":"votaraStudent")||"{}");}catch{}
     const storageKey=notificationStorageKey(role,account);
@@ -106,7 +106,7 @@ export default function PlatformNotifications({ admin = false, audience = "stude
     const unread=unreadNotifications(items,read);
     return <div className="platform-notifications" ref={container}>
         <button type="button" className="platform-bell" aria-label="Notifications" aria-expanded={open} onClick={() => setOpen(value => !value)}>
-            <FiBell aria-hidden="true" />{unread.length > 0 && <span aria-label={`${unread.length} unread notifications`}>{unread.length}</span>}
+            {iconSrc ? <img src={iconSrc} alt="" width="24" height="24" /> : <FiBell aria-hidden="true" />}{unread.length > 0 && <span aria-label={`${unread.length} unread notifications`}>{unread.length}</span>}
         </button>
         {open && <section className="platform-notification-panel" aria-label="Platform notifications">
             <header><strong>Notifications</strong><button type="button" aria-label="Close notifications" onClick={() => setOpen(false)}><FiX /></button></header>

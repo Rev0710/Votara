@@ -1,340 +1,168 @@
-import PlatformNotifications from '../../components/PlatformNotifications';
-import AdminProfileModal from './AdminProfileModal';
-import {FiMoon,FiSun} from 'react-icons/fi';
-import React, { useState } from "react";
-import {
-    useLocation,
-    useNavigate,
-} from "react-router-dom";
-
-import {
-    FiBell,
-    FiChevronDown,
-    FiLogOut,
-    FiMenu,
-    FiX,
-} from "react-icons/fi";
-
+import React, { useEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { FiLogOut, FiMenu, FiMoon, FiSun, FiUser, FiX } from "react-icons/fi";
+import PlatformNotifications from "../../components/PlatformNotifications";
+import AdminProfileModal from "./AdminProfileModal";
+import logo from "../../images/Votara.png";
+import { ADMIN_NAVIGATION, ADMIN_OVERVIEW, isAdminDestinationActive } from "./adminNavigation";
 import "./AdminTopNav.css";
 
-
-// ============================================================
-// VOTARA ADMIN TOP NAVIGATION
-// ============================================================
-
-const ADMIN_NAVIGATION = [
-    {
-        key: "dashboard",
-        label: "System Dashboard",
-        path: "/admin-dashboard",
-    },
-    {
-        key: "users",
-        label: "User & Access Management",
-        path: "/admin/users",
-    },
-    {
-        key: "data",
-        label: "Data Management",
-        path: "/admin/data-management",
-    },
-    {
-        key: "configuration",
-        label: "System Configuration",
-        path: "/admin/settings",
-    },
-    {
-        key: "logs",
-        label: "Monitoring & Logs",
-        path: "/admin/audit-logs",
-    },
-    {
-        key: "reports",
-        label: "Reports & Analytics",
-        path: "/admin/reports",
-    },
-    { key: "late", label: "Late Enrollees", path: "/admin/late-enrollees" },
-];
-
-
-// ============================================================
-// COMPONENT
-// ============================================================
-
-const AdminTopNav = ({
-    admin = null,
-    onLogout,
-}) => {
+export default function AdminTopNav({ admin = null, onLogout }) {
     const navigate = useNavigate();
     const location = useLocation();
-
-    const [profileOpen,setProfileOpen]=useState(false);
-    const [profileAdmin,setProfileAdmin]=useState(()=>{try{return admin || JSON.parse(localStorage.getItem('votaraAdminUser')||'null');}catch{return admin;}});
-    const [theme,setTheme]=useState(()=>localStorage.getItem('votaraAdminTheme')||'dark');
-    const toggleTheme=()=>{const next=theme==='dark'?'light':'dark';setTheme(next);localStorage.setItem('votaraAdminTheme',next);window.dispatchEvent(new Event('votara-admin-theme'));};
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
+    const headerRef = useRef(null);
+    const triggerRefs = useRef({});
+    const logoutRef = useRef(null);
+    const [openMenu, setOpenMenu] = useState(null);
+    const [mobileOpen, setMobileOpen] = useState(false);
+    const [profileOpen, setProfileOpen] = useState(false);
+    const [updatedAdmin, setUpdatedAdmin] = useState(null);
+    const [storedAdmin] = useState(() => {
+        try { return JSON.parse(localStorage.getItem("votaraAdminUser") || "null"); }
+        catch { return null; }
+    });
+    const profileAdmin = updatedAdmin || admin || storedAdmin;
+    const profileName = profileAdmin?.full_name || profileAdmin?.fullName || "Administrator";
+    const profilePhoto = profileAdmin?.profile_photo_url || profileAdmin?.profilePhotoUrl;
+    const [theme, setTheme] = useState(() => localStorage.getItem("votaraAdminTheme") || "dark");
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-    // ========================================================
-    // ACTIVE NAVIGATION
-    // ========================================================
+    const closeNavigation = () => { setOpenMenu(null); setMobileOpen(false); };
+    useEffect(() => { setOpenMenu(null); setMobileOpen(false); }, [location.pathname, location.search]);
 
-    const isActive = (path) => {
-        if (path === "/admin-dashboard") {
-            return location.pathname === "/admin-dashboard";
-        }
+    useEffect(() => {
+        if (!openMenu && !mobileOpen) return;
+        const dismiss = (event) => {
+            if (event.type === "keydown") {
+                if (event.key !== "Escape") return;
+                event.preventDefault();
+                if (openMenu) {
+                    triggerRefs.current[openMenu]?.focus();
+                    setOpenMenu(null);
+                } else {
+                    triggerRefs.current.mobile?.focus();
+                    setMobileOpen(false);
+                }
+            } else if (!headerRef.current?.contains(event.target)) {
+                setOpenMenu(null);
+                setMobileOpen(false);
+            }
+        };
+        document.addEventListener("pointerdown", dismiss);
+        document.addEventListener("focusin", dismiss);
+        document.addEventListener("keydown", dismiss);
+        return () => {
+            document.removeEventListener("pointerdown", dismiss);
+            document.removeEventListener("focusin", dismiss);
+            document.removeEventListener("keydown", dismiss);
+        };
+    }, [openMenu, mobileOpen]);
 
-        return (
-            location.pathname === path ||
-            location.pathname.startsWith(`${path}/`)
-        );
+    useEffect(() => {
+        if (showLogoutConfirm) logoutRef.current?.showModal();
+        else logoutRef.current?.close();
+    }, [showLogoutConfirm]);
+
+    const toggleTheme = () => {
+        const next = theme === "dark" ? "light" : "dark";
+        setTheme(next);
+        localStorage.setItem("votaraAdminTheme", next);
+        window.dispatchEvent(new Event("votara-admin-theme"));
     };
-
-    // ========================================================
-    // NAVIGATE
-    // ========================================================
-
-    const handleNavigation = (path) => {
-        if (location.pathname !== path) {
-            navigate(path);
-        }
-
-        setMobileMenuOpen(false);
-    };
-
-    // ========================================================
-    // LOGOUT
-    // ========================================================
-
     const confirmLogout = () => {
         setShowLogoutConfirm(false);
-
-        if (typeof onLogout === "function") {
-            onLogout();
-            return;
-        }
-
+        if (typeof onLogout === "function") return onLogout();
         localStorage.removeItem("votaraAdminToken");
         localStorage.removeItem("votaraAdminUser");
-
-        navigate("/admin-login", {
-            replace: true,
-        });
+        navigate("/admin-login", { replace: true });
     };
-
-    const requestLogout = () => {
-        setMobileMenuOpen(false);
-        setShowLogoutConfirm(true);
+    const handleListKeyDown = (event) => {
+        if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+        const items = Array.from(event.currentTarget.querySelectorAll("a, button"));
+        const index = items.indexOf(document.activeElement);
+        const next = event.key === "Home" ? 0 : event.key === "End" ? items.length - 1
+            : (index + (event.key === "ArrowDown" ? 1 : -1) + items.length) % items.length;
+        event.preventDefault();
+        items[next]?.focus();
     };
-
-    const currentPage =
-        ADMIN_NAVIGATION.find((item) => isActive(item.path));
-
-    // ========================================================
-    // RENDER
-    // ========================================================
+    const openWithKeyboard = (event, key) => {
+        if (event.key !== "ArrowDown") return;
+        event.preventDefault();
+        setOpenMenu(key);
+        requestAnimationFrame(() => document.getElementById(`admin-menu-${key}`)?.querySelector("a, button")?.focus());
+    };
+    const destination = (item, className = "admin-nav-destination") => (
+        <Link key={item.path} to={item.path} className={className}
+            aria-current={isAdminDestinationActive(item, location) ? "page" : undefined}
+            onClick={closeNavigation}>{item.label}</Link>
+    );
 
     return (
-        <><header className="votara-admin-topbar">
-
-            {/* BRAND */}
-            <button
-                type="button"
-                className="votara-admin-brand"
-                onClick={() =>
-                    handleNavigation("/admin-dashboard")
-                }
-                aria-label="VOTARA Admin Dashboard"
-            >
-                <span className="votara-admin-brand-mark">
-                    <img
-                        src="/src/images/Votara.png"
-                        alt="Votara"
-                        className="votara-admin-brand-logo"
-                    />
-                </span>
-
-                <span className="votara-admin-brand-name">
-                    Votara
-                </span>
-            </button>
-
-
-            {/* DESKTOP NAVIGATION */}
-            <nav
-                className="votara-admin-topnav"
-                aria-label="VOTARA Admin Navigation"
-            >
-                {ADMIN_NAVIGATION.map((item) => {
-                    const active = isActive(item.path);
-
-                    return (
-                        <button
-                            key={item.key}
-                            type="button"
-                            className={`votara-admin-topnav-link ${
-                                active ? "active" : ""
-                            }`}
-                            onClick={() =>
-                                handleNavigation(item.path)
-                            }
-                            aria-current={
-                                active ? "page" : undefined
-                            }
-                        >
-                            {item.label}
-                        </button>
-                    );
-                })}
-            </nav>
-
-
-            {/* RIGHT SIDE */}
-            <div className="votara-admin-topbar-actions">
-
-                <button
-                    type="button"
-                    className="votara-topbar-environment"
-                    title="Current environment"
-                >
-                    <span className="votara-env-dot" />
-                    <span>Production</span>
-                </button>
-
-                                <div className="admin-header-tools"><button type="button" className="admin-theme-button" aria-label={theme==='dark'?'Switch to light mode':'Switch to dark mode'} onClick={toggleTheme}>{theme==='dark'?<FiSun/>:<FiMoon/>}</button><PlatformNotifications admin/>
-                <button type="button" className="admin-profile-trigger" onClick={()=>setProfileOpen(true)} aria-label="Open administrator profile">{(profileAdmin?.profile_photo_url || profileAdmin?.profilePhotoUrl)?<img src={profileAdmin.profile_photo_url || profileAdmin.profilePhotoUrl} alt=""/>:<span>{(profileAdmin?.full_name||profileAdmin?.fullName||'A').charAt(0)}</span>}<span className="admin-profile-name">{profileAdmin?.full_name||profileAdmin?.fullName||'Administrator'}</span></button></div>
-                
-<button
-                    type="button"
-                    className="votara-admin-logout"
-                    onClick={requestLogout}
-                    title="Logout"
-                    aria-label="Logout"
-                >
-                    <FiLogOut size={17} />
-                </button>
-
-
-                {/* MOBILE / COMPACT MENU BUTTON */}
-                <button
-                    type="button"
-                    className="votara-admin-menu-button"
-                    onClick={() =>
-                        setMobileMenuOpen((open) => !open)
-                    }
-                    aria-label={
-                        mobileMenuOpen
-                            ? "Close admin navigation"
-                            : "Open admin navigation"
-                    }
-                    aria-expanded={mobileMenuOpen}
-                >
-                    {mobileMenuOpen ? (
-                        <FiX size={20} />
-                    ) : (
-                        <FiMenu size={20} />
-                    )}
-                </button>
-            </div>
-
-
-            {/* COMPACT NAVIGATION */}
-            {/* LOGOUT CONFIRMATION */}
-
-
-            <div
-                className={`votara-admin-mobile-menu ${
-                    mobileMenuOpen ? "open" : ""
-                }`}
-            >
-                <div className="votara-admin-mobile-current">
-                    <span className="votara-mobile-current-label">
-                        Current page
-                    </span>
-
-                    <span className="votara-mobile-current-value">
-                        {currentPage?.label || "Admin"}
-                    </span>
-
-                    <FiChevronDown size={16} />
-                </div>
-
-                <nav
-                    className="votara-admin-mobile-nav"
-                    aria-label="VOTARA Admin Navigation"
-                >
-                    {ADMIN_NAVIGATION.map((item) => {
-                        const active = isActive(item.path);
-
+        <>
+            <header className="admin-shared-header" ref={headerRef} data-navigation-theme={theme}>
+                <Link to={ADMIN_OVERVIEW.path} className="admin-shared-brand" aria-label="Votara admin dashboard" onClick={closeNavigation}>
+                    <img src={logo} alt="" /><span>Votara</span>
+                </Link>
+                <nav className={`admin-shared-nav${mobileOpen ? " is-open" : ""}`} id="admin-primary-navigation" aria-label="Admin navigation">
+                    {destination(ADMIN_OVERVIEW, "admin-nav-tab admin-nav-overview")}
+                    {ADMIN_NAVIGATION.map((group) => {
+                        const active = group.key === "settings" ? location.pathname.startsWith("/admin/settings")
+                            : group.items.some((item) => isAdminDestinationActive(item, location));
+                        const expanded = openMenu === group.key;
                         return (
-                            <button
-                                key={item.key}
-                                type="button"
-                                className={`votara-admin-mobile-link ${
-                                    active ? "active" : ""
-                                }`}
-                                onClick={() =>
-                                    handleNavigation(item.path)
-                                }
-                            >
-                                <span>{item.label}</span>
-
-                                {active && (
-                                    <span className="votara-mobile-active-dot" />
-                                )}
-                            </button>
+                            <div className={`admin-nav-group admin-nav-${group.key}`} key={group.key}>
+                                <button type="button" className={`admin-nav-tab${active ? " is-active" : ""}`}
+                                    ref={(node) => { triggerRefs.current[group.key] = node; }}
+                                    aria-expanded={expanded} aria-controls={`admin-menu-${group.key}`}
+                                    onKeyDown={(event) => openWithKeyboard(event, group.key)}
+                                    onClick={() => setOpenMenu(expanded ? null : group.key)}>
+                                    {group.label}<span className="admin-nav-caret" aria-hidden="true">▾</span>
+                                </button>
+                                {expanded && <div className="admin-nav-dropdown" id={`admin-menu-${group.key}`} onKeyDown={handleListKeyDown}>
+                                    {group.items.map((item) => destination(item))}
+                                </div>}
+                            </div>
                         );
                     })}
                 </nav>
-            </div>
-        </header>            {showLogoutConfirm && (
-                <div
-                    className="votara-logout-modal-backdrop"
-                    role="presentation"
-                    onMouseDown={(event) => {
-                        if (event.target === event.currentTarget) {
-                            setShowLogoutConfirm(false);
-                        }
-                    }}
-                >
-                    <div
-                        className="votara-logout-modal"
-                        role="dialog"
-                        aria-modal="true"
-                        aria-labelledby="votara-logout-title"
-                    >
-                        <div className="votara-logout-modal-icon">
-                            <FiLogOut size={20} />
-                        </div>
-
-                        <div className="votara-logout-modal-content">
-                            <h2 id="votara-logout-title">Sign out?</h2>
-                            <p>Are you sure you want to sign out of your VOTARA Admin account?</p>
-                        </div>
-
-                        <div className="votara-logout-modal-actions">
-                            <button
-                                type="button"
-                                className="votara-logout-cancel"
-                                onClick={() => setShowLogoutConfirm(false)}
-                            >
-                                Cancel
-                            </button>
-
-                            <button
-                                type="button"
-                                className="votara-logout-confirm"
-                                onClick={confirmLogout}
-                            >
-                                <FiLogOut size={15} />
-                                Sign Out
-                            </button>
-                        </div>
+                <div className="admin-shared-actions">
+                    <span className="admin-shared-role">Admin</span>
+                    <div onClick={() => setOpenMenu(null)}><PlatformNotifications admin /></div>
+                    <div className="admin-account">
+                        <button type="button" className="admin-account-trigger" aria-label={`Account menu for ${profileName}`}
+                            aria-expanded={openMenu === "account"} aria-controls="admin-menu-account"
+                            ref={(node) => { triggerRefs.current.account = node; }}
+                            onKeyDown={(event) => openWithKeyboard(event, "account")}
+                            onClick={() => { setMobileOpen(false); setOpenMenu(openMenu === "account" ? null : "account"); }}>
+                            {profilePhoto ? <img src={profilePhoto} alt="" /> : <span>{profileName.charAt(0).toUpperCase()}</span>}
+                        </button>
+                        {openMenu === "account" && <div className="admin-nav-dropdown admin-account-dropdown" id="admin-menu-account" onKeyDown={handleListKeyDown}>
+                            <div className="admin-account-name">{profileName}</div>
+                            <button type="button" onClick={() => { closeNavigation(); setProfileOpen(true); }}><FiUser />My profile</button>
+                            <button type="button" onClick={toggleTheme}>{theme === "dark" ? <FiSun /> : <FiMoon />}{theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}</button>
+                            <button type="button" onClick={() => { closeNavigation(); setShowLogoutConfirm(true); }}><FiLogOut />Sign out</button>
+                        </div>}
+                    </div>
+                    <button type="button" className="admin-shared-menu-toggle" aria-label={mobileOpen ? "Close admin navigation" : "Open admin navigation"}
+                        aria-expanded={mobileOpen} aria-controls="admin-primary-navigation"
+                        ref={(node) => { triggerRefs.current.mobile = node; }}
+                        onClick={() => { setOpenMenu(null); setMobileOpen(!mobileOpen); }}>
+                        {mobileOpen ? <FiX /> : <FiMenu />}
+                    </button>
+                </div>
+            </header>
+            <dialog ref={logoutRef} className="admin-signout-dialog" aria-labelledby="admin-signout-title"
+                onCancel={() => setShowLogoutConfirm(false)} onClick={(event) => { if (event.target === event.currentTarget) setShowLogoutConfirm(false); }}>
+                <div className="admin-signout-content">
+                    <FiLogOut size={24} /><h2 id="admin-signout-title">Sign out?</h2>
+                    <p>Are you sure you want to sign out of your Votara Admin account?</p>
+                    <div className="admin-signout-actions">
+                        <button type="button" autoFocus onClick={() => setShowLogoutConfirm(false)}>Cancel</button>
+                        <button type="button" className="admin-signout-confirm" onClick={confirmLogout}>Sign out</button>
                     </div>
                 </div>
-            )}{profileOpen&&<AdminProfileModal onClose={()=>setProfileOpen(false)} onUpdated={setProfileAdmin}/>}</>
+            </dialog>
+            {profileOpen && <AdminProfileModal onClose={() => { setProfileOpen(false); triggerRefs.current.account?.focus(); }} onUpdated={setUpdatedAdmin} />}
+        </>
     );
-};
-
-export default AdminTopNav;
+}

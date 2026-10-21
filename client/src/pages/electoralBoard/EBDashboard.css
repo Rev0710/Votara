@@ -956,22 +956,13 @@
 
 .eb-dashboard-shell {
     min-height: 100vh !important;
-    background: #17182a !important;
+    /* Original Figma canvas background at its native exported size. */
+    background: #19192d url("../../images/votara-board-background.png") repeat 0 0 / 1440px 1451px !important;
     color: #f7f8ff !important;
     font-family: "Poppins", "Inter", Arial, sans-serif !important;
     position: relative;
-    overflow-x: hidden;
-}
-
-.eb-dashboard-shell::before {
-    content: "";
-    position: fixed;
-    inset: 82px 0 0 0;
-    pointer-events: none;
-    z-index: 0;
-    background-image: radial-gradient(circle, rgba(42, 126, 255, .36) 1.4px, transparent 1.7px);
-    background-size: 27px 27px;
-    opacity: .58;
+    /* Clip horizontal overflow without trapping the sticky header's scroll. */
+    overflow-x: clip;
 }
 
 .eb-dashboard-shell .eb-sidebar {

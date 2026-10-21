@@ -28,6 +28,8 @@ import {
 } from "react-icons/fi";
 import "./SystemSettings.css";
 import AdminTopNav from "./AdminTopNav";
+import AdminConfigurationNav from "./AdminConfigurationNav";
+import { getAdminSection } from "./adminNavigation";
 import "./SystemSettings.connection.css";
 import PageLoader from "/src/components/transitionloader/PageLoader";
 import api from "../../services/api";
@@ -144,7 +146,6 @@ const ConfigCard = ({ icon, title, description, children, className = "" }) => (
 const SystemSettings = () => {
     const navigate = useNavigate();
     const settingsLocation=useLocation();
-    useEffect(()=>{const section=new URLSearchParams(settingsLocation.search).get('section');if(section)setConfigSection(section);},[settingsLocation.search]);
     const [reportPage,setReportPage]=useState(1);
 
     const [admin, setAdmin] = useState(null);
@@ -155,8 +156,7 @@ const SystemSettings = () => {
     const [saveError, setSaveError] = useState("");
     // Page transition loader used for navigation between admin pages.
     const [isPageTransitioning, setIsPageTransitioning] = useState(false);
-    const [configSection, setConfigSection] = useState(()=>new URLSearchParams(window.location.search).get('section')||'configuration');
-    useEffect(()=>{const update=()=>setConfigSection(new URLSearchParams(window.location.search).get('section')||'configuration');window.addEventListener('popstate',update);window.addEventListener('votara-report-navigation',update);return()=>{window.removeEventListener('popstate',update);window.removeEventListener('votara-report-navigation',update);};},[]);
+    const configSection = getAdminSection(settingsLocation.search);
     const [showNoticeReview, setShowNoticeReview] = useState(false);
     const [restoreReviewOpen, setRestoreReviewOpen] = useState(false);
     const [maintenanceReview,setMaintenanceReview]=useState(false);
@@ -164,7 +164,6 @@ const SystemSettings = () => {
     const [diagnosticReview,setDiagnosticReview]=useState(false);
     const [diagnosticNotice, setDiagnosticNotice] = useState("");
     const [diagnosticsRunning, setDiagnosticsRunning] = useState(false);
-    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
     const [securityDraft, setSecurityDraft] = useState({ staffVerification: true, idleSessionTimeout: "20", failedSignInThreshold: "5", temporaryLockout: "30" });
     const [securityOriginal, setSecurityOriginal] = useState({ staffVerification: true, idleSessionTimeout: "20", failedSignInThreshold: "5", temporaryLockout: "30" });
     const [securityReviewOpen, setSecurityReviewOpen] = useState(false);
@@ -243,7 +242,6 @@ const SystemSettings = () => {
     };
 
     const navAdminName = admin?.full_name || "Administrator";
-    const navAdminInitial = navAdminName.charAt(0).toUpperCase() || "A";
 
     const getSecurityDraftFromSettings = (source) => ({
         staffVerification: Boolean(source?.twoStepVerification ?? true),
@@ -679,90 +677,7 @@ const SystemSettings = () => {
 
             <AdminTopNav admin={admin} onLogout={handleLogout} />
 
-            <button
-                type="button"
-                className={`system-config-mobile-menu-toggle ${mobileSidebarOpen ? "open" : ""}`}
-                onClick={() => setMobileSidebarOpen((open) => !open)}
-                aria-label={mobileSidebarOpen ? "Close system configuration menu" : "Open system configuration menu"}
-                aria-expanded={mobileSidebarOpen}
-            >
-                {mobileSidebarOpen ? <FiX size={21} /> : <FiMenu size={21} />}
-            </button>
-
-            {mobileSidebarOpen && (
-                <button
-                    type="button"
-                    className="system-config-mobile-backdrop"
-                    aria-label="Close system configuration menu"
-                    onClick={() => setMobileSidebarOpen(false)}
-                />
-            )}
-
-            <aside className={`system-config-sidebar ${mobileSidebarOpen ? "mobile-open" : ""}`} aria-label="System configuration navigation">
-                <div className="system-config-sidebar-title">SYSTEM</div>
-
-                <nav className="system-config-sidebar-nav">
-                    <button
-                        type="button"
-                        className={configSection === "configuration" ? "active" : ""}
-                        aria-current={configSection === "configuration" ? "page" : undefined}
-                        onClick={() => { setConfigSection("configuration"); setMobileSidebarOpen(false); }}
-                    >
-                        Maintenance
-                    </button>
-                    <button
-                        type="button"
-                        className={configSection === "platform-notices" ? "active" : ""}
-                        aria-current={configSection === "platform-notices" ? "page" : undefined}
-                        onClick={() => { setConfigSection("platform-notices"); setMobileSidebarOpen(false); }}
-                    >
-                        Platform notices
-                    </button>
-                    <button
-                        type="button"
-                        className={configSection === "backup" ? "active" : ""}
-                        aria-current={configSection === "backup" ? "page" : undefined}
-                        onClick={() => { setConfigSection("backup"); setMobileSidebarOpen(false); }}
-                    >
-                        Backup &amp; Restore
-                    </button>
-                    <button
-                        type="button"
-                        className={configSection === "troubleshooting" ? "active" : ""}
-                        aria-current={configSection === "troubleshooting" ? "page" : undefined}
-                        onClick={() => { setConfigSection("troubleshooting"); setMobileSidebarOpen(false); }}
-                    >
-                        Troubleshooting
-                    </button>
-                    <button
-                        type="button"
-                        className={configSection === "security" ? "active" : ""}
-                        aria-current={configSection === "security" ? "page" : undefined}
-                        onClick={() => { setConfigSection("security"); setMobileSidebarOpen(false); }}
-                    >
-                        Security
-                    </button>
-<button type="button" className={configSection==='student-reports'?'active':''} onClick={()=>{setConfigSection('student-reports');setMobileSidebarOpen(false);}}>Issue reports</button>
-                </nav>
-
-                <div className="system-config-sidebar-footer">
-                    <div className="system-config-sidebar-user">
-                        <span className="system-config-sidebar-avatar">{navAdminInitial}</span>
-                        <div>
-                            <strong>{navAdminName}</strong>
-                            <span>Administrator</span>
-                        </div>
-                    </div>
-                    <button
-                        className="system-config-sidebar-logout"
-                        type="button"
-                        onClick={handleLogout}
-                        aria-label="Logout"
-                    >
-                        <FiLogOut size={16} />
-                    </button>
-                </div>
-            </aside>
+            <AdminConfigurationNav />
 
             <main className="system-config-reference-main">
                 {configSection === "platform-notices" ? (

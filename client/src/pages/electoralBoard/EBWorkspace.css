@@ -3,7 +3,7 @@
 .eb-workspace[data-eb-theme=light]{--eb-bg:#f5f8ff;--eb-surface:rgba(255,255,255,.86);--eb-solid:#fff;--eb-soft:#edf3ff;--eb-text:#202d43;--eb-muted:#506481;--eb-border:#cbd7eb;--eb-link:#1455db;color-scheme:light}
 .page-transition:has(.eb-workspace){transform:none!important;animation:none!important}
 .eb-workspace :is(.eb-dashboard-shell,.eb-main,.eb-content,.partylist-page,.partylist-main,.eb-candidate-page,.registration-page,.audit-page,.kiosk-page,.eb-page-party-lists){background-color:transparent!important;color:var(--eb-text)!important;min-width:0}
-.eb-workspace .eb-dashboard-shell{background:radial-gradient(circle,#3774ca40 1px,transparent 1px) 0 0/24px 24px!important}
+.eb-workspace[data-eb-theme=light] .eb-dashboard-shell{background:radial-gradient(circle,#3774ca40 1px,transparent 1px) 0 0/24px 24px var(--eb-bg)!important}
 .eb-workspace :is(.eb-panel,.eb-stat-card,.registration-applications,.registration-detail-card,.partylist-card,.eb-party-overview-card,.eb-candidates-card,.audit-category-panel,.audit-main-panel,.active-kiosk-card,.empty-kiosk-card,.kiosk-stat,.eb-issue-reports form,.eb-issue-reports>section,.plm-header,.plm-feature-card){background:var(--eb-surface)!important;border:1px solid var(--eb-border)!important;border-radius:20px;box-shadow:0 8px 25px #08172c0a;backdrop-filter:blur(8px);color:var(--eb-text)!important}
 .eb-workspace :is(h1,h2,h3,h4,strong,label,th){color:var(--eb-text)!important}
 .eb-workspace :is(p,small,td,.eb-added-date,.application-item-info,.eb-candidate-info,.audit-log-description){color:var(--eb-muted)!important}

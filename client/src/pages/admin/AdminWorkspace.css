@@ -37,7 +37,7 @@
 .admin-workspace .dashboard-live-metrics span { color:var(--aw-muted)!important; }
 .admin-workspace :is(.reports-toolbar,.reports-election-banner,.reports-panel,.reports-summary-card,.reports-stat-card) { background:var(--aw-surface)!important;border-color:var(--aw-border)!important;color:var(--aw-text); }
 .admin-workspace .system-config-sidebar { top:80px!important;width:224px!important;min-width:224px!important;height:calc(100dvh - 80px)!important;z-index:900!important; }
-.admin-workspace .system-config-reference-main { width:calc(100% - 224px)!important;margin-left:224px!important;max-width:none;padding:32px!important; }
+.admin-workspace .system-config-reference-main { width:calc(100% - 252px)!important;margin-left:252px!important;max-width:none;padding:32px!important; }
 .admin-workspace .system-config-sidebar-nav button { min-height:44px;color:var(--aw-text);font-size:14px;cursor:pointer; }
 .admin-workspace .system-config-sidebar-nav button.active { background:#155dfb;color:#fff; }
 .admin-workspace .system-config-sidebar-title { color:var(--aw-muted); }
