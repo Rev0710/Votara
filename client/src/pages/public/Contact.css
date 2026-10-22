@@ -1,0 +1,158 @@
+@import url("https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@400,500,600,700&display=swap");
+
+.vc-contact { --vc-heading: "Cabinet Grotesk", "Poppins", sans-serif; }
+.vc-contact .vc-main { width: 100%; max-width: 100%; overflow-x: clip; }
+.vc-contact :is(h1, h2, h3, h4) { font-family: var(--vc-heading); }
+.vc-contact .lp-nav-links > a[aria-current="page"] { color: var(--lp-blue); }
+.vc-contact .vc-eyebrow { color: var(--lp-blue); font-size: 13px; font-weight: 500; }
+.vc-contact .vc-hero { position: relative; padding: 176px 24px 70px; text-align: center; background: radial-gradient(ellipse at 50% 105%, rgba(0, 64, 255, .07), transparent 55%), radial-gradient(circle, #d9dce2 1px, transparent 1.4px) 0 8px / 28px 28px, #fff; }
+.vc-contact .vc-hero-copy { width: 100%; max-width: 1152px; margin: auto; }
+.vc-contact .vc-hero h1 { margin-top: 20px; font-size: clamp(52px, 7.5vw, 100px); font-weight: 500; line-height: 1.02; letter-spacing: -.055em; }
+.vc-contact .vc-hero h1 span { color: var(--lp-blue); }
+.vc-contact .vc-hero-description { margin-top: 26px; color: var(--lp-muted); font-size: 17px; line-height: 1.8; }
+.vc-contact .vc-actions { display: flex; justify-content: center; gap: 14px; margin-top: 32px; }
+.vc-contact .vc-actions .lp-button { min-height: 54px; padding-inline: 28px; font-size: 14px; }
+.vc-contact .vc-button-outline { border-color: #d9dfeb; background: #fff; color: var(--lp-ink); }
+.vc-contact .vc-button-outline:hover { border-color: var(--lp-blue); background: #f5f8ff; transform: translateY(-2px); }
+.vc-contact .vc-hero-rule { width: 1px; height: 46px; margin: 48px auto 0; background: #d7deed; }
+.vc-contact .vc-hero-rule span { display: block; width: 5px; height: 5px; position: relative; left: -2px; border-radius: 50%; background: var(--lp-blue); }
+.vc-contact .vc-departments { padding-block: 100px 112px; }
+.vc-contact .vc-section-intro { display: flex; justify-content: space-between; align-items: end; gap: 32px; margin-bottom: 44px; }
+.vc-contact h2 { font-size: clamp(32px, 3.5vw, 48px); letter-spacing: -.04em; }
+.vc-contact .vc-section-intro > p { color: var(--lp-muted); font-size: 14px; line-height: 1.9; }
+.vc-contact .vc-department-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-flow: dense; border: 1px solid var(--lp-line); border-radius: 20px; overflow: hidden; }
+.vc-contact .vc-department { min-width: 0; background: #fafbfe; transition: background .4s ease; }
+.vc-contact .vc-department + .vc-department { border-left: 1px solid var(--lp-line); }
+.vc-contact .vc-department.is-active { background: #edf3ff; }
+.vc-contact .vc-department > button { display: flex; align-items: center; flex-wrap: wrap; width: 100%; min-height: 132px; gap: 20px 12px; padding: 28px 28px 20px; border: 0; background: transparent; color: var(--lp-ink); text-align: left; font-family: var(--vc-heading); font-size: 22px; font-weight: 600; }
+.vc-contact .vc-department > button > svg { width: 20px; margin-left: auto; transition: transform .5s ease; }
+.vc-contact .vc-department > button:hover > svg { transform: translate(3px, -3px); }
+.vc-contact .vc-department-icon { display: grid; place-items: center; width: 100%; justify-content: start; color: var(--lp-blue); }
+.vc-contact .vc-department-icon svg { width: 26px; height: 26px; transition: transform .6s ease; }
+.vc-contact .vc-department > button:hover .vc-department-icon svg { transform: scale(1.1); }
+.vc-contact .vc-department-details { display: flex; flex-direction: column; padding: 0 28px 28px; min-height: 170px; }
+.vc-contact .vc-department-details p { color: var(--lp-muted); font-size: 12px; line-height: 1.9; }
+.vc-contact .vc-department-details .vc-team-detail { margin-top: 12px; color: #303a56; }
+.vc-contact .vc-department-details a { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 26px; margin-top: auto; color: var(--lp-blue); font-size: 13px; overflow-wrap: anywhere; }
+.vc-contact .vc-department-details a:hover { text-decoration: underline; }
+.vc-contact .vc-board-note { display: flex; align-items: start; gap: 12px; margin-top: 26px; color: var(--lp-muted); font-size: 12px; }
+.vc-contact .vc-board-note > svg { flex-shrink: 0; margin-top: 3px; color: var(--lp-blue); }
+.vc-contact .vc-board-note a { display: inline-flex; align-items: center; flex-shrink: 0; gap: 8px; margin-left: auto; color: var(--lp-blue); }
+.vc-contact .vc-compose { padding: 38px 0 112px; background: radial-gradient(ellipse at 10% 48%, #22284f, transparent 50%), radial-gradient(circle, rgba(172,185,232,.12) 1px, transparent 1.4px) 0 0 / 28px 28px, #19192d; color: #fff; }
+.vc-contact .vc-marquee { overflow: hidden; margin-bottom: 82px; padding-block: 16px; border-block: 1px solid #34374e; mask-image: linear-gradient(to right, transparent, black 10% 90%, transparent); }
+.vc-contact .vc-marquee-track { display: flex; width: max-content; font-family: var(--vc-heading); font-size: 28px; color: #a9b8e2; }
+.vc-contact .vc-marquee-track > span { display: inline-flex; align-items: center; gap: 52px; padding-right: 52px; white-space: nowrap; }
+.vc-contact .vc-marquee-dot { width: 7px; height: 7px; border-radius: 50%; background: #568aff; }
+.vc-contact .vc-compose-grid { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: clamp(40px, 6vw, 88px); align-items: start; }
+.vc-contact .vc-compose-copy .vc-eyebrow { color: #89adff; }
+.vc-contact .vc-compose-copy h2 { margin-top: 18px; color: #fff; }
+.vc-contact .vc-compose-copy > p:not(.vc-eyebrow) { max-width: 35ch; margin-top: 20px; color: #bdc6de; font-size: 14px; line-height: 1.9; }
+.vc-contact .vc-brand-media { display: flex; align-items: center; justify-content: center; gap: 28px; width: 100%; height: 150px; margin-block: 26px; transform-origin: center; }
+.vc-contact .vc-brand-media img { width: 65px; height: auto; filter: drop-shadow(0 0 25px #4779ff); }
+.vc-contact .vc-brand-media > span { width: min(90px, 20%); height: 1px; background: linear-gradient(90deg, transparent, #5b7cc8); }
+.vc-contact .vc-brand-media > span:last-child { transform: rotate(180deg); }
+.vc-contact .vc-guidance { padding-bottom: 18px; }
+.vc-contact .vc-guidance-card { position: sticky; top: calc(130px + var(--card-index) * 12px); display: flex; align-items: start; gap: 14px; padding: 22px; margin-top: 12px; border: 1px solid #414765; border-radius: 12px; background: #22263f; transform-origin: center top; }
+.vc-contact .vc-guidance-card > svg { flex-shrink: 0; color: #88adff; margin-top: 4px; }
+.vc-contact .vc-guidance-card h3 { color: #fff; font-size: 19px; font-weight: 500; }
+.vc-contact .vc-guidance-card p { margin-top: 7px; color: #c0c9df; font-size: 12px; line-height: 1.8; }
+.vc-contact .vc-form { min-width: 0; padding: 36px; border: 1px solid #e1e7f4; border-radius: 22px; background: #fff; color: var(--lp-ink); box-shadow: 0 24px 80px #0b102933; scroll-margin-top: 120px; }
+.vc-contact .vc-form > h3 { font-size: 27px; line-height: 1.3; font-weight: 600; letter-spacing: -.03em; }
+.vc-contact .vc-form > p:first-of-type { margin: 10px 0 28px; font-size: 11px; color: var(--lp-muted); }
+.vc-contact .vc-form label { display: block; margin-bottom: 20px; color: #31394c; font-size: 12px; font-weight: 500; }
+.vc-contact .vc-form label > span { color: var(--lp-blue); }
+.vc-contact .vc-form label > .vc-optional { color: #778095; font-weight: 400; }
+.vc-contact .vc-form :is(input, select, textarea) { display: block; width: 100%; min-height: 48px; margin-top: 8px; padding: 12px 14px; border: 1px solid #dce2ed; border-radius: 9px; background: #fafbfe; color: var(--lp-ink); font: 12px/1.6 "Poppins", sans-serif; }
+.vc-contact .vc-form textarea { resize: vertical; min-height: 136px; }
+.vc-contact .vc-form :is(input, textarea)::placeholder { color: #7c8599; }
+.vc-contact .vc-form :is(input, select, textarea):focus-visible { outline: 2px solid #7298ff; outline-offset: 2px; background: #fff; }
+.vc-contact .vc-form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.vc-contact .vc-form-hint { display: flex; align-items: start; gap: 8px; margin: -4px 0 24px; color: var(--lp-muted); font-size: 10px; line-height: 1.8; }
+.vc-contact .vc-form-hint svg { flex-shrink: 0; margin-top: 3px; }
+.vc-contact .vc-submit { width: 100%; border-radius: 9px; }
+.vc-contact .vc-email-note { margin-top: 12px; color: var(--lp-muted); font-size: 10px; line-height: 1.8; text-align: center; }
+.vc-contact .vc-email-review { margin-top: 24px; padding: 20px; border: 1px solid #a9bffc; border-radius: 12px; background: #f1f5ff; }
+.vc-contact .vc-email-review h4 { font-size: 20px; margin-bottom: 12px; }
+.vc-contact .vc-email-review p { margin-block: 8px; font-size: 11px; overflow-wrap: anywhere; }
+.vc-contact .vc-email-review pre { max-height: 220px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; margin-block: 16px; font: 12px/1.8 "Poppins", sans-serif; }
+.vc-contact .vc-faq { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: clamp(40px, 6vw, 88px); padding-block: 128px 112px; }
+.vc-contact .vc-faq h2 { margin-top: 18px; }
+.vc-contact .vc-faq > div > p:not(.vc-eyebrow) { margin-top: 22px; color: var(--lp-muted); font-size: 14px; }
+.vc-contact .vc-faq .lp-text-link { margin-top: 20px; }
+.vc-contact .vc-inline-brand { display: inline-flex; align-items: center; justify-content: center; width: 72px; height: 38px; margin-left: 12px; vertical-align: middle; border-radius: 30px; background: linear-gradient(130deg, #60c7f5, #0040ff); }
+.vc-contact .vc-inline-brand img { width: 25px; height: auto; }
+.vc-contact .vc-faq-list { border-top: 1px solid var(--lp-line); }
+.vc-contact .vc-faq-list article { border-bottom: 1px solid var(--lp-line); }
+.vc-contact .vc-faq-list h3 button { display: flex; align-items: center; justify-content: space-between; gap: 20px; width: 100%; min-height: 80px; padding: 24px 0; border: 0; background: transparent; color: var(--lp-ink); font-family: var(--vc-heading); font-size: 19px; font-weight: 500; text-align: left; }
+.vc-contact .vc-faq-list h3 button svg { flex-shrink: 0; width: 16px; transition: transform .2s; }
+.vc-contact .vc-faq-list button[aria-expanded="true"] { color: var(--lp-blue); }
+.vc-contact .vc-faq-list button[aria-expanded="true"] svg { transform: rotate(180deg); }
+.vc-contact .vc-faq-list article > div { padding: 0 30px 26px 0; }
+.vc-contact .vc-faq-list p { color: var(--lp-muted); font-size: 12px; line-height: 1.9; }
+.vc-contact .vc-faq-list article > div a { display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; color: var(--lp-blue); font-size: 12px; }
+.vc-contact .vc-election { padding-bottom: 100px; }
+.vc-contact .vc-election > div { display: flex; align-items: center; gap: 26px; padding: 36px; border: 1px solid #dce6ff; border-radius: 18px; background: #f4f7ff; }
+.vc-contact .vc-election > div > svg { flex-shrink: 0; width: 32px; height: 32px; color: var(--lp-blue); }
+.vc-contact .vc-election h2 { font-size: 27px; }
+.vc-contact .vc-election p { max-width: 65ch; margin-top: 12px; color: var(--lp-muted); font-size: 12px; line-height: 1.9; }
+.vc-contact .vc-election .lp-button { margin-left: auto; flex-shrink: 0; }
+.vc-contact .vc-return { padding: 84px 24px 100px; background: radial-gradient(ellipse at 50% 80%, #eaf0ff, transparent 70%), radial-gradient(circle, #d9dce2 1px, transparent 1.4px) 0 0 / 28px 28px; text-align: center; }
+.vc-contact .vc-return h2 { margin: 18px auto 30px; font-size: clamp(44px, 6vw, 76px); line-height: 1.05; }
+.vc-contact .vc-back-home { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 20px auto 0; font-size: 12px; }
+@media (max-width: 940px) {
+    .vc-contact .vc-departments { padding-block: 80px; }
+    .vc-contact .vc-department > button { padding-inline: 20px; font-size: 18px; }
+    .vc-contact .vc-department-details { padding-inline: 20px; }
+    .vc-contact .vc-compose-grid { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+    .vc-contact .vc-compose-copy { max-width: 680px; }
+    .vc-contact .vc-brand-media { height: 100px; }
+    .vc-contact .vc-guidance { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .vc-contact .vc-guidance-card { position: static; display: block; margin-top: 0; padding: 18px; }
+    .vc-contact .vc-guidance-card h3 { margin-top: 10px; }
+    .vc-contact .vc-election > div { flex-wrap: wrap; }
+    .vc-contact .vc-election > div > div { flex: 1; }
+    .vc-contact .vc-election .lp-button { margin-left: 58px; }
+}
+@media (max-width: 700px) {
+    .vc-contact .vc-hero { padding: 136px 20px 44px; }
+    .vc-contact .vc-hero h1 { margin-top: 22px; font-size: clamp(42px, 10.8vw, 68px); line-height: 1.05; }
+    .vc-contact .vc-hero-description { font-size: 13px; margin-top: 22px; }
+    .vc-contact .vc-desktop-break { display: none; }
+    .vc-contact .vc-actions { gap: 10px; margin-top: 26px; }
+    .vc-contact .vc-actions .lp-button { min-height: 48px; padding-inline: 18px; font-size: 12px; gap: 8px; }
+    .vc-contact .vc-hero-rule { margin-top: 36px; height: 32px; }
+    .vc-contact .vc-departments { padding-block: 64px; }
+    .vc-contact .vc-section-intro { display: block; margin-bottom: 28px; }
+    .vc-contact .vc-section-intro > p { margin-top: 18px; font-size: 12px; }
+    .vc-contact .vc-department-grid { grid-template-columns: minmax(0, 1fr); border-radius: 14px; }
+    .vc-contact .vc-department + .vc-department { border-left: 0; border-top: 1px solid var(--lp-line); }
+    .vc-contact .vc-department > button { min-height: 78px; padding: 22px; flex-wrap: nowrap; font-size: 21px; }
+    .vc-contact .vc-department-icon { width: auto; margin-right: 6px; }
+    .vc-contact .vc-department-icon svg { width: 21px; height: 21px; }
+    .vc-contact .vc-department-details { padding: 0 22px 24px; min-height: 0; }
+    .vc-contact .vc-department:not(.is-active) .vc-department-details { display: none; }
+    .vc-contact .vc-board-note { flex-wrap: wrap; }
+    .vc-contact .vc-board-note > span { flex: 1; }
+    .vc-contact .vc-board-note a { width: 100%; margin-left: 28px; }
+    .vc-contact .vc-compose { padding-top: 24px; padding-bottom: 64px; }
+    .vc-contact .vc-marquee { margin-bottom: 48px; }
+    .vc-contact .vc-marquee-track { font-size: 24px; }
+    .vc-contact .vc-compose-copy > p:not(.vc-eyebrow) { font-size: 13px; }
+    .vc-contact .vc-guidance { grid-template-columns: minmax(0, 1fr); }
+    .vc-contact .vc-guidance-card { display: flex; }
+    .vc-contact .vc-guidance-card h3 { margin-top: 0; }
+    .vc-contact .vc-form { padding: 24px 20px; border-radius: 16px; }
+    .vc-contact .vc-form > h3 { font-size: 25px; }
+    .vc-contact .vc-form-row { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .vc-contact .vc-form :is(input, select, textarea) { font-size: 16px; }
+    .vc-contact .vc-faq { grid-template-columns: minmax(0, 1fr); padding-block: 72px 64px; gap: 30px; }
+    .vc-contact .vc-faq-list h3 button { min-height: 72px; font-size: 18px; }
+    .vc-contact .vc-election { padding-bottom: 64px; }
+    .vc-contact .vc-election > div { padding: 26px 22px; display: block; }
+    .vc-contact .vc-election h2 { margin-top: 18px; font-size: 27px; }
+    .vc-contact .vc-election .lp-button { margin: 24px 0 0; }
+    .vc-contact .vc-return { padding-block: 64px 72px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .vc-contact .vc-guidance-card { position: static; }
+}

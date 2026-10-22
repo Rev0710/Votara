@@ -11,6 +11,7 @@ import VotaraIntro from "./src/components/VotaraIntro";
 // =====================================================
 import Vote from "./src/pages/student/Vote";
 import LandingPage from "./src/pages/public/LandingPage";
+import Contact from "./src/pages/public/Contact";
 import Register from "./src/pages/auth/Register";
 import LateEnrolleeForm from "./src/pages/public/LateEnrolleeForm";
 import OTPVerification from "./src/pages/auth/OTPVerification";
@@ -105,6 +106,7 @@ if (showInitialIntro) {
                     path="/"
                     element={<LandingPage />}
                 />
+                <Route path="/contact" element={<Contact />} />
 
 
                 <Route
