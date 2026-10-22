@@ -247,3 +247,10 @@
 @media (prefers-reduced-motion: reduce) {
     .user-access-view *, .user-access-view *::before, .user-access-view *::after { animation: none !important; transition: none !important; }
 }
+
+.user-access-view .ux-danger { background: var(--ux-error-bg); border-color: var(--ux-error); color: var(--ux-error); }
+.user-access-view .ux-danger:hover:not(:disabled) { filter: brightness(.94); }
+.user-access-view .ux-deactivation-field { margin-top: 20px; }
+.user-access-view .ux-deactivation-field > span { color: var(--ux-muted); font-size: 10px; line-height: 1.6; }
+.user-access-view .ux-account-actions { flex-wrap: wrap; }
+@media (max-width: 600px) { .user-access-view .ux-account-actions { align-items: stretch; flex-direction: column-reverse; } .user-access-view .ux-account-actions > button { width: 100%; } }

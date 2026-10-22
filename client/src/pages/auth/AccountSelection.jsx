@@ -680,12 +680,16 @@ const handleAdminLogin = async (event) => {
 
 
 
-                    <div className="account-selection-brand-visual">
-                        <img
-                            src={votaraOrbit}
-                            alt="Secure Votara election network"
-                            className="account-selection-orbit"
-                        />
+                    <div className="account-selection-brand-visual" role="img" aria-label="Votara security icons orbiting around the logo">
+                        <div className="account-selection-orbit-scene" aria-hidden="true">
+                            <img src={votaraOrbit} alt="" className="account-selection-orbit" />
+                            <span className="account-selection-orbit-core">
+                                <svg viewBox="0 0 80 80" aria-hidden="true">
+                                    <path d="M12 12h28L26 36z" /><circle cx="56" cy="20" r="10" />
+                                    <circle cx="22" cy="55" r="10" /><path d="M38 44h30L53 70z" />
+                                </svg>
+                            </span>
+                        </div>
                     </div>
 
                     <div className="account-selection-electoral-box">

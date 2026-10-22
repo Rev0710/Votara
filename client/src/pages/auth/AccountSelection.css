@@ -2155,3 +2155,12 @@
     }
 }
 
+
+/* Keep the Votara mark steady while the network icons travel around its spiral. */
+.account-selection-orbit-scene { position: absolute; left: 50%; bottom: -2px; width: 315px; height: 315px; transform: translateX(-50%); }
+.account-selection-orbit-scene .account-selection-orbit { position: absolute; inset: 0; width: 100%; height: 100%; transform: none; animation: account-selection-orbit-spin 26s linear infinite; transform-origin: 50% 50%; will-change: transform; }
+.account-selection-orbit-core { position: absolute; z-index: 1; left: 50%; top: 50%; display: grid; place-items: center; width: 39%; aspect-ratio: 1; transform: translate(-50%, -50%); border: 1px solid rgba(255,255,255,.32); border-radius: 50%; background: linear-gradient(145deg, #3e95ff, #2876ef); box-shadow: 0 12px 32px rgba(0,36,150,.24); }
+.account-selection-orbit-core svg { width: 52%; height: 52%; fill: #fff; }
+@keyframes account-selection-orbit-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@media (max-width: 600px) { .account-selection-orbit-scene { width: min(235px, 62vw); height: auto; aspect-ratio: 1; } }
+@media (prefers-reduced-motion: reduce) { .account-selection-orbit-scene .account-selection-orbit { animation: none !important; } }
