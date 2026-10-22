@@ -279,7 +279,7 @@ export default function AdminUserAccessManagement() {
 
     const handleDeleteAccount = async (account) => {
         if (!account || !account.id || statusUpdatingId) return;
-        const confirmed = window.confirm("Permanently delete " + (account.full_name || "this staff account") + " (" + account.email + ")? The account will be removed from the database and its email can be used for another staff role.");
+        const confirmed = window.confirm("Permanently delete this staff account?\n\nName: " + (account.full_name || "Staff account") + "\nEmail: " + account.email + "\nRole: " + (account._role === "admin" ? "Administrator" : "Electoral Board") + "\n\nThis removes the account from both staff lists and the database. Existing report history is kept, and the email can be reused after deletion succeeds.\n\nThis cannot be undone.");
         if (!confirmed) return;
         setStatusUpdatingId(account.id);
         setError("");
@@ -288,13 +288,13 @@ export default function AdminUserAccessManagement() {
             const accountType = account._role === "admin" ? "admin" : "electoral-board";
             const response = await api.delete("/admin/" + accountType + "/" + account.id);
             setSelectedAccount(null);
-            setDeactivationReason("");
             setCredentials((current) => current.user?.id === account.id ? emptyCredential : current);
             setMessage(response.data?.message || "Staff account permanently deleted.");
             await loadAccounts();
         } catch (err) {
             console.error("Staff account deletion error:", err);
-            setError(err.response?.data?.message || "Unable to delete this staff account.");
+            const apiMessage = err.response?.data?.message || "";
+            setError(apiMessage.includes("Route not found") ? "The connected API has not been updated with account deletion yet. Deploy the updated backend, then try again." : apiMessage || "Unable to delete this staff account.");
         } finally {
             setStatusUpdatingId(null);
         }
