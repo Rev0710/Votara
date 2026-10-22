@@ -548,6 +548,55 @@
   .lrm-row { margin-left:10px; margin-right:10px; }
 }
 
+/* Keep the selected application in the page's details column instead of
+   covering the application list with a review dialog. */
+.lrm-page:has(.lrm-review-inline) {
+  display: grid;
+  grid-template-columns: minmax(250px, 336px) minmax(0, 1fr);
+  align-content: start;
+  gap: 0 16px;
+  width: 100%;
+  max-width: 1700px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+.lrm-page:has(.lrm-review-inline) > .lrm-shell { display: contents; }
+.lrm-page:has(.lrm-review-inline) .lrm-heading,
+.lrm-page:has(.lrm-review-inline) > .lrm-shell > .lrm-error { grid-column: 1 / -1; }
+.lrm-page:has(.lrm-review-inline) .lrm-heading { grid-row: 1; margin: 24px 0 16px; padding: 0; }
+.lrm-page:has(.lrm-review-inline) .lrm-layout { display: contents; }
+.lrm-page:has(.lrm-review-inline) .lrm-list-panel { grid-column: 1; grid-row: 2; min-height: 0; max-height: calc(100dvh - 210px); overflow-y: auto; }
+.lrm-page:has(.lrm-review-inline) .lrm-layout > div:last-child { display: none !important; }
+.lrm-review-inline { grid-column: 2; grid-row: 2; min-width: 0; min-height: 0; padding: 0; background: transparent; }
+.lrm-review-inline .lrm-review-modal { width: 100%; max-width: none; max-height: calc(100dvh - 210px); overflow-y: auto; border: 1px solid rgba(111,126,184,.25); border-radius: 15px; background: rgba(31,36,75,.82); box-shadow: 0 14px 40px rgba(0,0,0,.14); }
+.lrm-review-inline .lrm-modal-head { position: sticky; top: 0; z-index: 2; background: #1f244b; }
+.lrm-page:has(.lrm-review-inline) > .lrm-shell > .lrm-error { grid-row: 2; }
+.lrm-page:has(.lrm-review-inline):has(> .lrm-shell > .lrm-error) .lrm-list-panel,
+.lrm-page:has(.lrm-review-inline):has(> .lrm-shell > .lrm-error) .lrm-review-inline { grid-row: 3; }
+@media (max-width: 900px) {
+  .lrm-page:has(.lrm-review-inline) { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .lrm-page:has(.lrm-review-inline) .lrm-heading { margin: 12px 0 0; }
+  .lrm-page:has(.lrm-review-inline) .lrm-list-panel,
+  .lrm-review-inline { grid-column: 1; grid-row: auto; }
+  .lrm-page:has(.lrm-review-inline) .lrm-list-panel { max-height: 45dvh; }
+  .lrm-review-inline .lrm-review-modal { max-height: none; }
+}
+@media (max-width: 640px) {
+  .lrm-page:has(.lrm-review-inline) { padding: 0 12px 28px; }
+  .lrm-page:has(.lrm-review-inline) .lrm-heading { gap: 12px; }
+  .lrm-page:has(.lrm-review-inline) .lrm-list-panel { max-height: 38dvh; }
+  .lrm-page:has(.lrm-review-inline) .lrm-row { grid-template-columns:minmax(0,1fr) auto; gap:8px; padding:9px; }
+  .lrm-page:has(.lrm-review-inline) .lrm-student { grid-column:1/-1; }
+  .lrm-page:has(.lrm-review-inline) .lrm-row-action { min-width:0; max-width:100%; }
+  .lrm-page:has(.lrm-review-inline) .lrm-name { max-width:100%; }
+  .lrm-page:has(.lrm-review-inline) .lrm-status { white-space:normal; }
+}
+@media (max-width: 420px) {
+  .lrm-page:has(.lrm-review-inline) .lrm-row { grid-template-columns:minmax(0,1fr); }
+  .lrm-page:has(.lrm-review-inline) .lrm-row-action { grid-column:1; justify-content:flex-start; }
+  .lrm-page:has(.lrm-review-inline) .lrm-review { width:100%; }
+}
+
 /* =========================================================
    STRUCTURE FIXES FOR THE LATE ENROLLEE COMPONENT
    ========================================================= */
@@ -651,4 +700,74 @@
   .lrm-enrollment-select {
     width: 100%;
   }
+}
+
+/* Admin late-enrollee workspace: keep both panes usable at every width. */
+.admin-feature-page:has(.lrm-page) { padding-top: 28px; }
+.lrm-page:not(:has(.lrm-review-inline)) .lrm-layout {
+  grid-template-columns: minmax(260px, 336px) minmax(0, 1fr);
+}
+.lrm-empty-detail {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  min-height: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  border: 1px solid rgba(111,126,184,.25);
+  border-radius: 15px;
+  background: rgba(31,36,75,.72);
+  color: #7f89aa;
+  text-align: center;
+  box-shadow: 0 14px 40px rgba(0,0,0,.12);
+}
+.lrm-review-inline {
+  position: relative;
+  z-index: auto;
+  grid-column: 2;
+  grid-row: 2;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+}
+.lrm-review-inline .lrm-review-modal {
+  width: 100%;
+  max-width: none;
+  max-height: calc(100dvh - 230px);
+  overflow-y: auto;
+  border: 1px solid rgba(111,126,184,.25);
+  border-radius: 15px;
+  background: rgba(31,36,75,.88);
+  box-shadow: 0 14px 40px rgba(0,0,0,.14);
+}
+@media (max-width: 900px) {
+  .admin-feature-page:has(.lrm-page) { padding: 24px 14px 32px; }
+  .lrm-page:not(:has(.lrm-review-inline)) .lrm-layout { grid-template-columns: minmax(0,1fr); }
+  .lrm-page:not(:has(.lrm-review-inline)) .lrm-empty-detail { grid-column: 1; grid-row: 2; min-height: 180px; }
+  .lrm-page:has(.lrm-review-inline) { grid-template-columns: minmax(0,1fr); gap: 14px; padding: 0; }
+  .lrm-page:has(.lrm-review-inline) .lrm-list-panel,
+  .lrm-page:has(.lrm-review-inline) .lrm-review-inline { grid-column: 1; grid-row: auto; }
+  .lrm-page:has(.lrm-review-inline) .lrm-list-panel { max-height: 42dvh; }
+  .lrm-page:has(.lrm-review-inline) .lrm-empty-detail { display: none; }
+  .lrm-review-inline .lrm-review-modal { max-height: none; }
+}
+@media (max-width: 640px) {
+  .admin-feature-page:has(.lrm-page) { padding: 20px 12px 28px; }
+  .admin-feature-page:has(.lrm-page) > p:not(.admin-eyebrow) { line-height: 1.55; overflow-wrap: anywhere; }
+  .lrm-page:has(.lrm-review-inline) { padding: 0; }
+  .lrm-page:has(.lrm-review-inline) .lrm-heading { margin-top: 8px; }
+  .lrm-page:has(.lrm-review-inline) .lrm-list-panel { max-height: 40dvh; }
+  .lrm-page .lrm-row { grid-template-columns: minmax(0,1fr) auto; gap: 8px; }
+  .lrm-page .lrm-student { grid-column: 1/-1; }
+  .lrm-page .lrm-row-action { min-width: 0; max-width: 100%; }
+  .lrm-page .lrm-name { max-width: 100%; }
+  .lrm-page .lrm-review-inline .lrm-review-modal { max-height: none; }
+}
+@media (max-width: 420px) {
+  .lrm-page .lrm-row { grid-template-columns: minmax(0,1fr); }
+  .lrm-page .lrm-row-action { grid-column: 1; justify-content: flex-start; }
+  .lrm-page .lrm-review { width: 100%; }
 }

@@ -132,6 +132,8 @@ const getKioskToken = () => {
     );
 };
 
+let ebSessionRedirectStarted = false;
+
 // =====================================================
 // REQUEST TYPE HELPERS
 // =====================================================
@@ -363,6 +365,15 @@ api.interceptors.request.use(
 
         }
 
+        // EB endpoints must never fall through to an admin, generic staff,
+        // or student token. Let the server return its normal unauthenticated
+        // response when there is no valid Electoral Board session.
+        else if (isEBRequest) {
+
+            token = "";
+
+        }
+
         // =================================================
         // EB FALLBACK
         // =================================================
@@ -434,15 +445,37 @@ api.interceptors.response.use(
     (error) => {
 
         if (error.response) {
+            const requestUrl =
+                error.config?.url || "";
+
+            const currentPath = typeof window !== "undefined"
+                ? String(window.location.pathname || "").toLowerCase()
+                : "";
+            const isEBContext = currentPath.startsWith("/electoral-board/");
+            const normalizedRequestUrl = String(requestUrl).toLowerCase();
+            const isEBAuthRequest = normalizedRequestUrl.includes("/eb-auth/login") ||
+                normalizedRequestUrl.includes("/eb-auth/register");
+
+            // An expired or revoked EB session must not leave the workspace
+            // making repeated protected requests without a valid token.
+            if (isEBContext && error.response.status === 401 && !isEBAuthRequest) {
+                localStorage.removeItem("votaraEBToken");
+                localStorage.removeItem("votaraEBUser");
+                localStorage.removeItem("votaraStaffToken");
+                localStorage.removeItem("votaraStaffUser");
+                if (!ebSessionRedirectStarted && typeof window !== "undefined") {
+                    ebSessionRedirectStarted = true;
+                    console.warn("Electoral Board session expired. Redirecting to sign in.");
+                    window.location.replace("/electoral-board/login");
+                }
+                return Promise.reject(error);
+            }
 
             console.error(
                 "API Error:",
                 error.response.status,
                 error.response.data
             );
-
-            const requestUrl =
-                error.config?.url || "";
 
             const kioskMode =
                 localStorage.getItem(

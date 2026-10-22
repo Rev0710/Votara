@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { getAllElections } from "../../services/electionService";
 import "./PartyListManagement.css";
@@ -8,7 +9,8 @@ import "./PartyListManagement.css";
 // PARTY LIST MANAGEMENT
 // =====================================================
 
-const PartyListManagement = () => {
+const PartyListManagement = ({ initialElectionId = "", positionContext = null }) => {
+    const navigate = useNavigate();
     // =====================================================
     // STATE
     // =====================================================
@@ -112,8 +114,11 @@ const PartyListManagement = () => {
             setElections(electionData);
 
             if (electionData.length > 0) {
+                const preferredElection = electionData.find(
+                    (item) => String(item.id || item._id) === String(initialElectionId)
+                );
                 setSelectedElection(
-                    electionData[0].id
+                    preferredElection?.id || preferredElection?._id || electionData[0].id || electionData[0]._id
                 );
             } else {
                 setSelectedElection("");
@@ -140,6 +145,20 @@ const PartyListManagement = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const openCandidateManagement = (party) => {
+        if (!party?.id || !selectedElection) return;
+        navigate("/electoral-board/manage-party-list", {
+            state: {
+                electionId: selectedElection,
+                partyListId: party.id,
+                partyListName: party.name,
+                positionId: positionContext?.positionId || "",
+                positionName: positionContext?.positionName || "",
+                returnToSection: "partyLists",
+            },
+        });
     };
 
     // =====================================================
@@ -953,6 +972,12 @@ const PartyListManagement = () => {
     Manage party lists participating in the VOTARA election.
 </p>
 
+            {positionContext?.positionName && (
+                <p className="plm-position-context" role="status">
+                    Position selected: <strong>{positionContext.positionName}</strong>. Add a party list, then open its candidates to add candidates for this election.
+                </p>
+            )}
+
                 </div>
 
                 <button
@@ -1341,6 +1366,7 @@ const PartyListManagement = () => {
                 {!selectedElection ? (
 
                     <div
+                        className="plm-empty-state"
                         style={
                             styles.emptyState
                         }
@@ -1355,6 +1381,7 @@ const PartyListManagement = () => {
                         </div>
 
                         <h4
+                            className="plm-empty-title"
                             style={
                                 styles.emptyTitle
                             }
@@ -1416,6 +1443,7 @@ const PartyListManagement = () => {
                         </div>
 
                         <h4
+                            className="plm-empty-title"
                             style={
                                 styles.emptyTitle
                             }
@@ -1946,6 +1974,7 @@ const PartyListManagement = () => {
 
                             </div>
                         )}
+                        {selectedParty.approval_status === "pending" ? (
 
                         <div
                             style={
@@ -1995,7 +2024,13 @@ const PartyListManagement = () => {
                                     : "✓ Approve"}
                             </button>
 
-                        </div>
+                        </div>) : (
+                            <div style={{ ...styles.infoBox, marginTop: 16 }}>
+                                <strong>Decision recorded</strong>
+                                <p>This party list is {selectedParty.approval_status === "approved" ? "approved" : "rejected"}. Electoral Board decisions can only be recorded once.</p>
+                            </div>
+                        )}
+
 
                     </Modal>
                 )}
@@ -2146,6 +2181,7 @@ const PartyListManagement = () => {
                 selectedParty && (
 
                     <Modal
+                        className="eb-party-candidates-dialog"
                         title="Party Candidates"
                         onClose={
                             closeModal
@@ -2195,6 +2231,17 @@ const PartyListManagement = () => {
 
                         </div>
 
+                        <div style={{ display: "flex", justifyContent: "flex-end", margin: "0 0 14px" }}>
+                            <button
+                                type="button"
+                                style={styles.primaryButton}
+                                onClick={() => openCandidateManagement(selectedParty)}
+                                disabled={!selectedElection}
+                            >
+                                Add candidates
+                            </button>
+                        </div>
+
                         {candidateLoading ? (
 
                             <div
@@ -2237,6 +2284,7 @@ const PartyListManagement = () => {
                                 </div>
 
                                 <h4
+                                    className="plm-empty-title"
                                     style={
                                         styles.emptyTitle
                                     }
@@ -2274,6 +2322,7 @@ const PartyListManagement = () => {
                                     ) => (
 
                                         <div
+                                            className="eb-party-candidate-row"
                                             key={
                                                 candidate.id ||
                                                 index
@@ -2284,6 +2333,7 @@ const PartyListManagement = () => {
                                         >
 
                                             <div
+                                                className="eb-party-candidate-number"
                                                 style={
                                                     styles.candidateNumber
                                                 }
@@ -2293,6 +2343,7 @@ const PartyListManagement = () => {
                                             </div>
 
                                             <div
+                                                className="eb-party-candidate-avatar"
                                                 style={
                                                     styles.candidateAvatar
                                                 }
@@ -3015,6 +3066,7 @@ const Modal = ({
     children,
     onClose,
     wide = false,
+    className = "",
 }) => {
     return (
         <div
@@ -3024,6 +3076,7 @@ const Modal = ({
         >
 
             <div
+                className={className}
                 style={{
                     ...styles.modal,
                     ...(wide

@@ -532,11 +532,35 @@ const loginEB = async (req, res) => {
     }
 };
 
+const keepEBSession = (req, res) => {
+    const user = req.user;
+    if (!user?.userId || user.role !== "electoral_board") {
+        return res.status(401).json({
+            success: false,
+            message: "A valid Electoral Board session is required.",
+        });
+    }
+
+    const token = jwt.sign(
+        {
+            userId: user.userId,
+            email: user.email,
+            fullName: user.fullName,
+            role: "electoral_board",
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: "8h" }
+    );
+
+    return res.status(200).json({ success: true, token });
+};
+
 // =========================================================
 // EXPORT
 // =========================================================
 
 module.exports = {
     registerEB,
-    loginEB
+    loginEB,
+    keepEBSession
 };

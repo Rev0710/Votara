@@ -896,3 +896,44 @@
         backdrop-filter: none;
     }
 }
+
+.kiosk-header-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+.kiosk-header-actions > button { width: 100%; min-width: 180px; }
+
+/* Status is conveyed by the label color, not a filled badge. */
+.eb-workspace[data-eb-theme] .session-status {
+    padding: 2px 0;
+    border: 0 !important;
+    border-radius: 0;
+    background: transparent !important;
+}
+.eb-workspace[data-eb-theme] .status-active { color: #15803d !important; }
+.eb-workspace[data-eb-theme] .status-closed { color: var(--eb-muted) !important; }
+.eb-workspace[data-eb-theme] .status-expired { color: #b42332 !important; }
+.eb-workspace[data-eb-theme=dark] .status-active { color: #86efac !important; }
+.eb-workspace[data-eb-theme=dark] .status-expired { color: #ff9aa5 !important; }
+
+.eb-workspace[data-eb-theme=light] .kiosk-modal {
+    background: rgba(255,255,255,.94) !important;
+    border-color: var(--eb-border) !important;
+    color: var(--eb-text) !important;
+    box-shadow: 0 24px 70px rgba(27,47,87,.22) !important;
+}
+.eb-workspace[data-eb-theme=light] .kiosk-modal :is(.kiosk-modal-header,.kiosk-modal-actions) { border-color: var(--eb-border) !important; }
+.eb-workspace[data-eb-theme=light] .kiosk-modal :is(h2,label,strong) { color: var(--eb-text) !important; }
+.eb-workspace[data-eb-theme=light] .kiosk-modal :is(p,small) { color: var(--eb-muted) !important; }
+.eb-workspace[data-eb-theme=light] .kiosk-modal :is(select,.modal-secondary-btn) { background:#fff!important;color:var(--eb-text)!important;border-color:var(--eb-border)!important; }
+.eb-workspace[data-eb-theme=light] .selected-election-info { background:var(--eb-soft)!important;color:var(--eb-text)!important;border-color:var(--eb-border)!important; }
+.eb-workspace[data-eb-theme=light] .selected-election-info strong { color:var(--eb-text)!important; }
+
+@media(max-width:700px) {
+    .kiosk-header { align-items: flex-start; flex-direction: column; }
+    .kiosk-header-actions { width: 100%; }
+    .kiosk-header-actions > button { width: 100%; }
+}

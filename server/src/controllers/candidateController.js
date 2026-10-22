@@ -516,6 +516,20 @@ const createCandidate = async (
             });
         }
 
+        if (!party_list_id && !String(profile_picture || "").trim()) {
+            return res.status(400).json({
+                success: false,
+                message: "A profile photo is required for an independent candidate.",
+            });
+        }
+
+        if (!party_list_id && !String(platform || "").trim()) {
+            return res.status(400).json({
+                success: false,
+                message: "A platform or short description is required for an independent candidate.",
+            });
+        }
+
 
         // -----------------------------------------------------
         // Verify election
@@ -526,9 +540,7 @@ const createCandidate = async (
             error: electionError,
         } = await supabase
             .from("elections")
-            .select(
-                "id, title"
-            )
+            .select("id, title, is_published")
             .eq(
                 "id",
                 election_id
@@ -654,6 +666,35 @@ const createCandidate = async (
                 message:
                     "The selected position is inactive.",
             });
+        }
+
+        // Independent candidacy year requirements are validated on the
+        // server as well as in the EB form so the ballot cannot bypass them.
+        if (!party_list_id) {
+            const yearText = String(student.year_level || "").trim().toLowerCase();
+            const normalizedYear = yearText.includes("1st") || yearText.includes("first") || yearText === "1"
+                ? "1st Year"
+                : yearText.includes("2nd") || yearText.includes("second") || yearText === "2"
+                    ? "2nd Year"
+                    : yearText.includes("3rd") || yearText.includes("third") || yearText === "3"
+                        ? "3rd Year"
+                        : yearText.includes("4th") || yearText.includes("fourth") || yearText === "4"
+                            ? "4th Year"
+                            : yearText;
+            const normalizedPosition = String(position.name || "").trim().toLowerCase();
+            const isTopOffice = ["president", "vice president"].includes(normalizedPosition);
+            const eligibleYears = isTopOffice
+                ? ["3rd Year", "4th Year"]
+                : ["2nd Year", "3rd Year", "4th Year"];
+
+            if (!eligibleYears.includes(normalizedYear)) {
+                return res.status(400).json({
+                    success: false,
+                    message: isTopOffice
+                        ? "Independent candidates for President or Vice President must be in 3rd or 4th Year."
+                        : "Independent candidates must be in 2nd, 3rd, or 4th Year. 1st Year students are not eligible.",
+                });
+            }
         }
 
 
@@ -888,11 +929,11 @@ const createCandidate = async (
                 is_active:
                     true,
 
-                // Existing database compatibility.
-                // This is NOT a candidate approval workflow.
+                // Candidates entered by EB after publication should immediately appear on the student ballot.
+                // Draft election candidates remain staged until the election is published.
+                approval_status: election.is_published ? "approved" : "pending",
 
-                approval_status:
-                    "pending",
+                approved_at: election.is_published ? new Date().toISOString() : null,
             })
             .select(`
                 *,

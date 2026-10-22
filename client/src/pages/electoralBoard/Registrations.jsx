@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { FiClipboard } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import "./Registrations.css"
@@ -1019,7 +1020,7 @@ const Registrations = ({ onNavigate }) => {
                     <div>
                         <div className="registration-eyebrow">Online Registration Management</div>
                         <h1>Review Student Approval</h1>
-                        <p>Check the submitted documents and selfie, then approve or reject the registration.</p>
+                        <p>Review the submitted documents and student details, then approve or reject the registration.</p>
                     </div>
 
 <p>Late enrollee applications are reviewed by the Administrator.</p>
@@ -1042,7 +1043,7 @@ const Registrations = ({ onNavigate }) => {
                     {/* APPLICATION LIST */}
                     <aside className="registration-applications">
                         <div className="applications-heading">
-                            <div className="applications-icon">▣</div>
+                            <div className="applications-icon"><FiClipboard aria-hidden="true" /></div>
                             <div>
                                 <h2>Applications</h2>
                                 <p>Submitted online registrations</p>
@@ -1254,7 +1255,7 @@ const Registrations = ({ onNavigate }) => {
                                 <section className="verification-section">
                                     <div className="section-heading-row">
                                         <h3>Verification checklist</h3>
-                                        <span>3 of 4 done</span>
+                                        <span>3 review checks</span>
                                     </div>
 
                                     <div className="verification-list">
@@ -1269,13 +1270,6 @@ const Registrations = ({ onNavigate }) => {
                                         <div className="verification-row">
                                             <span className="check checked">✓</span>
                                             <span>Documents are clear and readable</span>
-                                        </div>
-                                        <div className="verification-row">
-                                            <span className="check"></span>
-                                            <div>
-                                                <span>Selfie matches the ID photo</span>
-                                                <small>Compare the live selfie with the ID photo</small>
-                                            </div>
                                         </div>
                                     </div>
                                 </section>

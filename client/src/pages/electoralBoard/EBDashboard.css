@@ -1417,11 +1417,20 @@
 }
 
 .eb-dashboard-shell .eb-stat-card > div:first-child > div {
-    width: 34px !important;
-    height: 34px !important;
-    border-radius: 9px !important;
-    background: rgba(35, 91, 255, .12) !important;
-    color: #3977ff !important;
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: #8fb6ff !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+.eb-dashboard-shell .eb-stat-card > div:first-child > div svg {
+    width: 19px;
+    height: 19px;
+    stroke-width: 1.8;
 }
 
 .eb-dashboard-shell .eb-stat-card > div:nth-child(2) {
@@ -1440,6 +1449,10 @@
     color: #777e97 !important;
     font-size: 10px !important;
     margin-top: 4px !important;
+}
+
+.eb-workspace[data-eb-theme="light"] .eb-dashboard-shell .eb-stat-card > div:first-child > div {
+    color: #2459bb !important;
 }
 
 .eb-dashboard-main-grid,

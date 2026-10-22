@@ -470,9 +470,68 @@ const getVotingMonitoring = async (req, res) => {
 };
 
 // =========================================================
+// GET AGGREGATED TURNOUT TOTALS FOR EB ELECTIONS
+// =========================================================
+
+const getElectionTurnoutSummaries = async (req, res) => {
+    try {
+        await authenticateEB(req);
+
+        const { data: elections, error: electionsError } = await supabase
+            .from("elections")
+            .select("id")
+            .order("created_at", { ascending: false });
+        if (electionsError) throw electionsError;
+
+        if (!elections?.length) {
+            return res.json({ success: true, elections: [], updatedAt: new Date().toISOString() });
+        }
+
+        const electionIds = elections.map(({ id }) => id);
+        const { data: yearLevels, error: yearLevelsError } = await supabase
+            .from("election_year_levels")
+            .select("election_id, year_level")
+            .in("election_id", electionIds);
+        if (yearLevelsError) throw yearLevelsError;
+
+        const summaries = await Promise.all(elections.map(async ({ id }) => {
+            const configuredYears = (yearLevels || [])
+                .filter((row) => row.election_id === id)
+                .map((row) => row.year_level)
+                .filter((year) => year && year !== "1st Year");
+            const eligibleYears = configuredYears.length
+                ? [...new Set(configuredYears)]
+                : ["2nd Year", "3rd Year", "4th Year"];
+
+            const [studentsResult, participationResult] = await Promise.all([
+                supabase.from("students").select("id", { count: "exact", head: true }).in("year_level", eligibleYears),
+                supabase.from("vote_participations").select("id", { count: "exact", head: true }).eq("election_id", id).eq("has_voted", true),
+            ]);
+            if (studentsResult.error) throw studentsResult.error;
+            if (participationResult.error) throw participationResult.error;
+
+            return {
+                id,
+                voter_count: studentsResult.count || 0,
+                vote_count: participationResult.count || 0,
+            };
+        }));
+
+        return res.json({ success: true, elections: summaries, updatedAt: new Date().toISOString() });
+    } catch (error) {
+        console.error("Election turnout summary error:", error);
+        const message = error?.message || "Failed to load election turnout totals.";
+        const authError = /Authentication|Electoral Board access|Invalid Electoral Board/i.test(message) ||
+            error?.name === "JsonWebTokenError" || error?.name === "TokenExpiredError";
+        return res.status(authError ? 401 : 500).json({ success: false, message });
+    }
+};
+
+// =========================================================
 // EXPORT
 // =========================================================
 
 module.exports = {
-    getVotingMonitoring
+    getVotingMonitoring,
+    getElectionTurnoutSummaries,
 };

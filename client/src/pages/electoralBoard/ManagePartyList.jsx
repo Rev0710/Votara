@@ -246,12 +246,21 @@ const isStudentEligibleForPosition = (
     return true;
 };
 
+const isStudentEligibleForIndependentPosition = (student, position) => {
+    if (!student || !position) return true;
+    const year = normalizeYear(student.year_level);
+    const role = normalizeText(position.name);
+    return ["president", "vice president"].includes(role)
+        ? ["3rd Year", "4th Year"].includes(year)
+        : ["2nd Year", "3rd Year", "4th Year"].includes(year);
+};
+
 
 // ============================================================
 // COMPONENT
 // ============================================================
 
-function ManagePartyList({ partyListId: partyListIdProp = "", partyListName: partyListNameProp = "", electionId: electionIdProp = "", onBack = null }) {
+function ManagePartyList({ partyListId: partyListIdProp = "", partyListName: partyListNameProp = "", electionId: electionIdProp = "", onBack = null, individualCandidacy = false }) {
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -292,6 +301,8 @@ function ManagePartyList({ partyListId: partyListIdProp = "", partyListName: par
     const isPartyListScoped =
         Boolean(partyListContextId);
 
+    const isIndependentOnly = Boolean((individualCandidacy || location.state?.independentOnly) && !partyListContextId);
+
     // ========================================================
     // SEARCH
     // ========================================================
@@ -315,6 +326,9 @@ function ManagePartyList({ partyListId: partyListIdProp = "", partyListName: par
         useState(false);
 
     const [loadingOptions, setLoadingOptions] =
+        useState(false);
+
+    const [approvingPartyList, setApprovingPartyList] =
         useState(false);
 
     // ========================================================
@@ -537,7 +551,9 @@ function ManagePartyList({ partyListId: partyListIdProp = "", partyListName: par
                                   partyListContextId
                               )
                       )
-                    : candidateList;
+                    : isIndependentOnly
+                        ? candidateList.filter((candidate) => !(candidate.party_list_id || candidate.party_list?.id))
+                        : candidateList;
 
             setStudents(studentList);
 
@@ -648,6 +664,29 @@ function ManagePartyList({ partyListId: partyListIdProp = "", partyListName: par
         isPartyListScoped,
     ]);
 
+    const approveScopedPartyList = async () => {
+        const scopedPartyListId = getId(selectedPartyList);
+        if (!isPartyListScoped || !scopedPartyListId) return;
+
+        try {
+            setApprovingPartyList(true);
+            setError("");
+            setSuccess("");
+            await api.patch(`/party-lists/${scopedPartyListId}/approve`, {
+                approval_remarks: "",
+            });
+            setSuccess(`${selectedPartyList.name} is approved. You can now add candidates.`);
+            await loadOptions();
+        } catch (err) {
+            setError(
+                err?.response?.data?.message ||
+                    "Unable to approve this party list. Please review it in Party List Management."
+            );
+        } finally {
+            setApprovingPartyList(false);
+        }
+    };
+
     // ========================================================
     // STUDENT SEARCH
     // ========================================================
@@ -729,7 +768,7 @@ const availablePositions = useMemo(() => {
     // already occupied by that party are removed from the
     // Add Candidate form. The currently edited candidate keeps
     // its own position available while editing.
-    const occupiedPositionIds =
+    const occupiedPositionIds = isIndependentOnly ? new Set() :
         new Set(
             candidates
                 .filter((candidate) => {
@@ -778,12 +817,10 @@ const availablePositions = useMemo(() => {
                 );
             }
 
-            if (
-                !isStudentEligibleForPosition(
-                    selectedStudentForForm,
-                    position
-                )
-            ) {
+            const studentEligible = isIndependentOnly
+                ? isStudentEligibleForIndependentPosition(selectedStudentForForm, position)
+                : isStudentEligibleForPosition(selectedStudentForForm, position);
+            if (!studentEligible) {
                 return false;
             }
 
@@ -800,6 +837,7 @@ const availablePositions = useMemo(() => {
     candidates,
     editingCandidate,
     isPartyListScoped,
+    isIndependentOnly,
     partyListContextId,
 ]);
 
@@ -962,6 +1000,12 @@ const availablePositions = useMemo(() => {
                     String(
                         partyListContextId
                     ),
+                position_id: location.state?.positionId || "",
+            }));
+        } else if (location.state?.positionId) {
+            setForm((previous) => ({
+                ...previous,
+                position_id: location.state.positionId,
             }));
         }
 
@@ -1063,11 +1107,22 @@ const availablePositions = useMemo(() => {
     // ========================================================
 
     const selectStudent = (student) => {
+        const preferredPosition = positions.find(
+            (position) =>
+                String(getId(position)) === String(location.state?.positionId || "") &&
+                availablePositions.some(
+                    (item) => String(getId(item)) === String(getId(position))
+                ) &&
+                (isIndependentOnly
+                    ? isStudentEligibleForIndependentPosition(student, position)
+                    : isStudentEligibleForPosition(student, position))
+        );
+
         setForm((previous) => ({
             ...previous,
             student_id:
                 getId(student),
-            position_id: "",
+            position_id: preferredPosition ? String(getId(preferredPosition)) : "",
         }));
 
         setStudentSearch(
@@ -1078,7 +1133,9 @@ const availablePositions = useMemo(() => {
             false
         );
 
-        setError("");
+        setError(isIndependentOnly && normalizeYear(student.year_level) === "1st Year"
+            ? "This registered student is not eligible to run independently. Independent candidates must be in 2nd–4th Year."
+            : "");
     };
 
     // ========================================================
@@ -1279,6 +1336,16 @@ const availablePositions = useMemo(() => {
     const submitCandidate = () => {
         setError("");
 
+        if (isPartyListScoped && selectedPartyList?.approval_status !== "approved") {
+            setError("Approve this party list before adding candidates.");
+            return;
+        }
+
+        if (isPartyListScoped && selectedPartyList?.is_active === false) {
+            setError("Reactivate this party list before adding candidates.");
+            return;
+        }
+
         if (!selectedElectionId) {
             setError(
                 "Please select an election."
@@ -1300,16 +1367,29 @@ const availablePositions = useMemo(() => {
             return;
         }
 
+        if (isIndependentOnly && !form.profile_picture) {
+            setError("Upload a candidate profile photo before adding this independent candidate.");
+            return;
+        }
+
+        if (isIndependentOnly && !form.platform.trim()) {
+            setError("Add the candidate's platform or short description before continuing.");
+            return;
+        }
+
         if (
             selectedStudentForForm &&
             selectedPositionForForm &&
-            !isStudentEligibleForPosition(
-                selectedStudentForForm,
-                selectedPositionForForm
-            )
+            !(isIndependentOnly
+                ? isStudentEligibleForIndependentPosition(selectedStudentForForm, selectedPositionForForm)
+                : isStudentEligibleForPosition(selectedStudentForForm, selectedPositionForForm))
         ) {
             setError(
-                "This student is not eligible for the selected representative position based on year level."
+                isIndependentOnly && ["president", "vice president"].includes(normalizeText(selectedPositionForForm?.name))
+                    ? "Independent candidates for President or Vice President must be in 3rd or 4th Year."
+                    : isIndependentOnly
+                        ? "Independent candidates must be in 2nd, 3rd, or 4th Year. 1st Year students are not eligible."
+                        : "This student is not eligible for the selected representative position based on year level."
             );
             return;
         }
@@ -1445,6 +1525,18 @@ const availablePositions = useMemo(() => {
     // ========================================================
 
     const saveCandidate = async () => {
+        if (isPartyListScoped && selectedPartyList?.approval_status !== "approved") {
+            setError("Approve this party list before adding candidates.");
+            setShowConfirmation(false);
+            return;
+        }
+
+        if (isPartyListScoped && selectedPartyList?.is_active === false) {
+            setError("Reactivate this party list before adding candidates.");
+            setShowConfirmation(false);
+            return;
+        }
+
         try {
             setLoading(true);
             setError("");
@@ -1461,8 +1553,11 @@ const availablePositions = useMemo(() => {
                     form.student_id,
 
                 party_list_id:
-                    form.party_list_id ||
-                    null,
+                    isPartyListScoped
+                        ? partyListContextId
+                         : isIndependentOnly && !editingCandidate
+                            ? null
+                            : form.party_list_id || null,
 
                 platform:
                     form.platform.trim(),
@@ -1774,7 +1869,7 @@ const deleteCandidate = async (
     // ========================================================
 
     return (
-        <div className="eb-candidate-page">
+        <div className={`eb-candidate-page${individualCandidacy ? " is-individual-candidacy" : ""}`}>
             <main className="eb-main">
                 {/* ==================================================
                     BACK / PAGE CONTEXT
@@ -1794,7 +1889,8 @@ const deleteCandidate = async (
                                     // the standalone candidates route.
                                     navigate("/electoral-board/dashboard", {
                                         state: {
-                                            returnToSection: "candidates",
+                                            returnToSection: location.state?.returnToSection || "partyLists",
+                                            electionId: selectedElectionId,
                                         },
                                     });
                                 } else {
@@ -1809,7 +1905,7 @@ const deleteCandidate = async (
 
                 <div className="eb-manage-pill">
                     <span className="eb-pill-dot" />
-                    {isPartyListScoped ? "Manage Party List" : "Manage Candidates"}
+                    {isPartyListScoped ? "Manage Party List" : individualCandidacy ? "Individual Candidacy" : "Manage Candidates"}
                 </div>
 
                 {/* ==================================================
@@ -1828,12 +1924,14 @@ const deleteCandidate = async (
                             <h1>
                                 {isPartyListScoped
                                     ? partyListContextName || "Selected Party List"
-                                    : selectedElection?.title || "Candidate Management"}
+                                    : individualCandidacy ? "Run Independently" : selectedElection?.title || "Candidate Management"}
                             </h1>
                             <p>
-                                {selectedElection
-                                    ? `Election ${selectedElection.title || "2026–2027"}`
-                                    : "Election Candidate Management"}
+                                {individualCandidacy
+                                    ? `${selectedElection?.title || "Selected election"} · Candidates running without a party list`
+                                    : selectedElection
+                                        ? `Election ${selectedElection.title || "2026–2027"}`
+                                        : "Election Candidate Management"}
                             </p>
                         </div>
                     </div>
@@ -1841,17 +1939,7 @@ const deleteCandidate = async (
                     <div className="eb-hero-controls">
                         
 
-                        <button
-                            type="button"
-                            className="eb-edit-button"
-                            aria-label="Edit"
-                        >
-                            <span>⌕</span>
-                            Edit
-                        </button>
-
-                        {/* Search and Add stay functional, but are placed in the
-                            top hero to match the reference layout. */}
+                        {/* Search and the party-list action stay together in the hero. */}
                         <div className="eb-top-list-tools">
                             <div className="eb-search">
                                 <span aria-hidden="true">⌕</span>
@@ -1878,9 +1966,28 @@ const deleteCandidate = async (
                             <button
                                 type="button"
                                 className="eb-add-button"
-                                onClick={openAddModal}
+                                onClick={
+                                    isPartyListScoped && selectedPartyList?.approval_status !== "approved"
+                                        ? approveScopedPartyList
+                                        : openAddModal
+                                }
+                                disabled={
+                                    loadingOptions ||
+                                    approvingPartyList ||
+                                    (isPartyListScoped && (
+                                        !selectedPartyList ||
+                                        selectedPartyList.is_active === false ||
+                                        selectedPartyList.approval_status === "rejected"
+                                    ))
+                                }
                             >
-                                Add Candidates
+                                {individualCandidacy
+                                    ? "Add Candidate"
+                                    : approvingPartyList
+                                    ? "Approving..."
+                                    : isPartyListScoped && selectedPartyList?.approval_status !== "approved"
+                                        ? "Approve Party List"
+                                        : "Add Candidates"}
                             </button>
                         </div>
                     </div>
@@ -1939,6 +2046,10 @@ const deleteCandidate = async (
                                         "Review the party list information and manage the candidates who belong to this party list."}
                                 </p>
 
+                                <span className={`eb-party-approval-status ${selectedPartyList?.approval_status || "unknown"}`}>
+                                    {selectedPartyList?.approval_status || "Loading status"}
+                                </span>
+
                                 <div className="eb-party-overview-meta">
                                     <span>
                                         <strong>Election</strong>
@@ -1967,7 +2078,7 @@ const deleteCandidate = async (
                 =================================================== */}
                 <section className="eb-candidates-card">
                     <div className="eb-card-heading">
-                        <h2>{isPartyListScoped ? "Party List Members" : "Candidates"}</h2>
+                        <h2>{isPartyListScoped ? "Party List Members" : individualCandidacy ? "Individual Candidates" : "Candidates"}</h2>
                         {isPartyListScoped && (
                             <span className="eb-member-count">{totalCandidates} member{totalCandidates === 1 ? "" : "s"}</span>
                         )}
@@ -2136,7 +2247,7 @@ const deleteCandidate = async (
             =================================================== */}
 
             {showModal && (
-                <ModalOverlay>
+                <ModalOverlay className={individualCandidacy ? "eb-individual-modal-overlay" : ""}>
                     <div className="eb-candidate-dialog" role="dialog" aria-modal="true" aria-label="Candidate details" style={styles.largeModal}
                     >
                         {/* HEADER */}
@@ -2324,6 +2435,7 @@ const deleteCandidate = async (
                                     studentSearch &&
                                     !selectedStudentForForm && (
                                         <div
+                                            className="eb-student-results"
                                             style={
                                                 styles.studentResults
                                             }
@@ -2332,6 +2444,7 @@ const deleteCandidate = async (
                                             0 ? (
                                                 <>
                                                     <div
+                                                        className="eb-results-header"
                                                         style={
                                                             styles.resultsHeader
                                                         }
@@ -2438,6 +2551,7 @@ const deleteCandidate = async (
 
                             {selectedStudentForForm && (
                                 <div
+                                    className="eb-selected-student-card"
                                     style={
                                         styles.selectedStudentCard
                                     }
@@ -2564,7 +2678,9 @@ const deleteCandidate = async (
                                             : "Select a position"}
                                     </option>
 
-                                    {availablePositions.map(
+                                    {(isIndependentOnly && selectedStudentForForm
+                                        ? positions.filter((position) => position.is_active !== false)
+                                        : availablePositions).map(
                                         (
                                             position
                                         ) => (
@@ -2575,10 +2691,11 @@ const deleteCandidate = async (
                                                 value={getId(
                                                     position
                                                 )}
+                                                disabled={isIndependentOnly && !isStudentEligibleForIndependentPosition(selectedStudentForForm, position)}
                                             >
-                                                {
-                                                    position.name
-                                                }
+                                                {position.name}{isIndependentOnly && selectedStudentForForm && !isStudentEligibleForIndependentPosition(selectedStudentForForm, position)
+                                                    ? ["president", "vice president"].includes(normalizeText(position.name)) ? " · 3rd–4th Year only" : " · 2nd–4th Year only"
+                                                    : ""}
                                             </option>
                                         )
                                     )}
@@ -2600,19 +2717,13 @@ const deleteCandidate = async (
 
                                             <div>
                                                 <strong>
-                                                    1st Year
-                                                    voting
-                                                    rule
+                                                    {isIndependentOnly ? "Not eligible to run independently" : "1st Year voting rule"}
                                                 </strong>
 
                                                 <p>
-                                                    1st Year
-                                                    students do
-                                                    not use the
-                                                    general
-                                                    year-level
-                                                    representative
-                                                    positions.
+                                                    {isIndependentOnly
+                                                        ? "Independent candidates must be in 2nd–4th Year. President and Vice President require 3rd–4th Year."
+                                                        : "1st Year students do not use the general year-level representative positions."}
                                                 </p>
                                             </div>
                                         </div>
@@ -2625,94 +2736,76 @@ const deleteCandidate = async (
 
                             <FormStep
                                 number="3"
-                                title="Party List"
-                                description="Choose an approved active party list or Independent."
+                                title={isIndependentOnly ? "Candidacy Type" : "Party List"}
+                                description={isPartyListScoped
+                                    ? "Candidates are assigned to this party list automatically."
+                                    : isIndependentOnly
+                                        ? "Individual Candidacy · no party list will be assigned."
+                                        : "Choose an approved active party list or Independent."}
                             />
 
-                            <div
-                                style={
-                                    styles.formGroup
-                                }
-                            >
-                                <label
-                                    style={
-                                        styles.label
-                                    }
-                                >
-                                    Party List
-                                </label>
-
-                                <select
-                                    name="party_list_id"
-                                    value={
-                                        form.party_list_id
-                                    }
-                                    onChange={
-                                        handleChange
-                                    }
-                                    style={
-                                        styles.input
-                                    }
-                                    disabled={
-                                        isPartyListScoped
-                                    }
-                                >
-                                    {!isPartyListScoped && (
-                                        <option value="">
-                                            Independent /
-                                            No Party List
-                                        </option>
-                                    )}
-
-                                    {partyLists
-                                        .filter(
-                                            (
-                                                party
-                                            ) =>
-                                                party.is_active !==
-                                                    false &&
-                                                party.approval_status ===
-                                                    "approved" &&
-                                                (
-                                                    !isPartyListScoped ||
-                                                    String(
-                                                        getId(party)
-                                                    ) ===
-                                                        String(
-                                                            partyListContextId
-                                                        )
-                                                )
-                                        )
-                                        .map(
-                                            (
-                                                party
-                                            ) => (
-                                                <option
-                                                    key={getId(
-                                                        party
-                                                    )}
-                                                    value={getId(
-                                                        party
-                                                    )}
-                                                >
-                                                    {
-                                                        party.name
-                                                    }
-                                                </option>
-                                            )
+                            <div style={styles.formGroup}>
+                                {isPartyListScoped ? (
+                                    <div className="eb-scoped-party-card">
+                                        <div className="eb-scoped-party-identity">
+                                            <strong>{selectedPartyList?.name || partyListContextName || "Selected party list"}</strong>
+                                            <span>
+                                                {selectedPartyList?.approval_status === "approved" && selectedPartyList?.is_active !== false
+                                                    ? "This party list will be assigned automatically."
+                                                    : selectedPartyList?.approval_status === "pending"
+                                                        ? "Approve this party list before adding candidates."
+                                                        : selectedPartyList?.approval_status === "rejected"
+                                                            ? "This party list was rejected. Review it in Party List Management before adding candidates."
+                                                            : selectedPartyList?.is_active === false
+                                                                ? "This party list is inactive. Reactivate it in Party List Management before adding candidates."
+                                                                : "Loading party list details..."}
+                                            </span>
+                                        </div>
+                                        {selectedPartyList?.approval_status === "pending" && (
+                                            <button
+                                                type="button"
+                                                className="eb-approve-party-button"
+                                                onClick={approveScopedPartyList}
+                                                disabled={approvingPartyList}
+                                            >
+                                                {approvingPartyList ? "Approving..." : "Approve Party List"}
+                                            </button>
                                         )}
-                                </select>
-
-                                <small
-                                    style={
-                                        styles.helperText
-                                    }
-                                >
-                                    {isPartyListScoped
-                                        ? `Candidates added from this page will be assigned to ${partyListContextName || "this party list"}. Only unfilled positions are available.`
-                                        : `Only approved and active party lists can be assigned to candidates.`}
-
-                                </small>
+                                        <span className={`eb-party-approval-status ${selectedPartyList?.approval_status || "unknown"}`}>
+                                            {selectedPartyList?.approval_status || "Loading"}
+                                        </span>
+                                    </div>
+                                ) : isIndependentOnly ? (
+                                    <div className="eb-scoped-party-card">
+                                        <div className="eb-scoped-party-identity">
+                                            <strong>Individual Candidacy</strong>
+                                            <span>This candidate will run without a party list.</span>
+                                        </div>
+                                        <span className="eb-party-approval-status approved">Independent</span>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <label style={styles.label}>Party List</label>
+                                        <select
+                                            name="party_list_id"
+                                            value={form.party_list_id}
+                                            onChange={handleChange}
+                                            style={styles.input}
+                                        >
+                                            <option value="">Independent / No Party List</option>
+                                            {partyLists
+                                                .filter((party) => party.is_active !== false && party.approval_status === "approved")
+                                                .map((party) => (
+                                                    <option key={getId(party)} value={getId(party)}>
+                                                        {party.name}
+                                                    </option>
+                                                ))}
+                                        </select>
+                                        <small style={styles.helperText}>
+                                            Only approved and active party lists can be assigned to candidates.
+                                        </small>
+                                    </>
+                                )}
                             </div>
 
                             {/* =====================================
@@ -2735,7 +2828,7 @@ const deleteCandidate = async (
                                         styles.label
                                     }
                                 >
-                                    Profile Picture
+                                    Profile Picture{isIndependentOnly && <span style={styles.required}> *</span>}
                                 </label>
 
                                 {!form.profile_picture ? (
@@ -2753,6 +2846,7 @@ const deleteCandidate = async (
                                         }
                                     >
                                         <div
+                                            className="eb-upload-icon"
                                             style={
                                                 styles.uploadIcon
                                             }
@@ -2781,6 +2875,7 @@ const deleteCandidate = async (
                                     </button>
                                 ) : (
                                     <div
+                                        className="eb-candidate-image-preview"
                                         style={
                                             styles.imagePreviewBox
                                         }
@@ -2895,7 +2990,7 @@ const deleteCandidate = async (
                                     }
                                 >
                                     Platform /
-                                    Description
+                                    Description{isIndependentOnly && <span style={styles.required}> *</span>}
                                 </label>
 
                                 <textarea
@@ -2935,11 +3030,13 @@ const deleteCandidate = async (
                             {selectedStudentForForm &&
                                 selectedPositionForForm && (
                                     <div
+                                        className="eb-candidate-final-review"
                                         style={
                                             styles.finalReview
                                         }
                                     >
                                         <div
+                                            className="eb-candidate-final-review-header"
                                             style={
                                                 styles.finalReviewHeader
                                             }
@@ -3006,7 +3103,7 @@ const deleteCandidate = async (
                                             />
 
                                             <ReviewItem
-                                                label="Party List"
+                                                label={isIndependentOnly ? "Candidacy" : "Party List"}
                                                 value={
                                                     form.party_list_id
                                                         ? partyLists.find(
@@ -3036,6 +3133,14 @@ const deleteCandidate = async (
                                     </div>
                                 )}
                         </div>
+
+                        {error && (
+                            <div role="alert" style={styles.errorAlert}>
+                                <span aria-hidden="true">!</span>
+                                <span style={{ flex: 1 }}>{error}</span>
+                                <button type="button" style={styles.alertClose} onClick={() => setError("")} aria-label="Dismiss message">×</button>
+                            </div>
+                        )}
 
                         {/* FOOTER */}
 
@@ -3087,7 +3192,7 @@ const deleteCandidate = async (
 
             {showDetails &&
                 selectedCandidate && (
-                    <ModalOverlay>
+                <ModalOverlay className={individualCandidacy ? "eb-individual-modal-overlay" : ""}>
                         <div
                             style={
                                 styles.detailsModal
@@ -3315,8 +3420,11 @@ const deleteCandidate = async (
 
             {showConfirmation &&
                 confirmation && (
-                    <ModalOverlay>
+                <ModalOverlay className={individualCandidacy ? "eb-individual-modal-overlay" : ""}>
                         <div
+                            className="eb-candidate-confirmation"
+                            role="alertdialog"
+                            aria-modal="true"
                             style={
                                 styles.confirmModal
                             }
@@ -3350,6 +3458,7 @@ const deleteCandidate = async (
                             </p>
 
                             <div
+                                className="eb-candidate-confirmation-note"
                                 style={
                                     styles.confirmNote
                                 }
@@ -3632,6 +3741,7 @@ function FormStep({
 }) {
     return (
         <div
+            className="eb-candidate-form-step"
             style={
                 styles.formStep
             }
@@ -3676,6 +3786,7 @@ function ReviewItem({
 }) {
     return (
         <div
+            className="eb-review-item"
             style={
                 styles.reviewItem
             }
@@ -3769,11 +3880,10 @@ function EmptyState({
 // MODAL OVERLAY
 // ============================================================
 
-function ModalOverlay({
-    children,
-}) {
+function ModalOverlay({ children, className = "" }) {
     return (
         <div
+            className={className}
             style={
                 styles.overlay
             }

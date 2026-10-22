@@ -1026,7 +1026,7 @@ function LateEnrolleeManagement({ onNavigate }) {
 
             {detailsOpen && selectedApplication && (
                 <div
-                    className="lrm-overlay"
+                    className="lrm-review-inline"
                     onMouseDown={(e) => {
                         if (e.target === e.currentTarget) closeDetails();
                     }}

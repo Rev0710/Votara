@@ -966,23 +966,7 @@ function LateEnrolleeManagement({ onNavigate }) {
                         )}
                     </div>
 
-                    <div style={{
-                        gridColumn: 2,
-                        gridRow: 1,
-                        minWidth: 0,
-                        marginLeft: 16,
-                        minHeight: 500,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        border: "1px solid rgba(111,126,184,.25)",
-                        borderRadius: 15,
-                        background: "rgba(31,36,75,.72)",
-                        color: "#7f89aa",
-                        boxShadow: "0 14px 40px rgba(0,0,0,.12)",
-                        padding: 30,
-                        textAlign: "center",
-                    }}>
+                    <div className="lrm-empty-detail">
                         <div>
                             <div style={{
                                 width: 52,
@@ -1009,12 +993,7 @@ function LateEnrolleeManagement({ onNavigate }) {
             </div>
 
             {detailsOpen && selectedApplication && (
-                <div
-                    className="lrm-overlay"
-                    onMouseDown={(e) => {
-                        if (e.target === e.currentTarget) closeDetails();
-                    }}
-                >
+                <div className="lrm-review-inline">
                     <div className="lrm-review-modal">
                         <div className="lrm-modal-head">
                             <div style={{display:"flex", alignItems:"center", gap:13}}>

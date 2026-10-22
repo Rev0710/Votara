@@ -38,6 +38,18 @@
 .eb-page-party-lists .plm-feature-description,
 .eb-page-party-lists .party-description { color: #aeb9d6 !important; }
 
+.eb-page-party-lists .plm-position-context {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(90, 145, 255, 0.38);
+  border-radius: 10px;
+  background: rgba(38, 110, 255, 0.12);
+  color: #dce7ff;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.eb-page-party-lists .plm-position-context strong { color: #fff; }
+
 .eb-page-party-lists .plm-feature-card,
 .eb-page-party-lists .party-row {
   background: var(--plm-feature-bg) !important;

@@ -922,6 +922,47 @@ const loginAdmin = async (
     }
 };
 
+const keepAdminSession = async (req, res) => {
+    try {
+        const authorization = req.headers.authorization || "";
+        const token = authorization.startsWith("Bearer ") ? authorization.slice(7).trim() : "";
+        if (!token) return res.status(401).json({ success: false, message: "Administrator authentication is required." });
+
+        let claims;
+        try {
+            claims = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ["HS256"] });
+        } catch {
+            return res.status(401).json({ success: false, message: "Invalid or expired administrator session." });
+        }
+
+        if (claims.role !== ADMIN_ROLE || !claims.userId) {
+            return res.status(403).json({ success: false, message: "Administrator access is required." });
+        }
+
+        const { data: admin, error } = await supabase
+            .from("staff_users")
+            .select("id, email, full_name, role, is_active")
+            .eq("id", claims.userId)
+            .eq("role", ADMIN_ROLE)
+            .maybeSingle();
+
+        if (error) return res.status(503).json({ success: false, message: "Unable to verify the administrator account." });
+        if (!admin || admin.is_active !== true) {
+            return res.status(403).json({ success: false, message: "Administrator account is inactive or unavailable." });
+        }
+
+        const renewedToken = jwt.sign(
+            { userId: admin.id, email: admin.email, role: ADMIN_ROLE, fullName: admin.full_name },
+            process.env.JWT_SECRET,
+            { expiresIn: "8h" }
+        );
+        return res.status(200).json({ success: true, token: renewedToken });
+    } catch (error) {
+        console.error("Administrator session refresh failed:", error);
+        return res.status(500).json({ success: false, message: "Unable to refresh the administrator session." });
+    }
+};
+
 
 // =====================================================
 // EXPORTS
@@ -932,5 +973,7 @@ module.exports = {
     registerInitialAdmin,
 
     loginAdmin,
+
+    keepAdminSession,
 
 };

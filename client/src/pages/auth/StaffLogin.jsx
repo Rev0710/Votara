@@ -491,6 +491,13 @@ const StaffLogin = () => {
             // Password is NEVER stored.
             // =================================================
 
+            // This staff login is restricted to Electoral Board accounts.
+            // Remove older role tokens so the active account is unambiguous.
+            localStorage.removeItem("votaraEBToken");
+            localStorage.removeItem("votaraEBUser");
+            localStorage.removeItem("votaraAdminToken");
+            localStorage.removeItem("votaraAdminUser");
+
             localStorage.setItem(
                 "votaraStaffToken",
                 data.token

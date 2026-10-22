@@ -69,6 +69,45 @@
     font-size: 17px;
 }
 
+.rr-release-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 142px;
+    height: 42px;
+    padding: 0 16px;
+    border: 1px solid #86efac;
+    border-radius: 10px;
+    background: #16a34a;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 750;
+    cursor: pointer;
+}
+
+.rr-release-button:hover:not(:disabled) {
+    background: #15803d;
+}
+
+.rr-release-button:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+}
+
+.rr-release-status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 42px;
+    padding: 0 13px;
+    border: 1px solid #86efac;
+    border-radius: 10px;
+    background: #ecfdf3;
+    color: #166534;
+    font-size: 12px;
+    font-weight: 750;
+    white-space: nowrap;
+}
+
 .rr-eyebrow {
     margin-bottom: 7px;
     color: #62a4ff;
@@ -1051,6 +1090,8 @@
     }
 
     .rr-export-button,
+    .rr-release-button,
+    .rr-release-status,
     .rr-refresh-button {
         width: 100%;
     }
@@ -1156,6 +1197,231 @@
     .rr-generated {
         text-align: left;
     }
+}
+
+/* Final surface pass, kept after the legacy theme rules above. */
+.rr-selector-panel,
+.rr-election-card,
+.rr-stat-card,
+.rr-summary-panel,
+.rr-panel,
+.rr-position-card,
+.rr-empty,
+.rr-empty-results,
+.rr-loading {
+    background: #1b2940 !important;
+    border-color: rgba(150, 174, 210, .22) !important;
+    box-shadow: 0 8px 24px rgba(3, 10, 24, .14) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+.rr-summary-grid > div { background: #1b2940 !important; }
+
+.eb-workspace[data-eb-theme="light"] .rr-page {
+    color: #1d2b42;
+}
+
+.eb-workspace[data-eb-theme="light"] .rr-selector-panel,
+.eb-workspace[data-eb-theme="light"] .rr-election-card,
+.eb-workspace[data-eb-theme="light"] .rr-stat-card,
+.eb-workspace[data-eb-theme="light"] .rr-summary-panel,
+.eb-workspace[data-eb-theme="light"] .rr-panel,
+.eb-workspace[data-eb-theme="light"] .rr-position-card,
+.eb-workspace[data-eb-theme="light"] .rr-empty,
+.eb-workspace[data-eb-theme="light"] .rr-empty-results,
+.eb-workspace[data-eb-theme="light"] .rr-loading {
+    background: #fff !important;
+    border-color: #d8e1ee !important;
+    box-shadow: 0 8px 22px rgba(31, 54, 87, .07) !important;
+    color: #1d2b42 !important;
+}
+
+.eb-workspace[data-eb-theme="light"] .rr-page :is(h1, h2, h3, h4, strong, label) {
+    color: #1d2b42 !important;
+}
+
+.eb-workspace[data-eb-theme="light"] .rr-page :is(p, small, .rr-muted, .rr-generated, .rr-election-meta span, .rr-stat-card span, .rr-summary-grid span, .rr-candidate-info span, .rr-vote-count span) {
+    color: #586981 !important;
+}
+
+.eb-workspace[data-eb-theme="light"] .rr-selector-panel select {
+    background: #fff !important;
+    color: #1d2b42 !important;
+    border-color: #cbd7e8 !important;
+}
+
+.eb-workspace[data-eb-theme="light"] .rr-selector-panel select option {
+    background: #fff;
+    color: #1d2b42;
+}
+
+.eb-workspace[data-eb-theme="light"] .rr-summary-grid > div {
+    background: #fff !important;
+}
+
+.eb-workspace[data-eb-theme="light"] .rr-position-header {
+    background: #f1f5fb !important;
+}
+
+.eb-workspace[data-eb-theme="light"] .rr-candidate-row:hover {
+    background: #f3f7fd !important;
+}
+
+.eb-workspace[data-eb-theme="light"] .rr-release-note {
+    color: #80530b;
+}
+
+/* Responsive reporting layout: solid surfaces keep the tally readable over
+   the dashboard texture, with controls that wrap cleanly at every width. */
+.rr-page {
+    max-width: 1360px;
+    padding: 12px clamp(12px, 2vw, 28px) 40px;
+}
+
+.rr-header {
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 18px 28px;
+}
+
+.rr-header-actions {
+    flex-wrap: wrap;
+    max-width: min(100%, 560px);
+}
+
+.rr-release-note {
+    flex: 1 0 100%;
+    color: #f3cd83;
+    font-size: 12px;
+    line-height: 1.45;
+    text-align: right;
+}
+
+.rr-selector-panel,
+.rr-election-card,
+.rr-stat-card,
+.rr-summary-panel,
+.rr-panel,
+.rr-position-card,
+.rr-empty,
+.rr-empty-results,
+.rr-loading {
+    background: #1b2940 !important;
+    border-color: rgba(150, 174, 210, .22) !important;
+    box-shadow: 0 8px 24px rgba(3, 10, 24, .14);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+.rr-selector-panel:hover,
+.rr-election-card:hover,
+.rr-stat-card:hover,
+.rr-summary-panel:hover,
+.rr-panel:hover,
+.rr-position-card:hover {
+    border-color: rgba(112, 165, 255, .38) !important;
+}
+
+.rr-summary-grid > div {
+    background: #1b2940 !important;
+}
+
+.rr-release-button,
+.rr-export-button,
+.rr-refresh-button {
+    min-height: 42px;
+    border-radius: 9px;
+    box-shadow: none;
+}
+
+.rr-release-button:focus-visible,
+.rr-export-button:focus-visible,
+.rr-refresh-button:focus-visible,
+.rr-selector-panel select:focus-visible {
+    outline: 3px solid rgba(90, 151, 255, .48);
+    outline-offset: 2px;
+}
+
+@media (max-width: 720px) {
+    .rr-page {
+        padding: 10px 12px 28px;
+    }
+
+    .rr-header {
+        gap: 14px;
+        margin-bottom: 18px;
+    }
+
+    .rr-header-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+        max-width: none;
+        gap: 8px;
+    }
+
+    .rr-header-actions > * {
+        min-width: 0;
+    }
+
+    .rr-release-button,
+    .rr-release-status,
+    .rr-export-button,
+    .rr-refresh-button {
+        width: 100%;
+    }
+
+    .rr-release-note {
+        grid-column: 1 / -1;
+        text-align: left;
+    }
+}
+
+@media (max-width: 420px) {
+    .rr-header-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .rr-release-note {
+        grid-column: auto;
+    }
+}
+
+/* Candidate results stay scannable as individual tiles at every viewport. */
+.rr-candidate-list {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+    gap: 12px;
+    padding: 16px;
+}
+
+.rr-candidate-row {
+    min-width: 0;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center;
+    gap: 11px;
+    padding: 14px !important;
+    border: 1px solid var(--rr-candidate-border, rgba(148, 175, 225, .25)) !important;
+    border-radius: 14px;
+    background: var(--rr-candidate-surface, rgba(29, 40, 61, .78)) !important;
+}
+
+.rr-candidate-row:hover { background: var(--rr-candidate-hover, rgba(80, 125, 205, .14)) !important; }
+.rr-candidate-winner { border-color: rgba(34, 197, 94, .45) !important; background: var(--rr-candidate-winner, rgba(22, 101, 52, .16)) !important; }
+.rr-candidate-info { min-width: 0; flex: 1 1 auto; }
+.rr-candidate-info strong { overflow: visible; white-space: normal; overflow-wrap: anywhere; font-size: 14px; line-height: 1.35; }
+.rr-candidate-info span { font-size: 12px; line-height: 1.4; }
+.rr-vote-count { flex: 0 0 auto; min-width: 72px; text-align: right; }
+.rr-vote-count strong { color: var(--rr-text-primary) !important; font-size: 24px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.rr-vote-count span { color: var(--rr-text-secondary) !important; font-size: 12px; }
+
+@media (max-width: 430px) {
+    .rr-candidate-list { padding: 12px; grid-template-columns: minmax(0, 1fr); }
+    .rr-candidate-row { gap: 9px; padding: 12px !important; }
+    .rr-vote-count { min-width: 64px; margin-left: 0 !important; }
+    .rr-vote-count strong { font-size: 22px; }
 }
 
 /* =========================================================
@@ -1391,3 +1657,22 @@
         -webkit-backdrop-filter: blur(12px);
     }
 }
+
+/* Keep report surfaces legible above the dashboard texture. */
+.rr-selector-panel,
+.rr-election-card,
+.rr-stat-card,
+.rr-summary-panel,
+.rr-panel,
+.rr-position-card,
+.rr-empty,
+.rr-empty-results,
+.rr-loading {
+    background: #1b2940 !important;
+    border-color: rgba(150, 174, 210, .22) !important;
+    box-shadow: 0 8px 24px rgba(3, 10, 24, .14) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+.rr-summary-grid > div { background: #1b2940 !important; }

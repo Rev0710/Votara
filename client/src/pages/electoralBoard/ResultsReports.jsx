@@ -23,6 +23,12 @@ const ResultsReports = () => {
     const [exporting, setExporting] =
         useState(false);
 
+    const [exportedElectionId, setExportedElectionId] =
+        useState("");
+
+    const [releasing, setReleasing] =
+        useState(false);
+
     const [error, setError] =
         useState("");
 
@@ -39,18 +45,21 @@ const ResultsReports = () => {
     const loadResults = useCallback(
         async (
             electionId = "",
-            isRefresh = false
+            isRefresh = false,
+            silent = false
         ) => {
 
             try {
 
-                if (isRefresh) {
-                    setRefreshing(true);
-                } else {
-                    setLoading(true);
+                if (!silent) {
+                    if (isRefresh) {
+                        setRefreshing(true);
+                    } else {
+                        setLoading(true);
+                    }
                 }
 
-                setError("");
+                if (!silent) setError("");
 
                 const endpoint =
                     electionId
@@ -91,16 +100,20 @@ const ResultsReports = () => {
                     err
                 );
 
-                setError(
-                    err?.response?.data?.message ||
-                    err?.message ||
-                    "Unable to load election results."
-                );
+                if (!silent) {
+                    setError(
+                        err?.response?.data?.message ||
+                        err?.message ||
+                        "Unable to load election results."
+                    );
+                }
 
             } finally {
 
-                setLoading(false);
-                setRefreshing(false);
+                if (!silent) {
+                    setLoading(false);
+                    setRefreshing(false);
+                }
             }
         },
         [selectedElectionId]
@@ -113,6 +126,14 @@ const ResultsReports = () => {
     useEffect(() => {
         loadResults();
     }, []);
+
+    useEffect(() => {
+        const refreshTimer = window.setInterval(() => {
+            loadResults(selectedElectionId || data?.election?.id || "", false, true);
+        }, 30000);
+
+        return () => window.clearInterval(refreshTimer);
+    }, [data?.election?.id, loadResults, selectedElectionId]);
 
     // =====================================================
     // ELECTION CHANGE
@@ -128,6 +149,8 @@ const ResultsReports = () => {
         setSelectedElectionId(
             electionId
         );
+
+        setExportedElectionId("");
 
         loadResults(
             electionId
@@ -235,6 +258,7 @@ const ResultsReports = () => {
             link.remove();
 
             window.URL.revokeObjectURL(url);
+            setExportedElectionId(election.id);
 
         } catch (err) {
 
@@ -252,6 +276,27 @@ const ResultsReports = () => {
         } finally {
 
             setExporting(false);
+        }
+    };
+
+    const handleReleaseResults = async () => {
+        if (!election?.id) return;
+        if (!window.confirm(`Release the official results for "${election.title}" to all student accounts?`)) return;
+
+        try {
+            setReleasing(true);
+            setError("");
+            const response = await api.post("/electoral-board/results-reports/release", {
+                election_id: election.id,
+            });
+            if (!response?.data?.success) {
+                throw new Error(response?.data?.message || "Unable to release results.");
+            }
+            await loadResults(election.id, true);
+        } catch (err) {
+            setError(err?.response?.data?.message || err?.message || "Unable to release results.");
+        } finally {
+            setReleasing(false);
         }
     };
 
@@ -496,6 +541,42 @@ const ResultsReports = () => {
                 </div>
 
                 <div className="rr-header-actions">
+
+                    {election?.results_released ? (
+                        <span className="rr-release-status">Results released</span>
+                    ) : (
+                        <button
+                            type="button"
+                            className="rr-release-button"
+                            onClick={handleReleaseResults}
+                            disabled={
+                                releasing ||
+                                !election?.id ||
+                                data?.resultsReleaseSupported === false ||
+                                !["closed", "completed", "finished"].includes(String(election?.status || "").toLowerCase()) ||
+                                exportedElectionId !== election?.id
+                            }
+                            title={
+                                data?.resultsReleaseSupported === false
+                                    ? "Apply the results-release database update first."
+                                    : !election?.id
+                                        ? "Select an election first."
+                                        : !["closed", "completed", "finished"].includes(String(election?.status || "").toLowerCase())
+                                            ? "Close the election before releasing results."
+                                            : exportedElectionId !== election?.id
+                                                ? "Export this election's Excel report first."
+                                                : "Release the official results to students."
+                            }
+                        >
+                            {releasing ? "Releasing..." : "Release Results"}
+                        </button>
+                    )}
+
+                    {data?.resultsReleaseSupported === false && !election?.results_released && (
+                        <span className="rr-release-note" role="status">
+                            Apply the results-release database update to enable student release.
+                        </span>
+                    )}
 
                     <button
                         type="button"
@@ -1224,18 +1305,6 @@ const ResultsReports = () => {
                                                         Result
                                                         available
                                                     </strong>
-
-                                                    <p>
-                                                        {
-                                                            position.winner.fullName
-                                                        }{" "}
-                                                        has the
-                                                        highest
-                                                        recorded
-                                                        vote count
-                                                        for this
-                                                        position.
-                                                    </p>
 
                                                 </div>
 

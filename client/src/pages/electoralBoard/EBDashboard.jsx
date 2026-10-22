@@ -2,8 +2,9 @@ import EBAccountPanel from './EBAccountPanel';
 import IssueReports from "./IssueReports";
 import EBHeader from "./EBHeader";
 import InPersonVerification from "./InPersonVerification";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { FiBarChart2, FiClipboard, FiUserCheck, FiUsers } from "react-icons/fi";
 
 import "./EBDashboard.css";
 
@@ -13,9 +14,9 @@ import api from "../../services/api";
 import Registrations from "./Registrations";
 
 import PartyListManagement from "./PartyListManagement";
+import ManagePartyList from "./ManagePartyList";
 import ElectionManagement from "./ElectionManagement";
 import CreateElection from "./CreateElection";
-import CandidateManagement from "./EBCandidateManagement";
 import KioskManagement from "./KioskManagement";
 import VotingMonitoring from "./VotingMonitoring";
 import ResultsReports from "./ResultsReports";
@@ -37,6 +38,7 @@ const EBDashboard = () => {
 
     const [activeSection, setActiveSection] =
         useState("dashboard");
+    const [partyListContext, setPartyListContext] = useState(null);
  useEffect(()=>{api.post('/electoral-board/activity',{section:activeSection}).catch(()=>{});},[activeSection]);
 
     // Restore the dashboard section when returning from a standalone
@@ -47,6 +49,9 @@ const EBDashboard = () => {
         if (!returnToSection) return;
 
         setActiveSection(returnToSection);
+        if (location.state?.electionId) {
+            setPartyListContext({ electionId: location.state.electionId });
+        }
         window.scrollTo({ top: 0, behavior: "auto" });
 
         // Clear the navigation state so refreshing the dashboard does not
@@ -74,6 +79,9 @@ const EBDashboard = () => {
 
     const [dashboardError, setDashboardError] =
         useState("");
+    const [dashboardUpdatedAt, setDashboardUpdatedAt] = useState(null);
+    const statsRequestInFlight = useRef(false);
+    const statsPollingErrorLogged = useRef(false);
 
 
     // =====================================================
@@ -121,12 +129,17 @@ const EBDashboard = () => {
     // LOAD DASHBOARD STATISTICS
     // =====================================================
 
-    const loadDashboardStats = async () => {
+    const loadDashboardStats = async ({ silent = false } = {}) => {
+
+        if (statsRequestInFlight.current) return;
+        statsRequestInFlight.current = true;
 
         try {
 
-            setDashboardLoading(true);
-            setDashboardError("");
+            if (!silent) {
+                setDashboardLoading(true);
+                setDashboardError("");
+            }
 
             const response =
                 await api.get(
@@ -171,22 +184,27 @@ const EBDashboard = () => {
             setCurrentElection(
                 data.currentElection || null
             );
+            setDashboardUpdatedAt(new Date());
+            setDashboardError("");
+            statsPollingErrorLogged.current = false;
 
         } catch (error) {
 
-            console.error(
-                "❌ Unable to load EB dashboard statistics:",
-                error
-            );
+            const message = error?.response?.data?.message ||
+                "Unable to load the latest dashboard statistics.";
+            setDashboardError(message);
 
-            setDashboardError(
-                error?.response?.data?.message ||
-                "Unable to load the latest dashboard statistics."
-            );
+            // Keep the first real error visible in the console, without repeating
+            // the same failed background refresh every polling interval.
+            if (!silent || !statsPollingErrorLogged.current) {
+                console.error("Unable to load EB dashboard statistics:", error);
+            }
+            statsPollingErrorLogged.current = true;
 
         } finally {
 
-            setDashboardLoading(false);
+            statsRequestInFlight.current = false;
+            if (!silent) setDashboardLoading(false);
 
         }
 
@@ -204,8 +222,22 @@ const EBDashboard = () => {
 
         loadDashboardStats();
 
+    }, [activeSection]);
 
+    useEffect(() => {
+        if (activeSection !== "dashboard") return undefined;
 
+        const refreshSilently = () => {
+            if (document.visibilityState === "visible") {
+                loadDashboardStats({ silent: true });
+            }
+        };
+        const intervalId = window.setInterval(refreshSilently, 20000);
+        document.addEventListener("visibilitychange", refreshSilently);
+        return () => {
+            window.clearInterval(intervalId);
+            document.removeEventListener("visibilitychange", refreshSilently);
+        };
     }, [activeSection]);
 
 
@@ -242,9 +274,12 @@ const EBDashboard = () => {
     // WORKSPACE NAVIGATION
     // =====================================================
 
-    const handleNavigation = (section) => {
+    const handleNavigation = (section, context = null) => {
 
         setActiveSection(section);
+        if (["partyLists", "individualCandidacy"].includes(section)) {
+            setPartyListContext(context || null);
+        }
 
 
         window.scrollTo({
@@ -314,7 +349,7 @@ const EBDashboard = () => {
 
                     {activeSection === "dashboard" && (
                         <div className="eb-dashboard-home">
-                            <div className="eb-dashboard-heading"><button type="button" className="eb-manual-refresh" onClick={loadDashboardStats} disabled={dashboardLoading}>Refresh overview</button>
+                            <div className="eb-dashboard-heading"><button type="button" className="eb-manual-refresh" onClick={() => loadDashboardStats()} disabled={dashboardLoading}>Refresh overview</button>
                                 <div>
                                     <h1>Election Operation Dashboard</h1>
                                     <p>Registration, verification, and election activity for the current VOTARA election.</p>
@@ -329,10 +364,10 @@ const EBDashboard = () => {
                             </div>
 
                             <div className="eb-dashboard-stats">
-                                <StatCard title="Student Registered" value={dashboardLoading ? "..." : dashboardStats.registeredStudents} description="Registered students" icon="✓" onClick={() => handleNavigation("registrations")} />
-                                <StatCard title="Pending Registration" value={dashboardLoading ? "..." : dashboardStats.pendingApplications} description="Awaiting review" icon="▤" onClick={() => handleNavigation("registrations")} />
-                                <StatCard title="Active Candidates" value={dashboardLoading ? "..." : dashboardStats.activeCandidates} description="Currently active" icon="♙" onClick={() => handleNavigation("candidates")} />
-                                <StatCard title="Votes Cast" value={dashboardLoading ? "..." : dashboardStats.votesCast} description="Recorded ballots" icon="◉" onClick={() => handleNavigation("monitoring")} />
+                                <StatCard title="Student Registered" value={dashboardLoading ? "..." : dashboardStats.registeredStudents} description="Registered students" icon={<FiUsers aria-hidden="true" />} onClick={() => handleNavigation("registrations")} />
+                                <StatCard title="Pending Registration" value={dashboardLoading ? "..." : dashboardStats.pendingApplications} description="Awaiting review" icon={<FiClipboard aria-hidden="true" />} onClick={() => handleNavigation("registrations")} />
+                                <StatCard title="Active Candidates" value={dashboardLoading ? "..." : dashboardStats.activeCandidates} description="Currently active" icon={<FiUserCheck aria-hidden="true" />} />
+                                <StatCard title="Votes Cast" value={dashboardLoading ? "..." : dashboardStats.votesCast} description="Recorded ballots" icon={<FiBarChart2 aria-hidden="true" />} onClick={() => handleNavigation("monitoring")} />
                             </div>
 
                             <div className="eb-dashboard-main-grid">
@@ -372,7 +407,10 @@ const EBDashboard = () => {
                                                 <div className="eb-chart-grid-line line-3" />
                                                 <div className="eb-chart-bars"><span title={`Recorded ballots: ${dashboardStats.votesCast}`} style={{height: `${turnoutPercent}%`, minHeight:dashboardStats.votesCast>0?2:0}} /></div>
                                             </div>
-                                            <div className="eb-chart-caption">Current election turnout · refresh manually</div>
+                                            <div className="eb-chart-caption">
+                                                Updates automatically every 20 seconds
+                                                {dashboardUpdatedAt && <> · Last updated {dashboardUpdatedAt.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</>}
+                                            </div>
                                         </div>
                                     </div>
                                 </section>
@@ -415,9 +453,6 @@ const EBDashboard = () => {
                                         <div className="eb-review-row">
                                             <span>Registered students</span><strong>{dashboardStats.registeredStudents}</strong><em className="active">Active</em><button type="button" onClick={() => handleNavigation("registrations")}>View</button>
                                         </div>
-                                        <div className="eb-review-row">
-                                            <span>Active candidates</span><strong>{dashboardStats.activeCandidates}</strong><em className="active">Active</em><button type="button" onClick={() => handleNavigation("candidates")}>View</button>
-                                        </div>
                                     </div>
                                 </section>
 
@@ -431,9 +466,6 @@ const EBDashboard = () => {
                                     <div className="eb-readiness-list">
                                         <button type="button" onClick={() => handleNavigation("registrations")}>
                                             <span className="eb-readiness-icon">✓</span><div><strong>Student Registration</strong><small>{dashboardStats.registeredStudents} registered students</small></div><span className="eb-readiness-bar"><i style={{width: "86%"}} /></span>
-                                        </button>
-                                        <button type="button" onClick={() => handleNavigation("candidates")}>
-                                            <span className="eb-readiness-icon">♙</span><div><strong>Candidate Management</strong><small>{dashboardStats.activeCandidates} active candidates</small></div><span className="eb-readiness-bar"><i style={{width: "72%"}} /></span>
                                         </button>
                                         <button type="button" onClick={() => handleNavigation("monitoring")}>
                                             <span className="eb-readiness-icon">◉</span><div><strong>Voting Monitoring</strong><small>{dashboardStats.votesCast} recorded votes</small></div><span className="eb-readiness-bar"><i style={{width: `${Math.max(8, Math.min(100, turnoutPercent))}%`}} /></span>
@@ -485,22 +517,21 @@ const EBDashboard = () => {
                         PARTY LIST MANAGEMENT
                     ================================================= */}
 
-                    {activeSection === "verification" && <InPersonVerification />}
+                    {activeSection === "verification" && <InPersonVerification onNavigate={handleNavigation} />}
 
                     {activeSection === "partyLists" && (
-                        <PartyListManagement />
+                        <PartyListManagement
+                            initialElectionId={partyListContext?.electionId}
+                            positionContext={partyListContext?.positionId ? partyListContext : null}
+                        />
                     )}
 
-
-                    {/* =================================================
-                        CANDIDATE MANAGEMENT
-                    ================================================= */}
-
-                    {activeSection ===
-                        "candidates" && (
-
-                        <CandidateManagement />
-
+                    {activeSection === "individualCandidacy" && (
+                        <ManagePartyList
+                            individualCandidacy
+                            electionId={partyListContext?.electionId || ""}
+                            onBack={() => handleNavigation("election")}
+                        />
                     )}
 
 
@@ -510,6 +541,7 @@ const EBDashboard = () => {
 
                         {activeSection === "election" && (
                             <ElectionManagement
+                                onNavigate={handleNavigation}
                                 onCreateElection={() =>
                                     handleNavigation("createElection")
                                 }
@@ -1058,9 +1090,6 @@ const getSectionTitle = (section) => {
 
         partyLists:
             "Party List Management",
-
-        candidates:
-            "Candidate Management",
 
         election:
             "Election Management",

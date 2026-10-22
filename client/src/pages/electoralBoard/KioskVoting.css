@@ -184,6 +184,31 @@
 .kiosk-voting-alert.success { background: #effbf3; color: #187541; border: 1px solid #bcebc9; }
 .kiosk-voting-alert button { margin-left: auto; border: 0; background: none; font-size: 20px; cursor: pointer; }
 
+/* Keep validation visible above the kiosk content and centered on every viewport. */
+.kiosk-voting-alert.error {
+    position: fixed;
+    z-index: 1200;
+    top: 50%;
+    left: 50%;
+    width: min(440px, calc(100vw - 32px));
+    box-sizing: border-box;
+    margin: 0;
+    transform: translate(-50%, -50%);
+    align-items: center;
+    box-shadow: 0 18px 55px rgba(14, 28, 54, .25);
+}
+.eb-workspace[data-eb-theme=dark] .kiosk-voting-page,
+.eb-workspace[data-eb-theme=dark] .kiosk-voting-header { background: #101729 !important; color: #eef3ff !important; border-color: #40516b !important; }
+.eb-workspace[data-eb-theme=dark] .kiosk-voting-header :is(h1,p) { color: #eef3ff !important; }
+.eb-workspace[data-eb-theme=dark] .kiosk-voting-card,
+.eb-workspace[data-eb-theme=dark] .kiosk-ballot-card { background: rgba(29,40,61,.9) !important; border-color: #40516b !important; color: #eef3ff !important; }
+.eb-workspace[data-eb-theme=dark] .kiosk-voting-card :is(h2,h3,strong,label),
+.eb-workspace[data-eb-theme=dark] .kiosk-ballot-card :is(h2,h3,strong,label) { color: #eef3ff !important; }
+.eb-workspace[data-eb-theme=dark] .kiosk-voting-card p,
+.eb-workspace[data-eb-theme=dark] .kiosk-ballot-card p { color: #b2c1d9 !important; }
+.eb-workspace[data-eb-theme=dark] .kiosk-voting-card :is(input,select) { background: #1c293e !important; border-color: #40516b !important; color: #eef3ff !important; }
+.eb-workspace[data-eb-theme=dark] .kiosk-voting-card input::placeholder { color: #b2c1d9 !important; }
+
 .kiosk-eyebrow {
     color: #266eff;
     font-size: 11px;

@@ -1025,6 +1025,10 @@ const approvePartyList = async (
                         "Party list not found.",
                 });
         }
+        if (existingParty.approval_status !== "pending") {
+            return res.status(409).json({ success: false, message: "This party list has already been " + existingParty.approval_status + ". The decision cannot be changed." });
+        }
+
 
 
         // -------------------------------------------------
@@ -1055,14 +1059,13 @@ const approvePartyList = async (
                 updated_at:
                     new Date().toISOString(),
             })
-            .eq(
-                "id",
-                id
-            )
+            .eq("id", id)
+            .eq("approval_status", "pending")
             .select()
-            .single();
+            .maybeSingle();
 
-        if (error) {
+        if (error || !data) {
+            if (!error && !data) return res.status(409).json({ success: false, message: "A decision has already been recorded for this party list." });
             console.error(
                 "❌ Approve party list error:",
                 error
@@ -1245,6 +1248,10 @@ const rejectPartyList = async (
                         "Party list not found.",
                 });
         }
+        if (existingParty.approval_status !== "pending") {
+            return res.status(409).json({ success: false, message: "This party list has already been " + existingParty.approval_status + ". The decision cannot be changed." });
+        }
+
 
 
         const cleanRemarks =
@@ -1280,14 +1287,13 @@ const rejectPartyList = async (
                 updated_at:
                     new Date().toISOString(),
             })
-            .eq(
-                "id",
-                id
-            )
+            .eq("id", id)
+            .eq("approval_status", "pending")
             .select()
-            .single();
+            .maybeSingle();
 
-        if (error) {
+        if (error || !data) {
+            if (!error && !data) return res.status(409).json({ success: false, message: "A decision has already been recorded for this party list." });
             console.error(
                 "❌ Reject party list error:",
                 error
@@ -2034,6 +2040,11 @@ const getPartyListCandidates = async (
                 id,
                 election_id,
                 position_id,
+                position:positions (
+                    id,
+                    name,
+                    display_order
+                ),
                 student_id,
                 party_list_id,
                 full_name,

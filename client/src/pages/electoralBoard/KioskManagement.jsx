@@ -430,8 +430,7 @@ function KioskManagement() {
             <div className="kiosk-header">
 
                 <div>
-
-                    <button type="button" className="eb-manual-refresh" onClick={loadKioskData}>Refresh kiosk</button><div className="kiosk-title-row">
+                    <div className="kiosk-title-row">
 
                         <div className="kiosk-title-icon">
                             🖥️
@@ -455,22 +454,21 @@ function KioskManagement() {
                 </div>
 
 
-                {!activeSession && (
-
-                    <button
-                        className="kiosk-primary-btn"
-                        onClick={() => {
-
-                            setSelectedElection("");
-                            setError("");
-                            setShowStartModal(true);
-
-                        }}
-                    >
-                        + Start Kiosk Session
-                    </button>
-
-                )}
+                <div className="kiosk-header-actions">
+                    {!activeSession && (
+                        <button
+                            className="kiosk-primary-btn"
+                            onClick={() => {
+                                setSelectedElection("");
+                                setError("");
+                                setShowStartModal(true);
+                            }}
+                        >
+                            + Start Kiosk Session
+                        </button>
+                    )}
+                    <button type="button" className="eb-manual-refresh" onClick={loadKioskData}>Refresh kiosk</button>
+                </div>
 
             </div>
 

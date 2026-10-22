@@ -71,6 +71,8 @@
 }
 .admin-shared-brand img { width: 40px; height: 40px; object-fit: contain; }
 .admin-shared-nav { display: flex; flex: 1; align-items: center; gap: 8px; min-width: 0; }
+.admin-mobile-profile { display: none; }
+.admin-shared-nav :is(a,button) > svg { flex: none; width: 17px; height: 17px; }
 .admin-nav-group { position: relative; flex: none; }
 .admin-shared-header .admin-nav-tab {
     display: flex;
@@ -192,6 +194,13 @@
     .admin-shared-header .admin-shared-menu-toggle { display: grid; place-items: center; }
     .admin-shared-nav { display: none; position: absolute; top: 100%; left: 16px; right: 16px; max-height: calc(100dvh - 88px); overflow-y: auto; padding: 12px; border: 1px solid var(--nav-line); border-radius: 12px; background: var(--nav-surface); box-shadow: 0 8px 24px #0000004d; }
     .admin-shared-nav.is-open { display: flex; flex-direction: column; align-items: stretch; }
+    .admin-mobile-profile { display: flex; align-items: center; gap: 12px; padding: 8px 8px 14px; border-bottom: 1px solid var(--nav-line); color: var(--nav-text); }
+    .admin-mobile-profile > div:last-child { display: grid; gap: 4px; min-width: 0; }
+    .admin-mobile-profile strong { overflow-wrap: anywhere; font-size: 14px; }
+    .admin-mobile-profile span { color: var(--nav-muted); font-size: 12px; }
+    .admin-mobile-profile-avatar { display: grid; place-items: center; flex: none; width: 44px; height: 44px; overflow: hidden; border-radius: 50%; background: #ffbe78; color: #18233b; font-weight: 700; }
+    .admin-mobile-profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .admin-shared-nav .admin-nav-overview { justify-content: flex-start; }
     .admin-shared-nav .admin-nav-tab { width: 100%; justify-content: space-between; }
     .admin-shared-nav .admin-nav-dropdown { position: static; width: 100%; margin-top: 8px; background: var(--nav-inset); box-shadow: none; }
     .admin-shared-header .platform-notification-panel { right: -65px; }
@@ -204,4 +213,16 @@
     .admin-account-trigger, .admin-account-trigger img { width: 40px; height: 40px; }
     .admin-account-dropdown { right: -52px; width: min(288px, calc(100vw - 32px)); }
     .admin-config-navigation { padding: 16px; }
+}
+
+@media (max-width: 640px) {
+    .admin-shared-header { height: 64px; min-height: 64px; padding-inline: 12px; gap: 8px; }
+    .admin-shared-header .admin-shared-brand { font-size: 23px; }
+    .admin-shared-brand img { width: 31px; height: 31px; }
+    .admin-shared-actions { gap: 8px; }
+    .admin-shared-header .platform-notifications .platform-bell { width: 36px; }
+    .admin-shared-header .platform-notification-panel { position: fixed; top: 68px; right: 8px; left: 8px; width: auto; max-width: none; }
+    .admin-shared-nav { top: calc(100% + 4px); left: 8px; right: 8px; max-height: calc(100dvh - 76px); }
+    .admin-config-navigation { overflow: visible; }
+    .admin-config-navigation nav { flex-wrap: nowrap; }
 }

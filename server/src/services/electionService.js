@@ -701,7 +701,8 @@ const validateElectionReadyForOpening =
             .from("candidates")
             .select(`
                 id,
-                position_id
+                position_id,
+                party_list_id
             `)
             .eq(
                 "election_id",
@@ -739,9 +740,7 @@ const validateElectionReadyForOpening =
         // FIND POSITIONS THAT HAVE CANDIDATES
         // =================================================
 
-        const candidatePositionIds =
-            new Set(
-                candidateList.map(
+        const candidatePositionIds = new Set(candidateList.filter((candidate) => Boolean(candidate.party_list_id)).map(
                     (candidate) =>
                         String(
                             candidate.position_id
@@ -782,12 +781,7 @@ const validateElectionReadyForOpening =
 
 
             throw new Error(
-                `Election cannot be opened yet. The following required position${
-                    missingNames.length ===
-                    1
-                        ? ""
-                        : "s"
-                } still need an active candidate: ${missingNames.join(
+                `Election cannot be opened yet. Add active party-list candidates for these required positions: ${missingNames.join(
                     ", "
                 )}.`
             );
@@ -1070,6 +1064,26 @@ const publishElection =
             throw new Error(
                 "An open election is already active."
             );
+        }
+
+        // Candidate entries created by the Electoral Board are staged as
+        // pending until publication. Approve them before making the election
+        // visible to students so publication and the student directory stay in sync.
+        const {
+            error: candidateApprovalError,
+        } = await supabase
+            .from("candidates")
+            .update({
+                approval_status: "approved",
+                approval_remarks: "",
+                approved_at: new Date().toISOString(),
+                is_active: true,
+            })
+            .eq("election_id", electionId)
+            .eq("approval_status", "pending");
+
+        if (candidateApprovalError) {
+            throw new Error(candidateApprovalError.message);
         }
 
 
@@ -2154,7 +2168,7 @@ const deleteElection = async (
 
 
 // =========================================================
-// GET ACTIVE / OPEN ELECTION
+// GET MOST RECENT PUBLISHED SCHEDULED OR OPEN ELECTION
 // =========================================================
 
 const getActiveElection =
@@ -2173,12 +2187,12 @@ const getActiveElection =
                 )
             `)
             .eq(
-                "status",
-                "open"
-            )
-            .eq(
                 "is_published",
                 true
+            )
+            .in(
+                "status",
+                ["scheduled", "open"]
             )
             .order(
                 "election_date",

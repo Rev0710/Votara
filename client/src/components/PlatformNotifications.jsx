@@ -1,5 +1,6 @@
 import {notificationStorageKey,unreadNotifications,markNotificationsRead,notificationVersion} from "./notificationReadState";
 import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { FiBell, FiX } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
@@ -13,6 +14,26 @@ export default function PlatformNotifications({ admin = false, audience = "stude
     useEffect(()=>{try{setRead(JSON.parse(localStorage.getItem(storageKey)||"{}"));}catch{setRead({});}},[storageKey]);
     const markRead=entries=>{const next=markNotificationsRead(read,entries);try{localStorage.setItem(storageKey,JSON.stringify(next));}catch{}setRead(next);};
     const [open, setOpen] = useState(false);
+    const [selectedNotification, setSelectedNotification] = useState(null);
+    const themeStorageKey = admin ? "votaraAdminTheme" : audience === "eb" ? "votaraEBTheme" : "votaraStudentTheme";
+    const themeEvent = admin ? "votara-admin-theme" : audience === "eb" ? "votara-eb-theme" : "votara-student-theme";
+    const [notificationTheme, setNotificationTheme] = useState(() => {
+        try { return localStorage.getItem(themeStorageKey) || (audience === "student" ? "light" : "dark"); }
+        catch { return audience === "student" ? "light" : "dark"; }
+    });
+    useEffect(() => {
+        const syncTheme = () => {
+            try { setNotificationTheme(localStorage.getItem(themeStorageKey) || (audience === "student" ? "light" : "dark")); }
+            catch { setNotificationTheme(audience === "student" ? "light" : "dark"); }
+        };
+        syncTheme();
+        window.addEventListener(themeEvent, syncTheme);
+        window.addEventListener("storage", syncTheme);
+        return () => {
+            window.removeEventListener(themeEvent, syncTheme);
+            window.removeEventListener("storage", syncTheme);
+        };
+    }, [audience, themeEvent, themeStorageKey]);
     useEffect(()=>{if(audience!=='eb')return;const show=()=>setOpen(true);window.addEventListener('votara-eb-open-notifications',show);return()=>window.removeEventListener('votara-eb-open-notifications',show);},[audience]);
     const [items, setItems] = useState([]);
     const [error, setError] = useState("");
@@ -59,7 +80,16 @@ export default function PlatformNotifications({ admin = false, audience = "stude
                 }),
                 capture(async () => {
                     if (admin) return;
-                    const response = await api.get("/elections/active");
+                    let response;
+                    try {
+                        response = await api.get("/elections/active");
+                    } catch (requestError) {
+                        // No active election is a normal state between elections.
+                        // The endpoint now returns an empty result, but keep this
+                        // guard for older backend instances during local updates.
+                        if (requestError?.response?.status === 404 && /no active election/i.test(requestError?.response?.data?.message || "")) return;
+                        throw requestError;
+                    }
                     const election = response.data.election;
                     if (!election?.id) return;
                     const label = election.title || election.name || "Current election";
@@ -68,6 +98,19 @@ export default function PlatformNotifications({ admin = false, audience = "stude
                         const vote = await api.get(`/voting/status/${election.id}`);
                         if (vote.data.hasVoted) next.push({ id: `ballot-${election.id}`, text: `Your ballot for ${label} has been recorded.`, action: "vote" });
                     }
+                }),
+                capture(async () => {
+                    if (admin || audience !== "student") return;
+                    const response = await api.get("/students/results");
+                    const result = response.data;
+                    if (!result?.published || !result?.election?.id) return;
+                    const label = result.election.title || "Election";
+                    const releasedAt = result.election.results_released_at || "released";
+                    next.push({
+                        id: `results-released-${result.election.id}-${releasedAt}`,
+                        text: `Electoral Board released the official results for ${label}. Open Results to view the final tally.`,
+                        action: "results",
+                    });
                 }),
             ]);
             if (live) {
@@ -93,7 +136,15 @@ export default function PlatformNotifications({ admin = false, audience = "stude
     useEffect(() => {
         if (!open) return;
         const dismiss = event => {
-            if (event.key === "Escape" || (event.type === "pointerdown" && !container.current?.contains(event.target))) setOpen(false);
+            if (event.key === "Escape") {
+                if (selectedNotification) setSelectedNotification(null);
+                else setOpen(false);
+            }
+            const clickedDialog = event.target.closest?.(".platform-notification-overlay");
+            if (event.type === "pointerdown" && !container.current?.contains(event.target) && !clickedDialog) {
+                setOpen(false);
+                setSelectedNotification(null);
+            }
         };
         document.addEventListener("keydown", dismiss);
         document.addEventListener("pointerdown", dismiss);
@@ -101,7 +152,7 @@ export default function PlatformNotifications({ admin = false, audience = "stude
             document.removeEventListener("keydown", dismiss);
             document.removeEventListener("pointerdown", dismiss);
         };
-    }, [open]);
+    }, [open, selectedNotification]);
 
     const unread=unreadNotifications(items,read);
     return <div className="platform-notifications" ref={container}>
@@ -113,14 +164,28 @@ export default function PlatformNotifications({ admin = false, audience = "stude
             <div className="platform-read-controls"><span role="status">{unread.length ? `${unread.length} unread` : "All caught up"}</span>{unread.length>0 && <button type="button" onClick={()=>markRead(items)}>Mark all as read</button>}</div>
             {error && <p role="status">{error}</p>}
             {!items.length && !error && <p>No current updates.</p>}
-            {items.map(item => <div key={item.id} className={read?.[item.id]===notificationVersion(item)?"notification-read":"notification-unread"}>{item.path || item.action ? <button type="button" onClick={() => {
+            {items.map(item => <div key={item.id} className={read?.[item.id]===notificationVersion(item)?"notification-read":"notification-unread"}><button type="button" className="platform-notification-item" onClick={() => {
                 markRead([item]);
-                setOpen(false);
-                if (item.path) navigate(item.path);
-                else if (onAction) onAction(item.action);
-                else if (admin) navigate("/admin/settings?section=" + (item.action === "announcement" ? "platform-notices" : "configuration"));
-                else navigate(audience === "eb" ? "/electoral-board/dashboard" : "/student-dashboard");
-            }}>{item.text}</button> : <p>{item.text}</p>}</div>)}
+                setSelectedNotification(item);
+            }}>{item.text}</button></div>)}
         </section>}
+        {selectedNotification && createPortal(<div className="platform-notification-overlay" data-theme={notificationTheme === "light" ? "light" : "dark"} data-audience={role} onMouseDown={event => { if (event.target === event.currentTarget) setSelectedNotification(null); }}>
+            <section className="platform-notification-dialog" role="dialog" aria-modal="true" aria-labelledby="platform-notification-title">
+                <header><h2 id="platform-notification-title">Notification details</h2><button type="button" aria-label="Close notification" onClick={() => setSelectedNotification(null)}><FiX /></button></header>
+                <div className="platform-notification-message">{selectedNotification.text}</div>
+                <footer>
+                    <button type="button" className="platform-notification-close" onClick={() => setSelectedNotification(null)}>Close</button>
+                    {(selectedNotification.path || selectedNotification.action) && <button type="button" className="platform-notification-open" onClick={() => {
+                        const item = selectedNotification;
+                        setSelectedNotification(null);
+                        setOpen(false);
+                        if (item.path) navigate(item.path);
+                        else if (onAction) onAction(item.action);
+                        else if (admin) navigate("/admin/settings?section=" + (item.action === "announcement" ? "platform-notices" : "configuration"));
+                        else navigate(audience === "eb" ? "/electoral-board/dashboard" : "/student-dashboard");
+                    }}>Open related page</button>}
+                </footer>
+            </section>
+        </div>, document.body)}
     </div>;
 }

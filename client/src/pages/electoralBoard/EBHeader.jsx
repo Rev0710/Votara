@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { FiLogOut, FiMenu, FiMoon, FiSun, FiUser, FiX } from "react-icons/fi";
+import { FiActivity, FiBarChart2, FiCalendar, FiFileText, FiGrid, FiHelpCircle, FiLayers, FiLogOut, FiMenu, FiMonitor, FiMoon, FiSettings, FiSun, FiUser, FiX } from "react-icons/fi";
 import PlatformNotifications from "../../components/PlatformNotifications";
 import logo from "../../images/votara-board-logo.svg";
 import bell from "../../images/votara-board-bell.svg";
@@ -7,20 +7,20 @@ import "./EBHeader.css";
 
 const navigation = [
     { id: "elections", label: "Elections", items: [
-        { id: "election", label: "Election workspace" },
-        { id: "createElection", label: "Create election" },
-        { id: "partyLists", label: "Partylists" },
-        { id: "candidates", label: "Candidates" },
-        { id: "results", label: "Results" },
-        { id: "reports", label: "Reports" },
+        { id: "election", label: "Election workspace", Icon: FiCalendar },
+        { id: "createElection", label: "Create election", Icon: FiFileText },
+        { id: "partyLists", label: "Partylists", Icon: FiLayers },
+        { id: "individualCandidacy", label: "Individual Candidacy", Icon: FiUser },
+        { id: "results", label: "Results", Icon: FiBarChart2 },
+        { id: "reports", label: "Reports", Icon: FiFileText },
     ] },
     { id: "voters", label: "Voters", items: [
-        { id: "registrations", label: "Registration review" },
-        { id: "verification", label: "Verify voter" },
+        { id: "registrations", label: "Registration review", Icon: FiGrid },
+        { id: "verification", label: "Verify voter", Icon: FiUser },
     ] },
     { id: "operations", label: "Operations", items: [
-        { id: "kiosk", label: "Kiosk management" },
-        { id: "logs", label: "Activity log" },
+        { id: "kiosk", label: "Kiosk management", Icon: FiMonitor },
+        { id: "logs", label: "Activity log", Icon: FiActivity },
     ] },
 ];
 
@@ -82,6 +82,10 @@ export default function EBHeader({ activeSection, displayName, displayEmail, pro
                 <img src={logo} alt="" width="166" height="34" />
             </button>
             <nav className={`eb-board-navigation${mobileOpen ? " is-open" : ""}`} id="eb-board-navigation" aria-label="Electoral Board navigation">
+                <div className="eb-board-mobile-profile">
+                    <div className="eb-board-mobile-avatar">{profileImage ? <img src={profileImage} alt="" /> : initials}</div>
+                    <div><strong>{displayName}</strong><span>{displayEmail}</span><small>Electoral Board</small></div>
+                </div>
                 <button type="button" className="eb-board-tab eb-board-overview" aria-current={activeSection === "dashboard" ? "page" : undefined} onClick={() => select("dashboard")}>Overview</button>
                 {navigation.map(group => {
                     const active = group.items.some(item => item.id === activeSection);
@@ -95,7 +99,7 @@ export default function EBHeader({ activeSection, displayName, displayEmail, pro
                             {group.label}<span aria-hidden="true" className="eb-board-caret">▾</span>
                         </button>
                         {expanded && <div className="eb-board-dropdown" id={`eb-header-menu-${group.id}`} onKeyDown={moveFocus}>
-                            {group.items.map(item => <button type="button" key={item.id} aria-current={activeSection === item.id ? "page" : undefined} onClick={() => select(item.id)}>{item.label}</button>)}
+                            {group.items.map(item => <button type="button" key={item.id} aria-current={activeSection === item.id ? "page" : undefined} onClick={() => select(item.id)}><item.Icon aria-hidden="true" />{item.label}</button>)}
                         </div>}
                     </div>;
                 })}
@@ -116,8 +120,8 @@ export default function EBHeader({ activeSection, displayName, displayEmail, pro
                     {openMenu === "account" && <div className="eb-board-dropdown eb-board-account-menu" id="eb-header-menu-account" onKeyDown={moveFocus}>
                         <div className="eb-board-account-details"><strong>{displayName}</strong><span>{displayEmail}</span></div>
                         <button type="button" onClick={() => select("profile")}><FiUser />My profile</button>
-                        <button type="button" onClick={() => select("settings")}>Settings</button>
-                        <button type="button" onClick={() => select("support")}>Report an issue</button>
+                        <button type="button" onClick={() => select("settings")}><FiSettings />Settings</button>
+                        <button type="button" onClick={() => select("support")}><FiHelpCircle />Report an issue</button>
                         <button type="button" onClick={() => { close(); onToggleTheme(); }}>{theme === "dark" ? <FiSun /> : <FiMoon />}{theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}</button>
                         <button type="button" onClick={() => { close(); onLogout(); }}><FiLogOut />Sign out</button>
                     </div>}

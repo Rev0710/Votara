@@ -24,3 +24,12 @@
         animation: none;
     }
 }
+.route-loading {
+    display: grid;
+    min-height: 100dvh;
+    place-items: center;
+    padding: 24px;
+    background: #0c1020;
+    color: #dbe5ff;
+    font: 600 14px/1.5 "Poppins", sans-serif;
+}
