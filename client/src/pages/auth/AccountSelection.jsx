@@ -305,6 +305,10 @@ const handleAdminLogin = async (event) => {
 
             localStorage.setItem("votaraAdminUser", JSON.stringify(data.user));
 
+            // Keep the shared staff session in sync so first-login password changes work for admins.
+            localStorage.setItem("votaraStaffToken", data.token);
+            localStorage.setItem("votaraStaffUser", JSON.stringify(data.user));
+
 
 
             if (data.user.mustChangePassword) {
@@ -862,7 +866,7 @@ const handleAdminLogin = async (event) => {
 
                                 <p className="admin-login-info">
 
-                                    The system automatically identifies you are Admin member.
+                                    The system identifies your Administrator account automatically. The login code is separate from your password and is configured by your system administrator.
 
                                 </p>
 

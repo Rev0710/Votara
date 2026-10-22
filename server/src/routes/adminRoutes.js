@@ -6,6 +6,7 @@ const {
     getElectoralBoardAccounts,
     createElectoralBoardAccount,
     createAdminAccount,
+    resetAdminPassword,
     activateElectoralBoardAccount,
     deactivateElectoralBoardAccount,
     resetElectoralBoardPassword,
@@ -26,6 +27,7 @@ router.use(
 
 router.post("/admin", createAdminAccount);
 router.get("/admin", getAdminAccounts);
+router.post("/admin/:id/reset-password", resetAdminPassword);
 
 router.get("/electoral-board", getElectoralBoardAccounts);
 router.post("/electoral-board", createElectoralBoardAccount);

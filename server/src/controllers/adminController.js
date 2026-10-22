@@ -2020,6 +2020,73 @@ const deactivateElectoralBoardAccount = async (
 };
 
 // =========================================================
+// RESET ADMINISTRATOR PASSWORD
+// =========================================================
+
+const resetAdminPassword = async (req, res) => {
+    try {
+        await authenticateAdmin(req);
+
+        const { id } = req.params;
+        if (!id) {
+            return res.status(400).json({ success: false, message: "Administrator account ID is required." });
+        }
+
+        const { data: existingUser, error: findError } = await supabase
+            .from("staff_users")
+            .select("id, full_name, email, role, is_active")
+            .eq("id", id)
+            .eq("role", ADMIN_ROLE)
+            .maybeSingle();
+
+        if (findError) throw new Error(`Unable to find Administrator account: ${findError.message}`);
+        if (!existingUser) {
+            return res.status(404).json({ success: false, message: "Administrator account was not found." });
+        }
+        if (existingUser.is_active !== true) {
+            return res.status(403).json({ success: false, message: "This Administrator account is inactive." });
+        }
+
+        const temporaryPassword = generateTemporaryPassword();
+        const passwordHash = await bcrypt.hash(temporaryPassword, 12);
+        const { data: updatedUser, error: updateError } = await supabase
+            .from("staff_users")
+            .update({
+                password_hash: passwordHash,
+                must_change_password: true,
+                failed_login_attempts: 0,
+                locked_until: null,
+                updated_at: new Date().toISOString(),
+            })
+            .eq("id", id)
+            .eq("role", ADMIN_ROLE)
+            .select("id, full_name, email, role, is_active, must_change_password, updated_at")
+            .single();
+
+        if (updateError) throw new Error(`Unable to reset Administrator password: ${updateError.message}`);
+
+        await writeAdminAuditLog(req, {
+            action: "reset_admin_password",
+            description: `Administrator generated a new temporary password for account "${updatedUser.full_name}".`,
+            targetId: updatedUser.id,
+            targetType: "staff_user",
+            metadata: { role: ADMIN_ROLE },
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Administrator temporary password generated. The account holder must change it after signing in.",
+            user: updatedUser,
+            temporaryPassword,
+            emailSent: false,
+            securityNote: "The temporary password is returned once and is not stored in plaintext.",
+        });
+    } catch (error) {
+        return handleAdminError(error, res, "Unable to generate an Administrator temporary password.");
+    }
+};
+
+// =========================================================
 // RESET ELECTORAL BOARD PASSWORD
 // =========================================================
 
@@ -2217,6 +2284,8 @@ module.exports = {
     createElectoralBoardAccount,
 
     createAdminAccount,
+
+    resetAdminPassword,
 
     activateElectoralBoardAccount,
 
