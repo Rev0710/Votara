@@ -423,3 +423,58 @@ body {
         animation: none;
     }
 }
+
+/* Keep disclaimer copy comfortably readable at browser zoom and small widths. */
+.disclaimer-kicker,
+.disclaimer-card-kicker {
+    font-size: 11px;
+}
+
+.disclaimer-hero h1 {
+    font-size: clamp(28px, 3vw, 38px);
+}
+
+.disclaimer-hero p {
+    font-size: 15px;
+}
+
+.disclaimer-card h2 {
+    font-size: 24px;
+}
+
+.disclaimer-intro,
+.disclaimer-item p,
+.disclaimer-confirmation {
+    font-size: 14px;
+}
+
+.disclaimer-number {
+    font-size: 12px;
+}
+
+.disclaimer-item h3 {
+    font-size: 15px;
+}
+
+.disclaimer-back-button,
+.disclaimer-agree-button {
+    min-height: 42px;
+    height: auto;
+    font-size: 14px;
+}
+
+.disclaimer-footer {
+    font-size: 12px;
+}
+
+@media (max-width: 650px) {
+    .disclaimer-hero p {
+        font-size: 14px;
+    }
+
+    .disclaimer-item p,
+    .disclaimer-intro,
+    .disclaimer-confirmation {
+        font-size: 14px;
+    }
+}

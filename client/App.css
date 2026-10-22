@@ -33,3 +33,40 @@
     color: #dbe5ff;
     font: 600 14px/1.5 "Poppins", sans-serif;
 }
+.route-load-error {
+  min-height: 100vh;
+  padding: 32px 20px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 12px;
+  background: #f4f7ff;
+  color: #172033;
+  text-align: center;
+  font-family: "Poppins", sans-serif;
+}
+
+.route-load-error h1 {
+  margin: 0;
+  font-size: clamp(24px, 4vw, 32px);
+}
+
+.route-load-error p {
+  margin: 0;
+  color: #626f84;
+  font-size: 15px;
+}
+
+.route-load-error button {
+  min-height: 44px;
+  margin-top: 8px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 999px;
+  background: #0f4fff;
+  color: white;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
