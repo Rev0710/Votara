@@ -303,6 +303,11 @@ const StaffChangePassword = () => {
                 )
             );
 
+            if (data.user.role === "admin") {
+                localStorage.setItem("votaraAdminToken", data.token);
+                localStorage.setItem("votaraAdminUser", JSON.stringify(data.user));
+            }
+
 
             // =================================================
             // NAVIGATE BASED ON ROLE

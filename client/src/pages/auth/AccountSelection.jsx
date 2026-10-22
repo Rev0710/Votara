@@ -473,7 +473,12 @@ const handleAdminLogin = async (event) => {
 
 
 
-        if (registerForm.password !== registerForm.confirmPassword) {
+        if (!registerForm.profilePhoto) {
+            setRegisterError("Please upload a profile photo for the initial Administrator account.");
+            return;
+        }
+
+        if (registerForm.password !== registerForm.confirmPassword) {
 
             setRegisterError("Passwords do not match.");
 
@@ -537,27 +542,21 @@ const handleAdminLogin = async (event) => {
 
             setRegisterLoading(true);
 
+            const photoData = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(new Error("Unable to read the selected profile photo."));
+                reader.readAsDataURL(registerForm.profilePhoto);
+            });
 
-
-            // The current VOTARA admin registration endpoint accepts the
-
-            // account fields below. Profile photo is kept as a UI preview
-
-            // because the current endpoint does not accept a photo field.
-
-            const response = await api.post("/admin/register", {
-
-                fullName: registerForm.fullName.trim(),
-
-                email: registerForm.email.trim().toLowerCase(),
-
-                password: registerForm.password,
-
-                confirmPassword: registerForm.confirmPassword,
-
-                registrationCode: registerForm.registrationCode.trim(),
-
-            });
+            const response = await api.post("/admin-auth/register", {
+                fullName: registerForm.fullName.trim(),
+                email: registerForm.email.trim().toLowerCase(),
+                password: registerForm.password,
+                confirmPassword: registerForm.confirmPassword,
+                adminRegistrationCode: registerForm.registrationCode.trim(),
+                photoData,
+            });
 
 
 
@@ -573,7 +572,10 @@ const handleAdminLogin = async (event) => {
 
 
 
-            window.setTimeout(() => {
+            setRegisterForm({ fullName: "", email: "", password: "", confirmPassword: "", registrationCode: "", profilePhoto: null });
+            if (photoPreview) URL.revokeObjectURL(photoPreview);
+            setPhotoPreview("");
+            window.setTimeout(() => {
 
                 setActiveView("admin");
 
