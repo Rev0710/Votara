@@ -80,7 +80,6 @@ export default function AdminUserAccessManagement() {
     const [loadingAccounts, setLoadingAccounts] = useState(true);
     const [resettingId, setResettingId] = useState(null);
     const [statusUpdatingId, setStatusUpdatingId] = useState(null);
-    const [deactivationReason, setDeactivationReason] = useState("");
     const [selectedAccount, setSelectedAccount] = useState(null);
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
@@ -274,33 +273,28 @@ export default function AdminUserAccessManagement() {
 
     const handleViewAccount = (account) => {
         setSelectedAccount(account);
-        setDeactivationReason("");
         setError("");
         setMessage("");
     };
 
-    const handleToggleAccountStatus = async (account) => {
+    const handleDeleteAccount = async (account) => {
         if (!account || !account.id || statusUpdatingId) return;
-        const shouldActivate = account.is_active !== true;
-        if (!shouldActivate && deactivationReason.trim().length < 5) {
-            setError("Enter a deactivation reason of at least 5 characters.");
-            return;
-        }
+        const confirmed = window.confirm("Permanently delete " + (account.full_name || "this staff account") + " (" + account.email + ")? The account will be removed from the database and its email can be used for another staff role.");
+        if (!confirmed) return;
         setStatusUpdatingId(account.id);
         setError("");
         setMessage("");
         try {
             const accountType = account._role === "admin" ? "admin" : "electoral-board";
-            const action = shouldActivate ? "activate" : "deactivate";
-            const response = await api.patch("/admin/" + accountType + "/" + account.id + "/" + action, shouldActivate ? {} : { reason: deactivationReason.trim() });
-            const updated = { ...(response.data && response.data.user ? response.data.user : account), _role: account._role };
-            setSelectedAccount(updated);
-            setMessage((response.data && response.data.message) || ("Account " + (shouldActivate ? "reactivated" : "deactivated") + " successfully."));
+            const response = await api.delete("/admin/" + accountType + "/" + account.id);
+            setSelectedAccount(null);
             setDeactivationReason("");
+            setCredentials((current) => current.user?.id === account.id ? emptyCredential : current);
+            setMessage(response.data?.message || "Staff account permanently deleted.");
             await loadAccounts();
         } catch (err) {
-            console.error("Staff account status update error:", err);
-            setError((err.response && err.response.data && err.response.data.message) || "Unable to update this staff account.");
+            console.error("Staff account deletion error:", err);
+            setError(err.response?.data?.message || "Unable to delete this staff account.");
         } finally {
             setStatusUpdatingId(null);
         }
@@ -446,10 +440,9 @@ export default function AdminUserAccessManagement() {
                         ["Role", selectedAccount._role === "admin" ? "Administrator" : "Electoral Board"], ["Status", selectedAccount.is_active ? "Active" : "Inactive"], ["Created", formatDate(selectedAccount.created_at)], ["Password state", selectedAccount.must_change_password ? "Temporary password" : "Personal password"],
                     ].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
                     <div className="ux-recovery-note"><FiKey aria-hidden="true" /><div><strong>Account recovery</strong><p>Generate a temporary password for this active account. The password will appear in the Generated credentials panel and must be changed after sign-in.</p></div></div>
-                    {selectedAccount.is_active && <div className="ux-field ux-deactivation-field"><label htmlFor="ux-deactivation-reason">Reason for deactivation</label><input id="ux-deactivation-reason" type="text" value={deactivationReason} onChange={(event) => setDeactivationReason(event.target.value)} maxLength={240} placeholder="Enter a reason (at least 5 characters)" /><span>This account can be reactivated later. Account history is preserved.</span></div>}
                     {error && <p className="ux-modal-message ux-modal-error" role="alert">{error}</p>}
                     {message && <p className="ux-modal-message" role="status">{message}{credentials.user?.id === selectedAccount.id ? " Close these details to view the temporary credentials." : ""}</p>}
-                    <footer className="ux-dialog-actions ux-account-actions"><button type="button" className="ux-button ux-secondary" onClick={() => setSelectedAccount(null)}>Close</button><button type="button" className={"ux-button " + (selectedAccount.is_active ? "ux-danger" : "ux-secondary")} disabled={statusUpdatingId === selectedAccount.id || (selectedAccount.is_active && deactivationReason.trim().length < 5)} onClick={() => handleToggleAccountStatus(selectedAccount)}>{statusUpdatingId === selectedAccount.id ? "Updating…" : selectedAccount.is_active ? "Deactivate account" : "Reactivate account"}</button><button type="button" className="ux-button ux-primary" disabled={resettingId === selectedAccount.id || !selectedAccount.is_active || statusUpdatingId === selectedAccount.id} onClick={() => handleResetPassword(selectedAccount)}><FiKey aria-hidden="true" />{resettingId === selectedAccount.id ? "Generating…" : "Generate temporary password"}</button></footer>
+                    <footer className="ux-dialog-actions ux-account-actions"><button type="button" className="ux-button ux-secondary" onClick={() => setSelectedAccount(null)}>Close</button><button type="button" className="ux-button ux-danger" disabled={statusUpdatingId === selectedAccount.id} onClick={() => handleDeleteAccount(selectedAccount)}>{statusUpdatingId === selectedAccount.id ? "Deleting…" : "Delete account"}</button><button type="button" className="ux-button ux-primary" disabled={resettingId === selectedAccount.id || !selectedAccount.is_active || statusUpdatingId === selectedAccount.id} onClick={() => handleResetPassword(selectedAccount)}><FiKey aria-hidden="true" />{resettingId === selectedAccount.id ? "Generating…" : "Generate temporary password"}</button></footer>
                 </div>}
             </dialog>
         </div>

@@ -2020,6 +2020,67 @@ const deactivateElectoralBoardAccount = async (
 };
 
 // =========================================================
+// PERMANENTLY DELETE A STAFF ACCOUNT
+// =========================================================
+
+const deleteStaffAccount = async (req, res, role) => {
+    try {
+        const actor = await authenticateAdmin(req);
+        const { id } = req.params;
+        if (!id) return res.status(400).json({ success: false, message: "Staff account ID is required." });
+        if (actor.id === id) return res.status(409).json({ success: false, message: "You cannot delete your own signed-in account." });
+
+        const { data: user, error: findError } = await supabase
+            .from("staff_users")
+            .select("id, full_name, email, role, is_active")
+            .eq("id", id)
+            .eq("role", role)
+            .maybeSingle();
+        if (findError) throw new Error("Unable to find staff account: " + findError.message);
+        if (!user) return res.status(404).json({ success: false, message: "Staff account was not found." });
+
+        if (role === ADMIN_ROLE && user.is_active) {
+            const { count, error: countError } = await supabase
+                .from("staff_users")
+                .select("id", { count: "exact", head: true })
+                .eq("role", ADMIN_ROLE)
+                .eq("is_active", true);
+            if (countError) throw new Error("Unable to verify active administrators: " + countError.message);
+            if (count <= 1) return res.status(409).json({ success: false, message: "The last active Administrator cannot be deleted." });
+        }
+
+        const { data: deleted, error: deleteError } = await supabase
+            .from("staff_users")
+            .delete()
+            .eq("id", id)
+            .eq("role", role)
+            .select("id")
+            .maybeSingle();
+        if (deleteError) {
+            if (deleteError.code === "23503") {
+                return res.status(409).json({ success: false, message: "This account is linked to existing records. Apply the staff account deletion migration and resolve any other database references before deleting it." });
+            }
+            throw new Error("Unable to delete staff account: " + deleteError.message);
+        }
+        if (!deleted) return res.status(404).json({ success: false, message: "Staff account was not found." });
+
+        await writeAdminAuditLog(req, {
+            action: role === ADMIN_ROLE ? "delete_admin_account" : "delete_eb_account",
+            description: 'Administrator permanently deleted staff account "' + user.full_name + '" (' + user.email + ').',
+            targetId: user.id,
+            targetType: "staff_user",
+            metadata: { role: role, email: user.email },
+        });
+        return res.status(200).json({ success: true, message: "Staff account permanently deleted. Its email can now be used for another staff role.", deletedAccount: { id: user.id, full_name: user.full_name, email: user.email, role: role } });
+    } catch (error) {
+        return handleAdminError(error, res, "Unable to delete this staff account.");
+    }
+};
+
+const deleteAdminAccount = (req, res) => deleteStaffAccount(req, res, ADMIN_ROLE);
+const deleteElectoralBoardAccount = (req, res) => deleteStaffAccount(req, res, EB_ROLE);
+
+// =========================================================
 // ACTIVATE ADMINISTRATOR ACCOUNT
 // =========================================================
 
@@ -2340,6 +2401,10 @@ module.exports = {
     activateAdminAccount,
 
     deactivateAdminAccount,
+
+    deleteAdminAccount,
+
+    deleteElectoralBoardAccount,
 
     activateElectoralBoardAccount,
 

@@ -3,7 +3,7 @@
 create table if not exists public.staff_issue_reports (
  id uuid primary key default gen_random_uuid(),
  reference text not null unique,
- staff_id uuid not null references public.staff_users(id),
+ staff_id uuid references public.staff_users(id) on delete set null,
  reporter_name text not null,
  contact_email text,
  category text not null default 'Electoral Board issue',
