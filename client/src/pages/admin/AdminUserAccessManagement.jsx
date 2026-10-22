@@ -1,12 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
     FiCheckCircle,
-    FiChevronDown,
     FiEye,
+    FiSearch,
+    FiAlertCircle,
     FiKey,
     FiRefreshCw,
-    FiBell,
-    FiLogOut,
     FiShield,
     FiUploadCloud,
     FiUser,
@@ -16,7 +15,8 @@ import {
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
-import "./AdminUserAccessManagement.css";
+import "./AdminUserAccessView.css";
+import "./AdminDashboardLight.css";
 import AdminTopNav from "./AdminTopNav";
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
@@ -59,8 +59,6 @@ export default function AdminUserAccessManagement() {
         }
     }, []);
 
-    const adminDisplayName =
-        storedAdmin?.full_name || "Administrator";
 
     const handleAdminLogout = () => {
         localStorage.removeItem("votaraAdminToken");
@@ -81,6 +79,15 @@ export default function AdminUserAccessManagement() {
     const [selectedAccount, setSelectedAccount] = useState(null);
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
+    const [accountSearch, setAccountSearch] = useState("");
+    const [accountRole, setAccountRole] = useState("all");
+    const accountDialog = useRef(null);
+
+    useEffect(() => {
+        const dialog = accountDialog.current;
+        if (selectedAccount && !dialog.open) dialog.showModal();
+        else if (!selectedAccount && dialog.open) dialog.close();
+    }, [selectedAccount]);
 
     const isAdmin = role === "admin";
 
@@ -310,510 +317,105 @@ export default function AdminUserAccessManagement() {
         }
     };
 
-    const accountCountLabel = `${allAccounts.length} account${
-        allAccounts.length === 1 ? "" : "s"
-    }`;
-
-    const adminCountLabel = `${admins.length} Administrator account${
-        admins.length === 1 ? "" : "s"
-    }`;
-
-    const ebCountLabel = `${ebAccounts.length} Electoral Board account${
-        ebAccounts.length === 1 ? "" : "s"
-    }`;
-
-    const renderAccountRow = (account, adminAccount) => (
-        <div className="ua-account-row" key={`${adminAccount ? "admin" : "electoral_board"}-${account.id}`}>
-            <span className={`ua-avatar ${adminAccount ? "admin" : ""}`}>
-                {account.profile_photo_url ? (
-                    <img src={account.profile_photo_url} alt="" />
-                ) : (
-                    getInitials(account.full_name)
-                )}
-            </span>
-
-            <div className="ua-account-info">
-                <div className="ua-account-name-line">
-                    <strong>{account.full_name}</strong>
-                    <span className={`ua-role-badge ${adminAccount ? "admin" : "eb"}`}>
-                        {adminAccount ? "Administrator" : "Electoral Board"}
-                    </span>
-                </div>
-                <small>{account.email}</small>
-                <small>Created {formatDate(account.created_at)}</small>
-            </div>
-
-            <span className={`ua-status ${account.is_active ? "active" : "inactive"}`}>
-                {account.is_active ? "Active" : "Inactive"}
-            </span>
-
-            <button
-                type="button"
-                className="ua-view-button"
-                onClick={() => handleViewAccount({ ...account, _role: adminAccount ? "admin" : "electoral_board" })}
-            >
-                <FiEye />
-                View
-            </button>
-
-            {adminAccount ? (
-                <span className="ua-admin-access-label">Full Access</span>
-            ) : (
-                <span className="ua-eb-access-label">Election Operations</span>
-            )}
-        </div>
-    );
+    const filteredAccounts = useMemo(() => {
+        const query = accountSearch.trim().toLowerCase();
+        return allAccounts.filter((account) =>
+            (accountRole === "all" || account._role === accountRole) &&
+            (!query || `${account.full_name || ""} ${account.email || ""}`.toLowerCase().includes(query))
+        );
+    }, [allAccounts, accountSearch, accountRole]);
+    const activeCount = allAccounts.filter((account) => account.is_active).length;
+    const summaries = [
+        ["Total staff", allAccounts.length, FiUsers],
+        ["Administrators", admins.length, FiShield],
+        ["Electoral Board", ebAccounts.length, FiUser],
+        ["Active accounts", activeCount, FiCheckCircle],
+    ];
 
     return (
-        <>
+        <div className="user-access-view admin-polished-page">
+            <a className="ux-skip" href="#users-access-content">Skip to account management</a>
             <AdminTopNav admin={storedAdmin} onLogout={handleAdminLogout} />
+            <main className="ux-main" id="users-access-content" tabIndex={-1}>
+                <header className="ux-heading">
+                    <div><div className="ux-breadcrumb">Administration <span>/</span> People</div><h1>User &amp; Access Management</h1><p>Manage staff accounts, roles, and account recovery.</p></div>
+                    <button type="button" className="ux-button ux-secondary" onClick={loadAccounts} disabled={loadingAccounts}><FiRefreshCw aria-hidden="true" />{loadingAccounts ? "Refreshing…" : "Refresh accounts"}</button>
+                </header>
 
-            <div className="admin-user-access-page">
-            <div className="admin-user-access-shell">
-                <div className="admin-user-access-heading">
-                    <div className="admin-user-access-number">02</div>
-                    <div>
-                        <h1>User &amp; Access Management</h1>
-                        <p>
-                            Manage administrator and Electoral Board accounts,
-                            generated credentials, account status, and access recovery.
-                        </p>
-                    </div>
-                </div>
+                <section className="ux-summary" aria-label="Staff account summary" aria-busy={loadingAccounts}>
+                    {summaries.map(([label, value, Icon]) => <div key={label}><span>{label}</span><Icon aria-hidden="true" /><strong>{loadingAccounts ? "…" : value.toLocaleString()}</strong></div>)}
+                </section>
+                {error && <div className="ux-alert ux-alert-error" role="alert"><FiAlertCircle aria-hidden="true" /><span>{error}</span></div>}
+                {message && <div className="ux-alert ux-alert-success" role="status"><FiCheckCircle aria-hidden="true" /><span>{message}</span></div>}
 
-                <div className="admin-user-access-grid">
-                    <section className="ua-card ua-create-card">
-                        <div className="ua-card-heading">
-                            <div>
-                                <span className="ua-eyebrow">USER &amp; ACCESS MANAGEMENT</span>
-                                <h2>
-                                    Create {isAdmin ? "Administrator" : "Electoral Board"} Account
-                                </h2>
-                                <p>
-                                    Create a staff account directly. No invitation code or
-                                    expiration is used.
-                                </p>
-                            </div>
-
-                            <button
-                                className="ua-icon-button"
-                                type="button"
-                                aria-label="Return to Admin Dashboard"
-                                onClick={() => navigate("/admin-dashboard")}
-                            >
-                                <FiX />
-                            </button>
-                        </div>
-
-                        <div className="ua-role-switcher">
-                            <button
-                                type="button"
-                                className={`ua-role-card ${isAdmin ? "selected" : ""}`}
-                                onClick={() => handleRoleChange("admin")}
-                            >
-                                <span className="ua-role-icon">
-                                    <FiShield />
-                                </span>
-                                <span className="ua-role-copy">
-                                    <strong>Administrator</strong>
-                                    <small>System access and administration</small>
-                                </span>
-                                {isAdmin && <span className="ua-selected">Selected</span>}
-                            </button>
-
-                            <button
-                                type="button"
-                                className={`ua-role-card ${!isAdmin ? "selected" : ""}`}
-                                onClick={() => handleRoleChange("electoral_board")}
-                            >
-                                <span className="ua-role-icon">
-                                    <FiUser />
-                                </span>
-                                <span className="ua-role-copy">
-                                    <strong>Electoral Board</strong>
-                                    <small>Election, candidate and voting operations</small>
-                                </span>
-                                {!isAdmin && <span className="ua-selected">Selected</span>}
-                            </button>
-                        </div>
-
+                <div className="ux-create-grid">
+                    <section className="ux-panel ux-create" aria-labelledby="ux-create-title">
+                        <div className="ux-panel-heading"><div><h2 id="ux-create-title">Create a staff account</h2><p>Choose a role, then enter the account details.</p></div><span className="ux-heading-icon"><FiUserPlus aria-hidden="true" /></span></div>
                         <form onSubmit={handleSubmit}>
-                            <div className="ua-form-row">
-                                <label>
-                                    Full Name
-                                    <input
-                                        value={fullName}
-                                        onChange={(e) => setFullName(e.target.value)}
-                                        placeholder="Enter full name"
-                                        autoComplete="name"
-                                    />
-                                </label>
-
-                                <label>
-                                    Email
-                                    <input
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        placeholder="Enter email address"
-                                        type="email"
-                                        autoComplete="email"
-                                    />
-                                </label>
+                            <fieldset className="ux-role-fieldset" disabled={loading}><legend>Account role</legend><div className="ux-role-options">
+                                {[
+                                    ["admin", "Administrator", "System access and administration", FiShield],
+                                    ["electoral_board", "Electoral Board", "Election, candidate, and voting operations", FiUser],
+                                ].map(([value, label, detail, Icon]) => <label className={`ux-role-option${role === value ? " is-selected" : ""}`} key={value}><span className="ux-role-icon"><Icon aria-hidden="true" /></span><span className="ux-role-copy"><strong>{label}</strong><span>{detail}</span></span><input type="radio" name="account-role" value={value} checked={role === value} onChange={() => handleRoleChange(value)} /></label>)}
+                            </div></fieldset>
+                            <div className="ux-form-row">
+                                <div className="ux-field"><label htmlFor="ux-name">Full name</label><input id="ux-name" value={fullName} onChange={(event) => setFullName(event.target.value)} placeholder="Enter full name" autoComplete="name" required disabled={loading} /></div>
+                                <div className="ux-field"><label htmlFor="ux-email">Email address</label><input id="ux-email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Enter email address" type="email" autoComplete="email" required disabled={loading} /></div>
                             </div>
-
-                            <div className="ua-form-field">
-                                <label>Profile Picture</label>
-
-                                <button
-                                    type="button"
-                                    className={`ua-upload ${profilePhotoPreview ? "has-preview" : ""}`}
-                                    onClick={() => fileInputRef.current?.click()}
-                                >
-                                    {profilePhotoPreview ? (
-                                        <>
-                                            <img
-                                                src={profilePhotoPreview}
-                                                alt="Selected profile"
-                                            />
-                                            <span>
-                                                <strong>{profilePhoto.name}</strong>
-                                                <small>Click to replace profile picture</small>
-                                            </span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <FiUploadCloud />
-                                            <strong>Upload account profile picture</strong>
-                                            <small>PNG, JPG or WEBP · maximum 2 MB</small>
-                                        </>
-                                    )}
+                            <div className="ux-photo-field"><div className="ux-photo-label" id="ux-photo-label">Profile picture <span>{isAdmin ? "Optional" : "Required for Electoral Board"}</span></div>
+                                <button type="button" className={`ux-upload${profilePhotoPreview ? " has-preview" : ""}`} onClick={() => fileInputRef.current?.click()} aria-labelledby="ux-photo-label ux-photo-action" aria-describedby="ux-photo-help" disabled={loading}>
+                                    {profilePhotoPreview ? <><img src={profilePhotoPreview} alt="Selected account profile" /><span><strong id="ux-photo-action">{profilePhoto?.name}</strong><span id="ux-photo-help">Choose another picture to replace it</span></span></> : <><span className="ux-upload-icon"><FiUploadCloud aria-hidden="true" /></span><span><strong id="ux-photo-action">Choose a profile picture</strong><span id="ux-photo-help">PNG, JPG or WEBP, up to 2 MB</span></span><span className="ux-upload-browse">Browse files</span></>}
                                 </button>
-
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
-                                    onChange={handlePhoto}
-                                    hidden
-                                />
+                                <input ref={fileInputRef} type="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" onChange={handlePhoto} aria-label="Account profile picture" hidden />
                             </div>
-
-                            {message && (
-                                <div className="ua-alert success">
-                                    <FiCheckCircle />
-                                    <span>{message}</span>
-                                </div>
-                            )}
-
-                            {error && (
-                                <div className="ua-alert error">
-                                    <FiX />
-                                    <span>{error}</span>
-                                </div>
-                            )}
-
-                            <div className="ua-form-actions">
-                                <button
-                                    type="button"
-                                    className="ua-secondary-button"
-                                    onClick={clearForm}
-                                    disabled={loading}
-                                >
-                                    Clear
-                                </button>
-
-                                <button
-                                    type="submit"
-                                    className="ua-primary-button"
-                                    disabled={loading}
-                                >
-                                    {loading ? (
-                                        <>
-                                            <FiRefreshCw className="ua-spin" />
-                                            Creating...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <FiUserPlus />
-                                            Create Account &amp; Generate Password
-                                        </>
-                                    )}
-                                </button>
-                            </div>
+                            <div className="ux-create-footer"><span><FiKey aria-hidden="true" />A temporary password is generated when you create the account.</span><div><button type="button" className="ux-button ux-secondary" onClick={clearForm} disabled={loading}>Clear</button><button type="submit" className="ux-button ux-primary" disabled={loading}><FiUserPlus aria-hidden="true" />{loading ? "Creating…" : "Create account"}</button></div></div>
                         </form>
                     </section>
 
-                    <section className="ua-card ua-credentials-card">
-                        <div className="ua-panel-heading">
-                            <div>
-                                <span className="ua-eyebrow">SECURITY &amp; CREDENTIALS</span>
-                                <h2>Generated Credentials</h2>
-                                <p>
-                                    Password is generated only when the account is created or reset.
-                                </p>
-                            </div>
-                            <FiKey className="ua-panel-icon" />
-                        </div>
-
-                        {credentials.temporaryPassword ? (
-                            <div className="ua-credential-body">
-                                <div className="ua-account-preview">
-                                    <span className="ua-avatar">
-                                        {getInitials(credentials.user?.full_name)}
-                                    </span>
-                                    <div>
-                                        <strong>
-                                            {credentials.user?.full_name || "New Account"}
-                                        </strong>
-                                        <small>
-                                            {credentials.user?.email || email}
-                                        </small>
-                                    </div>
-                                </div>
-
-                                <div className="ua-password-box">
-                                    <span>TEMPORARY PASSWORD</span>
-                                    <strong>{credentials.temporaryPassword}</strong>
-                                </div>
-
-                                <div className="ua-email-status">
-                                    <FiCheckCircle />
-                                    <span>
-                                        {credentials.emailSent
-                                            ? "Credentials were sent to the account email."
-                                            : "Account created. Email delivery was not confirmed."}
-                                    </span>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="ua-empty-state">
-                                <FiShield />
-                                <strong>No credentials generated yet</strong>
-                                <span>
-                                    Create an account or reset a password to generate
-                                    temporary credentials.
-                                </span>
-                            </div>
-                        )}
-                    </section>
+                    <aside className="ux-panel ux-credentials" aria-labelledby="ux-credentials-title" aria-live="polite">
+                        <div className="ux-panel-heading"><div><h2 id="ux-credentials-title">Generated credentials</h2><p>Temporary access for a new or recovered account.</p></div><span className="ux-heading-icon"><FiKey aria-hidden="true" /></span></div>
+                        {credentials.temporaryPassword ? <div className="ux-credential-body">
+                            <div className="ux-credential-account"><span className="ux-avatar">{getInitials(credentials.user?.full_name)}</span><div><strong>{credentials.user?.full_name || "New account"}</strong><span>{credentials.user?.email || email}</span></div></div>
+                            <div className="ux-password"><span>Temporary password</span><code>{credentials.temporaryPassword}</code></div>
+                            <div className={`ux-delivery${credentials.emailSent ? " is-sent" : ""}`}>{credentials.emailSent ? <FiCheckCircle aria-hidden="true" /> : <FiAlertCircle aria-hidden="true" />}<p>{credentials.emailSent ? "Credentials were sent to the account email." : "Email delivery was not confirmed. Share these credentials with the account holder."}</p></div>
+                            <button type="button" className="ux-text-button" onClick={() => setCredentials(emptyCredential)}>Clear displayed credentials</button>
+                        </div> : <div className="ux-credentials-empty"><span className="ux-key-illustration"><FiKey size={26} aria-hidden="true" /></span><h3>No credentials generated yet</h3><p>Create an account or reset an Electoral Board password to display temporary credentials here.</p></div>}
+                        <div className="ux-credential-note"><FiShield aria-hidden="true" /><span>Temporary credentials appear after account creation or password recovery.</span></div>
+                    </aside>
                 </div>
 
-                <div className="ua-account-sections">
-                    <section className="ua-card ua-accounts-card ua-role-accounts-card">
-                        <div className="ua-panel-heading ua-role-panel-heading">
-                            <div>
-                                <span className="ua-section-label admin-label">
-                                    ADMINISTRATOR ACCOUNTS
-                                </span>
-                                <h2>Administrator Accounts</h2>
-                                <p>
-                                    {adminCountLabel} with system administration access.
-                                </p>
-                            </div>
-                            <div className="ua-panel-heading-actions">
-                                <span className="ua-section-count admin-count">{admins.length}</span>
-                                <button
-                                    className="ua-refresh-button"
-                                    type="button"
-                                    onClick={loadAccounts}
-                                    disabled={loadingAccounts}
-                                    aria-label="Refresh administrator accounts"
-                                >
-                                    <FiRefreshCw className={loadingAccounts ? "ua-spin" : ""} />
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="ua-account-list ua-role-account-list">
-                            {loadingAccounts ? (
-                                <div className="ua-list-empty">Loading administrator accounts...</div>
-                            ) : admins.length === 0 ? (
-                                <div className="ua-list-empty">
-                                    No administrator accounts found.
-                                </div>
-                            ) : (
-                                admins.map((account) => renderAccountRow(account, true))
-                            )}
-                        </div>
-                    </section>
-
-                    <section className="ua-card ua-accounts-card ua-role-accounts-card">
-                        <div className="ua-panel-heading ua-role-panel-heading">
-                            <div>
-                                <span className="ua-section-label eb-label">
-                                    ELECTORAL BOARD ACCOUNTS
-                                </span>
-                                <h2>Electoral Board Accounts</h2>
-                                <p>
-                                    {ebCountLabel} for election, candidate, and voting operations.
-                                </p>
-                            </div>
-                            <div className="ua-panel-heading-actions">
-                                <span className="ua-section-count eb-count">{ebAccounts.length}</span>
-                                <button
-                                    className="ua-refresh-button"
-                                    type="button"
-                                    onClick={loadAccounts}
-                                    disabled={loadingAccounts}
-                                    aria-label="Refresh Electoral Board accounts"
-                                >
-                                    <FiRefreshCw className={loadingAccounts ? "ua-spin" : ""} />
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="ua-account-list ua-role-account-list">
-                            {loadingAccounts ? (
-                                <div className="ua-list-empty">Loading Electoral Board accounts...</div>
-                            ) : ebAccounts.length === 0 ? (
-                                <div className="ua-list-empty">
-                                    No Electoral Board accounts found.
-                                </div>
-                            ) : (
-                                ebAccounts.map((account) => renderAccountRow(account, false))
-                            )}
-                        </div>
-                    </section>
-                </div>
-                </div>
-
-            {selectedAccount && (
-                <div
-                    className="ua-modal-backdrop"
-                    role="presentation"
-                    onMouseDown={(event) => {
-                        if (event.target === event.currentTarget) {
-                            setSelectedAccount(null);
-                        }
-                    }}
-                >
-                    <div
-                        className="ua-account-modal"
-                        role="dialog"
-                        aria-modal="true"
-                        aria-labelledby="ua-account-modal-title"
-                    >
-                        <div className="ua-modal-heading">
-                            <div>
-                                <span className="ua-eyebrow">
-                                    ACCOUNT DETAILS
-                                </span>
-                                <h2 id="ua-account-modal-title">
-                                    {selectedAccount.full_name}
-                                </h2>
-                                <p>
-                                    {selectedAccount._role === "admin"
-                                        ? "Administrator account"
-                                        : "Electoral Board account"}
-                                </p>
-                            </div>
-
-                            <button
-                                type="button"
-                                className="ua-icon-button"
-                                aria-label="Close account details"
-                                onClick={() => setSelectedAccount(null)}
-                            >
-                                <FiX />
-                            </button>
-                        </div>
-
-                        <div className="ua-modal-account">
-                            <span
-                                className={`ua-modal-avatar ${
-                                    selectedAccount._role === "admin" ? "admin" : ""
-                                }`}
-                            >
-                                {selectedAccount.profile_photo_url ? (
-                                    <img
-                                        src={selectedAccount.profile_photo_url}
-                                        alt=""
-                                    />
-                                ) : (
-                                    getInitials(selectedAccount.full_name)
-                                )}
-                            </span>
-
-                            <div>
-                                <strong>{selectedAccount.full_name}</strong>
-                                <span>{selectedAccount.email}</span>
-                            </div>
-                        </div>
-
-                        <div className="ua-modal-grid">
-                            <div>
-                                <span>Role</span>
-                                <strong>
-                                    {selectedAccount._role === "admin"
-                                        ? "Administrator"
-                                        : "Electoral Board"}
-                                </strong>
-                            </div>
-
-                            <div>
-                                <span>Status</span>
-                                <strong>
-                                    {selectedAccount.is_active ? "Active" : "Inactive"}
-                                </strong>
-                            </div>
-
-                            <div>
-                                <span>Created</span>
-                                <strong>{formatDate(selectedAccount.created_at)}</strong>
-                            </div>
-
-                            <div>
-                                <span>Password State</span>
-                                <strong>
-                                    {selectedAccount.must_change_password
-                                        ? "Temporary password"
-                                        : "Personal password"}
-                                </strong>
-                            </div>
-                        </div>
-
-                        {selectedAccount._role === "electoral_board" && (
-                            <div className="ua-modal-security-note">
-                                <FiKey />
-                                <div>
-                                    <strong>Temporary password security</strong>
-                                    <p>
-                                        The previous temporary password cannot be viewed again
-                                        after it has been cleared because VOTARA stores only its
-                                        secure hash. If the password was lost, generate a new
-                                        temporary password below.
-                                    </p>
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="ua-modal-actions">
-                            <button
-                                type="button"
-                                className="ua-secondary-button"
-                                onClick={() => setSelectedAccount(null)}
-                            >
-                                Close
-                            </button>
-
-                            {selectedAccount._role === "electoral_board" && (
-                                <button
-                                    type="button"
-                                    className="ua-primary-button"
-                                    disabled={resettingId === selectedAccount.id}
-                                    onClick={() => handleResetEBPassword(selectedAccount)}
-                                >
-                                    <FiKey />
-                                    {resettingId === selectedAccount.id
-                                        ? "Generating..."
-                                        : "Generate New Password"}
-                                </button>
-                            )}
-                        </div>
+                <section className="ux-panel ux-directory" aria-labelledby="ux-directory-title">
+                    <div className="ux-directory-heading"><div><h2 id="ux-directory-title">Account directory</h2><p>View staff details, account status, and access levels.</p></div><span>{loadingAccounts ? "Loading accounts…" : `${allAccounts.length} accounts`}</span></div>
+                    <div className="ux-directory-toolbar"><div className="ux-role-filters" role="group" aria-label="Filter accounts by role">{[["all", "All staff", allAccounts.length], ["admin", "Administrators", admins.length], ["electoral_board", "Electoral Board", ebAccounts.length]].map(([value, label, count]) => <button type="button" key={value} aria-pressed={accountRole === value} onClick={() => setAccountRole(value)}>{label}<span>{loadingAccounts ? "…" : count}</span></button>)}</div><div className="ux-directory-search"><FiSearch aria-hidden="true" /><input type="search" aria-label="Search staff by name or email" value={accountSearch} onChange={(event) => setAccountSearch(event.target.value)} placeholder="Search name or email" /></div></div>
+                    <div className="ux-table-scroll" role="region" aria-label="Staff accounts" tabIndex={0} aria-busy={loadingAccounts}>
+                        <table className="ux-table"><caption className="ux-visually-hidden">Staff accounts, roles, status, creation date, and access levels.</caption><colgroup><col className="ux-col-account" /><col className="ux-col-role" /><col className="ux-col-status" /><col className="ux-col-created" /><col className="ux-col-access" /><col className="ux-col-details" /></colgroup><thead><tr><th scope="col">Account</th><th scope="col">Role</th><th scope="col">Status</th><th scope="col">Created</th><th scope="col">Access</th><th scope="col"><span className="ux-visually-hidden">Details</span></th></tr></thead><tbody>
+                            {loadingAccounts ? [0, 1, 2, 3].map((row) => <tr className="ux-loading-row" key={row}>{[0, 1, 2, 3, 4, 5].map((cell) => <td key={cell}><span className="ux-skeleton" /></td>)}</tr>) : filteredAccounts.length ? filteredAccounts.map((account) => <tr key={`${account._role}-${account.id}`}>
+                                <td><div className="ux-account-cell"><span className="ux-avatar">{account.profile_photo_url ? <img src={account.profile_photo_url} alt="" /> : getInitials(account.full_name)}</span><div><strong>{account.full_name || "Staff account"}</strong><span>{account.email}</span></div></div></td>
+                                <td><span className={`ux-role-badge${account._role === "admin" ? " is-admin" : ""}`}>{account._role === "admin" ? "Administrator" : "Electoral Board"}</span></td>
+                                <td><span className={`ux-status${account.is_active ? " is-active" : ""}`}>{account.is_active ? "Active" : "Inactive"}</span></td>
+                                <td><time dateTime={account.created_at || undefined}>{formatDate(account.created_at)}</time></td>
+                                <td><span className="ux-access-label">{account._role === "admin" ? "Full access" : "Election operations"}</span></td>
+                                <td><button type="button" className="ux-view" onClick={() => handleViewAccount(account)} aria-label={`View ${account.full_name || "staff account"} details`}><FiEye aria-hidden="true" />View</button></td>
+                            </tr>) : <tr><td colSpan={6}><div className="ux-directory-empty"><FiUsers size={28} aria-hidden="true" /><h3>{accountSearch || accountRole !== "all" ? "No matching accounts" : "No staff accounts found"}</h3><p>{accountSearch || accountRole !== "all" ? "Try another search or show all staff accounts." : "Create an account above to add a member of your team."}</p>{(accountSearch || accountRole !== "all") && <button type="button" className="ux-button ux-secondary" onClick={() => { setAccountSearch(""); setAccountRole("all"); }}>Show all staff</button>}</div></td></tr>}
+                        </tbody></table>
                     </div>
-                </div>
-            )}
+                    <footer className="ux-directory-footer" aria-live="polite">{loadingAccounts ? "Loading staff accounts…" : `Showing ${filteredAccounts.length} of ${allAccounts.length} staff accounts`}</footer>
+                </section>
+                <footer className="ux-footer"><FiShield aria-hidden="true" /><span>Administrator accounts manage the platform. Electoral Board accounts handle election operations.</span></footer>
+            </main>
+
+            <dialog ref={accountDialog} className="ux-dialog" aria-labelledby="ux-account-modal-title" onCancel={() => setSelectedAccount(null)} onClick={(event) => { if (event.target === event.currentTarget) setSelectedAccount(null); }}>
+                {selectedAccount && <div className="ux-dialog-content"><header className="ux-dialog-heading"><div><span>Account details</span><h2 id="ux-account-modal-title">{selectedAccount.full_name}</h2></div><button type="button" className="ux-close" aria-label="Close account details" onClick={() => setSelectedAccount(null)}><FiX aria-hidden="true" /></button></header>
+                    <div className="ux-modal-account"><span className="ux-avatar">{selectedAccount.profile_photo_url ? <img src={selectedAccount.profile_photo_url} alt="" /> : getInitials(selectedAccount.full_name)}</span><div><strong>{selectedAccount.full_name}</strong><span>{selectedAccount.email}</span></div></div>
+                    <dl className="ux-details-grid">{[
+                        ["Role", selectedAccount._role === "admin" ? "Administrator" : "Electoral Board"], ["Status", selectedAccount.is_active ? "Active" : "Inactive"], ["Created", formatDate(selectedAccount.created_at)], ["Password state", selectedAccount.must_change_password ? "Temporary password" : "Personal password"],
+                    ].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+                    {selectedAccount._role === "electoral_board" && <div className="ux-recovery-note"><FiKey aria-hidden="true" /><div><strong>Account recovery</strong><p>If the account holder lost their password, generate a new temporary password. The new credentials will appear in the credentials panel.</p></div></div>}
+                    {error && <p className="ux-modal-message ux-modal-error" role="alert">{error}</p>}
+                    {credentials.user?.id === selectedAccount.id && message && <p className="ux-modal-message" role="status">{message} Close these details to view the temporary credentials.</p>}
+                    <footer className="ux-dialog-actions"><button type="button" className="ux-button ux-secondary" onClick={() => setSelectedAccount(null)}>Close</button>{selectedAccount._role === "electoral_board" && <button type="button" className="ux-button ux-primary" disabled={resettingId === selectedAccount.id} onClick={() => handleResetEBPassword(selectedAccount)}><FiKey aria-hidden="true" />{resettingId === selectedAccount.id ? "Generating…" : "Generate new password"}</button>}</footer>
+                </div>}
+            </dialog>
         </div>
-        </>
     );
 }

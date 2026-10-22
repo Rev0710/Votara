@@ -131,6 +131,7 @@ export default function AdminTopNav({ admin = null, onLogout }) {
     const destination = (item, className = "admin-nav-destination") => (
         <Link key={item.path} to={item.path} className={className}
             aria-current={isAdminDestinationActive(item, location) ? "page" : undefined}
+<<<<<<< HEAD
             onClick={closeNavigation}>{(() => {
                 const label = item.label.toLowerCase();
                 const Icon = label.includes("dashboard") || label.includes("overview") ? FiGrid
@@ -145,6 +146,9 @@ export default function AdminTopNav({ admin = null, onLogout }) {
                     : label.includes("setting") ? FiSettings : FiFileText;
                 return <><Icon aria-hidden="true" />{item.label}</>;
             })()}</Link>
+=======
+            onClick={closeNavigation}><span key={theme} className="admin-nav-label">{item.label}</span></Link>
+>>>>>>> e3c28d7b064dd8e06d0f4f70aaf6d2c0bff200a1
     );
 
     return (
@@ -170,7 +174,7 @@ export default function AdminTopNav({ admin = null, onLogout }) {
                                     aria-expanded={expanded} aria-controls={`admin-menu-${group.key}`}
                                     onKeyDown={(event) => openWithKeyboard(event, group.key)}
                                     onClick={() => setOpenMenu(expanded ? null : group.key)}>
-                                    {group.label}<span className="admin-nav-caret" aria-hidden="true">▾</span>
+                                    <span key={theme} className="admin-nav-label">{group.label}</span><span className="admin-nav-caret" aria-hidden="true">▾</span>
                                 </button>
                                 {expanded && <div className="admin-nav-dropdown" id={`admin-menu-${group.key}`} onKeyDown={handleListKeyDown}>
                                     {group.items.map((item) => destination(item))}

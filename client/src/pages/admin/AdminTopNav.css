@@ -8,8 +8,14 @@
     --nav-muted: #a5abc6;
     --nav-text: #fff;
     --nav-brand: #0040ff;
+    --nav-glass: rgba(25, 25, 45, .82);
+    --nav-highlight: rgba(255, 255, 255, .08);
+    --nav-header-shadow: rgba(8, 8, 24, .18);
+    --nav-menu-shadow: rgba(0, 0, 0, .3);
+    --nav-focus: #7da0ff;
     font-family: "Poppins", sans-serif;
 }
+.admin-shared-header[data-navigation-theme="light"],
 .admin-workspace[data-admin-theme="light"] .admin-config-navigation {
     --nav-canvas: #fff;
     --nav-surface: #fff;
@@ -17,6 +23,11 @@
     --nav-line: #d8deed;
     --nav-muted: #52637a;
     --nav-text: #242b3b;
+    --nav-glass: rgba(255, 255, 255, .92);
+    --nav-highlight: rgba(255, 255, 255, .9);
+    --nav-header-shadow: rgba(29, 52, 90, .06);
+    --nav-menu-shadow: rgba(29, 52, 90, .12);
+    --nav-focus: #2455bc;
 }
 .admin-shared-header {
     position: sticky;
@@ -29,11 +40,11 @@
     width: 100%;
     height: 88px;
     padding: 0 40px;
-    background: #19192D;
-    border-bottom: 1px solid rgba(255, 255, 255, .12);
+    background: var(--nav-canvas);
+    border-bottom: 1px solid var(--nav-line);
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, .08),
-        0 8px 32px rgba(8, 8, 24, .18);
+        inset 0 1px 0 var(--nav-highlight),
+        0 8px 32px var(--nav-header-shadow);
     color: var(--nav-muted);
     isolation: isolate;
 }
@@ -41,14 +52,14 @@
     .admin-shared-header {
         background:
             linear-gradient(115deg, rgba(255, 255, 255, .045), transparent 40%, rgba(255, 255, 255, .02)),
-            rgba(25, 25, 45, .82);
+            var(--nav-glass);
         backdrop-filter: blur(24px) saturate(150%);
         -webkit-backdrop-filter: blur(24px) saturate(150%);
     }
 }
 @media (prefers-reduced-transparency: reduce) {
     .admin-shared-header {
-        background: #19192D;
+        background: var(--nav-canvas);
         backdrop-filter: none;
         -webkit-backdrop-filter: none;
     }
@@ -98,8 +109,9 @@
 .admin-shared-header .admin-nav-tab:hover,
 .admin-shared-header .admin-nav-dropdown :is(a,button):hover { background: var(--nav-inset); color: var(--nav-text); }
 .admin-shared-header .admin-nav-tab.is-active,
-.admin-shared-header [aria-current="page"],
+.admin-shared-header .admin-nav-tab[aria-current="page"],
 .admin-config-navigation a[aria-current="page"] { background: var(--nav-brand); color: #fff; }
+.admin-shared-header .admin-nav-tab:is([aria-current="page"], .is-active) .admin-nav-label { color: #fff; }
 .admin-nav-dropdown {
     position: absolute;
     top: 54px;
@@ -113,7 +125,7 @@
     border: 1px solid var(--nav-line);
     border-radius: 12px;
     background: var(--nav-surface);
-    box-shadow: 0 8px 24px #0000004d;
+    box-shadow: 0 8px 24px var(--nav-menu-shadow);
 }
 .admin-shared-header .admin-nav-dropdown :is(a,button) {
     display: flex;
@@ -146,7 +158,7 @@
 .admin-account-name { padding: 8px 16px 12px; border-bottom: 1px solid var(--nav-line); color: var(--nav-text); font-size: 14px; overflow-wrap: anywhere; }
 .admin-shared-header .admin-shared-menu-toggle { display: none; width: 40px; height: 44px; padding: 0; border: 1px solid var(--nav-line); border-radius: 12px; background: transparent; color: var(--nav-text); font-size: 20px; }
 .admin-shared-header :is(a,button):focus-visible,
-.admin-config-navigation a:focus-visible { outline: 2px solid #7da0ff; outline-offset: 3px; }
+.admin-config-navigation a:focus-visible { outline: 2px solid var(--nav-focus); outline-offset: 3px; }
 .admin-config-navigation {
     position: fixed;
     top: 88px;
@@ -192,7 +204,7 @@
 @media (max-width: 960px) {
     .admin-shared-header { display: flex; height: 72px; }
     .admin-shared-header .admin-shared-menu-toggle { display: grid; place-items: center; }
-    .admin-shared-nav { display: none; position: absolute; top: 100%; left: 16px; right: 16px; max-height: calc(100dvh - 88px); overflow-y: auto; padding: 12px; border: 1px solid var(--nav-line); border-radius: 12px; background: var(--nav-surface); box-shadow: 0 8px 24px #0000004d; }
+    .admin-shared-nav { display: none; position: absolute; top: 100%; left: 16px; right: 16px; max-height: calc(100dvh - 88px); overflow-y: auto; padding: 12px; border: 1px solid var(--nav-line); border-radius: 12px; background: var(--nav-surface); box-shadow: 0 8px 24px var(--nav-menu-shadow); }
     .admin-shared-nav.is-open { display: flex; flex-direction: column; align-items: stretch; }
     .admin-mobile-profile { display: flex; align-items: center; gap: 12px; padding: 8px 8px 14px; border-bottom: 1px solid var(--nav-line); color: var(--nav-text); }
     .admin-mobile-profile > div:last-child { display: grid; gap: 4px; min-width: 0; }

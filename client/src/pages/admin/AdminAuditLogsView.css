@@ -1,0 +1,204 @@
+/* Audit records use the VOTARA palette, a compact table, and native dialogs. */
+.audit-log-view {
+    --al-bg: #0e1525;
+    --al-surface: #172134;
+    --al-inset: #121c2e;
+    --al-line: #2c3950;
+    --al-text: #eff3fc;
+    --al-muted: #abb9d0;
+    --al-link: #9bbcff;
+    --al-info-bg: #263957;
+    --al-info: #bed4ff;
+    --al-success-bg: #163c30;
+    --al-success: #9ce4c3;
+    --al-warning-bg: #44351c;
+    --al-warning: #f0cf8b;
+    --al-danger-bg: #472631;
+    --al-danger: #ffb8c3;
+    --aw-text: var(--al-text);
+    --aw-muted: var(--al-muted);
+    min-height: 100dvh;
+    color: var(--al-text);
+    font: 13px/1.5 "Poppins", system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+}
+.admin-workspace[data-admin-theme="light"] .audit-log-view {
+    --al-bg: #f2f5fa;
+    --al-surface: #fcfdff;
+    --al-inset: #f3f6fb;
+    --al-line: #dce4ef;
+    --al-text: #19263a;
+    --al-muted: #5e6b80;
+    --al-link: #214fc8;
+    --al-info-bg: #edf2fb;
+    --al-info: #315786;
+    --al-success-bg: #eaf6ef;
+    --al-success: #246044;
+    --al-warning-bg: #fcf2df;
+    --al-warning: #825509;
+    --al-danger-bg: #fcecee;
+    --al-danger: #a22c43;
+    --aw-dot: rgba(76, 110, 165, .19);
+}
+.admin-workspace[data-admin-theme] > .audit-log-view { background: var(--al-bg) radial-gradient(circle, var(--aw-dot) 1px, transparent 1.2px) 0 0 / 24px 24px !important; }
+.admin-workspace .audit-log-view .al-main { width: 100%; max-width: 1440px; margin: 0 auto; padding: 30px clamp(20px, 3vw, 44px) 24px; }
+.audit-log-view :is(button, input, select) { font: inherit; }
+.audit-log-view button { transition: background .18s ease, border-color .18s ease; }
+.audit-log-view button:active:not(:disabled) { transform: translateY(1px); }
+.audit-log-view :is(a, button, input, select, [tabindex]):focus-visible { outline: 2px solid var(--al-link); outline-offset: 3px; }
+.audit-log-view button:disabled { cursor: not-allowed; opacity: .45; }
+.audit-log-view .al-skip { position: fixed; top: -80px; left: 20px; z-index: 1200; padding: 12px 18px; background: var(--al-surface); color: var(--al-text); border: 1px solid var(--al-line); border-radius: 8px; }
+.audit-log-view .al-skip:focus { top: 16px; }
+.audit-log-view .al-heading { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-bottom: 24px; }
+.audit-log-view .al-breadcrumb { display: flex; gap: 10px; margin-bottom: 8px; color: var(--al-muted); font-size: 11px; }
+.audit-log-view .al-breadcrumb > span { opacity: .55; }
+.audit-log-view h1 { margin: 0; font-size: clamp(25px, 2.2vw, 30px); line-height: 1.3; font-weight: 600; letter-spacing: -.8px; }
+.audit-log-view .al-heading p { margin: 8px 0 0; font-size: 12px; }
+.audit-log-view .al-button { display: inline-flex; justify-content: center; align-items: center; gap: 8px; min-height: 40px; padding: 9px 14px; border: 1px solid transparent; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+.audit-log-view .al-button svg { width: 16px; height: 16px; flex-shrink: 0; }
+.audit-log-view .al-primary { background: #2154d2; color: #fcfdff; }
+.audit-log-view .al-primary:hover:not(:disabled) { background: #1946b6; }
+.audit-log-view .al-secondary { background: var(--al-surface); color: var(--al-text); border-color: var(--al-line); }
+.audit-log-view .al-secondary:hover:not(:disabled) { background: var(--al-inset); border-color: var(--al-link); }
+.audit-log-view .al-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--al-line); border-radius: 14px; background: var(--al-surface); margin-bottom: 24px; overflow: hidden; }
+.audit-log-view .al-summary-item { display: grid; grid-template-columns: minmax(0, 1fr) 32px; gap: 7px 12px; padding: 20px 24px; border-right: 1px solid var(--al-line); }
+.audit-log-view .al-summary-item:last-child { border-right: 0; }
+.audit-log-view .al-summary-label { grid-column: 1; color: var(--al-muted); font-size: 11px; }
+.audit-log-view .al-summary-icon { grid-column: 2; grid-row: 1 / 3; width: 18px; height: 18px; align-self: center; justify-self: end; color: var(--al-link); }
+.audit-log-view .al-summary-item strong { font-size: 27px; font-weight: 600; line-height: 1.3; letter-spacing: -.7px; }
+.audit-log-view .al-records { background: var(--al-surface); border: 1px solid var(--al-line); border-radius: 14px; overflow: hidden; }
+.audit-log-view .al-records-heading { display: flex; justify-content: space-between; align-items: center; gap: 18px; padding: 22px 24px; }
+.audit-log-view h2 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -.2px; }
+.audit-log-view .al-records-heading p { margin: 4px 0 0; font-size: 11px; }
+.audit-log-view .al-record-count { font-size: 11px; color: var(--al-muted); white-space: nowrap; }
+.audit-log-view .al-filters { display: grid; grid-template-columns: minmax(240px, 2fr) repeat(2, minmax(150px, 1fr)); gap: 16px; padding: 0 24px 22px; }
+.audit-log-view .al-field { display: flex; flex-direction: column; gap: 7px; }
+.audit-log-view .al-field > label { font-size: 11px !important; font-weight: 500; }
+.admin-workspace .audit-log-view .al-field :is(input, select) { width: 100%; max-width: 100%; min-height: 42px; padding: 9px 11px; border: 1px solid var(--al-line) !important; border-radius: 8px; background: var(--al-inset) !important; color: var(--al-text) !important; font-size: 12px !important; }
+.audit-log-view .al-field input::placeholder { color: var(--al-muted); opacity: 1; }
+.audit-log-view .al-search-control { display: flex; align-items: center; gap: 9px; min-height: 42px; padding-left: 12px; border: 1px solid var(--al-line); border-radius: 8px; background: var(--al-inset); }
+.audit-log-view .al-search-control > svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--al-muted); }
+.admin-workspace .audit-log-view .al-search-control input { border: 0 !important; background: transparent !important; min-height: 40px; padding-left: 0; }
+.audit-log-view .al-search-control:focus-within { outline: 2px solid var(--al-link); outline-offset: 2px; }
+.audit-log-view .al-search-control input:focus-visible { outline: none; }
+.audit-log-view .al-filter-actions { display: flex; justify-content: flex-end; align-items: flex-end; gap: 9px; }
+.audit-log-view .al-table-scroll { overflow-x: auto; scrollbar-width: thin; border-top: 1px solid var(--al-line); }
+.audit-log-view .al-table { width: 100%; min-width: 1060px; table-layout: fixed; border-collapse: collapse; border-spacing: 0; }
+.audit-log-view .al-col-date { width: 140px; }
+.audit-log-view .al-col-actor { width: 195px; }
+.audit-log-view .al-col-activity { width: 205px; }
+.audit-log-view .al-col-description { width: auto; }
+.audit-log-view .al-col-severity { width: 90px; }
+.audit-log-view .al-col-details { width: 80px; }
+.audit-log-view .al-table :is(th, td) { padding: 16px 18px; text-align: left; border-bottom: 1px solid var(--al-line); vertical-align: middle; font-size: 12px; }
+.audit-log-view .al-table th { padding-block: 13px; background: var(--al-inset); font-size: 11px; font-weight: 500; color: var(--al-muted) !important; white-space: nowrap; }
+.audit-log-view .al-table tbody tr:last-child td { border-bottom: 0; }
+.audit-log-view .al-table tbody tr:hover { background: var(--al-inset); }
+.audit-log-view .al-date { display: flex; flex-direction: column; gap: 5px; font-size: 11px; white-space: nowrap; }
+.audit-log-view .al-date strong { font-weight: 500; }
+.audit-log-view .al-date > span { color: var(--al-muted); font-size: 10px; }
+.audit-log-view .al-actor { display: flex; align-items: center; gap: 10px; }
+.audit-log-view .al-avatar { display: grid; place-items: center; width: 30px; height: 30px; flex: 0 0 30px; border-radius: 8px; background: var(--al-info-bg); color: var(--al-info); font-size: 12px; font-weight: 500; }
+.audit-log-view .al-actor > div { min-width: 0; }
+.audit-log-view .al-actor strong { display: block; font-size: 11px; font-weight: 500; overflow-wrap: anywhere; }
+.audit-log-view .al-actor div > span { display: block; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--al-muted); font-size: 10px; margin-top: 4px; }
+.audit-log-view .al-activity { display: flex; flex-direction: column; gap: 4px; }
+.audit-log-view .al-activity strong { font-size: 11px; font-weight: 500; line-height: 1.5; }
+.audit-log-view .al-activity > span { color: var(--al-muted); font-size: 10px; line-height: 1.5; }
+.audit-log-view .al-activity .al-category { color: var(--al-link); font-size: 9px; }
+.audit-log-view .al-description { margin: 0; font-size: 11px; line-height: 1.65; overflow-wrap: anywhere; }
+.audit-log-view .al-severity { display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 5px; font-size: 10px; font-weight: 500; white-space: nowrap; }
+.audit-log-view .al-severity-info { background: var(--al-info-bg); color: var(--al-info); }
+.audit-log-view .al-severity-success { background: var(--al-success-bg); color: var(--al-success); }
+.audit-log-view .al-severity-warning { background: var(--al-warning-bg); color: var(--al-warning); }
+.audit-log-view .al-severity-critical { background: var(--al-danger-bg); color: var(--al-danger); }
+.audit-log-view .al-view { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: 36px; padding: 7px 0; background: transparent; border: 0; border-radius: 5px; color: var(--al-link); font-size: 11px; }
+.audit-log-view .al-view svg { width: 13px; height: 13px; }
+.audit-log-view .al-view:hover { text-decoration: underline; text-underline-offset: 4px; }
+.audit-log-view .al-pagination { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 16px 24px; border-top: 1px solid var(--al-line); color: var(--al-muted); font-size: 11px; }
+.audit-log-view .al-pagination > div { display: flex; align-items: center; gap: 15px; }
+.audit-log-view .al-pagination strong { font-weight: 500; }
+.audit-log-view .al-page-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 7px 10px; border: 1px solid var(--al-line); border-radius: 7px; background: var(--al-surface); color: var(--al-text); font-size: 11px; }
+.audit-log-view .al-page-button svg { width: 14px; height: 14px; }
+.audit-log-view .al-page-button:hover:not(:disabled) { background: var(--al-inset); border-color: var(--al-link); }
+.audit-log-view .al-privacy { display: flex; align-items: flex-start; gap: 9px; margin-top: 20px; color: var(--al-muted); }
+.audit-log-view .al-privacy > svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
+.audit-log-view .al-privacy p { max-width: 95ch; margin: 0; font-size: 10px; }
+.audit-log-view .al-empty { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 10px; padding: 48px 24px; color: var(--al-muted); text-align: center; }
+.audit-log-view .al-empty h3 { margin: 4px 0 0; font-size: 15px; font-weight: 500; }
+.audit-log-view .al-empty p { max-width: 48ch; margin: 0 0 8px; font-size: 12px; }
+.audit-log-view .al-error { display: flex; align-items: center; gap: 12px; padding: 16px 18px; margin-bottom: 20px; border: 1px solid var(--al-warning); border-radius: 10px; background: var(--al-warning-bg); }
+.audit-log-view .al-error > svg { color: var(--al-warning); flex-shrink: 0; }
+.audit-log-view .al-error strong { font-size: 12px; font-weight: 500; }
+.audit-log-view .al-error p { margin: 4px 0 0; font-size: 11px; }
+.audit-log-view .al-error > button { margin-left: auto; padding: 8px; background: transparent; border: 0; color: var(--al-link); white-space: nowrap; }
+.audit-log-view .al-skeleton { display: block; width: 82%; height: 12px; border-radius: 4px; background: var(--al-line); }
+.audit-log-view .al-loading-row td { height: 85px; }
+.audit-log-view .al-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* Native modal focus handling keeps keyboard navigation inside the record. */
+.audit-log-view .al-dialog { width: min(720px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); margin: auto; padding: 0; border: 1px solid var(--al-line); border-radius: 16px; background: var(--al-surface); color: var(--al-text); box-shadow: 0 24px 80px rgba(17, 34, 65, .24); }
+.audit-log-view .al-dialog::backdrop { background: rgba(9, 18, 35, .58); }
+.audit-log-view .al-dialog-content { padding: 28px; }
+.audit-log-view .al-dialog-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 22px; margin-bottom: 22px; border-bottom: 1px solid var(--al-line); }
+.audit-log-view .al-dialog-header > div > span { color: var(--al-muted); font-size: 11px; }
+.audit-log-view .al-dialog-header h2 { margin-top: 5px; font-size: 23px; }
+.audit-log-view .al-close { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 1px solid var(--al-line); border-radius: 8px; background: var(--al-inset); color: var(--al-text); }
+.audit-log-view .al-close svg { width: 18px; height: 18px; }
+.audit-log-view .al-detail-highlight { display: flex; align-items: center; gap: 14px; padding: 18px; border: 1px solid var(--al-line); border-radius: 10px; background: var(--al-inset); }
+.audit-log-view .al-detail-icon { display: grid; place-items: center; width: 42px; height: 42px; flex-shrink: 0; border-radius: 9px; background: var(--al-info-bg); color: var(--al-info); }
+.audit-log-view .al-detail-highlight > div { flex: 1; min-width: 0; }
+.audit-log-view .al-detail-highlight > div > span { font-size: 11px; color: var(--al-muted); }
+.audit-log-view .al-detail-highlight h3 { margin: 4px 0 0; font-size: 16px; font-weight: 500; }
+.audit-log-view .al-detail-description { margin-block: 24px; }
+.audit-log-view .al-dialog h3 { font-weight: 500; }
+.audit-log-view .al-detail-description h3, .audit-log-view .al-metadata h3 { margin: 0 0 8px; font-size: 13px; }
+.audit-log-view .al-detail-description p { margin: 0; font-size: 12px; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }
+.audit-log-view .al-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 28px; margin: 0; padding-block: 22px; border-block: 1px solid var(--al-line); }
+.audit-log-view .al-detail-grid dt, .audit-log-view .al-metadata dt { color: var(--al-muted); font-size: 10px; }
+.audit-log-view .al-detail-grid dd { margin: 5px 0 0; font-size: 12px; line-height: 1.7; overflow-wrap: anywhere; }
+.audit-log-view .al-metadata { margin-top: 24px; }
+.audit-log-view .al-metadata h3 > span { display: inline-grid; place-items: center; min-width: 22px; height: 22px; margin-left: 5px; border-radius: 5px; background: var(--al-inset); font-size: 10px; color: var(--al-muted); }
+.audit-log-view .al-metadata > p { margin: 0 0 14px; font-size: 11px; }
+.audit-log-view .al-metadata dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; }
+.audit-log-view .al-metadata dl > div { padding: 13px 14px; border: 1px solid var(--al-line); border-radius: 8px; background: var(--al-inset); }
+.audit-log-view .al-metadata dd { margin: 6px 0 0; font-size: 12px; overflow-wrap: anywhere; }
+.audit-log-view .al-dialog-footer { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 24px; }
+.audit-log-view .al-dialog-footer > span { display: flex; align-items: center; gap: 7px; color: var(--al-muted); font-size: 10px; }
+.audit-log-view .al-dialog-footer > span > svg { flex-shrink: 0; }
+.audit-log-view .al-detail-loading { display: grid; gap: 22px; padding-block: 20px 60px; }
+.audit-log-view .al-detail-loading .al-skeleton { height: 24px; }
+.audit-log-view .al-detail-error { padding: 12px 14px; margin-bottom: 20px; border: 1px solid var(--al-warning); border-radius: 8px; background: var(--al-warning-bg); color: var(--al-warning) !important; font-size: 11px; }
+@media (max-width: 1000px) {
+    .audit-log-view .al-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .audit-log-view .al-search { grid-column: 1 / -1; }
+    .audit-log-view .al-filter-actions { align-items: end; }
+}
+@media (max-width: 720px) {
+    .admin-workspace .audit-log-view .al-main { padding: 24px 16px !important; }
+    .audit-log-view .al-heading { gap: 16px; }
+    .audit-log-view .al-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .audit-log-view .al-summary-item { padding: 16px 18px; }
+    .audit-log-view .al-summary-item:nth-child(2n) { border-right: 0; }
+    .audit-log-view .al-summary-item:nth-child(n+3) { border-top: 1px solid var(--al-line); }
+    .audit-log-view .al-records-heading { padding: 20px 18px; align-items: flex-start; }
+    .audit-log-view .al-filters { padding: 0 18px 20px; gap: 14px; }
+    .admin-workspace .audit-log-view .al-field :is(input, select) { font-size: 16px !important; }
+    .audit-log-view .al-pagination { flex-direction: column; align-items: flex-start; gap: 14px; padding: 16px 18px; }
+    .audit-log-view .al-pagination > div { width: 100%; justify-content: space-between; gap: 8px; }
+    .audit-log-view .al-dialog-content { padding: 22px; }
+}
+@media (max-width: 440px) {
+    .audit-log-view .al-heading { align-items: flex-start; flex-wrap: wrap; }
+    .audit-log-view .al-heading p { max-width: 35ch; }
+    .audit-log-view .al-filters { grid-template-columns: minmax(0, 1fr); }
+    .audit-log-view .al-filter-actions { justify-content: stretch; }
+    .audit-log-view .al-filter-actions > button { flex: 1; }
+    .audit-log-view .al-record-count { white-space: normal; text-align: right; }
+    .audit-log-view .al-detail-grid, .audit-log-view .al-metadata dl { grid-template-columns: minmax(0, 1fr); }
+    .audit-log-view .al-detail-highlight { flex-wrap: wrap; }
+    .audit-log-view .al-dialog-footer { flex-direction: column; align-items: stretch; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .audit-log-view *, .audit-log-view *::before, .audit-log-view *::after { animation: none !important; transition: none !important; }
+}
