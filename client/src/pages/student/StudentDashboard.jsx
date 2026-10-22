@@ -228,6 +228,7 @@ function StudentDashboard() {
     });
     useEffect(() => {
         try { localStorage.setItem("votaraStudentTheme", studentTheme); } catch { /* Storage may be disabled. */ }
+        window.dispatchEvent(new Event("votara-student-theme"));
     }, [studentTheme]);
 
     // =================================================
@@ -273,6 +274,50 @@ useEffect(() => {
 
     const [student, setStudent] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    // Keep an actively viewed student session alive. The server extends its
+    // 30-minute idle window for authenticated requests; this small heartbeat
+    // also renews the 8-hour JWT while the dashboard remains visible.
+    useEffect(() => {
+        let refreshInFlight = false;
+
+        const refreshSession = async () => {
+            if (document.visibilityState !== "visible" || refreshInFlight) return;
+            const token = localStorage.getItem("votaraToken");
+            if (!token) return;
+
+            refreshInFlight = true;
+            try {
+                const response = await api.post(
+                    "/auth/session/keepalive",
+                    {},
+                    { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
+                );
+                const renewedToken = response?.data?.token;
+                if (renewedToken && localStorage.getItem("votaraToken") === token) {
+                    localStorage.setItem("votaraToken", renewedToken);
+                }
+            } catch (error) {
+                // Keep the dashboard open; ordinary API handling can surface
+                // a genuinely expired or unavailable session without a loop.
+                console.warn("Student session renewal was unsuccessful:", error?.message);
+            } finally {
+                refreshInFlight = false;
+            }
+        };
+
+        const onVisibilityChange = () => {
+            if (document.visibilityState === "visible") refreshSession();
+        };
+
+        const timer = window.setInterval(refreshSession, 5 * 60 * 1000);
+        document.addEventListener("visibilitychange", onVisibilityChange);
+
+        return () => {
+            window.clearInterval(timer);
+            document.removeEventListener("visibilitychange", onVisibilityChange);
+        };
+    }, []);
 
     const [searchValue, setSearchValue] = useState("");
     const [calendarTab, setCalendarTab] = useState("Today");
@@ -1366,7 +1411,9 @@ const handleSettingsItemClick = (item) => {
             );
 
             setVoteFeedback(
-                error?.response?.data?.message ||
+                /all required eligible positions/i.test(error?.response?.data?.message || "")
+                    ? "Your partial ballot was not recorded because this election’s voting service has not been updated to accept abstentions yet. Your choices are still here; please contact the Electoral Board."
+                    : error?.response?.data?.message ||
                 error?.message ||
                 "Unable to submit your vote. Please try again."
             );
@@ -1445,6 +1492,8 @@ const handleLogout = async () => {
     }
 
     localStorage.removeItem("votaraToken");
+    localStorage.removeItem("votaraStudentToken");
+    localStorage.removeItem("studentToken");
     localStorage.removeItem("votaraStudent");
     window.location.href = "/";
 };
@@ -1527,6 +1576,15 @@ const handleLogout = async () => {
                         position.id
                     ] === candidate.id;
 
+                const candidateAffiliation =
+                    candidate.party_list?.name ||
+                    candidate.partyList?.name ||
+                    candidate.partyListName ||
+                    candidate.party_list_name ||
+                    (candidate.party_list_id || candidate.partyListId
+                        ? "Party list"
+                        : "Individual");
+
                 return (
                     <article
                         className={`candidate-card ${
@@ -1540,6 +1598,10 @@ const handleLogout = async () => {
                             <h3>
                                 {candidateName}
                             </h3>
+
+                            <span className="candidate-affiliation-badge">
+                                {candidateAffiliation}
+                            </span>
 
                             <div className="candidate-image-container">
                                 <img
@@ -1640,6 +1702,33 @@ const loadStudentResults = async () => {
         setResultsLoading(false);
     }
 };
+
+// Keep the dashboard's Live result card connected to the same official
+// release feed as the full Results page.
+useEffect(() => {
+    if (activeMenu !== "dashboard") return undefined;
+
+    let cancelled = false;
+    const refresh = async () => {
+        setResultsLoading(true);
+        setResultsError("");
+        try {
+            const response = await getPublishedStudentResults();
+            if (!cancelled && response?.success) setStudentResults(response);
+        } catch (error) {
+            if (!cancelled) setResultsError(error?.response?.data?.message || error?.message || "Unable to load election results.");
+        } finally {
+            if (!cancelled) setResultsLoading(false);
+        }
+    };
+
+    refresh();
+    const timer = window.setInterval(refresh, 30000);
+    return () => {
+        cancelled = true;
+        window.clearInterval(timer);
+    };
+}, [activeMenu]);
 
 
     // =================================================
@@ -2057,23 +2146,43 @@ const resultsAreVisible =
                                         <h3>Live result</h3>
                                         <p>Election results overview</p>
                                     </div>
-                                    <span className="live-results-badge">
+                                    <span className={`live-results-badge ${studentResults?.published ? "is-released" : ""}`}>
                                         <span className="live-results-dot" />
-                                        Awaiting data
+                                        {studentResults?.published ? "Official results" : "Awaiting release"}
                                     </span>
                                 </div>
 
-                                <div className="live-results-empty-state">
+                                {studentResults?.published && studentResults?.positions?.length ? (
+                                    <div className="live-results-list">
+                                        {studentResults.positions.map((position) => (
+                                            <div className="live-results-row" key={position.id}>
+                                                <span className="live-results-position">{position.name}</span>
+                                                {position.resultStatus === "tie" ? (
+                                                    <span className="live-results-winner">Tie</span>
+                                                ) : position.winner ? (
+                                                    <span className="live-results-winner">
+                                                        {position.winner.fullName}
+                                                        <small>{position.winner.partyListName || "Independent"} · {position.winner.voteCount} votes</small>
+                                                    </span>
+                                                ) : (
+                                                    <span className="live-results-winner">No votes</span>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : <div className="live-results-empty-state">
                                     <div className="live-results-icon" aria-hidden="true">
                                         <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <rect x="5" y="5" width="38" height="38" rx="12" fill="#EEF4FF" />
                                             <path d="M14 32V25M24 32V17M34 32V21" stroke="#2563EB" strokeWidth="4" strokeLinecap="round" />
                                         </svg>
                                     </div>
-                                    <h4>Election results will appear here</h4>
-                                    <p>Candidate standings and vote percentages will be displayed here when results are connected to the Electoral Board.</p>
-                                    <span className="live-results-note">Results are not available yet.</span>
-                                </div>
+                                    <h4>{resultsLoading ? "Checking official results" : "Election results will appear here"}</h4>
+                                    <p>{resultsError || (studentResults?.election?.status && ["closed", "completed", "finished"].includes(String(studentResults.election.status).toLowerCase())
+                                        ? "The Electoral Board has not released the official results yet."
+                                        : "Candidate standings and vote totals will appear here after the Electoral Board releases the official results.")}</p>
+                                    <span className="live-results-note">{resultsLoading ? "Refreshing results…" : "Results are not available yet."}</span>
+                                </div>}
                             </section>
 
                             <section id="student-announcements" className="announcement-card main-hover-card">
@@ -2445,16 +2554,16 @@ const resultsAreVisible =
                                                             "Unnamed Candidate"}
                                                     </h3>
 
-                                                    <span className="directory-position-badge">
-                                                        {position.name}
-                                                    </span>
-
-                                                    <p className="directory-party-name">
-                                                        Party List:{" "}
-                                                        {candidate.party_list?.name ||
-                                                            candidate.partyList?.name ||
-                                                            "Independent"}
-                                                    </p>
+                                                    <div className="directory-candidate-labels">
+                                                        <span className="directory-position-badge">
+                                                            {position.name}
+                                                        </span>
+                                                        <span className="directory-party-badge">
+                                                            {candidate.party_list?.name ||
+                                                                candidate.partyList?.name ||
+                                                                "Independent"}
+                                                        </span>
+                                                    </div>
 
                                                     <div className="directory-platform">
                                                         <h4>Campaign Platform</h4>
@@ -2663,9 +2772,18 @@ const resultsAreVisible =
                                     <div className="vote-position-heading">
                                         <h2>{position.name}</h2>
                                         <p>
-                                            Choose one candidate, or leave this position unselected to abstain. Select a chosen candidate again to clear your choice.
+                                            Choose one candidate or abstain from this position. You can still submit the choices you make for other positions.
                                         </p>
                                         {position.description && <p>{position.description}</p>}
+                                        <button
+                                            type="button"
+                                            className={`vote-position-abstain${selectedVotes[position.id] ? "" : " is-selected"}`}
+                                            aria-pressed={!selectedVotes[position.id]}
+                                            disabled={hasVoted || voteLoading || !electionIsOpen || !studentEligible}
+                                            onClick={() => setSelectedVotes(previous => ({ ...previous, [position.id]: null }))}
+                                        >
+                                            {selectedVotes[position.id] ? "Abstain from this position" : "Abstention selected"}
+                                        </button>
                                     </div>
                                     <div className="candidate-grid">
                                         {renderCandidateCards(position)}
@@ -3451,7 +3569,7 @@ const resultsAreVisible =
                 </button>
                 <div className="student-platform-bell"><PlatformNotifications onStatus={setPlatformUpdate} onAction={target => {
                     if (target === "reports") { loadReportHistory(); return; }
-                    handleMenuClick(target === "vote" ? "vote" : "dashboard");
+                    handleMenuClick(target === "vote" ? "vote" : target === "results" ? "results" : "dashboard");
                     if (target === "announcement") window.requestAnimationFrame(() => document.getElementById("student-announcements")?.scrollIntoView({block:"center",behavior:"smooth"}));
                 }}/></div>
                     </header>

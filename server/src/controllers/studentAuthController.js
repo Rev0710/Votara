@@ -875,6 +875,43 @@ const studentLogout = async (req, res) => {
     }
 };
 
+// Refresh the student's short-lived JWT while their protected active
+// session is being kept alive by protectStudent middleware.
+const keepStudentSession = async (req, res) => {
+    try {
+        const student = req.student;
+        if (!student?.userId || !student?.sid || !student?.studentId) {
+            return res.status(401).json({
+                success: false,
+                message: "A valid student session is required.",
+            });
+        }
+
+        const token = jwt.sign(
+            {
+                userId: student.userId,
+                sid: student.sid,
+                studentId: student.studentId,
+                email: student.email,
+                fullName: student.fullName,
+                yearLevel: student.yearLevel,
+                role: "student",
+                mustChangePassword: student.mustChangePassword === true,
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: "8h" }
+        );
+
+        return res.status(200).json({ success: true, token });
+    } catch (error) {
+        console.error("Student session refresh failed:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Unable to refresh the student session.",
+        });
+    }
+};
+
 
 // =========================================================
 // EXPORT
@@ -885,6 +922,8 @@ module.exports = {
     studentLogin,
 
     studentLogout,
+
+    keepStudentSession,
 
     changeTemporaryPassword,
 

@@ -369,3 +369,46 @@
 /* Transparent page background override */
 .registration-page { background: transparent !important; }
 .registration-shell { background: transparent !important; }
+
+/* Review workspace stays usable when the EB navigation leaves a narrow viewport. */
+@media (max-width: 1040px) {
+  .registration-page { padding: 34px 24px 56px; }
+  .registration-review-layout { grid-template-columns: minmax(0, 1fr); }
+  .registration-applications { min-height: 0; }
+  .application-list { max-height: 260px; overflow-y: auto; }
+  .application-tabs button { font-size: 11px; }
+  .student-meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .document-preview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+  .registration-page { width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; padding: 26px 16px 44px; }
+  .registration-heading > * { min-width: 0; max-width: 100%; }
+  .registration-heading { align-items: flex-start; flex-direction: column; gap: 10px; }
+  .registration-heading h1 { font-size: clamp(24px, 6vw, 30px); }
+  .registration-heading h1 { overflow-wrap: anywhere; }
+  .registration-heading > p { max-width: 42ch; }
+  .registration-detail-card { padding: 18px 16px; }
+  .student-profile { align-items: flex-start; }
+  .student-name-row h2 { font-size: 18px; overflow-wrap: anywhere; }
+  .student-meta-grid { gap: 14px; }
+  .document-preview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+}
+
+@media (max-width: 560px) {
+  .registration-page { padding: 22px 12px 36px; }
+  .registration-review-layout { gap: 12px; }
+  .applications-heading { padding: 16px 14px 13px; }
+  .applications-search { margin-inline: 14px; }
+  .application-tabs { margin-inline: 14px; }
+  .application-tabs button { white-space: normal; line-height: 1.25; padding: 8px 4px; }
+  .application-list { padding-inline: 6px; }
+  .application-item { gap: 8px; padding: 9px 7px; }
+  .registration-detail-card { padding: 16px 12px; }
+  .student-meta-grid { grid-template-columns: minmax(0, 1fr); }
+  .student-meta-grid strong { white-space: normal; overflow-wrap: anywhere; }
+  .document-preview-grid { grid-template-columns: minmax(0, 1fr); }
+  .document-preview-box { height: clamp(150px, 54vw, 230px); }
+  .decision-actions { flex-wrap: wrap; }
+  .decision-actions button { flex: 1 1 125px; }
+}

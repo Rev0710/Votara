@@ -393,3 +393,27 @@
 .student-dashboard .ballot-review-modal footer{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:12px;margin-top:20px}
 .student-dashboard .ballot-review-modal button{padding:12px 18px;border-radius:10px;background:var(--student-surface);color:var(--student-text);border:1px solid var(--student-border);font:inherit;min-height:44px}
 .student-dashboard .ballot-review-modal button.primary{background:#155dfb;color:#fff}
+
+/* Student dashboard readability: keep FAQ copy off the dotted canvas and use theme tokens. */
+.student-dashboard .student-content-scroll .faq-section {
+    position: relative;
+    padding: clamp(20px, 2.4vw, 32px);
+    border: 1px solid var(--student-border);
+    border-radius: 18px;
+    background: var(--student-solid);
+}
+.student-dashboard .student-content-scroll .faq-intro h3 { color: var(--student-text) !important; font-size: clamp(18px, 1.5vw, 22px); line-height: 1.25; }
+.student-dashboard .student-content-scroll .faq-intro p { max-width: 34ch; color: var(--student-muted) !important; font-size: 14px; line-height: 1.65; }
+.student-dashboard .student-content-scroll .faq-list { gap: 10px; }
+.student-dashboard .student-content-scroll .faq-item { border-color: var(--student-border); background: var(--student-surface); box-shadow: none; }
+.student-dashboard .student-content-scroll .faq-item .faq-button { min-height: 50px; padding: 12px 16px; color: var(--student-text) !important; background: var(--student-surface) !important; font-size: 14px; line-height: 1.5; }
+.student-dashboard .student-content-scroll .faq-item .faq-answer { padding: 0 16px 16px; color: var(--student-muted) !important; background: var(--student-surface) !important; font-size: 14px; line-height: 1.7; }
+.student-dashboard .platform-notification-dialog { background: var(--student-solid); color: var(--student-text); border-color: var(--student-border); }
+.student-dashboard .platform-notification-dialog :is(h2,button) { color: var(--student-text); }
+.student-dashboard .platform-notification-dialog .platform-notification-open { color: #fff; }
+@media(max-width:720px) {
+    .student-dashboard .student-content-scroll .faq-section { padding: 18px 14px; }
+    .student-dashboard .student-content-scroll .faq-item .faq-button { min-height: 48px; padding: 11px 12px; }
+}
+.student-dashboard .vote-position-abstain { border-color: var(--student-border); background: var(--student-solid); color: var(--student-text); }
+.student-dashboard .vote-position-abstain.is-selected { border-color: var(--student-blue); background: var(--student-soft); color: var(--student-text); }

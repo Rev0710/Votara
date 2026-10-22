@@ -40,7 +40,8 @@ const getDocumentType = (doc) => {
 const getDocumentMimeType = (doc) => String(doc?.file_type || doc?.fileType || doc?.mime_type || doc?.mimeType || "").toLowerCase();
 const errorMessage = (err, fallback) => err?.response?.data?.message || err?.response?.data?.error || err?.message || fallback;
 
-function Status({ status }) {
+
+    function Status({ status }) {
     return <span className={`le-status is-${statusClass(status)}`}><span aria-hidden="true" />{formatStatus(status)}</span>;
 }
 

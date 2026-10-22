@@ -14,13 +14,17 @@ import {
 } from "react-icons/fi";
 
 import api from "../../services/api";
+import "./InPersonVerification.css";
+
+const isNumericStudentIdQuery = (value) => /^[\d\s-]+$/.test(value) && /\d/.test(value);
+const hasFiveDigitStudentId = (value) => value.replace(/\D/g, "").length === 5;
 
 // =========================================================
 // IN-PERSON VERIFICATION
 // Electoral Board Module
 // =========================================================
 
-const InPersonVerification = () => {
+const InPersonVerification = ({ onNavigate = () => {} }) => {
     const [searchTerm, setSearchTerm] = useState("");
     const [student, setStudent] = useState(null);
 
@@ -42,19 +46,14 @@ const InPersonVerification = () => {
     // Load students available for verification
     // ---------------------------------------------------------
 
-    const loadStudents = async () => {
+    const loadStudents = async (search = "") => {
         try {
             setLoading(true);
             setError("");
 
-            /*
-             * The backend endpoint will be connected here.
-             *
-             * We intentionally do not assume any database column
-             * structure beyond the existing VOTARA student concept.
-             */
             const response = await api.get(
-                "/electoral-board/in-person-verification"
+                "/electoral-board/in-person-verification",
+                { params: { search } }
             );
 
             const data = response?.data;
@@ -64,17 +63,15 @@ const InPersonVerification = () => {
                 data?.data ||
                 [];
 
-            setStudents(Array.isArray(studentList) ? studentList : []);
+            const results = Array.isArray(studentList) ? studentList : [];
+            setStudents(results);
+            return results;
         } catch (err) {
             console.error(
                 "In-Person Verification load error:",
                 err
             );
 
-            /*
-             * The page can still be displayed even while the
-             * backend endpoint is being connected.
-             */
             setStudents([]);
 
             if (err?.response?.status !== 404) {
@@ -83,6 +80,7 @@ const InPersonVerification = () => {
                         "Unable to load students for verification."
                 );
             }
+            return [];
         } finally {
             setLoading(false);
         }
@@ -124,11 +122,16 @@ const InPersonVerification = () => {
         });
     }, [students, searchTerm]);
 
-    const handleSearch = () => {
+    const handleSearch = async () => {
         setError("");
         setSuccess("");
 
         const value = searchTerm.trim();
+
+        if (isNumericStudentIdQuery(value) && !hasFiveDigitStudentId(value)) {
+            setError("Student IDs must contain exactly 5 digits.");
+            return;
+        }
 
         if (!value) {
             setError(
@@ -138,11 +141,9 @@ const InPersonVerification = () => {
         }
 
         setSearching(true);
-
-        setTimeout(() => {
-            setSearching(false);
-
-            if (filteredStudents.length === 0) {
+        try {
+            const results = await loadStudents(value);
+            if (results.length === 0) {
                 setStudent(null);
                 setError(
                     "No matching student was found."
@@ -150,10 +151,12 @@ const InPersonVerification = () => {
                 return;
             }
 
-            if (filteredStudents.length === 1) {
-                selectStudent(filteredStudents[0]);
+            if (results.length === 1) {
+                selectStudent(results[0]);
             }
-        }, 250);
+        } finally {
+            setSearching(false);
+        }
     };
 
     // ---------------------------------------------------------
@@ -215,9 +218,11 @@ const InPersonVerification = () => {
         "—";
 
     const getRegistrationStatus = () =>
-        student?.registration_status ||
-        student?.registrationStatus ||
-        "Pending";
+        student?.registration_status === "not_submitted"
+            ? "Not submitted"
+            : student?.registration_status ||
+              student?.registrationStatus ||
+              "Pending";
 
     const getEnrollmentStatus = () =>
         student?.enrollment_status ||
@@ -228,6 +233,13 @@ const InPersonVerification = () => {
         student?.verification_status ||
         student?.verificationStatus ||
         "Pending";
+
+    const getVerificationDisplayStatus = () => {
+        if (isVerified) return "Verified";
+        if (!physicalIdVerified) return "ID check needed";
+        if (!registrationConfirmed) return "Registration check needed";
+        return "Ready to verify";
+    };
 
     const isFirstYear =
         String(getYearLevel()).toLowerCase().includes("1st") ||
@@ -241,16 +253,26 @@ const InPersonVerification = () => {
                 student?.isVerified
         );
 
+    const voteStatusValue =
+        student?.has_voted ?? student?.hasVoted ??
+        student?.vote_participation?.has_voted ??
+        student?.voteParticipation?.hasVoted;
+    const hasVotingStatus = voteStatusValue !== undefined && voteStatusValue !== null;
+    const hasVoted = Boolean(voteStatusValue);
+
     const isRegistrationApproved =
         String(getRegistrationStatus()).toLowerCase() ===
         "approved";
 
     const isEnrolled =
-        String(getEnrollmentStatus()).toLowerCase() ===
-        "enrolled";
+        ["enrolled", "active"].includes(
+            String(getEnrollmentStatus()).trim().toLowerCase()
+        );
 
     const canVerify =
         Boolean(student) &&
+        isRegistrationApproved &&
+        isEnrolled &&
         physicalIdVerified &&
         registrationConfirmed &&
         !isVerified;
@@ -410,7 +432,7 @@ const InPersonVerification = () => {
         return (
             <span className={className}>
                 {icon}
-                {status || "Pending"}
+                {String(status || "Pending").replace(/_/g, " ").replace(/\b\w/g, letter => letter.toUpperCase())}
             </span>
         );
     };
@@ -496,8 +518,7 @@ const InPersonVerification = () => {
                     <div>
                         <h2>Find Student</h2>
                         <p>
-                            Search using the Student ID or full
-                            name.
+                            Search by a 5-digit Student ID or full name.
                         </p>
                     </div>
                 </div>
@@ -508,10 +529,11 @@ const InPersonVerification = () => {
 
                         <input
                             type="text"
+                            inputMode="text"
                             value={searchTerm}
                             onChange={(event) =>
                                 setSearchTerm(
-                                    event.target.value
+                                    event.target.value.trimStart()
                                 )
                             }
                             onKeyDown={(event) => {
@@ -521,7 +543,7 @@ const InPersonVerification = () => {
                                     handleSearch();
                                 }
                             }}
-                            placeholder="Enter Student ID or full name..."
+                            placeholder="Enter 5-digit Student ID or full name..."
                         />
 
                         {searchTerm && (
@@ -541,7 +563,8 @@ const InPersonVerification = () => {
                         onClick={handleSearch}
                         disabled={
                             searching ||
-                            !searchTerm.trim()
+                            !searchTerm.trim() ||
+                            (isNumericStudentIdQuery(searchTerm.trim()) && !hasFiveDigitStudentId(searchTerm.trim()))
                         }
                     >
                         <FiSearch />
@@ -551,6 +574,9 @@ const InPersonVerification = () => {
                             : "Search Student"}
                     </button>
                 </div>
+                {isNumericStudentIdQuery(searchTerm.trim()) && !hasFiveDigitStudentId(searchTerm.trim()) && (
+                    <p className="search-hint" role="status">Student IDs must contain exactly 5 digits.</p>
+                )}
             </div>
 
             {/* =================================================
@@ -640,6 +666,16 @@ const InPersonVerification = () => {
 
             {student && (
                 <>
+                    <div className={`verification-vote-status ${hasVoted ? "is-voted" : "not-voted"}`} role="status">
+                        <div>
+                            <strong>{hasVoted ? "Vote already recorded" : hasVotingStatus ? "No vote recorded yet" : "No open election"}</strong>
+                            <span>{hasVoted ? `This student has already voted in ${student?.election_title || "the current election"}.` : hasVotingStatus ? `This student has not voted in ${student?.election_title || "the current election"}.` : "Voting status is available when an election is open."}</span>
+                        </div>
+                        <div className="verification-vote-actions">
+                            {hasVotingStatus && !hasVoted && <button type="button" className="primary-button" onClick={() => onNavigate("kiosk")}><FiCreditCard />Vote through kiosk</button>}
+                            <button type="button" className="secondary-button" onClick={() => onNavigate("dashboard")}>Return to dashboard</button>
+                        </div>
+                    </div>
                     <div className="verification-card student-details-card">
                         <div className="student-details-header">
                             <div className="large-student-avatar">
@@ -677,9 +713,7 @@ const InPersonVerification = () => {
                             <div className="student-header-status">
                                 <StatusBadge
                                     status={
-                                        isVerified
-                                            ? "Verified"
-                                            : getVerificationStatus()
+                                        getVerificationDisplayStatus()
                                     }
                                 />
                             </div>
@@ -751,9 +785,7 @@ const InPersonVerification = () => {
 
                                 <StatusBadge
                                     status={
-                                        isVerified
-                                            ? "Verified"
-                                            : getVerificationStatus()
+                                        getVerificationDisplayStatus()
                                     }
                                 />
                             </div>
@@ -772,10 +804,9 @@ const InPersonVerification = () => {
                                 </h2>
 
                                 <p>
-                                    Complete each required
-                                    physical verification step
-                                    before marking the student
-                                    as verified.
+                                    Verification is separate from voting. Check the
+                                    physical student ID and registration details, then
+                                    select Mark as Verified to save this status.
                                 </p>
                             </div>
                         </div>
@@ -942,10 +973,11 @@ const InPersonVerification = () => {
                                     <FiAlertCircle />
 
                                     <span>
-                                        Complete the physical ID
-                                        and registration
-                                        confirmation checks before
-                                        verifying the student.
+                                        {!isRegistrationApproved
+                                            ? "The student's registration application must be approved first."
+                                            : !isEnrolled
+                                              ? "The student must have active enrollment before verification."
+                                              : "Complete the physical ID and registration confirmation checks before verifying the student."}
                                     </span>
                                 </div>
                             )}

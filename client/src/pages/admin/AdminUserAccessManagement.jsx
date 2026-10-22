@@ -26,6 +26,7 @@ const emptyCredential = {
     user: null,
     temporaryPassword: "",
     emailSent: false,
+    emailAttempted: false,
 };
 
 function getInitials(name = "") {
@@ -63,6 +64,8 @@ export default function AdminUserAccessManagement() {
     const handleAdminLogout = () => {
         localStorage.removeItem("votaraAdminToken");
         localStorage.removeItem("votaraAdminUser");
+        localStorage.removeItem("votaraStaffToken");
+        localStorage.removeItem("votaraStaffUser");
         navigate("/admin-login", { replace: true });
     };
     const [role, setRole] = useState("electoral_board");
@@ -76,6 +79,7 @@ export default function AdminUserAccessManagement() {
     const [loading, setLoading] = useState(false);
     const [loadingAccounts, setLoadingAccounts] = useState(true);
     const [resettingId, setResettingId] = useState(null);
+    const [statusUpdatingId, setStatusUpdatingId] = useState(null);
     const [selectedAccount, setSelectedAccount] = useState(null);
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
@@ -236,6 +240,7 @@ export default function AdminUserAccessManagement() {
                 user: data.user || null,
                 temporaryPassword: data.temporaryPassword || "",
                 emailSent: data.emailSent === true,
+                emailAttempted: data.emailAttempted === true || typeof data.emailSent === "boolean",
             });
 
             setMessage(
@@ -269,9 +274,33 @@ export default function AdminUserAccessManagement() {
     const handleViewAccount = (account) => {
         setSelectedAccount(account);
         setError("");
+        setMessage("");
     };
 
-    const handleResetEBPassword = async (account) => {
+    const handleDeleteAccount = async (account) => {
+        if (!account || !account.id || statusUpdatingId) return;
+        const confirmed = window.confirm("Permanently delete this staff account?\n\nName: " + (account.full_name || "Staff account") + "\nEmail: " + account.email + "\nRole: " + (account._role === "admin" ? "Administrator" : "Electoral Board") + "\n\nThis removes the account from both staff lists and the database. Existing report history is kept, and the email can be reused after deletion succeeds.\n\nThis cannot be undone.");
+        if (!confirmed) return;
+        setStatusUpdatingId(account.id);
+        setError("");
+        setMessage("");
+        try {
+            const accountType = account._role === "admin" ? "admin" : "electoral-board";
+            const response = await api.delete("/admin/" + accountType + "/" + account.id);
+            setSelectedAccount(null);
+            setCredentials((current) => current.user?.id === account.id ? emptyCredential : current);
+            setMessage(response.data?.message || "Staff account permanently deleted.");
+            await loadAccounts();
+        } catch (err) {
+            console.error("Staff account deletion error:", err);
+            const apiMessage = err.response?.data?.message || "";
+            setError(apiMessage.includes("Route not found") ? "The connected API has not been updated with account deletion yet. Deploy the updated backend, then try again." : apiMessage || "Unable to delete this staff account.");
+        } finally {
+            setStatusUpdatingId(null);
+        }
+    };
+
+    const handleResetPassword = async (account) => {
         if (!account?.id) return;
 
         setResettingId(account.id);
@@ -280,9 +309,8 @@ export default function AdminUserAccessManagement() {
         setCredentials(emptyCredential);
 
         try {
-            const response = await api.post(
-                `/admin/electoral-board/${account.id}/reset-password`
-            );
+            const accountType = account._role === "admin" ? "admin" : "electoral-board";
+            const response = await api.post(`/admin/${accountType}/${account.id}/reset-password`);
 
             const data = response.data || {};
 
@@ -290,10 +318,11 @@ export default function AdminUserAccessManagement() {
                 user: data.user || account,
                 temporaryPassword: data.temporaryPassword || "",
                 emailSent: data.emailSent === true,
+                emailAttempted: data.emailAttempted === true || typeof data.emailSent === "boolean",
             });
 
             setMessage(
-                data.message || "Electoral Board password reset successfully."
+                data.message || `${account._role === "admin" ? "Administrator" : "Electoral Board"} temporary password generated.`
             );
 
             setSelectedAccount((current) =>
@@ -307,10 +336,10 @@ export default function AdminUserAccessManagement() {
 
             await loadAccounts();
         } catch (err) {
-            console.error("EB password reset error:", err);
+            console.error("Staff password reset error:", err);
             setError(
                 err.response?.data?.message ||
-                    "Unable to reset Electoral Board password."
+                    `Unable to generate a temporary ${account._role === "admin" ? "Administrator" : "Electoral Board"} password.`
             );
         } finally {
             setResettingId(null);
@@ -377,9 +406,9 @@ export default function AdminUserAccessManagement() {
                         {credentials.temporaryPassword ? <div className="ux-credential-body">
                             <div className="ux-credential-account"><span className="ux-avatar">{getInitials(credentials.user?.full_name)}</span><div><strong>{credentials.user?.full_name || "New account"}</strong><span>{credentials.user?.email || email}</span></div></div>
                             <div className="ux-password"><span>Temporary password</span><code>{credentials.temporaryPassword}</code></div>
-                            <div className={`ux-delivery${credentials.emailSent ? " is-sent" : ""}`}>{credentials.emailSent ? <FiCheckCircle aria-hidden="true" /> : <FiAlertCircle aria-hidden="true" />}<p>{credentials.emailSent ? "Credentials were sent to the account email." : "Email delivery was not confirmed. Share these credentials with the account holder."}</p></div>
+                            <div className={`ux-delivery${credentials.emailSent ? " is-sent" : ""}`}>{credentials.emailSent ? <FiCheckCircle aria-hidden="true" /> : <FiAlertCircle aria-hidden="true" />}<p>{credentials.emailSent ? "Credentials were sent to the account email." : credentials.emailAttempted ? "Email delivery was not confirmed. Share these credentials with the account holder." : "Email was not sent. Share these credentials securely with the account holder."}</p></div>
                             <button type="button" className="ux-text-button" onClick={() => setCredentials(emptyCredential)}>Clear displayed credentials</button>
-                        </div> : <div className="ux-credentials-empty"><span className="ux-key-illustration"><FiKey size={26} aria-hidden="true" /></span><h3>No credentials generated yet</h3><p>Create an account or reset an Electoral Board password to display temporary credentials here.</p></div>}
+                        </div> : <div className="ux-credentials-empty"><span className="ux-key-illustration"><FiKey size={26} aria-hidden="true" /></span><h3>No credentials generated yet</h3><p>Create an account or generate a temporary password for an Administrator or Electoral Board account to display it here.</p></div>}
                         <div className="ux-credential-note"><FiShield aria-hidden="true" /><span>Temporary credentials appear after account creation or password recovery.</span></div>
                     </aside>
                 </div>
@@ -410,10 +439,10 @@ export default function AdminUserAccessManagement() {
                     <dl className="ux-details-grid">{[
                         ["Role", selectedAccount._role === "admin" ? "Administrator" : "Electoral Board"], ["Status", selectedAccount.is_active ? "Active" : "Inactive"], ["Created", formatDate(selectedAccount.created_at)], ["Password state", selectedAccount.must_change_password ? "Temporary password" : "Personal password"],
                     ].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
-                    {selectedAccount._role === "electoral_board" && <div className="ux-recovery-note"><FiKey aria-hidden="true" /><div><strong>Account recovery</strong><p>If the account holder lost their password, generate a new temporary password. The new credentials will appear in the credentials panel.</p></div></div>}
+                    <div className="ux-recovery-note"><FiKey aria-hidden="true" /><div><strong>Account recovery</strong><p>Generate a temporary password for this active account. The password will appear in the Generated credentials panel and must be changed after sign-in.</p></div></div>
                     {error && <p className="ux-modal-message ux-modal-error" role="alert">{error}</p>}
-                    {credentials.user?.id === selectedAccount.id && message && <p className="ux-modal-message" role="status">{message} Close these details to view the temporary credentials.</p>}
-                    <footer className="ux-dialog-actions"><button type="button" className="ux-button ux-secondary" onClick={() => setSelectedAccount(null)}>Close</button>{selectedAccount._role === "electoral_board" && <button type="button" className="ux-button ux-primary" disabled={resettingId === selectedAccount.id} onClick={() => handleResetEBPassword(selectedAccount)}><FiKey aria-hidden="true" />{resettingId === selectedAccount.id ? "Generating…" : "Generate new password"}</button>}</footer>
+                    {message && <p className="ux-modal-message" role="status">{message}{credentials.user?.id === selectedAccount.id ? " Close these details to view the temporary credentials." : ""}</p>}
+                    <footer className="ux-dialog-actions ux-account-actions"><button type="button" className="ux-button ux-secondary" onClick={() => setSelectedAccount(null)}>Close</button><button type="button" className="ux-button ux-danger" disabled={statusUpdatingId === selectedAccount.id} onClick={() => handleDeleteAccount(selectedAccount)}>{statusUpdatingId === selectedAccount.id ? "Deleting…" : "Delete account"}</button><button type="button" className="ux-button ux-primary" disabled={resettingId === selectedAccount.id || !selectedAccount.is_active || statusUpdatingId === selectedAccount.id} onClick={() => handleResetPassword(selectedAccount)}><FiKey aria-hidden="true" />{resettingId === selectedAccount.id ? "Generating…" : "Generate temporary password"}</button></footer>
                 </div>}
             </dialog>
         </div>

@@ -3,6 +3,7 @@ const express = require("express");
 const {
     studentLogin,
     studentLogout,
+    keepStudentSession,
     changeTemporaryPassword,
 } = require("../controllers/studentAuthController");
 
@@ -36,6 +37,12 @@ router.post(
 router.post(
     "/student-logout",
     studentLogout
+);
+
+router.post(
+    "/session/keepalive",
+    protectStudent,
+    keepStudentSession
 );
 
 

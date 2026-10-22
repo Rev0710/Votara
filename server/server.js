@@ -462,6 +462,7 @@ app.use("/api/admin/staff-issue-reports", require("./src/routes/staffIssueReport
 app.use("/api/electoral-board/issues", require("./src/routes/staffIssueReportsRoutes"));
 app.use("/api/electoral-board/activity", require("./src/routes/ebActivityRoutes"));
 app.use("/api/electoral-board/profile", require("./src/routes/ebProfileRoutes"));
+app.use("/api/electoral-board/in-person-verification", require("./src/routes/ebInPersonVerificationRoutes"));
 
 app.use(
 

@@ -265,7 +265,7 @@ const handleAdminLogin = async (event) => {
 
 
 
-            const response = await api.post("/staff-auth/login", {
+            const response = await api.post("/admin-auth/login", {
 
                 email: formData.email.trim().toLowerCase(),
 
@@ -304,6 +304,10 @@ const handleAdminLogin = async (event) => {
             localStorage.setItem("votaraAdminToken", data.token);
 
             localStorage.setItem("votaraAdminUser", JSON.stringify(data.user));
+
+            // Keep the shared staff session in sync so first-login password changes work for admins.
+            localStorage.setItem("votaraStaffToken", data.token);
+            localStorage.setItem("votaraStaffUser", JSON.stringify(data.user));
 
 
 
@@ -418,14 +422,10 @@ const handleAdminLogin = async (event) => {
             console.error("EB login error:", requestError);
 
             setEbError(
-
-                requestError.response?.data?.message ||
-
-                requestError.message ||
-
-                "Unable to login. Please try again."
-
-            );
+                requestError.response?.data?.message ||
+                requestError.message ||
+                "Unable to login. Please try again."
+            );
 
         } finally {
 
@@ -469,7 +469,12 @@ const handleAdminLogin = async (event) => {
 
 
 
-        if (registerForm.password !== registerForm.confirmPassword) {
+        if (!registerForm.profilePhoto) {
+            setRegisterError("Please upload a profile photo for the initial Administrator account.");
+            return;
+        }
+
+        if (registerForm.password !== registerForm.confirmPassword) {
 
             setRegisterError("Passwords do not match.");
 
@@ -533,27 +538,21 @@ const handleAdminLogin = async (event) => {
 
             setRegisterLoading(true);
 
+            const photoData = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(new Error("Unable to read the selected profile photo."));
+                reader.readAsDataURL(registerForm.profilePhoto);
+            });
 
-
-            // The current VOTARA admin registration endpoint accepts the
-
-            // account fields below. Profile photo is kept as a UI preview
-
-            // because the current endpoint does not accept a photo field.
-
-            const response = await api.post("/admin/register", {
-
-                fullName: registerForm.fullName.trim(),
-
-                email: registerForm.email.trim().toLowerCase(),
-
-                password: registerForm.password,
-
-                confirmPassword: registerForm.confirmPassword,
-
-                registrationCode: registerForm.registrationCode.trim(),
-
-            });
+            const response = await api.post("/admin-auth/register", {
+                fullName: registerForm.fullName.trim(),
+                email: registerForm.email.trim().toLowerCase(),
+                password: registerForm.password,
+                confirmPassword: registerForm.confirmPassword,
+                adminRegistrationCode: registerForm.registrationCode.trim(),
+                photoData,
+            });
 
 
 
@@ -569,7 +568,10 @@ const handleAdminLogin = async (event) => {
 
 
 
-            window.setTimeout(() => {
+            setRegisterForm({ fullName: "", email: "", password: "", confirmPassword: "", registrationCode: "", profilePhoto: null });
+            if (photoPreview) URL.revokeObjectURL(photoPreview);
+            setPhotoPreview("");
+            window.setTimeout(() => {
 
                 setActiveView("admin");
 
@@ -593,7 +595,9 @@ const handleAdminLogin = async (event) => {
 
             setRegisterError(
 
-                requestError.response?.data?.message ||
+                requestError.response?.data?.registrationClosed
+                    ? "Initial Admin setup is complete. Sign in with an existing Admin and go to People → Users & access to add another account."
+                    : requestError.response?.data?.message ||
 
                 requestError.message ||
 
@@ -676,12 +680,16 @@ const handleAdminLogin = async (event) => {
 
 
 
-                    <div className="account-selection-brand-visual">
-                        <img
-                            src={votaraOrbit}
-                            alt="Secure Votara election network"
-                            className="account-selection-orbit"
-                        />
+                    <div className="account-selection-brand-visual" role="img" aria-label="Votara security icons orbiting around the logo">
+                        <div className="account-selection-orbit-scene" aria-hidden="true">
+                            <img src={votaraOrbit} alt="" className="account-selection-orbit" />
+                            <span className="account-selection-orbit-core">
+                                <svg viewBox="0 0 80 80" aria-hidden="true">
+                                    <path d="M12 12h28L26 36z" /><circle cx="56" cy="20" r="10" />
+                                    <circle cx="22" cy="55" r="10" /><path d="M38 44h30L53 70z" />
+                                </svg>
+                            </span>
+                        </div>
                     </div>
 
                     <div className="account-selection-electoral-box">
@@ -862,7 +870,7 @@ const handleAdminLogin = async (event) => {
 
                                 <p className="admin-login-info">
 
-                                    The system automatically identifies you are Admin member.
+                                    The system identifies your Administrator account automatically. The login code is separate from your password and is configured by your system administrator.
 
                                 </p>
 
@@ -1113,6 +1121,10 @@ const handleAdminLogin = async (event) => {
                                 Create the initial VOTARA administrator account.
 
                             </p>
+
+                            <p className="account-registration-guidance">
+                                This public form is only for the first Admin account. To add another, sign in as an Admin and open People → Users &amp; access.
+                            </p>
 
 
 

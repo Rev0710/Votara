@@ -2660,25 +2660,28 @@ const getPublishedStudentResults = async (req, res) => {
 
         // Read election metadata first so an older published election
         // cannot be selected while a newer election is scheduled or open.
-        const {
-            data: elections,
-            error: electionsError,
-        } = await supabase
+        const baseElectionFields = `
+            id, title, description, election_date, start_time, end_time,
+            status, is_published, published_at, closed_at, created_at
+        `;
+        const releaseElectionFields = `
+            id, title, description, election_date, start_time, end_time,
+            status, is_published, published_at, closed_at,
+            results_released, results_released_at, created_at
+        `;
+        let resultsReleaseSupported = true;
+        let { data: elections, error: electionsError } = await supabase
             .from("elections")
-            .select(`
-                id,
-                title,
-                description,
-                election_date,
-                start_time,
-                end_time,
-                status,
-                is_published,
-                published_at,
-                closed_at,
-                created_at
-            `)
+            .select(releaseElectionFields)
             .order("created_at", { ascending: false });
+
+        if (electionsError && /results_released(_at)?/i.test(String(electionsError.message || ""))) {
+            resultsReleaseSupported = false;
+            ({ data: elections, error: electionsError } = await supabase
+                .from("elections")
+                .select(baseElectionFields)
+                .order("created_at", { ascending: false }));
+        }
 
         if (electionsError) {
             throw electionsError;
@@ -2688,6 +2691,7 @@ const getPublishedStudentResults = async (req, res) => {
             return res.status(200).json({
                 success: true,
                 published: false,
+                resultsReleaseSupported,
                 message: "No election is available yet.",
                 election: null,
                 positions: [],
@@ -2697,9 +2701,13 @@ const getPublishedStudentResults = async (req, res) => {
         const normalizeStatus = (item) =>
             String(item?.status || "").trim().toLowerCase();
 
-        // Prefer the newest election that is scheduled or in progress.
-        // Otherwise use the newest completed/closed election.
+        // Show the most recent completed election with released results when
+        // available, even if a newer election is already being configured.
         const currentElection =
+            elections.find((item) =>
+                ["closed", "completed", "finished"].includes(normalizeStatus(item)) &&
+                item.results_released === true
+            ) ||
             elections.find((item) =>
                 ["open", "active", "scheduled"].includes(normalizeStatus(item))
             ) ||
@@ -2710,12 +2718,13 @@ const getPublishedStudentResults = async (req, res) => {
 
         const status = normalizeStatus(currentElection);
         const electionFinished = ["closed", "completed", "finished"].includes(status);
-        const resultsPublished = currentElection.is_published === true;
+        const resultsPublished = currentElection.results_released === true;
 
         if (!electionFinished || !resultsPublished) {
             return res.status(200).json({
                 success: true,
                 published: false,
+                resultsReleaseSupported,
                 message: !electionFinished
                     ? "The election is still ongoing. Please wait until the election has finished and the Electoral Board releases the official results."
                     : "The election has finished, but the official results have not been released yet.",
@@ -2725,6 +2734,9 @@ const getPublishedStudentResults = async (req, res) => {
                     status: currentElection.status,
                     is_published: currentElection.is_published,
                     published_at: currentElection.published_at,
+                    results_released: currentElection.results_released === true,
+                    resultsReleaseSupported,
+                    results_released_at: currentElection.results_released_at,
                     election_date: currentElection.election_date,
                 },
                 positions: [],
@@ -2748,12 +2760,14 @@ const getPublishedStudentResults = async (req, res) => {
             return res.status(200).json({
                 success: true,
                 published: false,
+                resultsReleaseSupported,
                 message: "The official election results are not available yet.",
                 election: {
                     id: currentElection.id,
                     title: currentElection.title,
                     status: currentElection.status,
                     is_published: currentElection.is_published,
+                    results_released: currentElection.results_released === true,
                 },
                 positions: [],
             });
@@ -2762,6 +2776,7 @@ const getPublishedStudentResults = async (req, res) => {
         return res.status(200).json({
             success: true,
             published: true,
+            resultsReleaseSupported,
             message: "Official election results loaded successfully.",
             election: resultElection,
             positions: resultsData.positions || [],

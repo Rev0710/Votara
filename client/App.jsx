@@ -1,59 +1,58 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import MaintenanceGate from './src/MaintenanceGate';
 import EBWorkspace from './src/pages/electoralBoard/EBWorkspace';
 import AdminWorkspace from './src/pages/admin/AdminWorkspace';
-import AdminLateEnrollees from './src/pages/admin/AdminLateEnrollees';
+const AdminLateEnrollees = lazy(() => import('./src/pages/admin/AdminLateEnrollees'));
 import VotaraIntro from "./src/components/VotaraIntro";
 
 // =====================================================
 // PUBLIC / AUTH PAGES
 // =====================================================
-import Vote from "./src/pages/student/Vote";
+const Vote = lazy(() => import("./src/pages/student/Vote"));
 import LandingPage from "./src/pages/public/LandingPage";
 import Contact from "./src/pages/public/Contact";
-import Register from "./src/pages/auth/Register";
-import LateEnrolleeForm from "./src/pages/public/LateEnrolleeForm";
-import OTPVerification from "./src/pages/auth/OTPVerification";
-import StudentRegistration from "./src/pages/auth/StudentRegistration";
-import RegistrationConfirmation from "./src/pages/auth/RegistrationConfirmation";
-import RegistrationSubmitted from "./src/pages/public/RegistrationSubmitted";
-import StudentLogin from "./src/pages/auth/StudentLogin";
-import ForgotPassword from "./src/pages/auth/ForgotPassword";
-import AccountSelection from "./src/pages/auth/AccountSelection";
-import ChangeTemporaryPassword from "./src/pages/auth/ChangeTemporaryPassword";
-import UploadProfilePicture from "./src/pages/auth/UploadProfilePicture";
-import AdminRegister from "./src/pages/auth/AdminRegister";
-import StaffLogin from "./src/pages/auth/StaffLogin";
-import StaffChangePassword from "./src/pages/auth/StaffChangePassword";
+const Register = lazy(() => import("./src/pages/auth/Register"));
+const LateEnrolleeForm = lazy(() => import("./src/pages/public/LateEnrolleeForm"));
+const OTPVerification = lazy(() => import("./src/pages/auth/OTPVerification"));
+const StudentRegistration = lazy(() => import("./src/pages/auth/StudentRegistration"));
+const RegistrationConfirmation = lazy(() => import("./src/pages/auth/RegistrationConfirmation"));
+const RegistrationSubmitted = lazy(() => import("./src/pages/public/RegistrationSubmitted"));
+const StudentLogin = lazy(() => import("./src/pages/auth/StudentLogin"));
+const ForgotPassword = lazy(() => import("./src/pages/auth/ForgotPassword"));
+const AccountSelection = lazy(() => import("./src/pages/auth/AccountSelection"));
+const ChangeTemporaryPassword = lazy(() => import("./src/pages/auth/ChangeTemporaryPassword"));
+const UploadProfilePicture = lazy(() => import("./src/pages/auth/UploadProfilePicture"));
+const AdminRegister = lazy(() => import("./src/pages/auth/AdminRegister"));
+const StaffLogin = lazy(() => import("./src/pages/auth/StaffLogin"));
+const StaffChangePassword = lazy(() => import("./src/pages/auth/StaffChangePassword"));
 
 // =====================================================
 // ADMIN
 // =====================================================
 
-import AdminDashboard from "./src/pages/admin/AdminDashboard";
-import RegistrationRequirements from "./src/pages/auth/RegistrationRequirements";
-import AdminDataManagement from "./src/pages/admin/AdminDataManagement";
-import AdminUserAccessManagement from "./src/pages/admin/AdminUserAccessManagement";
+const AdminDashboard = lazy(() => import("./src/pages/admin/AdminDashboard"));
+const RegistrationRequirements = lazy(() => import("./src/pages/auth/RegistrationRequirements"));
+const AdminDataManagement = lazy(() => import("./src/pages/admin/AdminDataManagement"));
+const AdminUserAccessManagement = lazy(() => import("./src/pages/admin/AdminUserAccessManagement"));
 
 
-import EBCandidateManagement from "./src/pages/electoralBoard/EBCandidateManagement";
-import ManagePartyList from "./src/pages/electoralBoard/ManagePartyList";
-import ElectionManagement from "./src/pages/electoralBoard/ElectionManagement";
-import CreateElection from "./src/pages/electoralBoard/CreateElection";
+const ManagePartyList = lazy(() => import("./src/pages/electoralBoard/ManagePartyList"));
+const ElectionManagement = lazy(() => import("./src/pages/electoralBoard/ElectionManagement"));
+const CreateElection = lazy(() => import("./src/pages/electoralBoard/CreateElection"));
 
-import KioskVoting from "./src/pages/electoralBoard/KioskVoting";
-import ElectoralBoardAuditLogs from "./src/pages/electoralBoard/AuditLogs";
-import AdminAuditLogs from "./src/pages/admin/AdminAuditLogs";
-import Reports from "./src/pages/admin/Reports";
-import SystemSettings from "./src/pages/admin/SystemSettings";
+const KioskVoting = lazy(() => import("./src/pages/electoralBoard/KioskVoting"));
+const ElectoralBoardAuditLogs = lazy(() => import("./src/pages/electoralBoard/AuditLogs"));
+const AdminAuditLogs = lazy(() => import("./src/pages/admin/AdminAuditLogs"));
+const Reports = lazy(() => import("./src/pages/admin/Reports"));
+const SystemSettings = lazy(() => import("./src/pages/admin/SystemSettings"));
 
-import StudentDashboard from "./src/pages/student/StudentDashboard";
-import Settings from "./src/pages/student/Settings";
+const StudentDashboard = lazy(() => import("./src/pages/student/StudentDashboard"));
+const Settings = lazy(() => import("./src/pages/student/Settings"));
 
-import ElectoralBoardLogin from "./src/pages/auth/ElectoralBoardLogin";
+const ElectoralBoardLogin = lazy(() => import("./src/pages/auth/ElectoralBoardLogin"));
 
-import EBDashboard from "./src/pages/electoralBoard/EBDashboard";
+const EBDashboard = lazy(() => import("./src/pages/electoralBoard/EBDashboard"));
 
 import "./App.css";
 import "./src/pages/admin/AdminWorkspace.css";
@@ -98,6 +97,7 @@ if (showInitialIntro) {
             className="page-transition"
             key={location.pathname}
         >
+            <Suspense fallback={<div className="route-loading" role="status">Loading VOTARA…</div>}>
             <MaintenanceGate><AdminWorkspace><EBWorkspace><Routes location={location}>
 <Route path="/admin/late-enrollees" element={<AdminLateEnrollees/>}/>
 
@@ -333,10 +333,7 @@ if (showInitialIntro) {
                 />
                 <Route
                     path="/electoral-board/candidates"
-
-                    element={
-                        <EBCandidateManagement />
-                    }
+                    element={<Navigate to="/electoral-board/election-management" replace />}
                 />
 
                 <Route
@@ -383,6 +380,7 @@ if (showInitialIntro) {
                     element={<Vote />}
                 />
             </Routes></EBWorkspace></AdminWorkspace></MaintenanceGate>
+            </Suspense>
         </div>
     );
 };

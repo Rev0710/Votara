@@ -652,10 +652,10 @@ function KioskVoting() {
             }
 
 
-            if (!studentId.trim()) {
+            if (!/^\d{5}$/.test(studentId.trim())) {
 
                 setError(
-                    "Please enter the student's Student ID."
+                    "Enter the complete 5-digit Student ID."
                 );
 
                 return;
@@ -2045,6 +2045,7 @@ const approveRegistration =
                                         .slice(0, 5);
 
                                 setStudentId(value);
+                                if (error) setError("");
                             }}
                             placeholder="Student ID"
                             maxLength={5}
@@ -2057,7 +2058,7 @@ const approveRegistration =
                                 type="submit"
                                 className="kiosk-main-button"
                                 disabled={
-                                    actionLoading
+                                    actionLoading || !/^\d{5}$/.test(studentId)
                                 }
                             >
 

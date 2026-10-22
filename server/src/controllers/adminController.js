@@ -2020,6 +2020,184 @@ const deactivateElectoralBoardAccount = async (
 };
 
 // =========================================================
+// PERMANENTLY DELETE A STAFF ACCOUNT
+// =========================================================
+
+const deleteStaffAccount = async (req, res, role) => {
+    try {
+        const actor = await authenticateAdmin(req);
+        const { id } = req.params;
+        if (!id) return res.status(400).json({ success: false, message: "Staff account ID is required." });
+        if (actor.id === id) return res.status(409).json({ success: false, message: "You cannot delete your own signed-in account." });
+
+        const { data: user, error: findError } = await supabase
+            .from("staff_users")
+            .select("id, full_name, email, role, is_active")
+            .eq("id", id)
+            .eq("role", role)
+            .maybeSingle();
+        if (findError) throw new Error("Unable to find staff account: " + findError.message);
+        if (!user) return res.status(404).json({ success: false, message: "Staff account was not found." });
+
+        if (role === ADMIN_ROLE && user.is_active) {
+            const { count, error: countError } = await supabase
+                .from("staff_users")
+                .select("id", { count: "exact", head: true })
+                .eq("role", ADMIN_ROLE)
+                .eq("is_active", true);
+            if (countError) throw new Error("Unable to verify active administrators: " + countError.message);
+            if (count <= 1) return res.status(409).json({ success: false, message: "The last active Administrator cannot be deleted." });
+        }
+
+        const { data: deleted, error: deleteError } = await supabase
+            .from("staff_users")
+            .delete()
+            .eq("id", id)
+            .eq("role", role)
+            .select("id")
+            .maybeSingle();
+        if (deleteError) {
+            if (deleteError.code === "23503") {
+                return res.status(409).json({ success: false, message: "This account is linked to existing records. Apply the staff account deletion migration and resolve any other database references before deleting it." });
+            }
+            throw new Error("Unable to delete staff account: " + deleteError.message);
+        }
+        if (!deleted) return res.status(404).json({ success: false, message: "Staff account was not found." });
+
+        await writeAdminAuditLog(req, {
+            action: role === ADMIN_ROLE ? "delete_admin_account" : "delete_eb_account",
+            description: 'Administrator permanently deleted staff account "' + user.full_name + '" (' + user.email + ').',
+            targetId: user.id,
+            targetType: "staff_user",
+            metadata: { role: role, email: user.email },
+        });
+        return res.status(200).json({ success: true, message: "Staff account permanently deleted. Its email can now be used for another staff role.", deletedAccount: { id: user.id, full_name: user.full_name, email: user.email, role: role } });
+    } catch (error) {
+        return handleAdminError(error, res, "Unable to delete this staff account.");
+    }
+};
+
+const deleteAdminAccount = (req, res) => deleteStaffAccount(req, res, ADMIN_ROLE);
+const deleteElectoralBoardAccount = (req, res) => deleteStaffAccount(req, res, EB_ROLE);
+
+// =========================================================
+// ACTIVATE ADMINISTRATOR ACCOUNT
+// =========================================================
+
+const activateAdminAccount = async (req, res) => {
+    try {
+        await authenticateAdmin(req);
+        const { id } = req.params;
+        if (!id) return res.status(400).json({ success: false, message: "Administrator account ID is required." });
+        const { data: user, error: findError } = await supabase.from("staff_users").select("id, full_name, email, role, is_active").eq("id", id).eq("role", ADMIN_ROLE).maybeSingle();
+        if (findError) throw new Error("Unable to find Administrator account: " + findError.message);
+        if (!user) return res.status(404).json({ success: false, message: "Administrator account was not found." });
+        const { data: updatedUser, error: updateError } = await supabase.from("staff_users").update({ is_active: true, updated_at: new Date().toISOString() }).eq("id", id).eq("role", ADMIN_ROLE).select("id, full_name, email, role, is_active, updated_at").single();
+        if (updateError) throw new Error("Unable to activate Administrator account: " + updateError.message);
+        await writeAdminAuditLog(req, { action: "activate_admin_account", description: 'Administrator reactivated account "' + updatedUser.full_name + '".', targetId: updatedUser.id, targetType: "staff_user", metadata: { role: ADMIN_ROLE } });
+        return res.status(200).json({ success: true, message: "Administrator account reactivated successfully.", user: updatedUser });
+    } catch (error) {
+        return handleAdminError(error, res, "Unable to reactivate Administrator account.");
+    }
+};
+
+// =========================================================
+// DEACTIVATE ADMINISTRATOR ACCOUNT
+// =========================================================
+
+const deactivateAdminAccount = async (req, res) => {
+    try {
+        const actor = await authenticateAdmin(req);
+        const { id } = req.params;
+        const reason = String((req.body && req.body.reason) || "").trim();
+        if (!id) return res.status(400).json({ success: false, message: "Administrator account ID is required." });
+        if (reason.length < 5) return res.status(400).json({ success: false, message: "Enter a deactivation reason of at least 5 characters." });
+        if (actor.id === id) return res.status(409).json({ success: false, message: "You cannot deactivate your own signed-in account." });
+        const { data: user, error: findError } = await supabase.from("staff_users").select("id, full_name, email, role, is_active").eq("id", id).eq("role", ADMIN_ROLE).maybeSingle();
+        if (findError) throw new Error("Unable to find Administrator account: " + findError.message);
+        if (!user) return res.status(404).json({ success: false, message: "Administrator account was not found." });
+        if (user.is_active) {
+            const { count, error: countError } = await supabase.from("staff_users").select("id", { count: "exact", head: true }).eq("role", ADMIN_ROLE).eq("is_active", true);
+            if (countError) throw new Error("Unable to verify active administrators: " + countError.message);
+            if (count <= 1) return res.status(409).json({ success: false, message: "The last active Administrator cannot be deactivated." });
+        }
+        const { data: updatedUser, error: updateError } = await supabase.from("staff_users").update({ is_active: false, updated_at: new Date().toISOString() }).eq("id", id).eq("role", ADMIN_ROLE).select("id, full_name, email, role, is_active, updated_at").single();
+        if (updateError) throw new Error("Unable to deactivate Administrator account: " + updateError.message);
+        await writeAdminAuditLog(req, { action: "deactivate_admin_account", description: 'Administrator deactivated account "' + updatedUser.full_name + '".', targetId: updatedUser.id, targetType: "staff_user", metadata: { role: ADMIN_ROLE, reason: reason } });
+        return res.status(200).json({ success: true, message: "Administrator account deactivated successfully.", user: updatedUser });
+    } catch (error) {
+        return handleAdminError(error, res, "Unable to deactivate Administrator account.");
+    }
+};
+
+// =========================================================
+// RESET ADMINISTRATOR PASSWORD
+// =========================================================
+
+const resetAdminPassword = async (req, res) => {
+    try {
+        await authenticateAdmin(req);
+
+        const { id } = req.params;
+        if (!id) {
+            return res.status(400).json({ success: false, message: "Administrator account ID is required." });
+        }
+
+        const { data: existingUser, error: findError } = await supabase
+            .from("staff_users")
+            .select("id, full_name, email, role, is_active")
+            .eq("id", id)
+            .eq("role", ADMIN_ROLE)
+            .maybeSingle();
+
+        if (findError) throw new Error(`Unable to find Administrator account: ${findError.message}`);
+        if (!existingUser) {
+            return res.status(404).json({ success: false, message: "Administrator account was not found." });
+        }
+        if (existingUser.is_active !== true) {
+            return res.status(403).json({ success: false, message: "This Administrator account is inactive." });
+        }
+
+        const temporaryPassword = generateTemporaryPassword();
+        const passwordHash = await bcrypt.hash(temporaryPassword, 12);
+        const { data: updatedUser, error: updateError } = await supabase
+            .from("staff_users")
+            .update({
+                password_hash: passwordHash,
+                must_change_password: true,
+                failed_login_attempts: 0,
+                locked_until: null,
+                updated_at: new Date().toISOString(),
+            })
+            .eq("id", id)
+            .eq("role", ADMIN_ROLE)
+            .select("id, full_name, email, role, is_active, must_change_password, updated_at")
+            .single();
+
+        if (updateError) throw new Error(`Unable to reset Administrator password: ${updateError.message}`);
+
+        await writeAdminAuditLog(req, {
+            action: "reset_admin_password",
+            description: `Administrator generated a new temporary password for account "${updatedUser.full_name}".`,
+            targetId: updatedUser.id,
+            targetType: "staff_user",
+            metadata: { role: ADMIN_ROLE },
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Administrator temporary password generated. The account holder must change it after signing in.",
+            user: updatedUser,
+            temporaryPassword,
+            emailSent: false,
+            securityNote: "The temporary password is returned once and is not stored in plaintext.",
+        });
+    } catch (error) {
+        return handleAdminError(error, res, "Unable to generate an Administrator temporary password.");
+    }
+};
+
+// =========================================================
 // RESET ELECTORAL BOARD PASSWORD
 // =========================================================
 
@@ -2217,6 +2395,16 @@ module.exports = {
     createElectoralBoardAccount,
 
     createAdminAccount,
+
+    resetAdminPassword,
+
+    activateAdminAccount,
+
+    deactivateAdminAccount,
+
+    deleteAdminAccount,
+
+    deleteElectoralBoardAccount,
 
     activateElectoralBoardAccount,
 

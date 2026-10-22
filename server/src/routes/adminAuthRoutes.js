@@ -3,6 +3,7 @@ const express = require("express");
 const {
     registerInitialAdmin,
     loginAdmin,
+    keepAdminSession,
 } = require("../controllers/adminAuthController");
 
 const router = express.Router();
@@ -28,6 +29,11 @@ router.post(
 router.post(
     "/login",
     loginAdmin
+);
+
+router.post(
+    "/session/keepalive",
+    keepAdminSession
 );
 
 

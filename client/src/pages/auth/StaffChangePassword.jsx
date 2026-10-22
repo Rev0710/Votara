@@ -6,10 +6,7 @@ import React, {
 import {
     useNavigate,
 } from "react-router-dom";
-
-const API_BASE_URL =
-    import.meta.env.VITE_API_URL ||
-    "http://localhost:5000/api";
+import api from "../../services/api";
 
 
 // =====================================================
@@ -239,51 +236,16 @@ const StaffChangePassword = () => {
                 );
 
 
-            const response =
-                await fetch(
-                    `${API_BASE_URL}/staff-auth/change-password`,
-                    {
+            const response = await api.post(
+                "/staff-auth/change-password",
+                { newPassword, confirmPassword },
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                    timeout: 30000,
+                }
+            );
 
-                        method: "POST",
-
-                        headers: {
-
-                            "Content-Type":
-                                "application/json",
-
-                            Authorization:
-                                `Bearer ${token}`,
-
-                        },
-
-                        body:
-                            JSON.stringify({
-
-                                newPassword,
-
-                                confirmPassword,
-
-                            }),
-
-                    }
-                );
-
-
-            const data =
-                await response.json();
-
-
-            if (
-                !response.ok
-            ) {
-
-                setError(
-                    data.message ||
-                    "Unable to change password."
-                );
-
-                return;
-            }
+            const data = response.data;
 
 
             // =================================================
@@ -302,6 +264,11 @@ const StaffChangePassword = () => {
                     data.user
                 )
             );
+
+            if (data.user.role === "admin") {
+                localStorage.setItem("votaraAdminToken", data.token);
+                localStorage.setItem("votaraAdminUser", JSON.stringify(data.user));
+            }
 
 
             // =================================================
@@ -347,7 +314,10 @@ const StaffChangePassword = () => {
             );
 
             setError(
-                "Unable to connect to the VOTARA server."
+                error.response?.data?.message ||
+                    (error.code === "ECONNABORTED"
+                        ? "The VOTARA server took too long to respond. Please try again."
+                        : "Unable to reach the VOTARA API. Please check that the deployed frontend uses the correct VITE_API_BASE_URL.")
             );
 
         } finally {

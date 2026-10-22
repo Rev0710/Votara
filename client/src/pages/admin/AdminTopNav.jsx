@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { FiLogOut, FiMenu, FiMoon, FiSun, FiUser, FiX } from "react-icons/fi";
+import { FiActivity, FiBarChart2, FiCalendar, FiClipboard, FiFileText, FiGrid, FiHelpCircle, FiLayers, FiLogOut, FiMenu, FiMonitor, FiMoon, FiSettings, FiSun, FiUser, FiUsers, FiX } from "react-icons/fi";
 import PlatformNotifications from "../../components/PlatformNotifications";
 import AdminProfileModal from "./AdminProfileModal";
+import api from "../../services/api";
 import logo from "../../images/Votara.png";
 import { ADMIN_NAVIGATION, ADMIN_OVERVIEW, isAdminDestinationActive } from "./adminNavigation";
 import "./AdminTopNav.css";
@@ -29,6 +30,42 @@ export default function AdminTopNav({ admin = null, onLogout }) {
 
     const closeNavigation = () => { setOpenMenu(null); setMobileOpen(false); };
     useEffect(() => { setOpenMenu(null); setMobileOpen(false); }, [location.pathname, location.search]);
+
+    useEffect(() => {
+        let refreshInFlight = false;
+        const refreshSession = async () => {
+            if (document.visibilityState !== "visible" || refreshInFlight) return;
+            const token = localStorage.getItem("votaraAdminToken");
+            if (!token) return;
+
+            refreshInFlight = true;
+            try {
+                const response = await api.post(
+                    "/admin-auth/session/keepalive",
+                    {},
+                    { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
+                );
+                const renewedToken = response?.data?.token;
+                if (renewedToken && localStorage.getItem("votaraAdminToken") === token) {
+                    localStorage.setItem("votaraAdminToken", renewedToken);
+                }
+            } catch (error) {
+                console.warn("Administrator session renewal was unsuccessful:", error?.message);
+            } finally {
+                refreshInFlight = false;
+            }
+        };
+
+        const onVisibilityChange = () => {
+            if (document.visibilityState === "visible") refreshSession();
+        };
+        const timer = window.setInterval(refreshSession, 5 * 60 * 1000);
+        document.addEventListener("visibilitychange", onVisibilityChange);
+        return () => {
+            window.clearInterval(timer);
+            document.removeEventListener("visibilitychange", onVisibilityChange);
+        };
+    }, []);
 
     useEffect(() => {
         if (!openMenu && !mobileOpen) return;
@@ -94,7 +131,20 @@ export default function AdminTopNav({ admin = null, onLogout }) {
     const destination = (item, className = "admin-nav-destination") => (
         <Link key={item.path} to={item.path} className={className}
             aria-current={isAdminDestinationActive(item, location) ? "page" : undefined}
-            onClick={closeNavigation}><span key={theme} className="admin-nav-label">{item.label}</span></Link>
+            onClick={closeNavigation}>{(() => {
+                const label = item.label.toLowerCase();
+                const Icon = label.includes("dashboard") || label.includes("overview") ? FiGrid
+                    : label.includes("registration") || label.includes("enrol") ? FiClipboard
+                    : label.includes("candidate") || label.includes("voter") || label.includes("user") ? FiUsers
+                    : label.includes("party") ? FiLayers
+                    : label.includes("election") ? FiCalendar
+                    : label.includes("kiosk") || label.includes("monitor") ? FiMonitor
+                    : label.includes("result") || label.includes("report") ? FiBarChart2
+                    : label.includes("audit") || label.includes("log") ? FiActivity
+                    : label.includes("issue") || label.includes("support") ? FiHelpCircle
+                    : label.includes("setting") ? FiSettings : FiFileText;
+                return <><Icon aria-hidden="true" /><span key={theme} className="admin-nav-label">{item.label}</span></>;
+            })()}</Link>
     );
 
     return (
@@ -104,6 +154,10 @@ export default function AdminTopNav({ admin = null, onLogout }) {
                     <img src={logo} alt="" /><span>Votara</span>
                 </Link>
                 <nav className={`admin-shared-nav${mobileOpen ? " is-open" : ""}`} id="admin-primary-navigation" aria-label="Admin navigation">
+                    <div className="admin-mobile-profile">
+                        <div className="admin-mobile-profile-avatar">{profilePhoto ? <img src={profilePhoto} alt="" /> : profileName.charAt(0).toUpperCase()}</div>
+                        <div><strong>{profileName}</strong><span>Administrator</span></div>
+                    </div>
                     {destination(ADMIN_OVERVIEW, "admin-nav-tab admin-nav-overview")}
                     {ADMIN_NAVIGATION.map((group) => {
                         const active = group.key === "settings" ? location.pathname.startsWith("/admin/settings")

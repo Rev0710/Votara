@@ -2,7 +2,8 @@ const express = require("express");
 
 const {
     getResultsReports,
-    exportResultsReports
+    exportResultsReports,
+    releaseElectionResults
 } = require(
     "../controllers/resultsReportsController"
 );
@@ -29,6 +30,11 @@ router.get(
 router.get(
     "/export",
     exportResultsReports
+);
+
+router.post(
+    "/release",
+    releaseElectionResults
 );
 
 

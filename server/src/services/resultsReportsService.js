@@ -1,5 +1,8 @@
 const supabase = require("../config/supabase");
 
+const isMissingReleaseSchema = (error) =>
+    /results_released(_at)?|results-release/i.test(String(error?.message || error?.details || ""));
+
 
 // =========================================================
 // RESULTS & REPORTS SERVICE
@@ -36,32 +39,36 @@ const getResultsReportsData = async (
     // GET ELECTIONS
     // -----------------------------------------------------
 
-    const {
-        data: elections,
-        error: electionsError
-    } = await supabase
+    const baseElectionFields = `
+        id, title, description, election_date, start_time, end_time,
+        status, is_published, published_at, closed_at, created_at
+    `;
+    const releaseElectionFields = `
+        id, title, description, election_date, start_time, end_time,
+        status, is_published, published_at, closed_at,
+        results_released, results_released_at, created_at
+    `;
+
+    let resultsReleaseSupported = true;
+    let { data: elections, error: electionsError } = await supabase
         .from("elections")
-        .select(
-            `
-            id,
-            title,
-            description,
-            election_date,
-            start_time,
-            end_time,
-            status,
-            is_published,
-            published_at,
-            closed_at,
-            created_at
-            `
-        )
+        .select(releaseElectionFields)
         .order(
             "created_at",
             {
                 ascending: false
             }
         );
+
+    // Keep reports usable before the optional result-release migration has
+    // been applied. Release itself stays disabled until the schema is ready.
+    if (electionsError && isMissingReleaseSchema(electionsError)) {
+        resultsReleaseSupported = false;
+        ({ data: elections, error: electionsError } = await supabase
+            .from("elections")
+            .select(baseElectionFields)
+            .order("created_at", { ascending: false }));
+    }
 
 
     if (electionsError) {
@@ -98,6 +105,8 @@ const getResultsReportsData = async (
             },
 
             positions: [],
+
+            resultsReleaseSupported,
 
             generatedAt:
                 new Date().toISOString()
@@ -881,7 +890,11 @@ const getResultsReportsData = async (
                     item.election_date,
 
                 status:
-                    item.status
+                    item.status,
+                results_released:
+                    item.results_released === true,
+                results_released_at:
+                    item.results_released_at || null
             })
         );
 
@@ -933,8 +946,16 @@ const getResultsReportsData = async (
                 election.published_at,
 
             closed_at:
-                election.closed_at
+                election.closed_at,
+
+            results_released:
+                election.results_released === true,
+
+            results_released_at:
+                election.results_released_at || null
         },
+
+        resultsReleaseSupported,
 
 
         elections:

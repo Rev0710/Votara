@@ -17,7 +17,13 @@ const requireStaff = (...roles) => async (req, res, next) => {
     }
     const id = claims.userId || claims.id;
     if (!id || !roles.includes(claims.role)) {
-        return res.status(403).json({ success: false, message: "You do not have permission for this action." });
+        const isEBRoute = roles.includes("electoral_board");
+        return res.status(403).json({
+            success: false,
+            message: isEBRoute
+                ? "Electoral Board access is required. Sign in with an active Electoral Board account."
+                : "You do not have permission for this action.",
+        });
     }
     try {
         const { data: staff, error } = await supabase.from("staff_users")

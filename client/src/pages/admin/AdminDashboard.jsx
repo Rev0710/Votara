@@ -512,6 +512,9 @@ const checkSystem = async () => {
                     "votaraAdminUser"
                 );
 
+                localStorage.removeItem("votaraStaffToken");
+                localStorage.removeItem("votaraStaffUser");
+
                 navigate("/admin-login", {
                     replace: true,
                 });
@@ -551,6 +554,9 @@ const checkSystem = async () => {
         localStorage.removeItem(
             "votaraAdminUser"
         );
+
+        localStorage.removeItem("votaraStaffToken");
+        localStorage.removeItem("votaraStaffUser");
 
         navigate("/admin-login", {
             replace: true,

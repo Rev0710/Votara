@@ -5,6 +5,7 @@ import React, {
 } from "react";
 
 import { useNavigate } from "react-router-dom";
+import api from "../../services/api";
 
 import {
     getActiveElection,
@@ -25,6 +26,46 @@ import "./StudentDashboard.css";
 
 const Vote = () => {
     const navigate = useNavigate();
+
+    // Keep the student's active session alive while this standalone vote
+    // route remains open, just as the dashboard does.
+    useEffect(() => {
+        let refreshInFlight = false;
+        const refreshSession = async () => {
+            if (document.visibilityState !== "visible" || refreshInFlight) return;
+            const tokenKey = ["votaraToken", "votaraStudentToken", "studentToken"]
+                .find((key) => localStorage.getItem(key));
+            const token = tokenKey ? localStorage.getItem(tokenKey) : "";
+            if (!token) return;
+
+            refreshInFlight = true;
+            try {
+                const response = await api.post(
+                    "/auth/session/keepalive",
+                    {},
+                    { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
+                );
+                const renewedToken = response?.data?.token;
+                if (renewedToken && localStorage.getItem(tokenKey) === token) {
+                    localStorage.setItem(tokenKey, renewedToken);
+                }
+            } catch (renewalError) {
+                console.warn("Student session renewal was unsuccessful:", renewalError?.message);
+            } finally {
+                refreshInFlight = false;
+            }
+        };
+
+        const onVisibilityChange = () => {
+            if (document.visibilityState === "visible") refreshSession();
+        };
+        const timer = window.setInterval(refreshSession, 5 * 60 * 1000);
+        document.addEventListener("visibilitychange", onVisibilityChange);
+        return () => {
+            window.clearInterval(timer);
+            document.removeEventListener("visibilitychange", onVisibilityChange);
+        };
+    }, []);
 
     // -------------------------------------------------------
     // STATE
@@ -703,35 +744,6 @@ const Vote = () => {
 
 
     // =====================================================
-    // REQUIRED POSITION CHECK
-    // =====================================================
-
-    const missingRequiredPositions =
-        useMemo(() => {
-
-            return eligiblePositions.filter(
-                (position) => {
-
-                    if (
-                        position?.is_required ===
-                        false
-                    ) {
-                        return false;
-                    }
-
-                    return !selections[
-                        position.id
-                    ];
-                }
-            );
-
-        }, [
-            eligiblePositions,
-            selections,
-        ]);
-
-
-    // =====================================================
     // HANDLE REVIEW
     // =====================================================
 
@@ -776,23 +788,10 @@ const Vote = () => {
             return;
         }
 
-        if (
-            missingRequiredPositions.length >
-            0
-        ) {
-
-            const missingNames =
-                missingRequiredPositions
-                    .map(
-                        (position) =>
-                            position.name
-                    )
-                    .join(", ");
-
+        if (!Object.values(selections).some(Boolean)) {
             setError(
-                `Please select a candidate for: ${missingNames}.`
+                "Choose at least one candidate. Any other position can be left blank as an abstention."
             );
-
             return;
         }
 
@@ -874,15 +873,6 @@ const Vote = () => {
                     );
                 }
 
-                if (
-                    missingRequiredPositions.length >
-                    0
-                ) {
-                    throw new Error(
-                        "Please complete all required positions before submitting."
-                    );
-                }
-
                 // ------------------------------------------
                 // FORMAT SELECTIONS
                 // ------------------------------------------
@@ -906,6 +896,12 @@ const Vote = () => {
                                     ],
                             })
                         );
+
+                if (formattedSelections.length === 0) {
+                    throw new Error(
+                        "Choose at least one candidate. Any other position can be left blank as an abstention."
+                    );
+                }
 
                 // ------------------------------------------
                 // MAKE SURE EVERY SELECTED CANDIDATE
@@ -1036,7 +1032,9 @@ const Vote = () => {
                 );
 
                 setError(
-                    error.response?.data
+                    /all required eligible positions/i.test(error.response?.data?.message || error.message || "")
+                        ? "Your partial ballot was not recorded because this election’s voting service has not been updated to accept abstentions yet. Your choices are still here; please contact the Electoral Board."
+                        : error.response?.data
                         ?.message ||
                     error.message ||
                     "Failed to submit your vote."
@@ -1504,6 +1502,11 @@ const Vote = () => {
                                         }
                                     </h2>
 
+                                    {!selectedCandidate ? (
+                                        <div className="vote-abstention-card" role="status">
+                                            No vote for this position — abstain
+                                        </div>
+                                    ) : (
                                     <div className="candidate-card candidate-selected">
 
                                         <div className="candidate-card-top">
@@ -1556,6 +1559,7 @@ const Vote = () => {
                                         </div>
 
                                     </div>
+                                    )}
 
                                 </div>
                             );
@@ -1713,14 +1717,6 @@ const Vote = () => {
                                         position.name
                                     }
 
-                                    {position.is_required !==
-                                        false && (
-                                        <span>
-                                            {" "}
-                                            *
-                                        </span>
-                                    )}
-
                                 </h2>
 
 
@@ -1731,6 +1727,16 @@ const Vote = () => {
                                         }
                                     </p>
                                 )}
+
+                                <button
+                                    type="button"
+                                    className={`vote-position-abstain${selections[position.id] ? "" : " is-selected"}`}
+                                    aria-pressed={!selections[position.id]}
+                                    disabled={submitting || hasVoted}
+                                    onClick={() => setSelections(previous => ({ ...previous, [position.id]: null }))}
+                                >
+                                    {selections[position.id] ? "Abstain from this position" : "Abstention selected"}
+                                </button>
 
 
                                 {/* NO CANDIDATES */}
@@ -1899,11 +1905,7 @@ const Vote = () => {
                         onClick={
                             handleReviewVote
                         }
-                        disabled={
-                            missingRequiredPositions.length >
-                                0 ||
-                            submitting
-                        }
+                        disabled={submitting}
                     >
                         Review Vote
                     </button>

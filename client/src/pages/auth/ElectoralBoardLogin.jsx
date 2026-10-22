@@ -63,6 +63,12 @@ const ElectoralBoardLogin = () => {
             // SAVE EB TOKEN
             // =================================================
 
+            // A previous admin/staff session must not be reused by EB screens.
+            localStorage.removeItem("votaraStaffToken");
+            localStorage.removeItem("votaraStaffUser");
+            localStorage.removeItem("votaraAdminToken");
+            localStorage.removeItem("votaraAdminUser");
+
             localStorage.setItem(
                 "votaraEBToken",
                 data.token

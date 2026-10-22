@@ -4,8 +4,8 @@ import React, {
     useState,
 } from "react";
 import { createPortal } from "react-dom";
-
 import { useNavigate } from "react-router-dom";
+
 
 import {
     getAllElections,
@@ -44,7 +44,7 @@ const STANDARD_POSITION_PRESETS = [
     {
         name: "Vice President",
         description: "Vice President of the student organization.",
-        yearLevelAccess: ["4th Year"],
+        yearLevelAccess: ["2nd Year", "3rd Year", "4th Year"],
     },
     {
         name: "Secretary",
@@ -241,6 +241,22 @@ const canEditElection = (election) => {
 const normalizeElection = (
     election
 ) => {
+    // Election rows are normalized once for the table and again when opened
+    // in the details panel. Preserve the canonical status across that second
+    // pass; otherwise `rawStatus` becomes the display label ("Open") and
+    // status-gated actions such as Close Election disappear.
+    const rawStatus = String(
+        election?.rawStatus || election?.status || "draft"
+    ).trim().toLowerCase();
+
+    const configuredYearLevels = (
+        Array.isArray(election?.election_year_levels)
+            ? election.election_year_levels
+            : Array.isArray(election?.yearLevelAccess)
+                ? election.yearLevelAccess
+                : []
+    ).map((item) => item?.year_level || item).filter(Boolean);
+
     return {
         ...election,
 
@@ -255,12 +271,11 @@ const normalizeElection = (
             "",
 
         rawStatus:
-            election?.status ||
-            "draft",
+            rawStatus,
 
         status:
             formatStatus(
-                election?.status
+                rawStatus
             ),
 
         isPublished:
@@ -278,11 +293,9 @@ const normalizeElection = (
             election?.end_time,
 
         yearLevelAccess:
-            Array.isArray(
-                election?.election_year_levels
-            )
-                ? election.election_year_levels
-                : [],
+            configuredYearLevels.length > 0
+                ? configuredYearLevels
+                : [...YEAR_LEVELS],
 
         candidates:
             Number(
@@ -523,10 +536,8 @@ const ElectionVotesBars = ({ elections }) => {
     );
 };
 
-function ElectionManagement({ onCreateElection }) {
-
-    const navigate =
-        useNavigate();
+function ElectionManagement({ onCreateElection, onNavigate }) {
+    const navigate = useNavigate();
 
 
     // =====================================================
@@ -827,12 +838,14 @@ function ElectionManagement({ onCreateElection }) {
     // =====================================================
 
     const loadElections =
-        async () => {
+        async (silent = false) => {
 
             try {
 
-                setLoading(true);
-                setError("");
+                if (!silent) {
+                    setLoading(true);
+                    setError("");
+                }
 
                 const response =
                     await getAllElections();
@@ -851,9 +864,41 @@ function ElectionManagement({ onCreateElection }) {
                           )
                         : [];
 
-                setElections(
-                    normalized
-                );
+                let turnoutByElection = new Map();
+                try {
+                    const turnoutResponse = await api.get("/electoral-board/voting-monitoring/election-turnout");
+                    turnoutByElection = new Map((turnoutResponse?.data?.elections || []).map((row) => [row.id, row]));
+                } catch (turnoutError) {
+                    console.error("Unable to load election turnout totals:", turnoutError);
+                    if (!silent) setError("Elections loaded, but turnout totals could not be refreshed.");
+                }
+
+                const electionsWithTurnout = normalized.map((election) => {
+                    const turnout = turnoutByElection.get(election.id);
+                    return turnout ? {
+                        ...election,
+                        voters: Number(turnout.voter_count) || 0,
+                        votes: Number(turnout.vote_count) || 0,
+                    } : election;
+                });
+
+                const electionsWithReadiness = await Promise.all(electionsWithTurnout.map(async (election) => {
+                    if (election.rawStatus !== "scheduled" || !election.isPublished) return election;
+                    try {
+                        const configResponse = await getElectionConfiguration(election.id);
+                        const config = configResponse?.data || configResponse || {};
+                        const positions = Array.isArray(config.positions) ? config.positions : [];
+                        const requiredPositions = positions.filter((position) => position.is_active !== false && position.is_required === true);
+                        const missingPositions = requiredPositions.filter((position) =>
+                            !(Array.isArray(position.candidates) ? position.candidates : []).some((candidate) => candidate.is_active !== false && Boolean(candidate.party_list_id))
+                        );
+                        return { ...election, readiness: { checked: true, ready: requiredPositions.length > 0 && missingPositions.length === 0, missingPositions, requiredPositionCount: requiredPositions.length } };
+                    } catch (readinessError) {
+                        console.error("Unable to check election readiness:", readinessError);
+                        return { ...election, readiness: { checked: false, ready: false, missingPositions: [], requiredPositionCount: 0 } };
+                    }
+                }));
+                setElections(electionsWithReadiness);
 
             } catch (err) {
 
@@ -862,16 +907,18 @@ function ElectionManagement({ onCreateElection }) {
                     err
                 );
 
-                setError(
-                    err?.response?.data
-                        ?.message ||
-                    err?.message ||
-                    "Unable to load elections."
-                );
+                if (!silent) {
+                    setError(
+                        err?.response?.data
+                            ?.message ||
+                        err?.message ||
+                        "Unable to load elections."
+                    );
+                }
 
             } finally {
 
-                setLoading(false);
+                if (!silent) setLoading(false);
             }
         };
 
@@ -883,6 +930,12 @@ function ElectionManagement({ onCreateElection }) {
     useEffect(() => {
 
         loadElections();
+
+        const refreshTimer = window.setInterval(() => {
+            loadElections(true);
+        }, 30000);
+
+        return () => window.clearInterval(refreshTimer);
 
     }, []);
 
@@ -1843,7 +1896,7 @@ function ElectionManagement({ onCreateElection }) {
 
                 await loadElections();
 
-                if (updated?.id) {
+                if (updated?.id && actionType !== "status") {
 
                     const normalized =
                         normalizeElection(
@@ -1857,6 +1910,11 @@ function ElectionManagement({ onCreateElection }) {
                     await loadPositions(
                         updated.id
                     );
+                } else if (actionType === "status") {
+                    // A status change from the row menu should return to the
+                    // election list instead of reopening the detail modal.
+                    setSelectedElection(null);
+                    setPositions([]);
                 }
 
             } catch (err) {
@@ -1924,7 +1982,7 @@ function ElectionManagement({ onCreateElection }) {
                     "Publish Election",
 
                 message:
-                    `Are you sure you want to publish "${election.name}"? Publishing will make this election officially scheduled for the election process.`,
+                    `Are you sure you want to publish "${election.name}"? Publishing will approve pending candidate submissions and make the election and its candidates visible to students. Voting remains closed until the EB opens the election.`,
 
                 actionLabel:
                     "Publish Election",
@@ -2019,27 +2077,6 @@ function ElectionManagement({ onCreateElection }) {
                     "cancelled",
             });
         };
-
-
-    // =====================================================
-    // OPEN CANDIDATE MANAGEMENT
-    // =====================================================
-
-    const openCandidateManagement = (election) => {
-    if (!election?.id) {
-        setError(
-            "Unable to open Candidate Management because the election ID is missing."
-        );
-        return;
-    }
-
-    navigate("/electoral-board/candidates", {
-        state: {
-            electionId: election.id,
-            electionTitle: election.name,
-        },
-    });
-};
 
 
     // =====================================================
@@ -2377,18 +2414,6 @@ function ElectionManagement({ onCreateElection }) {
             } finally {
                 setSaving(false);
             }
-        };
-
-
-    // =====================================================
-    // RESET
-    // =====================================================
-
-    const resetFilters =
-        () => {
-
-            setSearch("");
-            setStatusFilter("All");
         };
 
 
@@ -2902,7 +2927,7 @@ function ElectionManagement({ onCreateElection }) {
                         display:
                             "grid",
                         gridTemplateColumns:
-                            "1fr 170px auto",
+                            "minmax(0, 1fr) 170px",
                         gap:
                             "10px",
                     }}
@@ -2982,29 +3007,6 @@ function ElectionManagement({ onCreateElection }) {
 
                     </select>
 
-
-                    <button
-                        type="button"
-                        onClick={
-                            resetFilters
-                        }
-                        style={{
-                            border:
-                                "1px solid #d9e0eb",
-                            background:
-                                "#ffffff",
-                            borderRadius:
-                                "9px",
-                            padding:
-                                "0 14px",
-                            cursor:
-                                "pointer",
-                            fontWeight:
-                                700,
-                        }}
-                    >
-                        Reset
-                    </button>
 
                 </div>
 
@@ -3268,7 +3270,7 @@ function ElectionManagement({ onCreateElection }) {
                                                           .join(
                                                               ", "
                                                           )
-                                                    : "Not configured"}
+                                                    : YEAR_LEVELS.join(", ")}
 
                                             </td>
 
@@ -3461,9 +3463,8 @@ function ElectionManagement({ onCreateElection }) {
                                                                 maxHeight,
                                                             });
 
-                                                            setOpenActionMenuId(
-                                                                election.id
-                                                            );
+                                                            loadElections(true);
+                                                            setOpenActionMenuId(election.id);
                                                         }}
                                                         style={{
                                                             width:
@@ -3571,7 +3572,7 @@ function ElectionManagement({ onCreateElection }) {
                                                                 }}
                                                             >
                                                                 <span>
-                                                                    View
+                                                                    View positions
                                                                 </span>
                                                                 <span
                                                                     style={{
@@ -3625,8 +3626,23 @@ function ElectionManagement({ onCreateElection }) {
 
 
                                                             {/* PUBLISH */}
-                                                            {election.rawStatus ===
-                                                                "draft" && (
+                                                            {election.isPublished && election.rawStatus === "scheduled" && (
+                                                            <button type="button" role="menuitem" disabled={saving || !election.readiness?.ready}
+                                                                onClick={() => { setOpenActionMenuId(null); setActionMenuPosition(null); requestStatusChange(election, "open"); }}
+                                                                title={election.readiness?.ready ? "Open this election for voting" : election.readiness?.checked ? "Add candidates to: " + (election.readiness.missingPositions.map((position) => position.name).join(", ") || "all required positions") : "Election readiness could not be checked. Refresh and try again."}
+                                                                style={{ ...electionMenuItemStyle, color: election.readiness?.ready ? "#16a34a" : "#8490a2", opacity: saving || !election.readiness?.ready ? 0.55 : 1, cursor: saving || !election.readiness?.ready ? "not-allowed" : "pointer" }}>
+                                                                <span>Open Election</span><span style={{ color: "#94a3b8" }}>›</span>
+                                                            </button>
+                                                        )}
+                                                        {["draft", "scheduled"].includes(election.rawStatus) && (
+                                                            <button type="button" role="menuitem"
+                                                                onClick={() => { setOpenActionMenuId(null); setActionMenuPosition(null); onNavigate?.("individualCandidacy", { electionId: election.id }); }}
+                                                                style={electionMenuItemStyle}>
+                                                                <span>Individual Candidacy</span><span style={{ color: "#94a3b8" }}>›</span>
+                                                            </button>
+                                                        )}
+                                                        {!election.isPublished &&
+                                                            ["draft", "scheduled"].includes(election.rawStatus) && (
                                                                 <button
                                                                     type="button"
                                                                     role="menuitem"
@@ -3660,155 +3676,6 @@ function ElectionManagement({ onCreateElection }) {
                                                                 >
                                                                     <span>
                                                                         Publish
-                                                                    </span>
-                                                                    <span
-                                                                        style={{
-                                                                            color:
-                                                                                "#94a3b8",
-                                                                        }}
-                                                                    >
-                                                                        ›
-                                                                    </span>
-                                                                </button>
-                                                            )}
-
-
-                                                            {/* OPEN ELECTION */}
-                                                            {election.rawStatus ===
-                                                                "scheduled" && (
-                                                                <button
-                                                                    type="button"
-                                                                    role="menuitem"
-                                                                    disabled={
-                                                                        saving
-                                                                    }
-                                                                    onClick={() => {
-                                                                        setOpenActionMenuId(
-                                                                            null
-                                                                        );
-                                                                    setActionMenuPosition(
-                                                                        null
-                                                                    );
-                                                                        requestStatusChange(
-                                                                            election,
-                                                                            "open"
-                                                                        );
-                                                                    }}
-                                                                    style={{
-                                                                        ...electionMenuItemStyle,
-                                                                        color:
-                                                                            "#16A34A",
-                                                                        opacity:
-                                                                            saving
-                                                                                ? 0.55
-                                                                                : 1,
-                                                                        cursor:
-                                                                            saving
-                                                                                ? "not-allowed"
-                                                                                : "pointer",
-                                                                    }}
-                                                                >
-                                                                    <span>
-                                                                        Open Election
-                                                                    </span>
-                                                                    <span
-                                                                        style={{
-                                                                            color:
-                                                                                "#94a3b8",
-                                                                        }}
-                                                                    >
-                                                                        ›
-                                                                    </span>
-                                                                </button>
-                                                            )}
-
-
-                                                            {/* CANCEL PUBLISH */}
-                                                            {election.rawStatus ===
-                                                                "scheduled" && (
-                                                                <button
-                                                                    type="button"
-                                                                    role="menuitem"
-                                                                    disabled={
-                                                                        saving
-                                                                    }
-                                                                    onClick={() => {
-                                                                        setOpenActionMenuId(
-                                                                            null
-                                                                        );
-                                                                    setActionMenuPosition(
-                                                                        null
-                                                                    );
-                                                                        requestUnpublish(
-                                                                            election
-                                                                        );
-                                                                    }}
-                                                                    style={{
-                                                                        ...electionMenuItemStyle,
-                                                                        color:
-                                                                            "#DC2626",
-                                                                        opacity:
-                                                                            saving
-                                                                                ? 0.55
-                                                                                : 1,
-                                                                        cursor:
-                                                                            saving
-                                                                                ? "not-allowed"
-                                                                                : "pointer",
-                                                                    }}
-                                                                >
-                                                                    <span>
-                                                                        Cancel Publish
-                                                                    </span>
-                                                                    <span
-                                                                        style={{
-                                                                            color:
-                                                                                "#94a3b8",
-                                                                        }}
-                                                                    >
-                                                                        ›
-                                                                    </span>
-                                                                </button>
-                                                            )}
-
-
-                                                            {/* CLOSE ELECTION */}
-                                                            {election.rawStatus ===
-                                                                "open" && (
-                                                                <button
-                                                                    type="button"
-                                                                    role="menuitem"
-                                                                    disabled={
-                                                                        saving
-                                                                    }
-                                                                    onClick={() => {
-                                                                        setOpenActionMenuId(
-                                                                            null
-                                                                        );
-                                                                    setActionMenuPosition(
-                                                                        null
-                                                                    );
-                                                                        requestStatusChange(
-                                                                            election,
-                                                                            "closed"
-                                                                        );
-                                                                    }}
-                                                                    style={{
-                                                                        ...electionMenuItemStyle,
-                                                                        color:
-                                                                            "#7C3AED",
-                                                                        opacity:
-                                                                            saving
-                                                                                ? 0.55
-                                                                                : 1,
-                                                                        cursor:
-                                                                            saving
-                                                                                ? "not-allowed"
-                                                                                : "pointer",
-                                                                    }}
-                                                                >
-                                                                    <span>
-                                                                        Close Election
                                                                     </span>
                                                                     <span
                                                                         style={{
@@ -4625,7 +4492,7 @@ function ElectionManagement({ onCreateElection }) {
                                         .join(
                                             ", "
                                         ) ||
-                                    "Not configured"
+                                    YEAR_LEVELS.join(", ")
                                 }
                             />
 
@@ -4697,6 +4564,10 @@ function ElectionManagement({ onCreateElection }) {
                                         "space-between",
                                     alignItems:
                                         "center",
+                                    gap:
+                                        "10px",
+                                    flexWrap:
+                                        "wrap",
                                     marginBottom:
                                         "12px",
                                 }}
@@ -4731,36 +4602,38 @@ function ElectionManagement({ onCreateElection }) {
                                 </div>
 
 
-                                <button
-                                    type="button"
-                                    onClick={
-                                        openPositionModal
-                                    }
-                                    disabled={
-                                        selectedElection.rawStatus ===
-                                            "open" ||
-                                        selectedElection.rawStatus ===
-                                            "closed" ||
-                                        selectedElection.rawStatus ===
-                                            "cancelled"
-                                    }
-                                    style={{
-                                        ...primaryButtonStyle,
-                                        padding:
-                                            "9px 13px",
-                                        opacity:
-                                            selectedElection.rawStatus ===
-                                                "open" ||
-                                            selectedElection.rawStatus ===
-                                                "closed" ||
-                                            selectedElection.rawStatus ===
-                                                "cancelled"
-                                                ? 0.5
-                                                : 1,
-                                    }}
-                                >
-                                    + Add Position
-                                </button>
+                                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => onNavigate?.("partyLists", {
+                                            electionId: selectedElection.id,
+                                        })}
+                                        style={{ ...secondaryButtonStyle, padding: "9px 13px" }}
+                                    >
+                                        Manage Party Lists
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={openPositionModal}
+                                        disabled={
+                                            selectedElection.rawStatus === "open" ||
+                                            selectedElection.rawStatus === "closed" ||
+                                            selectedElection.rawStatus === "cancelled"
+                                        }
+                                        style={{
+                                            ...primaryButtonStyle,
+                                            padding: "9px 13px",
+                                            opacity:
+                                                selectedElection.rawStatus === "open" ||
+                                                selectedElection.rawStatus === "closed" ||
+                                                selectedElection.rawStatus === "cancelled"
+                                                    ? 0.5
+                                                    : 1,
+                                        }}
+                                    >
+                                        + Add Position
+                                    </button>
+                                </div>
 
                             </div>
 
@@ -4894,6 +4767,14 @@ function ElectionManagement({ onCreateElection }) {
                                                             "#667085",
                                                         textAlign:
                                                             "right",
+                                                        display:
+                                                            "flex",
+                                                        flexDirection:
+                                                            "column",
+                                                        alignItems:
+                                                            "flex-end",
+                                                        gap:
+                                                            "8px",
                                                     }}
                                                 >
 
@@ -4909,6 +4790,18 @@ function ElectionManagement({ onCreateElection }) {
                                                             ", "
                                                         ) ||
                                                         "All configured levels"}
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => onNavigate?.("partyLists", {
+                                                            electionId: selectedElection.id,
+                                                            positionId: position.id,
+                                                            positionName: position.name,
+                                                        })}
+                                                        style={{ ...secondaryButtonStyle, padding: "6px 9px", fontSize: 11, whiteSpace: "nowrap" }}
+                                                    >
+                                                        Add candidates
+                                                    </button>
 
                                                 </div>
 
@@ -4950,6 +4843,8 @@ function ElectionManagement({ onCreateElection }) {
                                     "flex-end",
                                 zIndex:
                                     5,
+                                flexShrink:
+                                    0,
                             }}
                         >
 
@@ -4977,24 +4872,6 @@ function ElectionManagement({ onCreateElection }) {
                             >
                                 Delete Election
                             </button>
-
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    openCandidateManagement(
-                                        selectedElection
-                                    )
-                                }
-                                style={{
-                                    ...secondaryButtonStyle,
-                                    color: "#266EFF",
-                                    borderColor: "#bfdbfe",
-                                    background: "#f8fbff",
-                                }}
-                            >
-                                Manage Candidates
-                            </button>
-
 
                             {selectedElection.rawStatus ===
                                 "open" && (
@@ -5564,9 +5441,9 @@ const ModalOverlay = ({
                 position:
                     "fixed",
                 inset:
-                    0,
+                    "80px 0 0",
                 zIndex:
-                    9999,
+                    10000,
                 background:
                     "rgba(15,23,42,.58)",
                 backdropFilter:
@@ -5578,7 +5455,7 @@ const ModalOverlay = ({
                 justifyContent:
                     "center",
                 padding:
-                    "18px",
+                    "12px 16px 16px",
             }}
         >
             {children}
@@ -5607,9 +5484,11 @@ const ModalCard = ({
                         ? "min(850px, calc(100vw - 30px))"
                         : "min(650px, calc(100vw - 30px))",
                 maxHeight:
-                    "90vh",
+                    "calc(100dvh - 108px)",
                 overflowY:
                     "auto",
+                minHeight:
+                    0,
                 background:
                     "#ffffff",
                 borderRadius:

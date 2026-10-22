@@ -379,8 +379,11 @@
 
 /* ---------- MODALS ---------- */
 .election-modal-overlay {
+    inset: 80px 0 0 !important;
     background: rgba(5,7,18,.78) !important;
     backdrop-filter: blur(7px) !important;
+    padding: 12px 16px 16px !important;
+    align-items: center !important;
 }
 
 .election-modal-card {
@@ -408,6 +411,12 @@
     background: #292e46 !important;
     color: #cbd2e5 !important;
     border: 1px solid #454c69 !important;
+    width: 32px !important;
+    height: 32px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 32px !important;
 }
 
 .election-modal-body {
@@ -1010,6 +1019,43 @@
     width: 0 !important;
     height: 0 !important;
     display: none !important;
+}
+
+/* Modal content uses shared inline styles in the component; keep those panels
+   readable against the dark election workspace. */
+.election-modal-overlay > div:not(.election-modal-card) {
+    background: #1a1e33 !important;
+    color: #edf0fa !important;
+    border: 1px solid #4a526f !important;
+}
+.election-modal-overlay > div:not(.election-modal-card) h2 { color: #f6f7fc !important; }
+.election-modal-overlay > div:not(.election-modal-card) p { color: #b7bfd2 !important; }
+.election-modal-card { color-scheme: dark; }
+.election-modal-card .election-info-box,
+.election-modal-card [style*="background: rgb(255, 255, 255)"],
+.election-modal-card [style*="background: rgb(248, 250, 252)"] {
+    background: #20243a !important;
+    border-color: #3d4562 !important;
+    color: #e9edf8 !important;
+}
+.election-modal-card .election-info-box div { color: #aeb8d0 !important; }
+.election-modal-card .election-info-box strong { color: #f1f4fc !important; }
+.election-modal-card label { color: #d5dced !important; }
+.election-modal-card button[style*="background: rgb(255, 255, 255)"],
+.election-modal-card button[style*="background: rgb(241, 245, 249)"] { color: #e2e8f5 !important; }
+.election-modal-card input,
+.election-modal-card textarea,
+.election-modal-card select { color-scheme: dark; }
+@media (max-width: 900px) {
+    .election-modal-card { max-height: calc(100dvh - 96px) !important; }
+}
+@media (max-width: 600px) {
+    .election-modal-overlay { inset: 72px 0 0 !important; align-items: flex-start !important; overflow-y: auto !important; padding: 8px 10px 14px !important; }
+    .election-modal-card { width: 100% !important; max-height: calc(100dvh - 94px) !important; border-radius: 14px !important; }
+    .election-modal-header { padding: 16px !important; }
+    .election-modal-body { padding: 16px !important; }
+    .election-modal-actions { flex-wrap: wrap; }
+    .election-modal-actions > button { flex: 1 1 130px; }
 }
 
 @media (max-width: 700px) {

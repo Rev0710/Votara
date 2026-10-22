@@ -343,33 +343,26 @@
 
 
 .account-selection-orbit {
-
     position: absolute;
-
     left: 50%;
-
     bottom: -2px;
-
     display: block;
-
     width: 250px;
-
     height: 250px;
-
     transform: translateX(-50%);
-
     object-fit: contain;
-
     object-position: center;
-
     opacity: .98;
-
     filter: drop-shadow(0 18px 34px rgba(0,35,160,.20));
-
+    animation: account-selection-orbit-drift 7s ease-in-out infinite;
+    transform-origin: 50% 58%;
+    will-change: transform;
 }
 
-
-
+@keyframes account-selection-orbit-drift {
+    0%, 100% { transform: translateX(-50%) translateY(0) rotate(-1deg); }
+    50% { transform: translateX(-50%) translateY(-8px) rotate(1deg); }
+}
 .account-selection-electoral-box {
 
     position: relative;
@@ -1026,6 +1019,8 @@
 
     .account-login-panel { transition:none !important; }
 
+    .account-selection-orbit { animation:none; }
+
 }
 
 
@@ -1385,9 +1380,16 @@
     margin-top: 2px;
 
 }
-
-
-
+.account-registration-guidance {
+    margin: 10px 0 15px;
+    padding: 10px 12px;
+    border: 1px solid #d9e1ee;
+    border-radius: 10px;
+    background: #f8fafd;
+    color: #53617a;
+    font-size: 12px;
+    line-height: 1.5;
+}
 .account-selection-register-container {
 
     margin-top: 24px;
@@ -1581,10 +1583,7 @@
         margin-top: 52px;
 
     }
-
-
-
-    .account-selection-register-container {
+.account-selection-register-container {
 
         margin-top: 18px;
 
@@ -1695,8 +1694,7 @@
 
 
     .account-selection-form-container,
-
-    .account-selection-register-container {
+.account-selection-register-container {
 
         margin-top: 42px;
 
@@ -1946,8 +1944,7 @@
     .profile-photo-actions {
         flex-wrap: wrap;
     }
-
-    .account-selection-register-container {
+.account-selection-register-container {
         padding-bottom: 10px;
     }
 }
@@ -2158,3 +2155,12 @@
     }
 }
 
+
+/* Keep the Votara mark steady while the network icons travel around its spiral. */
+.account-selection-orbit-scene { position: absolute; left: 50%; bottom: -2px; width: 315px; height: 315px; transform: translateX(-50%); }
+.account-selection-orbit-scene .account-selection-orbit { position: absolute; inset: 0; width: 100%; height: 100%; transform: none; animation: account-selection-orbit-spin 26s linear infinite; transform-origin: 50% 50%; will-change: transform; }
+.account-selection-orbit-core { position: absolute; z-index: 1; left: 50%; top: 50%; display: grid; place-items: center; width: 39%; aspect-ratio: 1; transform: translate(-50%, -50%); border: 1px solid rgba(255,255,255,.32); border-radius: 50%; background: linear-gradient(145deg, #3e95ff, #2876ef); box-shadow: 0 12px 32px rgba(0,36,150,.24); }
+.account-selection-orbit-core svg { width: 52%; height: 52%; fill: #fff; }
+@keyframes account-selection-orbit-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@media (max-width: 600px) { .account-selection-orbit-scene { width: min(235px, 62vw); height: auto; aspect-ratio: 1; } }
+@media (prefers-reduced-motion: reduce) { .account-selection-orbit-scene .account-selection-orbit { animation: none !important; } }

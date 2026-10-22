@@ -1155,7 +1155,7 @@ const deactivatePosition = async (
 
 
 // =========================================================
-// GET ACTIVE ELECTION
+// GET MOST RECENT PUBLISHED SCHEDULED OR OPEN ELECTION
 // =========================================================
 
 const getActiveElection = async (
@@ -1171,13 +1171,15 @@ const getActiveElection = async (
 
         if (!election) {
 
-            return res.status(404).json({
+            // Absence of an open election is a valid state, not a failed
+            // request. Returning a successful empty result avoids treating
+            // normal between-election periods as console/API errors.
+            return res.status(200).json({
 
-                success:
-                    false,
+                success: true,
 
-                message:
-                    "There is currently no active election.",
+                message: "There is currently no active election.",
+                election: null,
 
             });
         }

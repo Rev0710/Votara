@@ -247,3 +247,10 @@
 @media (prefers-reduced-motion: reduce) {
     .user-access-view *, .user-access-view *::before, .user-access-view *::after { animation: none !important; transition: none !important; }
 }
+
+.user-access-view .ux-account-actions { flex-wrap: wrap; }
+
+.user-access-view .ux-danger { background: var(--ux-error-bg); border-color: var(--ux-error); color: var(--ux-error); }
+.user-access-view .ux-danger:hover:not(:disabled) { filter: brightness(.94); }
+.user-access-view .ux-account-actions { flex-wrap: wrap; }
+@media (max-width: 600px) { .user-access-view .ux-account-actions { align-items: stretch; flex-direction: column-reverse; } .user-access-view .ux-account-actions > button { width: 100%; } }

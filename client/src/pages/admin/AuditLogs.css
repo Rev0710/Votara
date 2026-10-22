@@ -3497,3 +3497,42 @@ body,
 .audit-page .audit-table th,.audit-page .audit-table td{vertical-align:middle}
 @media(max-width:980px){.audit-page .audit-filters{grid-template-columns:repeat(2,minmax(0,1fr))!important}.audit-page .audit-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:640px){.audit-page .audit-content-shell{width:calc(100% - 24px)!important;padding-top:20px!important}.audit-page .audit-filter-card{padding:16px!important}.audit-page .audit-filters{grid-template-columns:minmax(0,1fr)!important;gap:12px!important}.audit-page .audit-stat-grid{grid-template-columns:minmax(0,1fr)!important;gap:12px!important}.audit-page .audit-table-header{padding:17px!important}.audit-page .audit-table-wrapper{padding:10px!important}.audit-page .audit-filter-actions{justify-content:stretch}.audit-page .audit-filter-actions button{flex:1}}
+
+@media (max-width: 720px) {
+  .audit-page .audit-table-wrapper { overflow:visible !important; padding:8px !important; }
+  .audit-page .audit-table { display:block; min-width:0 !important; border-spacing:0 !important; }
+  .audit-page .audit-table thead { display:none; }
+  .audit-page .audit-table tbody { display:grid; gap:10px; }
+  .audit-page .audit-table tbody tr { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 12px; padding:10px 12px; border:1px solid var(--audit-border-soft); border-radius:12px; background:var(--audit-panel); }
+  .audit-page .audit-table tbody td { display:block; min-width:0; padding:9px 0 !important; border:0 !important; overflow-wrap:anywhere; }
+  .audit-page .audit-table tbody td::before { display:block; margin-bottom:5px; color:var(--audit-text-muted); font-size:9px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+  .audit-page .audit-table tbody td:nth-child(1)::before { content:"Date & time"; }
+  .audit-page .audit-table tbody td:nth-child(2)::before { content:"Actor"; }
+  .audit-page .audit-table tbody td:nth-child(3)::before { content:"Module"; }
+  .audit-page .audit-table tbody td:nth-child(4)::before { content:"Category"; }
+  .audit-page .audit-table tbody td:nth-child(5)::before { content:"Severity"; }
+  .audit-page .audit-table tbody td:nth-child(6)::before { content:"Action"; }
+  .audit-page .audit-table tbody td:nth-child(7)::before { content:"Description"; }
+  .audit-page .audit-table tbody td:nth-child(8)::before { content:"Details"; }
+  .audit-page .audit-table tbody td:nth-child(7) { grid-column:1/-1; }
+  .audit-page .audit-table tbody td:nth-child(8) { grid-column:1/-1; text-align:left !important; }
+  .audit-page .audit-table .audit-description { width:auto !important; min-width:0; }
+  .audit-page .audit-table .audit-details-btn { min-width:0; }
+}
+@media (min-width: 721px) {
+  .audit-page .audit-table { min-width: 1150px !important; table-layout: auto !important; }
+  .audit-page .audit-table tbody td { overflow-wrap: normal; word-break: normal; }
+  .audit-page .audit-table tbody td:nth-child(1) { min-width: 110px; }
+  .audit-page .audit-table tbody td:nth-child(2) { min-width: 145px; }
+  .audit-page .audit-table tbody td:nth-child(3) { min-width: 130px; }
+  .audit-page .audit-table tbody td:nth-child(4),
+  .audit-page .audit-table tbody td:nth-child(5) { min-width: 82px; }
+  .audit-page .audit-table tbody td:nth-child(6) { min-width: 140px; }
+  .audit-page .audit-table tbody td:nth-child(7) { min-width: 260px; }
+  .audit-page .audit-table tbody td:nth-child(8) { min-width: 76px; }
+}
+@media (max-width: 420px) {
+  .audit-page .audit-table tbody tr { grid-template-columns:minmax(0,1fr); }
+  .audit-page .audit-table tbody td:nth-child(7),
+  .audit-page .audit-table tbody td:nth-child(8) { grid-column:1; }
+}

@@ -1,16 +1,15 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createElection } from "../../services/electionService";
 import "./CreateElection.css";
 
 const YEAR_LEVELS = ["2nd Year", "3rd Year", "4th Year"];
-const ELECTION_TYPES = ["Party list only", "Individual only"];
 
 const INITIAL_FORM = {
     title: "",
     description: "",
     electionType: "Party list only",
-    yearLevel: "",
+    yearLevelAccess: [...YEAR_LEVELS],
     electionDate: "",
     startTime: "08:00",
     endTime: "17:00",
@@ -23,324 +22,158 @@ function CreateElection({ onBack }) {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
 
-    const stepOneComplete = useMemo(
-        () => form.title.trim().length > 0 && form.description.trim().length > 0,
-        [form.title, form.description]
-    );
-
-    const stepTwoComplete = useMemo(
-        () =>
-            Boolean(
-                form.electionType &&
-                    form.yearLevel &&
-                    form.electionDate &&
-                    form.startTime &&
-                    form.endTime &&
-                    form.startTime < form.endTime
-            ),
-        [form]
-    );
-
     const updateField = (name, value) => {
         setError("");
         setSuccess("");
         setForm((current) => ({ ...current, [name]: value }));
     };
 
-    const selectYearLevel = (yearLevel) => {
-        setError("");
-        setSuccess("");
-
-        // Exactly one year level is allowed.
-        setForm((current) => ({
-            ...current,
-            yearLevel,
-        }));
+    const toggleYearLevel = (yearLevel) => {
+        const selected = form.yearLevelAccess.includes(yearLevel);
+        updateField(
+            "yearLevelAccess",
+            selected
+                ? form.yearLevelAccess.filter((item) => item !== yearLevel)
+                : YEAR_LEVELS.filter((item) => form.yearLevelAccess.includes(item) || item === yearLevel)
+        );
     };
+
+    const goBack = () => (onBack ? onBack() : navigate(-1));
 
     const handleSubmit = async (event) => {
         event.preventDefault();
         setError("");
         setSuccess("");
 
-        if (!stepOneComplete) {
-            setError("Complete all fields in Step 1 first.");
+        if (!form.title.trim() || !form.description.trim()) {
+            setError("Enter an election name and description to continue.");
             return;
         }
-
-        if (!form.yearLevel) {
-            setError("Select exactly one eligible year level.");
+        if (!form.yearLevelAccess.length) {
+            setError("Select at least one eligible year level.");
             return;
         }
-
-        if (!form.electionDate) {
-            setError("Election date is required.");
+        if (!form.electionDate || !form.startTime || !form.endTime) {
+            setError("Election date, opening time, and closing time are required.");
             return;
         }
-
-        if (!form.startTime || !form.endTime) {
-            setError("Start time and end time are required.");
-            return;
-        }
-
         if (form.startTime >= form.endTime) {
-            setError("End time must be later than start time.");
+            setError("Closing time must be later than opening time.");
             return;
         }
 
         try {
             setSaving(true);
-
             const response = await createElection({
                 title: form.title.trim(),
                 description: form.description.trim(),
                 electionType: form.electionType,
+                yearLevelAccess: form.yearLevelAccess,
                 electionDate: form.electionDate,
                 startTime: form.startTime,
                 endTime: form.endTime,
-                yearLevelAccess: [form.yearLevel],
             });
-
-            const created =
-                response?.election ||
-                response?.data?.election ||
-                response?.data ||
-                response;
-
-            setSuccess(
-                `"${created?.title || form.title.trim()}" was created successfully.`
-            );
-
-            // Give the success message a moment to be visible before returning.
-            window.setTimeout(() => {
-                if (onBack) {
-                    onBack();
-                } else {
-                    navigate(-1);
-                }
-            }, 700);
+            const created = response?.election || response?.data?.election || response?.data || response;
+            setSuccess(`“${created?.title || form.title.trim()}” was saved as a draft.`);
+            window.setTimeout(goBack, 700);
         } catch (err) {
             console.error("Create election error:", err);
-            setError(
-                err?.response?.data?.message ||
-                    err?.message ||
-                    "Failed to create election."
-            );
+            setError(err?.response?.data?.message || err?.message || "Failed to save the election draft.");
         } finally {
             setSaving(false);
         }
     };
 
     return (
-        <div className="create-election-page">
-            <div className="create-election-shell">
-                <button
-                    type="button"
-                    className="create-election-back"
-                    onClick={() => {
-                        if (onBack) {
-                            onBack();
-                        } else {
-                            navigate(-1);
-                        }
-                    }}
-                >
-                    <span>‹</span> Back
-                </button>
-
-                <div className="create-election-badge">
-                    <span /> Election
-                </div>
-
-                <div className="create-election-heading">
-                    <h1>Create New Election</h1>
-                    <p>Create, configure, publish, and manage VOTARA elections.</p>
-                </div>
+        <main className="create-election-page">
+            <section className="create-election-shell" aria-labelledby="create-election-title">
+                <header className="create-election-heading">
+                    <div>
+                        <p className="create-election-kicker">Electoral Board / Elections</p>
+                        <h1 id="create-election-title">Create an election</h1>
+                        <p>Save this election as a draft, then review it before publishing.</p>
+                    </div>
+                    <button type="button" className="create-election-back" onClick={goBack}>Cancel</button>
+                </header>
 
                 <form onSubmit={handleSubmit} className="create-election-form">
-                    <div className="create-step active-step">
-                        <div className="create-step-marker">1</div>
-                        <div className="create-step-line" />
+                    <label className="create-field">
+                        <span>Election name <b aria-hidden="true">*</b></span>
+                        <input
+                            type="text"
+                            value={form.title}
+                            onChange={(event) => updateField("title", event.target.value)}
+                            placeholder="e.g. Student Council 2026–2027"
+                            autoComplete="off"
+                            required
+                        />
+                    </label>
 
-                        <div className="create-step-content">
-                            <h2>General</h2>
+                    <label className="create-field">
+                        <span>Description <b aria-hidden="true">*</b></span>
+                        <textarea
+                            value={form.description}
+                            onChange={(event) => updateField("description", event.target.value)}
+                            placeholder="Describe the election and the students it serves."
+                            rows={3}
+                            required
+                        />
+                    </label>
 
-                            <label className="create-field">
-                                <span>Election Name</span>
-                                <input
-                                    type="text"
-                                    value={form.title}
-                                    onChange={(event) =>
-                                        updateField("title", event.target.value)
-                                    }
-                                    placeholder="e.g. SSG Election 2026"
-                                    autoComplete="off"
-                                    required
-                                />
-                                <small>Use a clear election name with the year included.</small>
-                            </label>
-
-                            <label className="create-field">
-                                <span>Description</span>
-                                <textarea
-                                    value={form.description}
-                                    onChange={(event) =>
-                                        updateField("description", event.target.value)
-                                    }
-                                    placeholder="Describe the purpose of this election..."
-                                    rows="2"
-                                    required
-                                />
-                            </label>
+                    <div className="create-field election-type-readonly">
+                        <span>Election type</span>
+                        <div className="election-type-value">
+                            <strong>Party list election</strong>
+                            <small>Independent candidates can be managed separately under Individual Candidacy.</small>
                         </div>
                     </div>
 
-                    <div
-                        className={`create-step step-two ${
-                            stepOneComplete ? "step-two-visible" : "step-two-hidden"
-                        }`}
-                        aria-hidden={!stepOneComplete}
-                    >
-                        <div className="create-step-marker">2</div>
-                        <div className="create-step-line" />
-
-                        <div className="create-step-content">
-                            <h2>Configuration</h2>
-
-                            <div className="type-card">
-                                <div>
-                                    <strong>Choose Election Type</strong>
-                                    <small>
-                                        Select whether the election is for party lists or individual candidates.
-                                    </small>
-                                </div>
-
-                                <select
-                                    value={form.electionType}
-                                    onChange={(event) =>
-                                        updateField("electionType", event.target.value)
-                                    }
-                                    aria-label="Election type"
-                                >
-                                    {ELECTION_TYPES.map((type) => (
-                                        <option key={type} value={type}>
-                                            {type}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="year-level-section">
-                                <div className="field-heading-row">
-                                    <div>
-                                        <span>Eligible Year Levels</span>
-                                        <small>Select exactly one year level.</small>
-                                    </div>
-                                    <span className="required-label">Required</span>
-                                </div>
-
-                                <div className="year-level-options">
-                                    {YEAR_LEVELS.map((yearLevel) => {
-                                        const selected = form.yearLevel === yearLevel;
-
-                                        return (
-                                            <label
-                                                key={yearLevel}
-                                                className={`year-level-option ${
-                                                    selected ? "selected" : ""
-                                                }`}
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selected}
-                                                    onChange={() => selectYearLevel(yearLevel)}
-                                                />
-                                                <span className="custom-checkbox">
-                                                    {selected ? "✓" : ""}
-                                                </span>
-                                                <span>{yearLevel}</span>
-                                            </label>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            <div className="schedule-grid">
-                                <label className="create-field compact-field">
-                                    <span>Date</span>
-                                    <div className="input-with-icon">
-                                        <input
-                                            type="date"
-                                            value={form.electionDate}
-                                            onChange={(event) =>
-                                                updateField("electionDate", event.target.value)
-                                            }
-                                            required
-                                        />
-                                    </div>
-                                </label>
-
-                                <label className="create-field compact-field">
-                                    <span>Start time</span>
-                                    <div className="input-with-icon">
-                                        <span className="clock-icon">◷</span>
-                                        <input
-                                            type="time"
-                                            value={form.startTime}
-                                            onChange={(event) =>
-                                                updateField("startTime", event.target.value)
-                                            }
-                                            required
-                                        />
-                                    </div>
-                                </label>
-
-                                <label className="create-field compact-field">
-                                    <span>End time</span>
-                                    <div className="input-with-icon">
-                                        <span className="clock-icon">◷</span>
-                                        <input
-                                            type="time"
-                                            value={form.endTime}
-                                            onChange={(event) =>
-                                                updateField("endTime", event.target.value)
-                                            }
-                                            required
-                                        />
-                                    </div>
-                                </label>
-                            </div>
-
-                            <div className="create-step-footer">
-                                {error && <div className="create-election-message error">{error}</div>}
-                                {success && (
-                                    <div className="create-election-message success">✓ {success}</div>
-                                )}
-
-                                <button
-                                    type="submit"
-                                    className="create-election-submit"
-                                    disabled={saving || !stepOneComplete || !stepTwoComplete}
-                                >
-                                    {saving ? "Creating..." : "Create Election"}
-                                    <span>↗</span>
-                                </button>
-                            </div>
+                    <fieldset className="year-level-field">
+                        <legend>Eligible year levels <b aria-hidden="true">*</b></legend>
+                        <p>Students in the selected years can participate in this election.</p>
+                        <div className="year-level-options">
+                            {YEAR_LEVELS.map((yearLevel) => {
+                                const checked = form.yearLevelAccess.includes(yearLevel);
+                                return (
+                                    <label className={`year-level-option${checked ? " selected" : ""}`} key={yearLevel}>
+                                        <input type="checkbox" checked={checked} onChange={() => toggleYearLevel(yearLevel)} />
+                                        <span className="year-level-check" aria-hidden="true">{checked ? "✓" : ""}</span>
+                                        {yearLevel}
+                                    </label>
+                                );
+                            })}
                         </div>
+                    </fieldset>
+
+                    <div className="schedule-grid">
+                        <label className="create-field compact-field">
+                            <span>Voting date <b aria-hidden="true">*</b></span>
+                            <input type="date" value={form.electionDate} onChange={(event) => updateField("electionDate", event.target.value)} required />
+                        </label>
+                        <label className="create-field compact-field">
+                            <span>Opens <b aria-hidden="true">*</b></span>
+                            <input type="time" value={form.startTime} onChange={(event) => updateField("startTime", event.target.value)} required />
+                        </label>
+                        <label className="create-field compact-field">
+                            <span>Closes <b aria-hidden="true">*</b></span>
+                            <input type="time" value={form.endTime} onChange={(event) => updateField("endTime", event.target.value)} required />
+                        </label>
                     </div>
+                    <p className="create-election-time-note">Times use Asia/Manila (UTC+8). Closing time must be after opening time.</p>
 
-                    {!stepOneComplete && (
-                        <div className="step-locked-note">
-                            <span>2</span>
-                            <div>
-                                <strong>Configuration is locked</strong>
-                                <small>Complete the Election Name and Description to continue.</small>
-                            </div>
+                    <div className="create-election-footer">
+                        <div className="create-election-feedback" aria-live="polite">
+                            {error && <p className="create-election-message error">{error}</p>}
+                            {success && <p className="create-election-message success">{success}</p>}
                         </div>
-                    )}
+                        <button type="button" className="create-election-cancel" onClick={goBack} disabled={saving}>Cancel</button>
+                        <button type="submit" className="create-election-submit" disabled={saving}>
+                            {saving ? "Saving…" : "Save election draft"}
+                        </button>
+                    </div>
                 </form>
-            </div>
-        </div>
+            </section>
+        </main>
     );
 }
 
