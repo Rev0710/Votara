@@ -131,7 +131,6 @@ export default function AdminTopNav({ admin = null, onLogout }) {
     const destination = (item, className = "admin-nav-destination") => (
         <Link key={item.path} to={item.path} className={className}
             aria-current={isAdminDestinationActive(item, location) ? "page" : undefined}
-<<<<<<< HEAD
             onClick={closeNavigation}>{(() => {
                 const label = item.label.toLowerCase();
                 const Icon = label.includes("dashboard") || label.includes("overview") ? FiGrid
@@ -144,11 +143,8 @@ export default function AdminTopNav({ admin = null, onLogout }) {
                     : label.includes("audit") || label.includes("log") ? FiActivity
                     : label.includes("issue") || label.includes("support") ? FiHelpCircle
                     : label.includes("setting") ? FiSettings : FiFileText;
-                return <><Icon aria-hidden="true" />{item.label}</>;
+                return <><Icon aria-hidden="true" /><span key={theme} className="admin-nav-label">{item.label}</span></>;
             })()}</Link>
-=======
-            onClick={closeNavigation}><span key={theme} className="admin-nav-label">{item.label}</span></Link>
->>>>>>> e3c28d7b064dd8e06d0f4f70aaf6d2c0bff200a1
     );
 
     return (
