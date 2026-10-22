@@ -422,14 +422,10 @@ const handleAdminLogin = async (event) => {
             console.error("EB login error:", requestError);
 
             setEbError(
-
-                requestError.response?.data?.message ||
-
-                requestError.message ||
-
-                "Unable to login. Please try again."
-
-            );
+                requestError.response?.data?.message ||
+                requestError.message ||
+                "Unable to login. Please try again."
+            );
 
         } finally {
 
@@ -599,7 +595,9 @@ const handleAdminLogin = async (event) => {
 
             setRegisterError(
 
-                requestError.response?.data?.message ||
+                requestError.response?.data?.registrationClosed
+                    ? "Initial Admin setup is complete. Sign in with an existing Admin and go to People → Users & access to add another account."
+                    : requestError.response?.data?.message ||
 
                 requestError.message ||
 
@@ -1119,6 +1117,10 @@ const handleAdminLogin = async (event) => {
                                 Create the initial VOTARA administrator account.
 
                             </p>
+
+                            <p className="account-registration-guidance">
+                                This public form is only for the first Admin account. To add another, sign in as an Admin and open People → Users &amp; access.
+                            </p>
 
 
 
