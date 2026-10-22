@@ -265,7 +265,7 @@ const handleAdminLogin = async (event) => {
 
 
 
-            const response = await api.post("/staff-auth/login", {
+            const response = await api.post("/admin-auth/login", {
 
                 email: formData.email.trim().toLowerCase(),
 
