@@ -1,0 +1,194 @@
+.late-enrollees-view {
+    --le-bg: #0e1525; --le-surface: #172134; --le-inset: #121c2e;
+    --le-line: #2c3950; --le-text: #eff3fc; --le-muted: #abb9d0;
+    --le-link: #9bbcff; --le-selection: #223b63;
+    --le-green: #9ce4c3; --le-green-bg: #163c30;
+    --le-amber: #f0cf8b; --le-amber-bg: #44351c;
+    --le-red: #ffb8c3; --le-red-bg: #472631;
+    --le-dot: rgba(139, 169, 224, .23);
+    --aw-text: var(--le-text); --aw-muted: var(--le-muted);
+    --aw-solid: var(--le-surface); --aw-border: var(--le-line);
+    min-height: 100dvh; color: var(--le-text);
+    font: 13px/1.5 "Poppins", system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+}
+.admin-workspace[data-admin-theme="light"] .late-enrollees-view {
+    --le-bg: #f2f5fa; --le-surface: #fcfdff; --le-inset: #f3f6fb;
+    --le-line: #dce4ef; --le-text: #19263a; --le-muted: #5e6b80;
+    --le-link: #214fc8; --le-selection: #edf3ff;
+    --le-green: #246044; --le-green-bg: #eaf6ef;
+    --le-amber: #825509; --le-amber-bg: #fcf2df;
+    --le-red: #a22c43; --le-red-bg: #fcecee;
+    --le-dot: rgba(76, 110, 165, .19);
+}
+.admin-workspace[data-admin-theme] > .late-enrollees-view { background: var(--le-bg) radial-gradient(circle, var(--le-dot) 1px, transparent 1.2px) 0 0 / 24px 24px !important; }
+.admin-workspace .late-enrollees-view .le-main { width: 100%; max-width: 1440px; margin: 0 auto; padding: 30px clamp(20px, 3vw, 44px) 32px; }
+.late-enrollees-view :is(button, input, textarea) { font: inherit; }
+.late-enrollees-view button { transition: background .18s ease, border-color .18s ease; }
+.late-enrollees-view button:active:not(:disabled) { transform: translateY(1px); }
+.late-enrollees-view :is(a, button, input, textarea, [tabindex]):focus-visible { outline: 2px solid var(--le-link); outline-offset: 3px; }
+.late-enrollees-view .le-skip { position: fixed; top: -80px; left: 20px; z-index: 1200; padding: 12px 18px; border: 1px solid var(--le-line); border-radius: 8px; background: var(--le-surface); color: var(--le-text); }
+.late-enrollees-view .le-skip:focus { top: 16px; }
+.late-enrollees-view .le-heading { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-bottom: 24px; }
+.late-enrollees-view .le-breadcrumb { display: flex; gap: 10px; margin-bottom: 8px; color: var(--le-muted); font-size: 11px; }
+.late-enrollees-view .le-breadcrumb > span { opacity: .55; }
+.late-enrollees-view h1 { margin: 0; font-size: clamp(24px, 2.2vw, 30px); font-weight: 600; line-height: 1.3; letter-spacing: -.8px; }
+.late-enrollees-view .le-heading p { margin: 8px 0 0; max-width: 76ch; font-size: 12px; }
+.late-enrollees-view .le-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 10px 15px; border: 1px solid transparent; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+.late-enrollees-view .le-button > svg { width: 16px; height: 16px; flex-shrink: 0; }
+.late-enrollees-view .le-primary { background: #2154d2; color: #fcfdff; }
+.late-enrollees-view .le-primary:hover:not(:disabled) { background: #1946b6; }
+.late-enrollees-view .le-secondary { background: var(--le-surface); border-color: var(--le-line); color: var(--le-text); }
+.late-enrollees-view .le-secondary:hover:not(:disabled) { background: var(--le-inset); border-color: var(--le-link); }
+.late-enrollees-view .le-danger { background: transparent; border-color: var(--le-line); color: var(--le-red); }
+.late-enrollees-view .le-danger:hover:not(:disabled) { background: var(--le-red-bg); border-color: var(--le-red); }
+.late-enrollees-view .le-danger-solid { background: #aa2941; color: #fff; }
+.late-enrollees-view .le-danger-solid:hover:not(:disabled) { background: #8d1c32; }
+.late-enrollees-view .le-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow: hidden; margin-bottom: 24px; border: 1px solid var(--le-line); border-radius: 14px; background: var(--le-surface); }
+.late-enrollees-view .le-summary > div { display: grid; grid-template-columns: minmax(0, 1fr) 28px; gap: 7px 12px; padding: 20px 24px; border-right: 1px solid var(--le-line); }
+.late-enrollees-view .le-summary > div:last-child { border-right: 0; }
+.late-enrollees-view .le-summary > div > span { color: var(--le-muted); font-size: 11px; }
+.late-enrollees-view .le-summary strong { font-size: 27px; font-weight: 600; line-height: 1.3; letter-spacing: -.6px; }
+.late-enrollees-view .le-summary svg { grid-column: 2; grid-row: 1 / 3; width: 18px; height: 18px; align-self: center; justify-self: end; color: var(--le-link); }
+.late-enrollees-view .le-summary > div:nth-child(2) svg { color: var(--le-amber); }
+.late-enrollees-view .le-summary > div:nth-child(3) svg { color: var(--le-green); }
+.late-enrollees-view .le-summary > div:nth-child(4) svg { color: var(--le-red); }
+.late-enrollees-view .le-panel { overflow: hidden; border: 1px solid var(--le-line); border-radius: 14px; background: var(--le-surface); }
+.late-enrollees-view .le-panel-heading { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 22px 24px; }
+.late-enrollees-view h2 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -.2px; }
+.late-enrollees-view .le-panel-heading p { margin: 5px 0 0; font-size: 11px; }
+.late-enrollees-view .le-panel-heading > span { color: var(--le-muted); font-size: 11px; white-space: nowrap; }
+.late-enrollees-view .le-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 18px; padding: 0 24px 20px; }
+.late-enrollees-view .le-filters { display: flex; gap: 4px; max-width: 100%; padding: 4px; overflow-x: auto; border: 1px solid var(--le-line); border-radius: 9px; background: var(--le-inset); }
+.late-enrollees-view .le-filters button { display: inline-flex; align-items: center; gap: 9px; min-height: 34px; padding: 6px 11px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--le-muted); font-size: 11px; white-space: nowrap; }
+.late-enrollees-view .le-filters button[aria-pressed="true"] { border-color: var(--le-line); background: var(--le-surface); color: var(--le-link); }
+.late-enrollees-view .le-filters button:hover { color: var(--le-link); }
+.late-enrollees-view .le-filters button span { font-size: 10px; }
+.late-enrollees-view .le-search { display: flex; align-items: center; gap: 9px; width: min(300px, 100%); min-height: 42px; padding-left: 12px; border: 1px solid var(--le-line); border-radius: 8px; background: var(--le-inset); }
+.late-enrollees-view .le-search > svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--le-muted); }
+.admin-workspace .late-enrollees-view .le-search > input { width: 100%; min-width: 0; min-height: 40px; padding-left: 0; border: 0 !important; background: transparent !important; color: var(--le-text) !important; font-size: 12px !important; }
+.late-enrollees-view .le-search:focus-within { outline: 2px solid var(--le-link); outline-offset: 2px; }
+.late-enrollees-view .le-search input:focus-visible { outline: none; }
+.late-enrollees-view .le-table-scroll { overflow: auto; max-height: 600px; border-top: 1px solid var(--le-line); scrollbar-width: thin; }
+.late-enrollees-view .le-table { width: 100%; min-width: 820px; table-layout: fixed; border-collapse: collapse; }
+.late-enrollees-view .le-col-student { width: 35%; } .late-enrollees-view .le-col-year { width: 14%; }
+.late-enrollees-view .le-col-status { width: 17%; } .late-enrollees-view .le-col-date { width: 21%; }
+.late-enrollees-view .le-col-action { width: 13%; }
+.late-enrollees-view .le-table :is(th, td) { padding: 16px 20px; border-bottom: 1px solid var(--le-line); font-size: 12px; vertical-align: middle; }
+.late-enrollees-view .le-table th { position: sticky; top: 0; z-index: 1; background: var(--le-inset); color: var(--le-muted) !important; font-size: 11px; font-weight: 500; }
+.late-enrollees-view .le-table tbody tr:last-child td { border-bottom: 0; }
+.late-enrollees-view .le-table tbody tr:hover { background: var(--le-inset); }
+.late-enrollees-view .le-student { display: flex; align-items: center; gap: 12px; }
+.late-enrollees-view .le-avatar { display: grid; place-items: center; width: 38px; height: 38px; flex: 0 0 38px; border-radius: 9px; background: var(--le-selection); color: var(--le-link); font-size: 12px; font-weight: 500; }
+.late-enrollees-view .le-student strong { display: block; font-size: 12px; font-weight: 500; overflow-wrap: anywhere; }
+.late-enrollees-view .le-student div > span { display: block; margin-top: 4px; font-size: 10px; color: var(--le-muted); }
+.late-enrollees-view .le-table time { font-size: 11px; color: var(--le-muted); }
+.late-enrollees-view .le-status { display: inline-flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 5px; color: var(--le-muted); background: var(--le-inset); font-size: 10px; white-space: nowrap; }
+.late-enrollees-view .le-status > span { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.late-enrollees-view .le-status.is-pending { background: var(--le-amber-bg); color: var(--le-amber); }
+.late-enrollees-view .le-status.is-approved { background: var(--le-green-bg); color: var(--le-green); }
+.late-enrollees-view .le-status.is-rejected { background: var(--le-red-bg); color: var(--le-red); }
+.late-enrollees-view .le-review-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 7px 0; border: 0; border-radius: 5px; background: transparent; color: var(--le-link); font-size: 11px; text-decoration: none; }
+.late-enrollees-view .le-review-button > svg { width: 15px; height: 15px; flex-shrink: 0; }
+.late-enrollees-view .le-review-button:hover:not(:disabled) { text-decoration: underline; text-underline-offset: 4px; }
+.late-enrollees-view .le-panel-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 17px 24px; border-top: 1px solid var(--le-line); color: var(--le-muted); font-size: 11px; }
+.late-enrollees-view .le-panel-footer > span { font-size: 10px; }
+.late-enrollees-view .le-empty { display: flex; align-items: center; flex-direction: column; gap: 12px; padding: 44px 20px; text-align: center; }
+.late-enrollees-view .le-empty > svg { width: 28px; height: 28px; color: var(--le-muted); }
+.late-enrollees-view .le-empty h3 { margin: 0; font-size: 15px; font-weight: 500; }
+.late-enrollees-view .le-empty p { margin: 0 0 4px; max-width: 48ch; font-size: 12px; }
+.late-enrollees-view .le-alert { display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; margin-bottom: 20px; border: 1px solid currentColor; border-radius: 9px; font-size: 12px; line-height: 1.7; }
+.late-enrollees-view .le-alert > svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px; }
+.late-enrollees-view .le-alert > span { flex: 1; }
+.late-enrollees-view .le-alert > button { border: 0; background: transparent; color: inherit; font-size: 11px; text-decoration: underline; white-space: nowrap; }
+.late-enrollees-view .le-error { color: var(--le-red); background: var(--le-red-bg); }
+.late-enrollees-view .le-success { color: var(--le-green); background: var(--le-green-bg); }
+.late-enrollees-view .le-loading-row td { height: 80px; }
+.late-enrollees-view .le-skeleton { display: block; height: 12px; width: 75%; border-radius: 4px; background: var(--le-line); }
+.late-enrollees-view .le-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.late-enrollees-view .le-dialog { width: min(900px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); margin: auto; padding: 0; overflow: auto; border: 1px solid var(--le-line); border-radius: 16px; color: var(--le-text); background: var(--le-surface); box-shadow: 0 24px 80px rgba(17, 34, 65, .24); }
+.late-enrollees-view .le-dialog::backdrop { background: rgba(9, 18, 35, .58); }
+.late-enrollees-view .le-review-dialog[open] { display: flex; flex-direction: column; overflow: hidden; }
+.late-enrollees-view .le-review-dialog > .le-dialog-heading, .late-enrollees-view .le-review-dialog > .le-dialog-actions { flex-shrink: 0; }
+.late-enrollees-view .le-dialog-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 22px; padding: 24px 28px; border-bottom: 1px solid var(--le-line); }
+.late-enrollees-view .le-dialog-heading > div > span { color: var(--le-muted); font-size: 11px; }
+.late-enrollees-view .le-dialog-heading h2 { margin-top: 5px; font-size: 22px; overflow-wrap: anywhere; }
+.late-enrollees-view .le-dialog-heading p { margin: 7px 0 0; font-size: 11px; }
+.late-enrollees-view .le-close { display: grid; place-items: center; width: 36px; height: 36px; flex: 0 0 36px; padding: 0; border: 1px solid var(--le-line); border-radius: 8px; background: var(--le-inset); color: var(--le-text); }
+.late-enrollees-view .le-close > svg { width: 18px; height: 18px; }
+.late-enrollees-view .le-review-body { min-height: 0; overflow-y: auto; padding: 24px 28px; }
+.late-enrollees-view .le-review-status { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.late-enrollees-view .le-review-status > span:last-child { font-size: 11px; color: var(--le-muted); }
+.late-enrollees-view .le-info-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 28px; padding: 22px; margin: 0; border: 1px solid var(--le-line); border-radius: 10px; background: var(--le-inset); }
+.late-enrollees-view .le-info-grid dt { font-size: 10px; color: var(--le-muted); }
+.late-enrollees-view .le-info-grid dd { margin: 6px 0 0; font-size: 12px; overflow-wrap: anywhere; }
+.late-enrollees-view .le-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 26px 0 14px; }
+.late-enrollees-view h3 { margin: 0; font-size: 13px; font-weight: 500; }
+.late-enrollees-view .le-section-heading > span { color: var(--le-muted); font-size: 10px; }
+.late-enrollees-view .le-documents { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.late-enrollees-view .le-document { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px; border: 1px solid var(--le-line); border-radius: 10px; background: var(--le-inset); }
+.late-enrollees-view .le-thumbnail { display: grid; place-items: center; width: 52px; height: 60px; flex: 0 0 52px; overflow: hidden; border: 1px solid var(--le-line); border-radius: 6px; background: var(--le-surface); color: var(--le-link); }
+.late-enrollees-view .le-thumbnail img { width: 100%; height: 100%; object-fit: cover; }
+.late-enrollees-view .le-thumbnail svg { width: 23px; height: 23px; }
+.late-enrollees-view .le-document-copy { flex: 1; min-width: 80px; }
+.late-enrollees-view .le-document h4 { margin: 0; font-size: 11px; font-weight: 500; overflow-wrap: anywhere; }
+.late-enrollees-view .le-document p { margin: 4px 0 0; font-size: 10px; overflow-wrap: anywhere; }
+.late-enrollees-view .le-document > button { margin-left: auto; }
+.late-enrollees-view .le-documents-note { grid-column: 1 / -1; margin: 0; padding: 10px 0; font-size: 11px; }
+.late-enrollees-view .le-document-loading { display: flex; align-items: center; gap: 10px; padding: 28px 0; color: var(--le-muted); font-size: 12px; }
+.late-enrollees-view .le-review-note { display: flex; align-items: flex-start; gap: 12px; padding-top: 24px; margin-top: 24px; border-top: 1px solid var(--le-line); }
+.late-enrollees-view .le-review-note > svg { width: 18px; height: 18px; flex-shrink: 0; color: var(--le-link); margin-top: 2px; }
+.late-enrollees-view .le-review-note p { margin: 6px 0 0; font-size: 11px; }
+.late-enrollees-view .le-notice { padding: 16px; margin-top: 20px; border: 1px solid var(--le-line); border-radius: 9px; background: var(--le-inset); }
+.late-enrollees-view .le-notice p { margin: 6px 0 0; font-size: 12px; }
+.late-enrollees-view .le-notice p:first-child { margin-top: 0; }
+.late-enrollees-view .le-rejection { border-color: var(--le-red); }
+.late-enrollees-view .le-review-body > .le-alert { margin: 20px 0 0; }
+.late-enrollees-view .le-dialog-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 28px; border-top: 1px solid var(--le-line); }
+.late-enrollees-view .le-dialog-actions > div { display: flex; gap: 10px; }
+.late-enrollees-view .le-preview-dialog { width: min(1120px, calc(100vw - 32px)); }
+.late-enrollees-view .le-preview-dialog .le-dialog-heading h2 { font-size: 16px; }
+.late-enrollees-view .le-preview-tools { display: flex; align-items: center; gap: 18px; flex-shrink: 0; }
+.late-enrollees-view .le-preview-body { display: flex; align-items: center; justify-content: center; min-height: 240px; padding: 20px; background: var(--le-inset); }
+.late-enrollees-view .le-preview-body > img { max-width: 100%; max-height: 65dvh; object-fit: contain; }
+.late-enrollees-view .le-preview-body > iframe { width: 100%; height: 65dvh; border: 0; }
+.late-enrollees-view .le-preview-body > p { max-width: 50ch; padding: 32px; font-size: 13px; text-align: center; }
+.late-enrollees-view .le-decision-dialog { width: min(540px, calc(100vw - 32px)); }
+.late-enrollees-view .le-decision-body { padding: 24px 28px; }
+.late-enrollees-view .le-decision-body > p { margin: 0; font-size: 12px; }
+.late-enrollees-view .le-reason-label { display: block; margin-top: 20px; font-size: 12px !important; }
+.admin-workspace .late-enrollees-view .le-reason-label textarea { display: block; width: 100%; min-height: 110px; margin-top: 9px; padding: 12px; resize: vertical; border: 1px solid var(--le-line) !important; border-radius: 8px; background: var(--le-inset) !important; font-size: 12px !important; }
+.late-enrollees-view .le-decision-body > .le-alert { margin: 20px 0 0; }
+.late-enrollees-view .le-spinning { animation: le-spin 1s linear infinite; }
+@keyframes le-spin { to { transform: rotate(360deg); } }
+@media (max-width: 1000px) {
+    .late-enrollees-view .le-toolbar { align-items: stretch; flex-direction: column; }
+    .late-enrollees-view .le-filters { align-self: flex-start; }
+    .late-enrollees-view .le-search { width: 100%; }
+}
+@media (max-width: 700px) {
+    .late-enrollees-view .le-heading { align-items: flex-start; flex-direction: column; gap: 16px; }
+    .late-enrollees-view .le-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .late-enrollees-view .le-summary > div:nth-child(2n) { border-right: 0; }
+    .late-enrollees-view .le-summary > div:nth-child(n+3) { border-top: 1px solid var(--le-line); }
+    .late-enrollees-view .le-panel-footer { align-items: flex-start; flex-direction: column; gap: 6px; }
+    .late-enrollees-view .le-documents { grid-template-columns: minmax(0, 1fr); }
+    .late-enrollees-view .le-preview-dialog .le-dialog-heading { flex-direction: column; }
+    .late-enrollees-view .le-preview-tools { width: 100%; justify-content: space-between; }
+}
+@media (max-width: 500px) {
+    .admin-workspace .late-enrollees-view .le-main { padding: 24px 16px !important; }
+    .late-enrollees-view .le-summary > div { padding: 16px; }
+    .late-enrollees-view .le-panel-heading { padding: 20px; align-items: flex-start; }
+    .late-enrollees-view .le-panel-heading > span { max-width: 60px; white-space: normal; text-align: right; }
+    .late-enrollees-view .le-toolbar { padding: 0 20px 20px; }
+    .late-enrollees-view .le-filters button { padding-inline: 9px; gap: 6px; }
+    .admin-workspace .late-enrollees-view .le-search > input, .admin-workspace .late-enrollees-view .le-reason-label textarea { font-size: 16px !important; }
+    .late-enrollees-view .le-dialog-heading, .late-enrollees-view .le-review-body, .late-enrollees-view .le-decision-body { padding: 20px; }
+    .late-enrollees-view .le-dialog-heading h2 { font-size: 19px; }
+    .late-enrollees-view .le-info-grid { grid-template-columns: minmax(0, 1fr); padding: 18px; }
+    .late-enrollees-view .le-dialog-actions { padding: 18px 20px; flex-wrap: wrap; }
+    .late-enrollees-view .le-dialog-actions > div { margin-left: auto; }
+    .late-enrollees-view .le-review-status { align-items: flex-start; flex-direction: column; gap: 10px; }
+}
+@media (prefers-reduced-motion: reduce) { .late-enrollees-view *, .late-enrollees-view *::before, .late-enrollees-view *::after { animation: none !important; transition: none !important; } }

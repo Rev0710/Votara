@@ -94,7 +94,7 @@ export default function AdminTopNav({ admin = null, onLogout }) {
     const destination = (item, className = "admin-nav-destination") => (
         <Link key={item.path} to={item.path} className={className}
             aria-current={isAdminDestinationActive(item, location) ? "page" : undefined}
-            onClick={closeNavigation}>{item.label}</Link>
+            onClick={closeNavigation}><span key={theme} className="admin-nav-label">{item.label}</span></Link>
     );
 
     return (
@@ -116,7 +116,7 @@ export default function AdminTopNav({ admin = null, onLogout }) {
                                     aria-expanded={expanded} aria-controls={`admin-menu-${group.key}`}
                                     onKeyDown={(event) => openWithKeyboard(event, group.key)}
                                     onClick={() => setOpenMenu(expanded ? null : group.key)}>
-                                    {group.label}<span className="admin-nav-caret" aria-hidden="true">▾</span>
+                                    <span key={theme} className="admin-nav-label">{group.label}</span><span className="admin-nav-caret" aria-hidden="true">▾</span>
                                 </button>
                                 {expanded && <div className="admin-nav-dropdown" id={`admin-menu-${group.key}`} onKeyDown={handleListKeyDown}>
                                     {group.items.map((item) => destination(item))}

@@ -2,7 +2,8 @@ import AdminTopNav from './AdminTopNav';
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./AdminDashboard.css";
-import InviteTeamPopUp from "./InviteTeamPopUp";
+import "./AdminDashboardView.css";
+import "./AdminDashboardLight.css";
 import PageLoader from "/src/components/transitionloader/PageLoader";
 
 import {
@@ -12,20 +13,17 @@ import {
     FiActivity,
     FiSettings,
     FiFileText,
-    FiBarChart2,
     FiShield,
-    FiLogOut,
     FiRefreshCw,
-    FiCheckCircle,
     FiAlertCircle,
     FiCalendar,
     FiDatabase,
     FiUserPlus,
     FiChevronRight,
-    FiBell,
 } from "react-icons/fi";
 
 import api from "../../services/api";
+import { getAdminConnectionError, isAdminSessionRejection } from "../../services/adminSession";
 
 // =========================================================
 // SYSTEM THEME
@@ -150,18 +148,6 @@ function AdminDashboard() {
 
     const [admin, setAdmin] = useState(null);
 
-    const [showInviteModal, setShowInviteModal] = useState(false);
-
-    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-
-    const openInviteModal = () => {
-    setShowInviteModal(true);
-};
-
-const closeInviteModal = () => {
-    setShowInviteModal(false);
-};
-
     // =====================================================
 // APPLY SYSTEM SETTINGS THEME
 // =====================================================
@@ -199,7 +185,6 @@ useEffect(() => {
     };
 }, []);
 
-    const [loading, setLoading] = useState(true);
 
     // Page transition loader
     const [isPageTransitioning, setIsPageTransitioning] =
@@ -263,7 +248,7 @@ useEffect(() => {
 
     // Authoritative settings loaded from the Admin Settings API.
     // Dashboard display values should come from the server, not hardcoded UI values.
-    const [systemSettings, setSystemSettings] = useState({});
+    const [systemSettings, setSystemSettings] = useState(null);
 
     // =====================================================
     // LOAD ADMIN SESSION
@@ -518,10 +503,7 @@ const checkSystem = async () => {
                 error
             );
 
-            if (
-                error.response?.status === 401 ||
-                error.response?.status === 403
-            ) {
+            if (isAdminSessionRejection(error)) {
                 localStorage.removeItem(
                     "votaraAdminToken"
                 );
@@ -538,14 +520,11 @@ const checkSystem = async () => {
             }
 
             setDashboardError(
-                error.response?.data?.message ||
-                    error.message ||
-                    "Unable to load Admin Dashboard data."
+                getAdminConnectionError(error)
             );
 
         } finally {
             setDashboardLoading(false);
-            setLoading(false);
         }
     };
 
@@ -576,10 +555,6 @@ const checkSystem = async () => {
         navigate("/admin-login", {
             replace: true,
         });
-    };
-
-    const requestLogout = () => {
-        setShowLogoutConfirm(true);
     };
 
     // =====================================================
@@ -633,1815 +608,129 @@ const checkSystem = async () => {
         return `${days}d`;
     };
 
-    // =====================================================
-    // MENU ITEMS
-    // =====================================================
-
-    const managementItems = [
-        {
-            title: "Student Management",
-            description:
-                "View and manage registered students.",
-            icon: FiUsers,
-            path: "/admin/data-management",
-        },
-
-        {
-            title: "Electoral Board",
-            description:
-                "Manage Electoral Board staff accounts.",
-            icon: FiUserCheck,
-            path: "/admin/users",
-        },
-
-        {
-            title: "Admin Accounts",
-            description:
-                "Create and manage administrator accounts.",
-            icon: FiShield,
-            path: "/admin/users",
-        },
-
-        {
-            title: "Late Enrollee Review",
-            description:
-                "Review online and kiosk late enrollee applications.",
-            icon: FiUserPlus,
-            path: "/admin/late-enrollees",
-        },
-
-        {
-            title: "Election Overview",
-            description:
-                "Review election status and participation reports.",
-            icon: FiCalendar,
-            path: "/admin/reports",
-        },
-
-        {
-        title: "System Settings",
-        description:
-            "Configure system preferences and appearance.",
-        icon: FiSettings,
-        path: "/admin/settings",
-    },
+    const hasData = stats.totalStudents !== null;
+    const displayCount = (value) => hasData ? Number(value ?? 0).toLocaleString() : "—";
+    const health = systemDashboard.systemHealth;
+    const usage = systemDashboard.serverUsage;
+    const election = systemDashboard.electionStatus;
+    const isOnline = hasData && !dashboardError && health.status === "Online";
+    const memoryPercent = hasData ? usage.memoryPercent : null;
+    const pending = stats.pendingRegistrations ?? 0;
+    const recentLogs = systemDashboard.activityLogs.recent || [];
+    const overviewMetrics = [
+        { label: "Registered students", value: stats.totalStudents, detail: "Student and voter accounts", icon: FiUsers, path: "/admin/data-management" },
+        { label: "Staff accounts", value: stats.totalStaff, detail: hasData ? `${displayCount(stats.activeUsers)} active accounts` : "Electoral board and administrators", icon: FiUserCheck, path: "/admin/users" },
+        { label: "Pending reviews", value: stats.pendingRegistrations, detail: "Late enrollee applications", icon: FiClock, path: "/admin/late-enrollees", attention: pending > 0 },
+        { label: "Total elections", value: stats.totalElections, detail: "Recorded in the platform", icon: FiCalendar, path: "/admin/reports" },
     ];
-
-    const monitoringItems = [
-        {
-            title: "Audit Logs",
-            description:
-                "Review important system activities.",
-            icon: FiActivity,
-            path: "/admin/audit-logs",
-        },
-
-        {
-            title: "Reports",
-            description:
-                "View system and election reports.",
-            icon: FiBarChart2,
-            path: "/admin/reports",
-        },
-
-        {
-            title: "Election Results",
-            description:
-                "View election result information.",
-            icon: FiFileText,
-            path: "/admin/reports",
-        },
-    ];
-
-    // =====================================================
-    // LOADING
-    // =====================================================
 
     if (!admin) {
-        return (
-            <div style={styles.loadingPage}>
-                <div style={styles.loadingSpinner}>
-                    <FiRefreshCw size={28} />
-                </div>
-
-                <p>
-                    Loading Admin Dashboard...
-                </p>
-            </div>
-        );
+        return <div className="ad-dashboard ad-session-loading" role="status"><FiRefreshCw className="ad-spinning" size={24} /><p>Loading your dashboard…</p></div>;
     }
 
-    // =====================================================
-    // RENDER
-    // =====================================================
-
     return (
-        
-        <div style={styles.page}>
+        <div className="ad-dashboard admin-polished-page">
             {isPageTransitioning && <PageLoader />}
-
-            <InviteTeamPopUp
-    isOpen={showInviteModal}
-    onClose={closeInviteModal}
-/>
-            {/* =================================================
-                TOP NAVIGATION
-                Shared VOTARA Admin navigation.
-            ================================================= */}
-
-            <AdminTopNav admin={admin} onLogout={confirmLogout}/>
-
-            {/* LOGOUT CONFIRMATION */}
-            {showLogoutConfirm && (
-                <div
-                    className="votara-dashboard-logout-modal-backdrop"
-                    role="presentation"
-                    onMouseDown={(event) => {
-                        if (event.target === event.currentTarget) {
-                            setShowLogoutConfirm(false);
-                        }
-                    }}
-                >
-                    <div
-                        className="votara-dashboard-logout-modal"
-                        role="dialog"
-                        aria-modal="true"
-                        aria-labelledby="votara-dashboard-logout-title"
-                    >
-                        <div className="votara-dashboard-logout-icon">
-                            <FiLogOut size={20} />
-                        </div>
-
-                        <div>
-                            <h2 id="votara-dashboard-logout-title">Sign out?</h2>
-                            <p>Are you sure you want to sign out of your VOTARA Admin account?</p>
-                        </div>
-
-                        <div className="votara-dashboard-logout-actions">
-                            <button
-                                type="button"
-                                className="votara-dashboard-logout-cancel"
-                                onClick={() => setShowLogoutConfirm(false)}
-                            >
-                                Cancel
-                            </button>
-
-                            <button
-                                type="button"
-                                className="votara-dashboard-logout-confirm"
-                                onClick={confirmLogout}
-                            >
-                                <FiLogOut size={15} />
-                                Sign Out
-                            </button>
-                        </div>
+            <a className="ad-skip-link" href="#admin-dashboard-content">Skip to dashboard</a>
+            <AdminTopNav admin={admin} onLogout={confirmLogout} />
+            <main className="ad-main" id="admin-dashboard-content" tabIndex={-1}>
+                <header className="ad-page-heading">
+                    <div>
+                        <div className="ad-eyebrow">Administration <span>/</span> Overview</div>
+                        <h1>Admin dashboard</h1>
+                        <p>Your accounts, elections, and platform activity in one place.</p>
                     </div>
-                </div>
-            )}
-
-            {/* =================================================
-                MAIN CONTENT
-            ================================================= */}
-
-            <main
-                className="votara-admin-main"
-                style={styles.main}
-            >
-                {/* HEADER */}
-
-                <section className="votara-admin-hero">
-                    <div className="votara-admin-hero-copy">
-                        <span className="votara-admin-kicker">VOTARA ADMINISTRATION</span>
-                        <h1>Admin Dashboard</h1>
-                        <p>Manage accounts, elections, and platform health across every campus. Actions are written to the audit log.</p>
+                    <div className="ad-heading-actions">
+                        <button type="button" className="ad-button ad-button-secondary" onClick={handleRefresh} disabled={dashboardLoading}>
+                            <FiRefreshCw className={dashboardLoading ? "ad-spinning" : undefined} aria-hidden="true" />
+                            {dashboardLoading ? "Refreshing…" : "Refresh"}
+                        </button>
+                        <button type="button" className="ad-button ad-button-primary" onClick={() => goTo("/admin/users")}>
+                            <FiUserPlus aria-hidden="true" />Invite user
+                        </button>
                     </div>
-
-                    <div className="votara-admin-hero-actions">
-                        <button
-                        className="votara-primary-action"
-                        onClick={() => goTo("/admin/users")}
-                    >
-                        <FiUserPlus size={16} />
-                        Invite User
-                    </button>
-                    </div>
-                </section>
-
-                {/* =========================================================
-    STEP 2 — SYSTEM DASHBOARD
-========================================================= */}
-
-<section
-    style={{
-        marginBottom: "24px",
-    }}
->
-
-    <div
-        style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "16px",
-            marginBottom: "14px",
-        }}
-    >
-
-        <div>
-
-            <span
-                style={{
-                    display: "block",
-                    fontSize: "11px",
-                    fontWeight: 800,
-                    letterSpacing: "0.12em",
-                    textTransform: "uppercase",
-                    color:
-                        "var(--votara-primary)",
-                    marginBottom: "4px",
-                }}
-            >
-                ADMIN SYSTEM MANAGEMENT
-            </span>
-
-            <h2
-                style={{
-                    margin: 0,
-                    fontSize: "21px",
-                    fontWeight: 800,
-                    color:
-                        "var(--admin-text, #172033)",
-                }}
-            >
-                System Dashboard
-            </h2>
-
-            <p
-                style={{
-                    margin:
-                        "5px 0 0",
-                    fontSize: "13px",
-                    color:
-                        "var(--admin-text-secondary, #64748B)",
-                }}
-            >
-                Live overview of VOTARA system operations.
-            </p>
-
-        </div>
-
-
-        <button
-            type="button"
-            className="admin-dashboard-refresh" onClick={handleRefresh}
-            disabled={dashboardLoading}
-            style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "7px",
-                padding:
-                    "9px 13px",
-                borderRadius: "9px",
-                border:
-                    "1px solid var(--admin-border, #E2E8F0)",
-                background:
-                    "var(--admin-card, #FFFFFF)",
-                color:
-                    "var(--admin-text, #172033)",
-                cursor:
-                    dashboardLoading
-                        ? "wait"
-                        : "pointer",
-                fontSize: "12px",
-                fontWeight: 700,
-            }}
-        >
-
-            <FiRefreshCw
-                size={14}
-                style={{
-                    animation:
-                        dashboardLoading
-                            ? "spin 1s linear infinite"
-                            : "none",
-                }}
-            />
-
-            Refresh
-
-        </button>
-
-    </div>
-
-
-    <div
-      className="admin-system-dashboard-grid"
-        style={{
-            display: "grid",
-            gridTemplateColumns:
-                "repeat(5, minmax(0, 1fr))",
-            gap: "12px",
-        }}
-    >
-
-        {/* =================================================
-            SYSTEM HEALTH
-        ================================================= */}
-
-        <button
-            type="button"
-            onClick={() =>
-                goTo("/admin/settings")
-            }
-            style={{
-                textAlign: "left",
-                border:
-                    "1px solid var(--admin-border, #E2E8F0)",
-                background:
-                    "var(--admin-card, #FFFFFF)",
-                borderRadius: "14px",
-                padding: "17px",
-                minHeight: "142px",
-                cursor: "pointer",
-                boxShadow:
-                    "0 5px 18px rgba(15, 23, 42, 0.05)",
-            }}
-        >
-
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent:
-                        "space-between",
-                    alignItems: "center",
-                    marginBottom: "18px",
-                }}
-            >
-
-                <span
-                    style={{
-                        width: "36px",
-                        height: "36px",
-                        display: "grid",
-                        placeItems: "center",
-                        borderRadius: "10px",
-                        background:
-                            "rgba(34, 197, 94, 0.10)",
-                        color: "#16A34A",
-                    }}
-                >
-                    <FiActivity
-                        size={18}
-                    />
-                </span>
-
-                <span
-                    style={{
-                        width: "8px",
-                        height: "8px",
-                        borderRadius: "50%",
-                        background:
-                            systemDashboard.systemHealth.status ===
-                            "Online"
-                                ? "#16A34A"
-                                : "#F59E0B",
-                    }}
-                />
-
-            </div>
-
-            <strong
-                style={{
-                    display: "block",
-                    fontSize: "13px",
-                    color:
-                        "var(--admin-text, #172033)",
-                }}
-            >
-                System Health
-            </strong>
-
-            <strong
-                style={{
-                    display: "block",
-                    marginTop: "5px",
-                    fontSize: "19px",
-                    color: "#16A34A",
-                }}
-            >
-                {systemDashboard.systemHealth.status}
-            </strong>
-
-            <span
-                style={{
-                    display: "block",
-                    marginTop: "5px",
-                    fontSize: "11px",
-                    color:
-                        "var(--admin-text-muted, #94A3B8)",
-                }}
-            >
-                API:{" "}
-                {systemDashboard.systemHealth.api}
-                {" · "}
-                DB:{" "}
-                {systemDashboard.systemHealth.database}
-            </span>
-
-        </button>
-
-
-        {/* =================================================
-            TOTAL USERS
-        ================================================= */}
-
-        <button
-            type="button"
-            className="admin-total-users-card"
-            onClick={() =>
-                goTo("/admin/data-management")
-            }
-            style={{
-                textAlign: "left",
-                border:
-                    "1px solid var(--admin-border, #E2E8F0)",
-                background:
-                    "var(--admin-card, #FFFFFF)",
-                borderRadius: "14px",
-                padding: "17px",
-                minHeight: "142px",
-                cursor: "pointer",
-                boxShadow:
-                    "0 5px 18px rgba(15, 23, 42, 0.05)",
-            }}
-        >
-
-            <div
-                style={{
-                    width: "36px",
-                    height: "36px",
-                    display: "grid",
-                    placeItems: "center",
-                    borderRadius: "10px",
-                    background:
-                        "rgba(38, 110, 255, 0.10)",
-                    color:
-                        "var(--votara-primary)",
-                    marginBottom: "18px",
-                }}
-            >
-                <FiUsers
-                    size={18}
-                />
-            </div>
-
-            <strong
-                style={{
-                    display: "block",
-                    fontSize: "13px",
-                    color:
-                        "var(--admin-text, #172033)",
-                }}
-            >
-                Total Users
-            </strong>
-
-            <div className="admin-total-users-split">
-                <div className="admin-total-users-stat">
-                    <strong>
-                        {dashboardLoading
-                            ? "..."
-                            : (
-                                stats.totalStudents ??
-                                0
-                            ).toLocaleString()}
-                    </strong>
-                    <span>Students</span>
-                </div>
-
-                <div
-                    className="admin-total-users-divider"
-                    aria-hidden="true"
-                />
-
-                <div className="admin-total-users-stat">
-                    <strong>
-                        {dashboardLoading
-                            ? "..."
-                            : (
-                                stats.totalStaff ??
-                                0
-                            ).toLocaleString()}
-                    </strong>
-                    <span>Staff</span>
-                </div>
-            </div>
-
-            <span
-                style={{
-                    display: "block",
-                    marginTop: "8px",
-                    fontSize: "11px",
-                    color:
-                        "var(--admin-text-muted, #94A3B8)",
-                }}
-            >
-                Combined total:{" "}
-                {dashboardLoading
-                    ? "..."
-                    : (
-                        systemDashboard.totalUsers ??
-                        0
-                    ).toLocaleString()}
-            </span>
-
-        </button>
-
-
-        {/* =================================================
-            ELECTION STATUS
-        ================================================= */}
-
-        <button
-            type="button"
-            onClick={() =>
-                goTo("/admin/reports")
-            }
-            style={{
-                textAlign: "left",
-                border:
-                    "1px solid var(--admin-border, #E2E8F0)",
-                background:
-                    "var(--admin-card, #FFFFFF)",
-                borderRadius: "14px",
-                padding: "17px",
-                minHeight: "142px",
-                cursor: "pointer",
-                boxShadow:
-                    "0 5px 18px rgba(15, 23, 42, 0.05)",
-            }}
-        >
-
-            <div
-                style={{
-                    width: "36px",
-                    height: "36px",
-                    display: "grid",
-                    placeItems: "center",
-                    borderRadius: "10px",
-                    background:
-                        "rgba(124, 58, 237, 0.10)",
-                    color: "#7C3AED",
-                    marginBottom: "18px",
-                }}
-            >
-                <FiCalendar
-                    size={18}
-                />
-            </div>
-
-            <strong
-                style={{
-                    display: "block",
-                    fontSize: "13px",
-                    color:
-                        "var(--admin-text, #172033)",
-                }}
-            >
-                Election Status
-            </strong>
-
-            <strong
-                style={{
-                    display: "block",
-                    marginTop: "5px",
-                    fontSize: "19px",
-                    color: "#7C3AED",
-                    textTransform:
-                        "capitalize",
-                }}
-            >
-                {
-                    systemDashboard
-                        .electionStatus
-                        .status
-                }
-            </strong>
-
-            <span
-                style={{
-                    display: "block",
-                    marginTop: "4px",
-                    fontSize: "11px",
-                    color:
-                        "var(--admin-text-muted, #94A3B8)",
-                    whiteSpace:
-                        "nowrap",
-                    overflow: "hidden",
-                    textOverflow:
-                        "ellipsis",
-                }}
-            >
-                {
-                    systemDashboard
-                        .electionStatus
-                        .election
-                        ?.title ||
-                    "No current election"
-                }
-            </span>
-
-        </button>
-
-
-        {/* =================================================
-            SERVER USAGE
-        ================================================= */}
-
-        <button
-            type="button"
-            onClick={() =>
-                goTo("/admin/settings")
-            }
-            style={{
-                textAlign: "left",
-                border:
-                    "1px solid var(--admin-border, #E2E8F0)",
-                background:
-                    "var(--admin-card, #FFFFFF)",
-                borderRadius: "14px",
-                padding: "17px",
-                minHeight: "142px",
-                cursor: "pointer",
-                boxShadow:
-                    "0 5px 18px rgba(15, 23, 42, 0.05)",
-            }}
-        >
-
-            <div
-                style={{
-                    width: "36px",
-                    height: "36px",
-                    display: "grid",
-                    placeItems: "center",
-                    borderRadius: "10px",
-                    background:
-                        "rgba(245, 158, 11, 0.10)",
-                    color: "#D97706",
-                    marginBottom: "18px",
-                }}
-            >
-                <FiActivity
-                    size={18}
-                />
-            </div>
-
-            <strong
-                style={{
-                    display: "block",
-                    fontSize: "13px",
-                    color:
-                        "var(--admin-text, #172033)",
-                }}
-            >
-                Server Usage
-            </strong>
-
-            <strong
-                style={{
-                    display: "block",
-                    marginTop: "5px",
-                    fontSize: "24px",
-                    color:
-                        "var(--admin-text, #172033)",
-                }}
-            >
-                {
-                    systemDashboard
-                        .serverUsage
-                        .memoryPercent
-                }%
-            </strong>
-
-            <div
-                style={{
-                    height: "6px",
-                    marginTop: "8px",
-                    borderRadius: "99px",
-                    background:
-                        "#E2E8F0",
-                    overflow: "hidden",
-                }}
-            >
-
-                <span
-                    style={{
-                        display: "block",
-                        width:
-                            `${Math.min(
-                                100,
-                                Math.max(
-                                    0,
-                                    systemDashboard
-                                        .serverUsage
-                                        .memoryPercent
-                                )
-                            )}%`,
-                        height: "100%",
-                        borderRadius: "99px",
-                        background:
-                            "var(--votara-primary)",
-                    }}
-                />
-
-            </div>
-
-            <span
-                style={{
-                    display: "block",
-                    marginTop: "6px",
-                    fontSize: "10px",
-                    color:
-                        "var(--admin-text-muted, #94A3B8)",
-                }}
-            >
-                Node.js memory usage
-            </span>
-
-        </button>
-
-
-        {/* =================================================
-            ACTIVITY LOGS
-        ================================================= */}
-
-        <button
-            type="button"
-            onClick={() =>
-                goTo("/admin/audit-logs")
-            }
-            style={{
-                textAlign: "left",
-                border:
-                    "1px solid var(--admin-border, #E2E8F0)",
-                background:
-                    "var(--admin-card, #FFFFFF)",
-                borderRadius: "14px",
-                padding: "17px",
-                minHeight: "142px",
-                cursor: "pointer",
-                boxShadow:
-                    "0 5px 18px rgba(15, 23, 42, 0.05)",
-            }}
-        >
-
-            <div
-                style={{
-                    width: "36px",
-                    height: "36px",
-                    display: "grid",
-                    placeItems: "center",
-                    borderRadius: "10px",
-                    background:
-                        "rgba(6, 182, 212, 0.10)",
-                    color: "#0891B2",
-                    marginBottom: "18px",
-                }}
-            >
-                <FiFileText
-                    size={18}
-                />
-            </div>
-
-            <strong
-                style={{
-                    display: "block",
-                    fontSize: "13px",
-                    color:
-                        "var(--admin-text, #172033)",
-                }}
-            >
-                Activity Logs
-            </strong>
-
-            <strong
-                style={{
-                    display: "block",
-                    marginTop: "5px",
-                    fontSize: "24px",
-                    color:
-                        "var(--admin-text, #172033)",
-                }}
-            >
-                {
-                    (
-                        systemDashboard
-                            .activityLogs
-                            .total ??
-                        0
-                    ).toLocaleString()
-                }
-            </strong>
-
-            <span
-                style={{
-                    display: "block",
-                    marginTop: "4px",
-                    fontSize: "11px",
-                    color:
-                        "var(--admin-text-muted, #94A3B8)",
-                }}
-            >
-                Recorded audit activities
-            </span>
-
-        </button>
-
-    </div>
-
-</section>
-
-                {/* =================================================
-                    ERROR MESSAGE
-                ================================================= */}
+                </header>
 
                 {dashboardError && (
-                    <div
-                        style={
-                            styles.errorBanner
-                        }
-                    >
-                        <FiAlertCircle
-                            size={20}
-                        />
-
-                        <div>
-                            <strong>
-                                Dashboard data could
-                                not be loaded
-                            </strong>
-
-                            <p>
-                                {dashboardError}
-                            </p>
-                        </div>
+                    <div className="ad-error" role="alert">
+                        <FiAlertCircle size={20} aria-hidden="true" />
+                        <div><strong>Unable to refresh dashboard data</strong><p>{dashboardError}{hasData ? " Showing the last available data." : ""}</p></div>
+                        <button type="button" onClick={handleRefresh} disabled={dashboardLoading}>Try again <FiRefreshCw aria-hidden="true" /></button>
                     </div>
                 )}
 
-                <section className="votara-dashboard-grid top-feature-grid">
-                    <div className="votara-feature-card platform-health-card">
-                        <div className="feature-card-heading">
-                            <div>
-                                <h2>Platform health</h2>
-                                <span className="status-pill success"><span></span> operational</span>
-                            </div>
-                            <span className="feature-time">{formatDate(lastUpdated)}</span>
-                        </div>
-                        <div className="health-score-row">
-                            <strong>
-                                {dashboardLoading
-                                    ? "…"
-                                    : systemDashboard.systemHealth.status}
-                            </strong>
-                            <span>
-                                API <b>{systemDashboard.systemHealth.api}</b>
-                                {" · "}
-                                DB <b>{systemDashboard.systemHealth.database}</b>
-                            </span>
-                        </div>
-                        <div className="capacity-track">
-                            <span
-                                style={{
-                                    width: `${Math.min(
-                                        100,
-                                        Math.max(
-                                            0,
-                                            Number(systemDashboard.serverUsage.memoryPercent) || 0
-                                        )
-                                    )}%`,
-                                }}
-                            />
-                        </div>
-                        <div className="capacity-labels">
-                            <span>
-                                Server memory · {systemDashboard.serverUsage.memoryPercent == null
-                                    ? "Unavailable"
-                                    : `${systemDashboard.serverUsage.memoryPercent}%`}
-                            </span>
-                            <span>
-                                {systemDashboard.serverUsage.uptimeSeconds == null
-                                    ? "Uptime unavailable"
-                                    : `Uptime ${Math.floor(systemDashboard.serverUsage.uptimeSeconds / 3600)}h`}
-                            </span>
-                        </div>
-                        <div className="mini-chart" aria-label="Live dashboard database metrics">
-                            <div className="chart-grid-lines"></div>
-                            <div className="dashboard-live-metrics">
-                                <div>
-                                    <strong>{dashboardLoading ? "…" : (stats.totalStudents ?? 0).toLocaleString()}</strong>
-                                    <span>Students</span>
-                                </div>
-                                <div>
-                                    <strong>{dashboardLoading ? "…" : (stats.pendingRegistrations ?? 0).toLocaleString()}</strong>
-                                    <span>Pending registrations</span>
-                                </div>
-                                <div>
-                                    <strong>{dashboardLoading ? "…" : (stats.totalStaff ?? 0).toLocaleString()}</strong>
-                                    <span>Staff accounts</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="chart-label">Live values returned by the Admin Dashboard API</div>
-                    </div>
-
-                    <div className="votara-feature-card system-overview-card">
-                        <div className="feature-card-title-row"><h2>System Overview</h2><button onClick={() => goTo("/admin/settings")}>Configure</button></div>
-                        {[
-                            [FiDatabase, "Database Status", systemStatus.database, "/admin/settings"],
-                            [FiUsers, "Staff Accounts", `${(stats.totalStaff ?? 0).toLocaleString()} total · ${(stats.activeUsers ?? 0).toLocaleString()} active`, "/admin/users"],
-                            [FiRefreshCw, "Automatic Backup", systemSettings.autoBackup ? `Enabled · ${systemSettings.backupFrequency || "scheduled"}` : "Disabled", "/admin/settings?section=backup"],
-                            [FiShield, "Security", systemSettings.twoStepVerification ? "Two-step verification enabled" : "Review security settings", "/admin/settings?section=security"],
-                        ].map(([Icon, title, status, path]) => (
-                            <button key={title} className="system-overview-row" onClick={() => goTo(path)}>
-                                <span className="row-icon"><Icon size={17} /></span>
-                                <span><b>{title}</b><small><i></i>{status}</small></span>
-                                <FiChevronRight size={15} />
-                            </button>
-                        ))}
-                    </div>
-                </section>
-
-                <section className="votara-dashboard-grid secondary-feature-grid">
-                    <div className="votara-feature-card elections-card">
-                        <div className="feature-card-title-row"><h2>Elections</h2><span>{stats.totalStaff ?? 0} staff</span></div>
-                        <div className="election-alert">
-                            <FiAlertCircle size={18} />
-                            <div><strong>Election management</strong><p>Review election schedules, status, and configuration before opening the voting window.</p><button onClick={() => goTo("/admin/reports")}>View election reports</button></div>
-                        </div>
-                        {[
-                            [
-                                systemDashboard.electionStatus.election?.title || "No current election",
-                                "Current election",
-                                systemDashboard.electionStatus.status || "No Election",
-                            ],
-                            [
-                                (stats.totalElections ?? 0).toLocaleString(),
-                                "Total elections in database",
-                                "Recorded",
-                            ],
-                            [
-                                (stats.pendingRegistrations ?? 0).toLocaleString(),
-                                "Registration applications",
-                                "Pending review",
-                            ],
-                        ].map(([name, detail, status]) => (
-                            <button className="election-row" key={`${name}-${detail}`} onClick={() => goTo("/admin/reports")}>
-                                <span className="election-dot"></span><span><b>{name}</b><small>{detail}</small></span><em>{status}</em>
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className="votara-feature-card approval-card">
-                        <div className="feature-card-title-row"><h2>Late Enrollee Approval</h2><button onClick={() => goTo("/admin/late-enrollees")}>Open queue</button></div>
-                        <div className="approval-stat"><span></span><strong>{stats.totalStudents ?? "—"}</strong><p>registered students / voters</p></div>
-                        <div className="approval-stat"><span></span><strong>{stats.pendingRegistrations ?? "—"}</strong><p>awaiting eligibility review</p><button onClick={() => goTo("/admin/late-enrollees")}>Review</button></div>
-                        <div className="approval-stat"><span></span><strong>{stats.activeUsers ?? "—"}</strong><p>active staff accounts</p><button onClick={() => goTo("/admin/users")}>View</button></div>
-                    </div>
-
-                    <div className="votara-feature-card monitor-card">
-                        <div className="feature-card-title-row"><h2>Monitor &amp; logs</h2><button onClick={() => goTo("/admin/audit-logs")}>Full log</button></div>
-                        {(systemDashboard.activityLogs.recent || []).length > 0 ? (
-                            systemDashboard.activityLogs.recent.map((log, index) => (
-                                <button
-                                    className="log-row"
-                                    key={log.id || `${log.action}-${index}`}
-                                    onClick={() => goTo("/admin/audit-logs")}
-                                >
-                                    <span className={`log-dot log-dot-${index % 5}`}></span>
-                                    <span>{log.description || log.action || "System activity"}</span>
-                                    <em>{log.created_at ? formatRelativeTime(log.created_at) : "—"}</em>
-                                </button>
-                            ))
-                        ) : (
-                            <div className="dashboard-empty-state">No audit activity has been recorded yet.</div>
-                        )}
-                    </div>
-                </section>
-
-                <section className="votara-feature-card account-role-card">
-                    <div className="feature-card-title-row">
-                        <h2>Account overview</h2>
-                        <span>{(stats.totalUsers ?? 0).toLocaleString()} Total</span>
-                    </div>
-                    {[
-                        [
-                            "Students / Voters",
-                            stats.totalStudents ?? 0,
-                            stats.totalUsers ? Math.min(100, ((stats.totalStudents ?? 0) / stats.totalUsers) * 100) : 0,
-                            `${(stats.totalStudents ?? 0).toLocaleString()}`,
-                        ],
-                        [
-                            "Staff Accounts",
-                            stats.totalStaff ?? 0,
-                            stats.totalUsers ? Math.min(100, ((stats.totalStaff ?? 0) / stats.totalUsers) * 100) : 0,
-                            `${(stats.totalStaff ?? 0).toLocaleString()}`,
-                        ],
-                    ].map(([label, value, percent, displayValue]) => (
-                        <div className="role-row" key={label}>
-                            <span>{label}</span>
-                            <div className="role-track">
-                                <i style={{ width: `${percent}%` }}></i>
-                            </div>
-                            <b>{displayValue ?? value}</b>
-                        </div>
+                <section className="ad-metrics" aria-label="Account and election overview" aria-busy={dashboardLoading}>
+                    {overviewMetrics.map(({ label, value, detail, icon: Icon, path, attention }) => (
+                        <button type="button" className={`ad-metric${attention ? " ad-metric-attention" : ""}`} key={label} onClick={() => goTo(path)}>
+                            <span className="ad-metric-top"><span className="ad-icon"><Icon size={18} aria-hidden="true" /></span><FiChevronRight size={16} className="ad-metric-arrow" aria-hidden="true" /></span>
+                            <span className="ad-metric-label">{label}</span>
+                            {dashboardLoading && !hasData ? <span className="ad-skeleton ad-number-skeleton" aria-label="Loading" /> : <strong className="ad-metric-number">{displayCount(value)}</strong>}
+                            <span className="ad-metric-detail">{detail}{attention && <span className="ad-attention-dot" aria-label="Needs review" />}</span>
+                        </button>
                     ))}
                 </section>
 
-                <section className="votara-feature-card config-support-card">
-                    <div className="config-panel">
-                        <h2>Configuration snapshot</h2>
-                        <span>Current values returned by System Configuration</span>
-                        {[
-                            [
-                                "Voting window",
-                                systemSettings.votingPeriod || "Not configured",
-                                "/admin/settings",
-                            ],
-                            [
-                                "Session timeout",
-                                systemSettings.sessionTimeout ? `${systemSettings.sessionTimeout} minutes` : "Not configured",
-                                "/admin/settings",
-                            ],
-                            [
-                                "Automatic backup",
-                                systemSettings.autoBackup ? `Enabled · ${systemSettings.backupFrequency || "scheduled"}` : "Disabled",
-                                "/admin/settings",
-                            ],
-                            [
-                                "Maintenance mode",
-                                systemSettings.maintenanceMode ? "Enabled" : "Disabled",
-                                "/admin/settings",
-                            ],
-                        ].map(([label, value, path]) => (
-                            <div className="config-row" key={label}>
-                                <span>{label}</span>
-                                <b>{value}</b>
-                                <button onClick={() => goTo(path)}>Edit</button>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="support-panel dashboard-system-summary">
-                        <h3>Live system summary</h3>
-                        <div className="dashboard-summary-item">
-                            <span>Audit activities</span>
-                            <strong>{(systemDashboard.activityLogs.total ?? 0).toLocaleString()}</strong>
+                <div className="ad-content-grid">
+                    <section className="ad-panel ad-election-panel" aria-labelledby="ad-election-title">
+                        <div className="ad-panel-heading"><h2 id="ad-election-title">Election overview</h2><button className="ad-text-button" onClick={() => goTo("/admin/reports")}>View reports <FiChevronRight aria-hidden="true" /></button></div>
+                        <div className="ad-election-current">
+                            <span className="ad-election-icon"><FiCalendar size={24} aria-hidden="true" /></span>
+                            <div><span className="ad-label">Current election</span><h3>{dashboardLoading && !hasData ? "Loading election…" : election.election?.title || "No current election"}</h3></div>
+                            <span className="ad-badge">{hasData ? election.status : "Checking"}</span>
                         </div>
-                        <div className="dashboard-summary-item">
-                            <span>Elections recorded</span>
-                            <strong>{(stats.totalElections ?? 0).toLocaleString()}</strong>
+                        <p className="ad-election-description">Review election schedules, participation, and results from the latest platform data.</p>
+                        <div className="ad-review-callout">
+                            <span className="ad-callout-icon"><FiUserCheck size={20} aria-hidden="true" /></span>
+                            <div><strong>{!hasData ? "Registration review" : pending > 0 ? `${displayCount(pending)} application${pending === 1 ? "" : "s"} awaiting review` : "Your review queue is clear"}</strong><p>Check eligibility before approving late enrollees.</p></div>
+                            <button type="button" className="ad-button ad-button-secondary" onClick={() => goTo("/admin/late-enrollees")}>Open queue <FiChevronRight aria-hidden="true" /></button>
                         </div>
-                        <div className="dashboard-summary-item">
-                            <span>Current election</span>
-                            <strong>{systemDashboard.electionStatus.election?.title || "None"}</strong>
-                        </div>
-                        <button className="dashboard-summary-action" onClick={() => goTo("/admin/reports")}>Open Reports &amp; Analytics</button>
-                    </div>
-                </section>
+                        <div className="ad-election-footer"><span><FiShield aria-hidden="true" />Administrative actions are recorded in the audit log.</span><button type="button" className="ad-text-button" onClick={() => goTo("/admin/audit-logs")}>View log</button></div>
+                    </section>
 
-                <section className="votara-quick-actions">
-                    <button onClick={() => goTo("/admin/late-enrollees")}><span><FiCheckCircle size={19} /></span>Review Late Enrollees</button>
-                    <button onClick={() => goTo("/admin/users")}><span><FiUserCheck size={19} /></span>Grant or revoke access</button>
-                    <button onClick={() => goTo("/admin/settings")}><span><FiSettings size={19} /></span>Open System Configuration</button>
-                </section>
+                    <section className="ad-panel ad-health-panel" aria-labelledby="ad-health-title">
+                        <div className="ad-panel-heading"><h2 id="ad-health-title">Platform health</h2><span className={`ad-status${isOnline ? " ad-status-online" : ""}`}><i aria-hidden="true" />{dashboardLoading && !hasData ? "Checking" : isOnline ? "Operational" : "Needs attention"}</span></div>
+                        <dl className="ad-health-list">
+                            <div><dt><FiActivity aria-hidden="true" />API connection</dt><dd>{systemStatus.api}</dd></div>
+                            <div><dt><FiDatabase aria-hidden="true" />Database</dt><dd>{hasData && !dashboardError ? health.database : dashboardLoading ? "Checking" : "Unverified"}</dd></div>
+                            <div><dt><FiClock aria-hidden="true" />Server uptime</dt><dd>{!hasData || usage.uptimeSeconds == null ? "—" : usage.uptimeSeconds < 3600 ? `${Math.floor(usage.uptimeSeconds / 60)}m` : `${Math.floor(usage.uptimeSeconds / 3600)}h ${Math.floor((usage.uptimeSeconds % 3600) / 60)}m`}</dd></div>
+                        </dl>
+                        <div className="ad-memory"><div><span>Server memory</span><strong>{memoryPercent == null ? "—" : `${memoryPercent}%`}</strong></div><progress value={Math.max(0, Math.min(100, Number(memoryPercent) || 0))} max="100" aria-label="Server memory usage" /><span>Node.js heap utilization</span></div>
+                        <button type="button" className="ad-panel-footer-link" onClick={() => goTo("/admin/settings")}>System configuration <FiChevronRight aria-hidden="true" /></button>
+                    </section>
 
-                {/* FOOTER */}
+                    <section className="ad-panel ad-activity-panel" aria-labelledby="ad-activity-title" aria-busy={dashboardLoading}>
+                        <div className="ad-panel-heading"><div><h2 id="ad-activity-title">Recent activity</h2><p>The latest actions across your platform.</p></div><button type="button" className="ad-text-button" onClick={() => goTo("/admin/audit-logs")}>View all <FiChevronRight aria-hidden="true" /></button></div>
+                        {dashboardLoading && !hasData ? <div className="ad-activity-loading" role="status" aria-label="Loading recent activity">{[0, 1, 2].map((item) => <div className="ad-skeleton ad-line-skeleton" key={item} />)}</div> : recentLogs.length ? (
+                            <ul className="ad-activity-list">{recentLogs.slice(0, 5).map((log, index) => (
+                                <li key={log.id || `${log.action}-${index}`}><button type="button" onClick={() => goTo("/admin/audit-logs")}><span className="ad-activity-icon"><FiActivity size={16} aria-hidden="true" /></span><span className="ad-activity-copy">{log.description || log.action || "System activity"}</span><time dateTime={log.created_at || undefined}>{log.created_at ? formatRelativeTime(log.created_at) : "—"}</time><FiChevronRight size={14} className="ad-activity-arrow" aria-hidden="true" /></button></li>
+                            ))}</ul>
+                        ) : <div className="ad-empty"><FiFileText size={26} aria-hidden="true" /><strong>{dashboardError ? "Activity unavailable" : "No activity yet"}</strong><p>{dashboardError ? "Try refreshing to load platform activity." : "Administrative actions will appear here as your team uses VOTARA."}</p></div>}
+                        <div className="ad-activity-total"><FiFileText aria-hidden="true" /><span>{displayCount(systemDashboard.activityLogs.total)} recorded audit activities</span></div>
+                    </section>
 
-                <footer
-                    style={styles.footer}
-                >
-                    <span>
-                        VOTARA Online Voting System
-                    </span>
-
-                    <span>
-                        Last checked:{" "}
-                        {formatDate(
-                            lastUpdated
-                        )}
-                    </span>
-                </footer>
-            </main>
-
-            {/* =================================================
-                RESPONSIVE CSS
-            ================================================= */}
-
-            <style>
-                {`
-                    @keyframes spin {
-                        from {
-                            transform: rotate(0deg);
-                        }
-
-                        to {
-                            transform: rotate(360deg);
-                        }
-                    }
-
-                    * {
-                        box-sizing: border-box;
-                    }
-
-                    button {
-                        font-family: inherit;
-                    }
-
-                    @media (max-width: 1100px) {
-                        .votara-admin-main {
-                            padding: 28px !important;
-                        }
-                    }
-
-                    @media (max-width: 850px) {
-                        .votara-admin-sidebar {
-                            display: none;
-                        }
-
-                        .votara-admin-main {
-                            margin-left: 0 !important;
-                        }
-                    }
-
-                    @media (max-width: 650px) {
-                        .votara-admin-main {
-                            padding: 20px !important;
-                        }
-
-                        .votara-admin-header {
-                            flex-direction: column !important;
-                            align-items: flex-start !important;
-                        }
-
-                        .votara-admin-stats {
-                            grid-template-columns: 1fr !important;
-                        }
-
-                        .votara-admin-health {
-                            grid-template-columns: 1fr !important;
-                        }
-
-                        .votara-admin-management {
-                            grid-template-columns: 1fr !important;
-                        }
-                            @media (max-width: 1200px) {
-
-                            .admin-system-dashboard-grid {
-                                grid-template-columns:
-                                    repeat(3, minmax(0, 1fr)) !important;
-                            }
-
-                        }
-
-                        @media (max-width: 750px) {
-
-                            .admin-system-dashboard-grid {
-                                grid-template-columns:
-                                    repeat(2, minmax(0, 1fr)) !important;
-                            }
-
-                        }
-
-                        @media (max-width: 520px) {
-
-                            .admin-system-dashboard-grid {
-                                grid-template-columns:
-                                    1fr !important;
-                            }
-
-                        }
-                    }
-                `}
-            </style>
-        </div>
-    );
-}
-
-
-// =========================================================
-// STAT CARD
-// =========================================================
-
-function StatCard({
-    title,
-    value,
-    icon: Icon,
-    description,
-    loading,
-}) {
-    return (
-        <div style={styles.statCard}>
-            <div style={styles.statTop}>
-                <div style={styles.statIcon}>
-                    <Icon size={21} />
+                    <section className="ad-panel ad-access-panel" aria-labelledby="ad-access-title">
+                        <div className="ad-panel-heading"><h2 id="ad-access-title">Account overview</h2><span className="ad-muted">{displayCount(stats.totalUsers)} total</span></div>
+                        <div className="ad-account-bar" aria-hidden="true"><span style={{ width: `${stats.totalUsers ? Math.min(100, (stats.totalStudents / stats.totalUsers) * 100) : 0}%` }} /></div>
+                        <dl className="ad-account-list"><div><dt><i className="ad-student-dot" />Students / voters</dt><dd>{displayCount(stats.totalStudents)}</dd></div><div><dt><i className="ad-staff-dot" />Staff accounts</dt><dd>{displayCount(stats.totalStaff)}</dd></div></dl>
+                        <button type="button" className="ad-account-action" onClick={() => goTo("/admin/data-management")}><span className="ad-icon"><FiUsers size={18} aria-hidden="true" /></span><span><strong>Student management</strong><span>View and manage registered students</span></span><FiChevronRight aria-hidden="true" /></button>
+                        <button type="button" className="ad-account-action" onClick={() => goTo("/admin/users")}><span className="ad-icon"><FiShield size={18} aria-hidden="true" /></span><span><strong>Staff and access</strong><span>Manage accounts and permissions</span></span><FiChevronRight aria-hidden="true" /></button>
+                    </section>
                 </div>
 
-                <span style={styles.statLabel}>
-                    {title}
-                </span>
-            </div>
-
-            <div style={styles.statValue}>
-                {loading ? "..." : value}
-            </div>
-
-            <span
-                style={
-                    styles.statDescription
-                }
-            >
-                {description}
-            </span>
+                <section className="ad-panel ad-configuration" aria-labelledby="ad-configuration-title">
+                    <div className="ad-panel-heading"><div><h2 id="ad-configuration-title">Configuration snapshot</h2><p>Your current platform settings.</p></div><button type="button" className="ad-text-button" onClick={() => goTo("/admin/settings")}>Manage settings <FiChevronRight aria-hidden="true" /></button></div>
+                    <dl className="ad-config-grid">{[
+                        ["Voting window", systemSettings?.votingPeriod || "Not configured", FiCalendar],
+                        ["Session timeout", systemSettings?.sessionTimeout ? `${systemSettings?.sessionTimeout} minutes` : "Not configured", FiClock],
+                        ["Automatic backup", systemSettings?.autoBackup ? `Enabled · ${systemSettings.backupFrequency || "Scheduled"}` : "Disabled", FiDatabase],
+                        ["Maintenance mode", systemSettings?.maintenanceMode ? "Enabled" : "Disabled", FiSettings],
+                    ].map(([label, value, Icon]) => <div key={label}><dt><Icon aria-hidden="true" />{label}</dt><dd>{dashboardLoading && !hasData ? "Loading…" : systemSettings ? value : "Unavailable"}</dd></div>)}</dl>
+                    <div className="ad-security-note"><FiShield size={16} aria-hidden="true" /><span>{!systemSettings ? "Security settings unavailable" : systemSettings?.twoStepVerification ? "Two-step verification is enabled" : "Review your security settings"}</span><button type="button" className="ad-text-button" onClick={() => goTo("/admin/settings?section=security")}>Security settings <FiChevronRight aria-hidden="true" /></button></div>
+                </section>
+                <footer className="ad-footer"><span>VOTARA <span>Administration workspace</span></span><span aria-live="polite">{dashboardLoading ? "Updating dashboard…" : lastUpdated ? `Last updated at ${formatDate(lastUpdated)}` : "Waiting for dashboard data"}</span></footer>
+            </main>
         </div>
     );
 }
-
-// =========================================================
-// HEALTH CARD
-// =========================================================
-
-function HealthCard({
-    title,
-    status,
-    icon: Icon,
-}) {
-    const isGood =
-        status === "Online" ||
-        status === "Connected" ||
-        status === "Protected" ||
-        status === "RBAC Enabled";
-
-    return (
-        <div style={styles.healthCard}>
-            <div style={styles.healthIcon}>
-                <Icon size={20} />
-            </div>
-
-            <div
-                style={
-                    styles.healthContent
-                }
-            >
-                <strong>{title}</strong>
-
-                <span
-                    style={{
-                        ...styles.healthStatus,
-                        ...(isGood
-                            ? styles.healthGood
-                            : styles.healthWarning),
-                    }}
-                >
-                    {isGood ? (
-                        <FiCheckCircle
-                            size={14}
-                        />
-                    ) : (
-                        <FiAlertCircle
-                            size={14}
-                        />
-                    )}
-
-                    {status}
-                </span>
-            </div>
-        </div>
-    );
-}
-
-// =========================================================
-// MANAGEMENT CARD
-// =========================================================
-
-function ManagementCard({
-    item,
-    onClick,
-}) {
-    const Icon = item.icon;
-
-    return (
-        <button
-            style={
-                styles.managementCard
-            }
-            onClick={onClick}
-        >
-            <div
-                style={
-                    styles.managementIcon
-                }
-            >
-                <Icon size={22} />
-            </div>
-
-            <div
-                style={
-                    styles.managementContent
-                }
-            >
-                <h3>{item.title}</h3>
-
-                <p>{item.description}</p>
-            </div>
-
-            <FiChevronRight
-                size={20}
-                style={styles.chevron}
-            />
-        </button>
-    );
-}
-
-// =========================================================
-// STYLES
-// =========================================================
-
-const styles = {
-    page: {
-        minHeight: "100vh",
-        background: "var(--admin-bg)",
-        color: "var(--admin-text)",
-        fontFamily:
-            "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-    },
-
-    sidebar: {
-        position: "fixed",
-        top: 0,
-        left: 0,
-        bottom: 0,
-        width: "260px",
-        background: "#101828",
-        color: "#ffffff",
-        display: "flex",
-        flexDirection: "column",
-        zIndex: 100,
-        boxShadow:
-            "4px 0 20px rgba(16, 24, 40, 0.08)",
-    },
-
-    logoArea: {
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
-        padding: "25px 22px",
-        borderBottom:
-            "1px solid rgba(255,255,255,0.08)",
-    },
-
-    logoIcon: {
-        width: "43px",
-        height: "43px",
-        borderRadius: "12px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "var(--votara-primary, #266EFF)",
-    },
-
-    logoText: {
-        margin: 0,
-        fontSize: "21px",
-        fontWeight: 800,
-        letterSpacing: "1px",
-    },
-
-    logoSubtitle: {
-        display: "block",
-        marginTop: "2px",
-        fontSize: "9px",
-        letterSpacing: "1.5px",
-        color: "#98A2B3",
-        fontWeight: 600,
-    },
-
-    adminProfile: {
-        display: "flex",
-        alignItems: "center",
-        gap: "11px",
-        padding: "20px",
-        borderBottom:
-            "1px solid rgba(255,255,255,0.08)",
-    },
-
-    avatar: {
-        width: "40px",
-        height: "40px",
-        borderRadius: "50%",
-        background: "var(--votara-primary, #266EFF)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: "17px",
-        fontWeight: 700,
-    },
-
-    profileInfo: {
-        display: "flex",
-        flexDirection: "column",
-        minWidth: 0,
-    },
-
-    navigation: {
-        flex: 1,
-        overflowY: "auto",
-        padding: "18px 12px",
-    },
-
-    navSection: {
-        marginBottom: "22px",
-    },
-
-    navSectionTitle: {
-        display: "block",
-        padding:
-            "0 12px 8px",
-        fontSize: "9px",
-        fontWeight: 700,
-        letterSpacing: "1.3px",
-        color: "#667085",
-    },
-
-    navItem: {
-        width: "100%",
-        border: "none",
-        background: "transparent",
-        color: "#98A2B3",
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
-        padding: "11px 12px",
-        borderRadius: "9px",
-        cursor: "pointer",
-        textAlign: "left",
-        fontSize: "13px",
-        marginBottom: "3px",
-    },
-
-    navItemActive: {
-        background: "var(--votara-primary, #266EFF)",
-        color: "#ffffff",
-        fontWeight: 600,
-    },
-
-    sidebarBottom: {
-        padding: "14px 12px",
-        borderTop:
-            "1px solid rgba(255,255,255,0.08)",
-    },
-
-    settingsButton: {
-        width: "100%",
-        border: "none",
-        background: "transparent",
-        color: "#98A2B3",
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
-        padding: "11px 12px",
-        borderRadius: "9px",
-        cursor: "pointer",
-        textAlign: "left",
-        fontSize: "13px",
-    },
-
-    logoutButton: {
-        width: "100%",
-        border: "none",
-        background:
-            "rgba(255,255,255,0.05)",
-        color: "#ffffff",
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
-        padding: "11px 12px",
-        borderRadius: "9px",
-        cursor: "pointer",
-        textAlign: "left",
-        fontSize: "13px",
-        marginTop: "4px",
-    },
-
-    main: {
-        minHeight: "100vh",
-        padding: "34px 42px",
-    },
-
-    header: {
-        display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "space-between",
-        gap: "25px",
-        marginBottom: "34px",
-    },
-
-    pageLabel: {
-        fontSize: "10px",
-        fontWeight: 700,
-        letterSpacing: "1.5px",
-        color: "var(--votara-primary, #266EFF)",
-    },
-
-    title: {
-        margin: "7px 0 5px",
-        fontSize: "30px",
-        fontWeight: 800,
-        letterSpacing: "-0.7px",
-    },
-
-    subtitle: {
-        margin: 0,
-        color: "var(--admin-text-secondary)",
-        fontSize: "14px",
-    },
-
-    headerActions: {
-        display: "flex",
-        alignItems: "center",
-        gap: "10px",
-    },
-
-    systemOnlineBadge: {
-        display: "flex",
-        alignItems: "center",
-        gap: "7px",
-        padding: "9px 13px",
-        background: "var(--admin-card)",
-border: "1px solid var(--admin-border)",
-        borderRadius: "9px",
-        fontSize: "12px",
-        fontWeight: 600,
-    },
-
-    onlineDot: {
-        width: "7px",
-        height: "7px",
-        borderRadius: "50%",
-        background: "#2ED171",
-    },
-
-    refreshButton: {
-        border:
-            "1px solid #D0D5DD",
-        background: "var(--admin-card)",
-        color: "var(--admin-text)",
-        borderRadius: "9px",
-        padding: "9px 13px",
-        display: "flex",
-        alignItems: "center",
-        gap: "7px",
-        cursor: "pointer",
-        fontSize: "12px",
-        fontWeight: 600,
-    },
-
-    errorBanner: {
-        display: "flex",
-        alignItems: "flex-start",
-        gap: "12px",
-        padding: "15px 17px",
-        marginBottom: "25px",
-        bbackground: "var(--admin-bg)",
-border: "1px solid var(--admin-border)",
-        borderRadius: "12px",
-        color: "#B42318",
-    },
-
-    section: {
-        marginTop: "34px",
-    },
-
-    sectionHeader: {
-        marginBottom: "15px",
-    },
-
-    sectionTitle: {
-        margin: 0,
-        fontSize: "18px",
-        fontWeight: 750,
-    },
-
-    sectionDescription: {
-        margin: "4px 0 0",
-        color: "var(--admin-text-secondary)",
-        fontSize: "12px",
-    },
-
-    statsGrid: {
-        display: "grid",
-        gridTemplateColumns:
-        "repeat(5, minmax(0, 1fr))",
-        gap: "15px",
-    },
-
-    statCard: {
-        background: "var(--admin-card)",
-        border:
-            "1px solid var(--admin-border)",
-        borderRadius: "14px",
-        padding: "19px",
-        boxShadow:
-            "0 2px 5px rgba(16,24,40,0.03)",
-    },
-
-    statTop: {
-        display: "flex",
-        alignItems: "center",
-        gap: "10px",
-    },
-
-    statIcon: {
-        width: "38px",
-        height: "38px",
-        borderRadius: "10px",
-        background: "var(--votara-primary-light, #EEF4FF)",
-        color: "var(--votara-primary, #266EFF)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
-    statLabel: {
-        color: "var(--admin-text-secondary)",
-        fontSize: "12px",
-        fontWeight: 600,
-    },
-
-    statValue: {
-        marginTop: "15px",
-        fontSize: "27px",
-        fontWeight: 800,
-    },
-
-    statDescription: {
-        display: "block",
-        marginTop: "4px",
-        color: "var(--admin-text-secondary)",
-        fontSize: "11px",
-    },
-
-    healthGrid: {
-        display: "grid",
-        gridTemplateColumns:
-            "repeat(4, minmax(0, 1fr))",
-        gap: "15px",
-    },
-
-    healthCard: {
-        background: "var(--admin-card)",
-        border:
-            "1px solid var(--admin-border)",
-        borderRadius: "14px",
-        padding: "17px",
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
-    },
-
-    healthIcon: {
-        width: "38px",
-        height: "38px",
-        borderRadius: "10px",
-        background: "var(--admin-card)",
-        color: "var(--admin-text)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexShrink: 0,
-    },
-
-    healthContent: {
-        display: "flex",
-        flexDirection: "column",
-        gap: "5px",
-        minWidth: 0,
-    },
-
-    healthStatus: {
-        display: "flex",
-        alignItems: "center",
-        gap: "5px",
-        fontSize: "11px",
-        fontWeight: 600,
-    },
-
-    healthGood: {
-        color: "#039855",
-    },
-
-    healthWarning: {
-        color: "#D92D20",
-    },
-
-    managementGrid: {
-        display: "grid",
-        gridTemplateColumns:
-            "repeat(2, minmax(0, 1fr))",
-        gap: "15px",
-    },
-
-    managementCard: {
-        width: "100%",
-        border:
-            "1px solid var(--admin-border)",
-        background: "var(--admin-card)",
-        borderRadius: "14px",
-        padding: "18px",
-        display: "flex",
-        alignItems: "center",
-        gap: "13px",
-        cursor: "pointer",
-        textAlign: "left",
-        boxShadow:
-            "0 2px 5px rgba(16,24,40,0.03)",
-    },
-
-    managementIcon: {
-        width: "43px",
-        height: "43px",
-        borderRadius: "11px",
-        background: "var(--votara-primary-light, #EEF4FF)",
-        color: "var(--votara-primary, #266EFF)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexShrink: 0,
-    },
-
-    managementContent: {
-        flex: 1,
-    },
-
-    chevron: {
-        color: "var(--admin-text-secondary)",
-        flexShrink: 0,
-    },
-
-    infoPanel: {
-        display: "flex",
-        alignItems: "flex-start",
-        gap: "14px",
-        padding: "18px",
-        background: "var(--votara-primary-light, #EEF4FF)",
-border: "1px solid var(--admin-border)",
-        borderRadius: "14px",
-    },
-
-    infoIcon: {
-        width: "40px",
-        height: "40px",
-        borderRadius: "10px",
-        background: "var(--admin-card)",
-        color: "var(--votara-primary, #266EFF)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexShrink: 0,
-    },
-
-    infoContent: {
-        flex: 1,
-    },
-
-    footer: {
-        marginTop: "40px",
-        padding:
-            "20px 0 5px",
-        borderTop:
-            "1px solid var(--admin-border)",
-        display: "flex",
-        justifyContent: "space-between",
-        gap: "20px",
-        color: "var(--admin-text-secondary)",
-        fontSize: "11px",
-    },
-
-    loadingPage: {
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "var(--admin-bg)",
-        color: "var(--admin-text)",
-    },
-
-    loadingSpinner: {
-        color: "var(--votara-primary, #266EFF)",
-        marginBottom: "10px",
-    },
-};
-
-
 
 export default AdminDashboard;
-

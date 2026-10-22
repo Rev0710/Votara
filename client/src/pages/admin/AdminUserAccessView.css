@@ -1,0 +1,249 @@
+/* Staff-management surfaces share the VOTARA palette in both themes.
+   Panels: 14px corners. Nested controls: 8px. Table headers: local layer 1. */
+.user-access-view {
+    --ux-bg: #0e1525;
+    --ux-surface: #172134;
+    --ux-inset: #121c2e;
+    --ux-line: #2c3950;
+    --ux-text: #eff3fc;
+    --ux-muted: #abb9d0;
+    --ux-link: #9bbcff;
+    --ux-selection: #223b63;
+    --ux-success-bg: #163c30;
+    --ux-success: #9ce4c3;
+    --ux-warning-bg: #44351c;
+    --ux-warning: #f0cf8b;
+    --ux-error-bg: #472631;
+    --ux-error: #ffb8c3;
+    --aw-text: var(--ux-text);
+    --aw-muted: var(--ux-muted);
+    --aw-solid: var(--ux-surface);
+    --aw-border: var(--ux-line);
+    min-height: 100dvh;
+    color: var(--ux-text);
+    font: 13px/1.5 "Poppins", system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+}
+.admin-workspace[data-admin-theme="light"] .user-access-view {
+    --ux-bg: #f2f5fa;
+    --ux-surface: #fcfdff;
+    --ux-inset: #f3f6fb;
+    --ux-line: #dce4ef;
+    --ux-text: #19263a;
+    --ux-muted: #5e6b80;
+    --ux-link: #214fc8;
+    --ux-selection: #edf3ff;
+    --ux-success-bg: #eaf6ef;
+    --ux-success: #246044;
+    --ux-warning-bg: #fcf2df;
+    --ux-warning: #825509;
+    --ux-error-bg: #fcecee;
+    --ux-error: #a22c43;
+    --aw-dot: rgba(76, 110, 165, .19);
+}
+.admin-workspace[data-admin-theme] > .user-access-view { background: var(--ux-bg) radial-gradient(circle, var(--aw-dot) 1px, transparent 1.2px) 0 0 / 24px 24px !important; }
+.admin-workspace .user-access-view .ux-main { width: 100%; max-width: 1440px; margin: 0 auto; padding: 30px clamp(20px, 3vw, 44px) 24px; }
+.user-access-view :is(button, input) { font: inherit; }
+.user-access-view button { transition: background .18s ease, border-color .18s ease; }
+.user-access-view button:active:not(:disabled) { transform: translateY(1px); }
+.user-access-view button:disabled { cursor: not-allowed; opacity: .5; }
+.user-access-view :is(a, button, input, [tabindex]):focus-visible { outline: 2px solid var(--ux-link); outline-offset: 3px; }
+.user-access-view .ux-skip { position: fixed; top: -80px; left: 20px; z-index: 1200; padding: 12px 18px; border: 1px solid var(--ux-line); border-radius: 8px; background: var(--ux-surface); color: var(--ux-text); }
+.user-access-view .ux-skip:focus { top: 16px; }
+.user-access-view .ux-heading { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-bottom: 24px; }
+.user-access-view .ux-breadcrumb { display: flex; gap: 10px; margin-bottom: 8px; color: var(--ux-muted); font-size: 11px; }
+.user-access-view .ux-breadcrumb > span { opacity: .55; }
+.user-access-view h1 { margin: 0; font-size: clamp(24px, 2.2vw, 30px); font-weight: 600; line-height: 1.3; letter-spacing: -.8px; }
+.user-access-view .ux-heading p { margin: 8px 0 0; font-size: 12px; }
+.user-access-view .ux-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 10px 15px; border: 1px solid transparent; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+.user-access-view .ux-button > svg { width: 16px; height: 16px; flex-shrink: 0; }
+.user-access-view .ux-primary { background: #2154d2; color: #fcfdff; }
+.user-access-view .ux-primary:hover:not(:disabled) { background: #1946b6; }
+.user-access-view .ux-secondary { background: var(--ux-surface); border-color: var(--ux-line); color: var(--ux-text); }
+.user-access-view .ux-secondary:hover:not(:disabled) { background: var(--ux-inset); border-color: var(--ux-link); }
+.user-access-view .ux-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow: hidden; margin-bottom: 24px; border: 1px solid var(--ux-line); border-radius: 14px; background: var(--ux-surface); }
+.user-access-view .ux-summary > div { display: grid; grid-template-columns: minmax(0, 1fr) 32px; gap: 7px 12px; padding: 20px 24px; border-right: 1px solid var(--ux-line); }
+.user-access-view .ux-summary > div:last-child { border-right: 0; }
+.user-access-view .ux-summary > div > span { color: var(--ux-muted); font-size: 11px; }
+.user-access-view .ux-summary > div > svg { grid-column: 2; grid-row: 1 / 3; width: 18px; height: 18px; align-self: center; justify-self: end; color: var(--ux-link); }
+.user-access-view .ux-summary strong { font-size: 27px; font-weight: 600; line-height: 1.3; letter-spacing: -.6px; }
+.user-access-view .ux-create-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); align-items: start; gap: 20px; }
+.user-access-view .ux-panel { min-width: 0; border: 1px solid var(--ux-line); border-radius: 14px; background: var(--ux-surface); }
+.user-access-view .ux-create { padding: 24px; }
+.user-access-view .ux-panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.user-access-view h2 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -.2px; }
+.user-access-view .ux-panel-heading p { margin: 5px 0 0; font-size: 11px; }
+.user-access-view .ux-heading-icon { display: grid; place-items: center; width: 34px; height: 34px; flex-shrink: 0; border-radius: 8px; background: var(--ux-inset); color: var(--ux-link); }
+.user-access-view .ux-heading-icon > svg { width: 17px; height: 17px; }
+.user-access-view .ux-role-fieldset { min-width: 0; border: 0; padding: 0; margin: 24px 0 22px; }
+.user-access-view .ux-role-fieldset legend { margin-bottom: 9px; font-size: 12px; font-weight: 500; }
+.user-access-view .ux-role-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.user-access-view .ux-role-option { display: flex; align-items: flex-start; gap: 10px; min-width: 0; padding: 14px; border: 1px solid var(--ux-line); border-radius: 10px; background: var(--ux-surface); cursor: pointer; }
+.user-access-view .ux-role-option.is-selected { border-color: var(--ux-link); background: var(--ux-selection); }
+.user-access-view .ux-role-option:hover { border-color: var(--ux-link); }
+.user-access-view .ux-role-icon { display: grid; place-items: center; width: 28px; height: 28px; flex: 0 0 28px; color: var(--ux-link); }
+.user-access-view .ux-role-icon svg { width: 19px; height: 19px; }
+.user-access-view .ux-role-copy { display: block; flex: 1; min-width: 0; }
+.user-access-view .ux-role-copy strong { display: block; margin-bottom: 4px; font-size: 12px; font-weight: 500; }
+.user-access-view .ux-role-copy > span { display: block; color: var(--ux-muted); font-size: 10px; line-height: 1.6; }
+.admin-workspace .user-access-view .ux-role-option input[type="radio"] { appearance: auto; width: 15px; height: 15px; min-width: 15px; margin: 4px 0 0; padding: 0 !important; border: 0 !important; background: transparent !important; accent-color: #2154d2; }
+.user-access-view .ux-role-option:focus-within { outline: 2px solid var(--ux-link); outline-offset: 3px; }
+.user-access-view .ux-role-option input:focus-visible { outline: none; }
+.user-access-view .ux-form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.user-access-view .ux-field { display: flex; flex-direction: column; gap: 8px; }
+.user-access-view .ux-field > label { font-size: 12px !important; font-weight: 500; }
+.admin-workspace .user-access-view .ux-field > input { width: 100%; min-height: 44px; padding: 11px 12px; border: 1px solid var(--ux-line) !important; border-radius: 8px; background: var(--ux-inset) !important; color: var(--ux-text) !important; font-size: 12px !important; }
+.user-access-view .ux-field input::placeholder { color: var(--ux-muted); opacity: 1; }
+.user-access-view .ux-photo-field { margin-top: 20px; }
+.user-access-view .ux-photo-label { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 8px; font-size: 12px; font-weight: 500; }
+.user-access-view .ux-photo-label > span { font-size: 10px; color: var(--ux-muted); font-weight: 400; }
+.user-access-view .ux-upload { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 92px; padding: 18px; border: 1px dashed var(--ux-line); border-radius: 10px; background: var(--ux-inset); color: var(--ux-text); text-align: left; }
+.user-access-view .ux-upload:hover:not(:disabled) { border-color: var(--ux-link); }
+.user-access-view .ux-upload-icon { display: grid; place-items: center; width: 38px; height: 38px; flex-shrink: 0; border: 1px solid var(--ux-line); border-radius: 9px; background: var(--ux-surface); color: var(--ux-link); }
+.user-access-view .ux-upload-icon > svg { width: 20px; height: 20px; }
+.user-access-view .ux-upload strong { display: block; font-size: 12px; font-weight: 500; overflow-wrap: anywhere; }
+.user-access-view .ux-upload > span > span { display: block; margin-top: 4px; font-size: 10px; color: var(--ux-muted); }
+.user-access-view .ux-upload .ux-upload-browse { margin-left: auto; padding: 7px 9px; border: 1px solid var(--ux-line); border-radius: 6px; font-size: 10px; background: var(--ux-surface); white-space: nowrap; }
+.user-access-view .ux-upload > img { width: 48px; height: 48px; flex-shrink: 0; border-radius: 9px; object-fit: cover; }
+.user-access-view .ux-create-footer { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--ux-line); }
+.user-access-view .ux-create-footer > span { display: flex; align-items: flex-start; gap: 7px; max-width: 30ch; color: var(--ux-muted); font-size: 10px; line-height: 1.7; }
+.user-access-view .ux-create-footer > span > svg { width: 14px; height: 14px; flex-shrink: 0; margin-top: 2px; }
+.user-access-view .ux-create-footer > div { display: flex; gap: 8px; flex-shrink: 0; }
+.user-access-view .ux-credentials { overflow: hidden; }
+.user-access-view .ux-credentials > .ux-panel-heading { padding: 24px; border-bottom: 1px solid var(--ux-line); }
+.user-access-view .ux-credentials-empty { display: flex; align-items: flex-start; flex-direction: column; gap: 12px; padding: 26px 24px; }
+.user-access-view .ux-key-illustration { display: grid; place-items: center; width: 52px; height: 52px; margin-bottom: 4px; border: 1px solid var(--ux-line); border-radius: 12px; background: var(--ux-inset); color: var(--ux-link); }
+.user-access-view .ux-credentials-empty h3 { margin: 0; font-size: 13px; font-weight: 500; }
+.user-access-view .ux-credentials-empty p { margin: 0; max-width: 36ch; font-size: 11px; line-height: 1.8; }
+.user-access-view .ux-credential-note { display: flex; align-items: flex-start; gap: 9px; padding: 16px 24px; border-top: 1px solid var(--ux-line); background: var(--ux-inset); color: var(--ux-muted); font-size: 10px; line-height: 1.8; }
+.user-access-view .ux-credential-note > svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
+.user-access-view .ux-credential-body { padding: 24px; }
+.user-access-view .ux-credential-account, .user-access-view .ux-modal-account { display: flex; align-items: center; gap: 12px; }
+.user-access-view .ux-credential-account strong, .user-access-view .ux-modal-account strong { display: block; font-size: 13px; font-weight: 500; }
+.user-access-view .ux-credential-account div > span, .user-access-view .ux-modal-account div > span { display: block; margin-top: 4px; color: var(--ux-muted); font-size: 11px; overflow-wrap: anywhere; }
+.user-access-view .ux-password { padding: 16px; margin-top: 20px; border: 1px solid var(--ux-line); border-radius: 10px; background: var(--ux-inset); }
+.user-access-view .ux-password > span { display: block; color: var(--ux-muted); font-size: 10px; }
+.user-access-view .ux-password code { display: block; margin-top: 9px; font: 500 17px/1.7 ui-monospace, SFMono-Regular, Consolas, monospace; color: var(--ux-text); overflow-wrap: anywhere; user-select: all; }
+.user-access-view .ux-delivery { display: flex; align-items: flex-start; gap: 8px; margin-top: 18px; color: var(--ux-warning); }
+.user-access-view .ux-delivery.is-sent { color: var(--ux-success); }
+.user-access-view .ux-delivery > svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 2px; }
+.user-access-view .ux-delivery p { margin: 0; font-size: 11px; }
+.user-access-view .ux-text-button { min-height: 32px; margin-top: 14px; padding: 0; border: 0; border-radius: 4px; background: transparent; color: var(--ux-link); font-size: 11px; text-decoration: underline; text-underline-offset: 4px; }
+.user-access-view .ux-alert { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; padding: 14px 16px; border: 1px solid currentColor; border-radius: 9px; font-size: 12px; line-height: 1.7; }
+.user-access-view .ux-alert > svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; }
+.user-access-view .ux-alert-error { background: var(--ux-error-bg); color: var(--ux-error); }
+.user-access-view .ux-alert-success { background: var(--ux-success-bg); color: var(--ux-success); }
+.user-access-view .ux-directory { margin-top: 24px; overflow: hidden; }
+.user-access-view .ux-directory-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px 24px; }
+.user-access-view .ux-directory-heading p { margin: 5px 0 0; font-size: 11px; }
+.user-access-view .ux-directory-heading > span { color: var(--ux-muted); font-size: 11px; white-space: nowrap; }
+.user-access-view .ux-directory-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 0 24px 20px; }
+.user-access-view .ux-role-filters { display: flex; align-items: center; gap: 4px; padding: 4px; border: 1px solid var(--ux-line); border-radius: 9px; background: var(--ux-inset); }
+.user-access-view .ux-role-filters > button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 34px; padding: 6px 12px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--ux-muted); font-size: 11px; white-space: nowrap; }
+.user-access-view .ux-role-filters > button[aria-pressed="true"] { border-color: var(--ux-line); background: var(--ux-surface); color: var(--ux-link); }
+.user-access-view .ux-role-filters > button > span { font-size: 10px; }
+.user-access-view .ux-directory-search { display: flex; align-items: center; gap: 9px; width: min(290px, 100%); min-height: 42px; padding-left: 12px; border: 1px solid var(--ux-line); border-radius: 8px; background: var(--ux-inset); }
+.user-access-view .ux-directory-search > svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--ux-muted); }
+.admin-workspace .user-access-view .ux-directory-search > input { width: 100%; min-width: 0; min-height: 40px; border: 0 !important; padding-left: 0; border-radius: 8px; background: transparent !important; color: var(--ux-text) !important; font-size: 12px !important; }
+.user-access-view .ux-directory-search:focus-within { outline: 2px solid var(--ux-link); outline-offset: 2px; }
+.user-access-view .ux-directory-search input:focus-visible { outline: none; }
+.user-access-view .ux-table-scroll { overflow: auto; max-height: 560px; border-top: 1px solid var(--ux-line); scrollbar-width: thin; }
+.user-access-view .ux-table { width: 100%; min-width: 960px; table-layout: fixed; border-collapse: collapse; }
+.user-access-view .ux-col-account { width: 27%; }
+.user-access-view .ux-col-role { width: 16%; }
+.user-access-view .ux-col-status { width: 10%; }
+.user-access-view .ux-col-created { width: 20%; }
+.user-access-view .ux-col-access { width: 17%; }
+.user-access-view .ux-col-details { width: 10%; }
+.user-access-view .ux-table :is(th, td) { padding: 15px 20px; border-bottom: 1px solid var(--ux-line); vertical-align: middle; text-align: left; font-size: 12px; }
+.user-access-view .ux-table th { position: sticky; top: 0; z-index: 1; background: var(--ux-inset); font-size: 11px; font-weight: 500; color: var(--ux-muted) !important; }
+.user-access-view .ux-table tbody tr:last-child td { border-bottom: 0; }
+.user-access-view .ux-table tbody tr:hover { background: var(--ux-inset); }
+.user-access-view .ux-account-cell { display: flex; align-items: center; gap: 12px; }
+.user-access-view .ux-avatar { display: grid; place-items: center; width: 36px; height: 36px; flex: 0 0 36px; border-radius: 9px; background: var(--ux-selection); color: var(--ux-link); font-size: 12px; font-weight: 500; overflow: hidden; }
+.user-access-view .ux-avatar > img { width: 100%; height: 100%; object-fit: cover; }
+.user-access-view .ux-account-cell > div { min-width: 0; }
+.user-access-view .ux-account-cell strong { display: block; font-size: 12px; font-weight: 500; overflow-wrap: anywhere; }
+.user-access-view .ux-account-cell div > span { display: block; margin-top: 4px; font-size: 10px; color: var(--ux-muted); overflow-wrap: anywhere; }
+.user-access-view .ux-role-badge { display: inline-flex; align-items: center; min-height: 25px; padding: 4px 7px; border-radius: 5px; background: var(--ux-inset); color: var(--ux-muted); font-size: 10px; white-space: nowrap; }
+.user-access-view .ux-role-badge.is-admin { background: var(--ux-selection); color: var(--ux-link); }
+.user-access-view .ux-status { display: inline-flex; padding: 4px 7px; border-radius: 5px; background: var(--ux-inset); color: var(--ux-muted); font-size: 10px; }
+.user-access-view .ux-status.is-active { background: var(--ux-success-bg); color: var(--ux-success); }
+.user-access-view .ux-table time, .user-access-view .ux-access-label { color: var(--ux-muted); font-size: 10px; line-height: 1.7; }
+.user-access-view .ux-view { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 7px 0; border: 0; border-radius: 5px; background: transparent; color: var(--ux-link); font-size: 11px; }
+.user-access-view .ux-view > svg { width: 14px; height: 14px; }
+.user-access-view .ux-view:hover { text-decoration: underline; text-underline-offset: 4px; }
+.user-access-view .ux-directory-footer { padding: 16px 24px; border-top: 1px solid var(--ux-line); color: var(--ux-muted); font-size: 11px; }
+.user-access-view .ux-directory-empty { display: flex; align-items: center; flex-direction: column; justify-content: center; gap: 12px; padding: 45px 24px; text-align: center; color: var(--ux-muted); }
+.user-access-view .ux-directory-empty h3 { margin: 0; font-size: 15px; font-weight: 500; }
+.user-access-view .ux-directory-empty p { margin: 0 0 8px; max-width: 44ch; font-size: 12px; }
+.user-access-view .ux-footer { display: flex; align-items: center; gap: 8px; margin-top: 20px; color: var(--ux-muted); font-size: 10px; }
+.user-access-view .ux-footer > svg { width: 16px; height: 16px; flex-shrink: 0; }
+.user-access-view .ux-loading-row td { height: 72px; }
+.user-access-view .ux-skeleton { display: block; width: 80%; height: 12px; border-radius: 4px; background: var(--ux-line); }
+.user-access-view .ux-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+.user-access-view .ux-dialog { width: min(620px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); margin: auto; padding: 0; border: 1px solid var(--ux-line); border-radius: 16px; background: var(--ux-surface); color: var(--ux-text); box-shadow: 0 24px 80px rgba(17, 34, 65, .24); }
+.user-access-view .ux-dialog::backdrop { background: rgba(9, 18, 35, .58); }
+.user-access-view .ux-dialog-content { padding: 28px; }
+.user-access-view .ux-dialog-heading { display: flex; justify-content: space-between; align-items: center; gap: 18px; padding-bottom: 22px; border-bottom: 1px solid var(--ux-line); }
+.user-access-view .ux-dialog-heading > div > span { color: var(--ux-muted); font-size: 11px; }
+.user-access-view .ux-dialog-heading h2 { margin-top: 5px; font-size: 22px; font-weight: 600; }
+.user-access-view .ux-close { display: grid; place-items: center; width: 36px; height: 36px; flex-shrink: 0; border: 1px solid var(--ux-line); border-radius: 8px; background: var(--ux-inset); color: var(--ux-text); }
+.user-access-view .ux-close > svg { width: 18px; height: 18px; }
+.user-access-view .ux-modal-account { padding-block: 24px; }
+.user-access-view .ux-modal-account > .ux-avatar { width: 46px; height: 46px; flex-basis: 46px; }
+.user-access-view .ux-details-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; margin: 0; padding: 22px; border: 1px solid var(--ux-line); border-radius: 10px; background: var(--ux-inset); }
+.user-access-view .ux-details-grid dt { color: var(--ux-muted); font-size: 10px; }
+.user-access-view .ux-details-grid dd { margin: 6px 0 0; font-size: 12px; overflow-wrap: anywhere; }
+.user-access-view .ux-recovery-note { display: flex; align-items: flex-start; gap: 10px; padding-top: 22px; }
+.user-access-view .ux-recovery-note > svg { width: 18px; height: 18px; flex-shrink: 0; color: var(--ux-link); margin-top: 2px; }
+.user-access-view .ux-recovery-note strong { font-size: 12px; font-weight: 500; }
+.user-access-view .ux-recovery-note p { margin: 5px 0 0; font-size: 11px; line-height: 1.8; }
+.user-access-view .ux-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--ux-line); }
+.user-access-view .ux-modal-message { padding: 12px 14px; margin-top: 18px; border-radius: 8px; background: var(--ux-success-bg); color: var(--ux-success) !important; font-size: 11px; }
+.user-access-view .ux-modal-error { background: var(--ux-error-bg); color: var(--ux-error) !important; }
+
+@media (max-width: 1100px) {
+    .user-access-view .ux-create-grid { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
+    .user-access-view .ux-role-options { grid-template-columns: minmax(0, 1fr); }
+    .user-access-view .ux-create-footer { align-items: flex-start; flex-direction: column; }
+    .user-access-view .ux-create-footer > span { max-width: none; }
+    .user-access-view .ux-create-footer > div { align-self: flex-end; }
+}
+@media (max-width: 800px) {
+    .user-access-view .ux-create-grid { grid-template-columns: minmax(0, 1fr); }
+    .user-access-view .ux-role-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .user-access-view .ux-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .user-access-view .ux-summary > div:nth-child(2n) { border-right: 0; }
+    .user-access-view .ux-summary > div:nth-child(n+3) { border-top: 1px solid var(--ux-line); }
+    .user-access-view .ux-directory-toolbar { align-items: stretch; flex-direction: column; }
+    .user-access-view .ux-directory-search { width: 100%; }
+    .user-access-view .ux-role-filters { align-self: flex-start; max-width: 100%; overflow-x: auto; }
+}
+@media (max-width: 600px) {
+    .admin-workspace .user-access-view .ux-main { padding: 24px 16px !important; }
+    .user-access-view .ux-heading { align-items: flex-start; flex-direction: column; gap: 16px; }
+    .user-access-view .ux-summary > div { padding: 16px 18px; }
+    .user-access-view .ux-create { padding: 20px; }
+    .user-access-view .ux-role-options, .user-access-view .ux-form-row { grid-template-columns: minmax(0, 1fr); }
+    .admin-workspace .user-access-view .ux-field > input, .admin-workspace .user-access-view .ux-directory-search > input { font-size: 16px !important; }
+    .user-access-view .ux-upload { flex-wrap: wrap; }
+    .user-access-view .ux-upload .ux-upload-browse { margin-left: 52px; }
+    .user-access-view .ux-credentials > .ux-panel-heading, .user-access-view .ux-credentials-empty, .user-access-view .ux-credential-body { padding: 20px; }
+    .user-access-view .ux-credential-note { padding: 16px 20px; }
+    .user-access-view .ux-directory-heading { padding: 20px; }
+    .user-access-view .ux-directory-toolbar { padding: 0 20px 20px; }
+    .user-access-view .ux-directory-footer { padding: 16px 20px; }
+    .user-access-view .ux-role-filters > button { padding-inline: 9px; gap: 6px; font-size: 10px; }
+    .user-access-view .ux-dialog-content { padding: 22px; }
+}
+@media (max-width: 400px) {
+    .user-access-view .ux-directory-heading { align-items: flex-start; }
+    .user-access-view .ux-directory-heading > span { white-space: normal; text-align: right; }
+    .user-access-view .ux-dialog-actions { flex-direction: column-reverse; }
+    .user-access-view .ux-details-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .user-access-view *, .user-access-view *::before, .user-access-view *::after { animation: none !important; transition: none !important; }
+}

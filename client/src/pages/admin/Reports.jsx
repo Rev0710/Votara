@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     FiAlertCircle,
@@ -15,6 +15,7 @@ import {
 
 import api from "../../services/api";
 import AdminTopNav from "./AdminTopNav";
+import CandidateResults from "./CandidateResults";
 import "./Reports.css";
 
 const EMPTY_STATS = {
@@ -90,13 +91,6 @@ function getStatusClass(status) {
     if (normalized === "scheduled") return "scheduled";
     if (normalized === "cancelled") return "cancelled";
     return "draft";
-}
-
-function getPositionTotalVotes(position) {
-    return (position?.candidates || []).reduce(
-        (total, candidate) => total + Number(candidate?.voteCount || 0),
-        0
-    );
 }
 
 function buildLinePath(points, width, height, padding, maxValue) {
@@ -387,16 +381,6 @@ export default function Reports() {
     const turnoutPoints = Array.isArray(report?.turnoutOverTime)
         ? report.turnoutOverTime
         : [];
-
-    const candidateCount = useMemo(
-        () =>
-            positions.reduce(
-                (total, position) =>
-                    total + (position?.candidates?.length || 0),
-                0
-            ),
-        [positions]
-    );
 
     const loadReport = useCallback(
         async (electionId = "") => {
@@ -870,198 +854,7 @@ export default function Reports() {
                             </article>
                         </section>
 
-                        <section className="reports-results-panel">
-                            <div className="reports-results-heading">
-                                <div>
-                                    <span>CANDIDATE RESULTS</span>
-                                    <h2>Candidate results</h2>
-                                    <p>
-                                        Certified candidate results are
-                                        read-only in Reports &amp; Analytics.
-                                        Results are calculated from submitted
-                                        ballots without exposing student
-                                        identities or ballot selections.
-                                    </p>
-                                </div>
-
-                                <div className="reports-results-summary">
-                                    <span>
-                                        {formatNumber(candidateCount)} candidates
-                                    </span>
-                                    <span>
-                                        {formatNumber(
-                                            statistics.totalPositions
-                                        )}{" "}
-                                        positions
-                                    </span>
-                                </div>
-                            </div>
-
-                            {positions.length === 0 ? (
-                                <div className="reports-results-empty">
-                                    <FiFileText />
-                                    <strong>
-                                        No candidate results available
-                                    </strong>
-                                    <span>
-                                        No active election positions or
-                                        candidates were returned for this
-                                        election.
-                                    </span>
-                                </div>
-                            ) : (
-                                <div className="reports-position-list">
-                                    {positions.map((position) => {
-                                        const totalVotes =
-                                            getPositionTotalVotes(position);
-
-                                        return (
-                                            <article
-                                                className="reports-position-card"
-                                                key={position.id}
-                                            >
-                                                <div className="reports-position-header">
-                                                    <div>
-                                                        <span>
-                                                            POSITION
-                                                        </span>
-                                                        <h3>
-                                                            {position.name}
-                                                        </h3>
-                                                    </div>
-
-                                                    <span
-                                                        className={`reports-result-status ${String(
-                                                            position.resultStatus ||
-                                                                ""
-                                                        ).toLowerCase()}`}
-                                                    >
-                                                        {position.resultStatus ===
-                                                        "winner"
-                                                            ? "Result available"
-                                                            : position.resultStatus ===
-                                                              "tie"
-                                                            ? "Tie"
-                                                            : "No votes"}
-                                                    </span>
-                                                </div>
-
-                                                <div className="reports-candidate-list">
-                                                    {(
-                                                        position.candidates ||
-                                                        []
-                                                    ).map((candidate) => {
-                                                        const votes =
-                                                            Number(
-                                                                candidate.voteCount ||
-                                                                    0
-                                                            );
-
-                                                        const percentage =
-                                                            totalVotes > 0
-                                                                ? (votes /
-                                                                      totalVotes) *
-                                                                  100
-                                                                : 0;
-
-                                                        const isWinner =
-                                                            position.winner
-                                                                ?.id ===
-                                                            candidate.id;
-
-                                                        return (
-                                                            <div
-                                                                className={`reports-candidate-row ${
-                                                                    isWinner
-                                                                        ? "winner"
-                                                                        : ""
-                                                                }`}
-                                                                key={
-                                                                    candidate.id
-                                                                }
-                                                            >
-                                                                <div className="reports-candidate-main">
-                                                                    <div className="reports-candidate-avatar">
-                                                                        {candidate.profilePicture ? (
-                                                                            <img
-                                                                                src={
-                                                                                    candidate.profilePicture
-                                                                                }
-                                                                                alt=""
-                                                                            />
-                                                                        ) : (
-                                                                            String(
-                                                                                candidate.fullName ||
-                                                                                    "C"
-                                                                            )
-                                                                                .trim()
-                                                                                .charAt(
-                                                                                    0
-                                                                                )
-                                                                                .toUpperCase()
-                                                                        )}
-                                                                    </div>
-
-                                                                    <div>
-                                                                        <strong>
-                                                                            {
-                                                                                candidate.fullName
-                                                                            }
-                                                                        </strong>
-                                                                        <span>
-                                                                            {
-                                                                                candidate.partyListName
-                                                                            }
-                                                                        </span>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div className="reports-candidate-bar-wrap">
-                                                                    <div className="reports-candidate-bar">
-                                                                        <span
-                                                                            style={{
-                                                                                width: `${Math.min(
-                                                                                    100,
-                                                                                    Math.max(
-                                                                                        0,
-                                                                                        percentage
-                                                                                    )
-                                                                                )}%`,
-                                                                            }}
-                                                                        />
-                                                                    </div>
-                                                                    <small>
-                                                                        {formatPercent(
-                                                                            percentage
-                                                                        )}
-                                                                    </small>
-                                                                </div>
-
-                                                                <div className="reports-candidate-votes">
-                                                                    <strong>
-                                                                        {formatNumber(
-                                                                            votes
-                                                                        )}
-                                                                    </strong>
-                                                                    <span>
-                                                                        votes
-                                                                    </span>
-                                                                    {isWinner && (
-                                                                        <em>
-                                                                            Winner
-                                                                        </em>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </article>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </section>
+                        <CandidateResults key={selectedElection.id} positions={positions} loading={loading || refreshing} />
 
                         <section className="reports-footer-actions">
                             <button
