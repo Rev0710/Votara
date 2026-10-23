@@ -27,6 +27,7 @@ function browserContext(values = {}, pathname = "/registration-requirements") {
         .replace(/^import .*;\r?\n/gm, "")
         .replace(/import\.meta\.env\.VITE_API_BASE_URL/g, '"http://test.invalid/api"')
         .replace(/import\.meta\.env\.PROD/g, "false")
+        .replace(/^export const /gm, "const ")
         .replace("export default api;", "");
     vm.runInContext(source, context);
     return context;
@@ -78,4 +79,112 @@ test("Electoral Board election changes retain the board credential", () => {
     const token = jwt.sign({ role: "electoral_board" }, "test-only-secret");
     const context = browserContext({ votaraStaffToken: token }, "/electoral-board/election-management");
     assert.equal(context.request({ url: "/elections/e1/publish", headers: {} }).headers.Authorization, `Bearer ${token}`);
+});
+
+// Execute the real registration loader to cover the previously conflicting
+// dashboard and review-page token choices, without a live API or database.
+function registrationPageContext(values) {
+    const context = browserContext(values, "/electoral-board/dashboard");
+    context.recordedRequests = [];
+    context.redirects = [];
+    context.navigate = pathname => context.redirects.push(pathname);
+    context.setError = () => {};
+    context.setApplications = applications => { context.loadedApplications = applications; };
+    context.setLoading = () => {};
+    context.setRefreshing = () => {};
+    context.testGet = async (url, config = {}) => {
+        context.recordedRequests.push(context.request({ url, ...config }));
+        return { data: { applications: [{ id: "sample-application" }] } };
+    };
+    vm.runInContext("api.get = testGet;", context);
+    const source = fs.readFileSync(path.resolve(__dirname,
+        "../../../client/src/pages/electoralBoard/Registrations.jsx"), "utf8");
+    const start = source.indexOf("const loadApplications = async () => {");
+    assert.ok(start >= 0, "registration loader is present");
+    const end = source.indexOf("// =====================================================", start);
+    vm.runInContext(source.slice(start, end) + "\nglobalThis.loadApplications = loadApplications;", context);
+    return context;
+}
+
+const roleToken = (role, expiresIn = "1h") => jwt.sign(
+    { userId: `sample-${role}`, role }, "test-only-secret", { expiresIn }
+);
+
+test("registration list uses the EB login even when an Admin staff token remains", async () => {
+    const ebToken = roleToken("electoral_board");
+    const context = registrationPageContext({
+        votaraEBToken: ebToken,
+        votaraStaffToken: roleToken("admin"),
+        votaraAdminToken: roleToken("admin"),
+    });
+    await context.loadApplications();
+    assert.equal(context.recordedRequests.length, 1);
+    assert.equal(context.recordedRequests[0].url, "/eb/registrations");
+    assert.equal(context.recordedRequests[0].headers.Authorization, `Bearer ${ebToken}`);
+    assert.equal(context.loadedApplications[0].id, "sample-application");
+    assert.equal(context.redirects.length, 0);
+});
+
+test("registration list skips an expired legacy staff token", async () => {
+    const ebToken = roleToken("electoral_board");
+    const context = registrationPageContext({
+        votaraEBToken: ebToken,
+        votaraStaffToken: roleToken("electoral_board", -1),
+    });
+    await context.loadApplications();
+    assert.equal(context.recordedRequests[0].headers.Authorization, `Bearer ${ebToken}`);
+});
+
+test("registration list supports an EB login in the legacy staff slot", async () => {
+    const ebToken = roleToken("electoral_board");
+    const context = registrationPageContext({
+        votaraEBToken: "malformed-old-token",
+        votaraStaffToken: ebToken,
+    });
+    await context.loadApplications();
+    assert.equal(context.recordedRequests[0].headers.Authorization, `Bearer ${ebToken}`);
+});
+
+test("an Admin token alone cannot open the EB registration list", async () => {
+    const context = registrationPageContext({
+        votaraEBToken: roleToken("admin"),
+        votaraStaffToken: roleToken("admin"),
+    });
+    await context.loadApplications();
+    assert.equal(context.recordedRequests.length, 0);
+    assert.equal(context.redirects[0], "/electoral-board/login");
+});
+
+test("an expired EB session returns to EB sign-in instead of sending an Admin token", async () => {
+    const context = registrationPageContext({
+        votaraEBToken: roleToken("electoral_board", -1),
+        votaraStaffToken: roleToken("admin"),
+    });
+    await context.loadApplications();
+    assert.equal(context.recordedRequests.length, 0);
+    assert.equal(context.redirects[0], "/electoral-board/login");
+});
+
+test("successful EB sign-in updates the legacy staff slot as well as the EB slot", async () => {
+    const context = browserContext({ votaraStaffToken: roleToken("admin") }, "/admin-login");
+    const ebToken = roleToken("electoral_board");
+    context.ebFormData = { email: "sample@example.com", password: "sample-password" };
+    context.setEbError = () => {};
+    context.setEbSuccess = () => {};
+    context.setEbLoading = () => {};
+    context.navigate = () => {};
+    context.testPost = async () => ({ data: {
+        token: ebToken, user: { id: "sample-electoral_board", role: "electoral_board" },
+    } });
+    vm.runInContext("api.post = testPost;", context);
+    const source = fs.readFileSync(path.resolve(__dirname,
+        "../../../client/src/pages/auth/AccountSelection.jsx"), "utf8");
+    const start = source.indexOf("const handleEbLogin = async");
+    const end = source.indexOf("const handleAdminRegister = async", start);
+    assert.ok(start >= 0 && end > start, "EB sign-in handler is present");
+    vm.runInContext(source.slice(start, end) + "\nglobalThis.handleEbLogin = handleEbLogin;", context);
+    await context.handleEbLogin({ preventDefault() {} });
+    assert.equal(context.localStorage.getItem("votaraEBToken"), ebToken);
+    assert.equal(context.localStorage.getItem("votaraStaffToken"), ebToken);
+    assert.equal(JSON.parse(context.localStorage.getItem("votaraStaffUser")).role, "electoral_board");
 });

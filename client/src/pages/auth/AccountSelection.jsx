@@ -408,6 +408,9 @@ const handleAdminLogin = async (event) => {
             localStorage.setItem("votaraEBToken", data.token);
 
             localStorage.setItem("votaraEBUser", JSON.stringify(data.user));
+            // Keep the legacy shared staff slot aligned with the latest staff sign-in.
+            localStorage.setItem("votaraStaffToken", data.token);
+            localStorage.setItem("votaraStaffUser", JSON.stringify(data.user));
 
 
 

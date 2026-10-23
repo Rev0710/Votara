@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { FiClipboard } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
-import api from "../../services/api";
+import api, { getEBToken } from "../../services/api";
 import "./Registrations.css"
 
 // =====================================================
@@ -46,16 +46,10 @@ const Registrations = ({ onNavigate }) => {
         try {
             setError("");
 
-            const token =
-                localStorage.getItem(
-                    "votaraStaffToken"
-                ) ||
-                localStorage.getItem(
-                    "votaraEBToken"
-                );
+            const token = getEBToken();
 
             if (!token) {
-                navigate("/admin-login");
+                navigate("/electoral-board/login");
                 return;
             }
 
@@ -236,16 +230,10 @@ const Registrations = ({ onNavigate }) => {
             setError("");
             setSuccess("");
 
-            const token =
-                localStorage.getItem(
-                    "votaraStaffToken"
-                ) ||
-                localStorage.getItem(
-                    "votaraEBToken"
-                );
+            const token = getEBToken();
 
             if (!token) {
-                navigate("/admin-login");
+                navigate("/electoral-board/login");
                 return;
             }
 
@@ -442,12 +430,10 @@ const Registrations = ({ onNavigate }) => {
             setError("");
             setSuccess("");
 
-            const token =
-                localStorage.getItem("votaraStaffToken") ||
-                localStorage.getItem("votaraEBToken");
+            const token = getEBToken();
 
             if (!token) {
-                navigate("/admin-login");
+                navigate("/electoral-board/login");
                 return;
             }
 

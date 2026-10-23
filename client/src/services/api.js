@@ -67,7 +67,7 @@ const getStaffToken = () => {
 // role is "electoral_board".
 // =====================================================
 
-const getEBToken = () => {
+export const getEBToken = () => {
 
     const candidates = [
         localStorage.getItem("votaraEBToken"),
