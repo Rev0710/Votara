@@ -290,7 +290,7 @@ const createAuditLog = async ({
                     targetId,
 
                 target_type:
-                    targetType,
+                    targetType || module,
 
                 metadata:
                     safeMetadata,

@@ -276,6 +276,8 @@ const EBDashboard = () => {
 
     const handleNavigation = (section, context = null) => {
 
+        if (section === "reports") section = "results";
+
         setActiveSection(section);
         if (["partyLists", "individualCandidacy"].includes(section)) {
             setPartyListContext(context || null);

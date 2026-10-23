@@ -11,8 +11,7 @@ const navigation = [
         { id: "createElection", label: "Create election", Icon: FiFileText },
         { id: "partyLists", label: "Partylists", Icon: FiLayers },
         { id: "individualCandidacy", label: "Individual Candidacy", Icon: FiUser },
-        { id: "results", label: "Results", Icon: FiBarChart2 },
-        { id: "reports", label: "Reports", Icon: FiFileText },
+        { id: "results", label: "Results & Reports", Icon: FiBarChart2 },
     ] },
     { id: "voters", label: "Voters", items: [
         { id: "registrations", label: "Registration review", Icon: FiGrid },
@@ -26,15 +25,27 @@ const navigation = [
 
 export default function EBHeader({ activeSection, displayName, displayEmail, profileImage, theme, onToggleTheme, onNavigate, onLogout }) {
     const header = useRef(null);
+    const logoutDialog = useRef(null);
     const triggers = useRef({});
     const [openMenu, setOpenMenu] = useState(null);
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const initials = displayName.trim().split(/\s+/).filter(Boolean).map(part => part[0]).filter((_, index, parts) => index === 0 || index === parts.length - 1).join("").toUpperCase() || "EB";
 
     const close = () => { setOpenMenu(null); setMobileOpen(false); };
     const select = section => { close(); onNavigate(section); };
 
     useEffect(() => { setOpenMenu(null); setMobileOpen(false); }, [activeSection]);
+
+    useEffect(() => {
+        if (showLogoutConfirm) logoutDialog.current?.showModal();
+        else logoutDialog.current?.close();
+    }, [showLogoutConfirm]);
+
+    const confirmLogout = () => {
+        setShowLogoutConfirm(false);
+        onLogout();
+    };
 
     useEffect(() => {
         if (!openMenu && !mobileOpen) return;
@@ -123,7 +134,7 @@ export default function EBHeader({ activeSection, displayName, displayEmail, pro
                         <button type="button" onClick={() => select("settings")}><FiSettings />Settings</button>
                         <button type="button" onClick={() => select("support")}><FiHelpCircle />Report an issue</button>
                         <button type="button" onClick={() => { close(); onToggleTheme(); }}>{theme === "dark" ? <FiSun /> : <FiMoon />}{theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}</button>
-                        <button type="button" onClick={() => { close(); onLogout(); }}><FiLogOut />Sign out</button>
+                        <button type="button" onClick={() => { close(); setShowLogoutConfirm(true); }}><FiLogOut />Sign out</button>
                     </div>}
                 </div>
                 <button type="button" className="eb-board-menu-toggle" aria-label={mobileOpen ? "Close board navigation" : "Open board navigation"}
@@ -133,6 +144,19 @@ export default function EBHeader({ activeSection, displayName, displayEmail, pro
                     {mobileOpen ? <FiX /> : <FiMenu />}
                 </button>
             </div>
+            <dialog ref={logoutDialog} className="eb-signout-dialog" aria-labelledby="eb-signout-title"
+                onCancel={() => setShowLogoutConfirm(false)}
+                onClick={event => { if (event.target === event.currentTarget) setShowLogoutConfirm(false); }}>
+                <div className="eb-signout-content">
+                    <FiLogOut aria-hidden="true" />
+                    <h2 id="eb-signout-title">Sign out?</h2>
+                    <p>Are you sure you want to sign out of your VOTARA Electoral Board account?</p>
+                    <div className="eb-signout-actions">
+                        <button type="button" autoFocus onClick={() => setShowLogoutConfirm(false)}>Cancel</button>
+                        <button type="button" className="eb-signout-confirm" onClick={confirmLogout}>Sign out</button>
+                    </div>
+                </div>
+            </dialog>
         </header>
     );
 }

@@ -147,6 +147,16 @@
 .eb-board-account-details span { font-size: 12px; }
 .eb-board-header .eb-board-menu-toggle { display: none; place-items: center; width: 40px; height: 44px; padding: 0; border: 1px solid var(--board-line); border-radius: 12px; background: transparent; color: var(--board-text); font-size: 20px; }
 .eb-board-header button:focus-visible { outline: 2px solid #7da0ff; outline-offset: 3px; }
+.eb-signout-dialog { width: min(440px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); margin: auto; padding: 0; border: 1px solid var(--board-line); border-radius: 16px; background: var(--board-surface); color: var(--board-text); box-shadow: 0 24px 70px #0006; }
+.eb-signout-dialog::backdrop { background: #070a18bb; }
+.eb-signout-content { padding: 28px; }
+.eb-signout-content > svg { width: 24px; height: 24px; color: #a9c2ff; }
+.eb-signout-content h2 { margin: 16px 0 8px; font-size: 24px; }
+.eb-signout-content p { color: var(--board-muted); line-height: 1.6; font-size: 14px; }
+.eb-signout-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+.eb-signout-actions button { min-height: 44px; padding: 10px 18px; border: 1px solid var(--board-line); border-radius: 10px; background: var(--board-inset); color: inherit; font: inherit; }
+.eb-signout-actions .eb-signout-confirm { border-color: #b91c1c; background: #b91c1c; color: #fff; }
+.eb-signout-actions button:focus-visible { outline: 2px solid #7da0ff; outline-offset: 3px; }
 @keyframes eb-board-menu-in {
     from { opacity: 0; transform: translateY(-4px); }
     to { opacity: 1; transform: translateY(0); }
