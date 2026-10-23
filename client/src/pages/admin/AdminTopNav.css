@@ -238,3 +238,18 @@
     .admin-config-navigation { overflow: visible; }
     .admin-config-navigation nav { flex-wrap: nowrap; }
 }
+
+.admin-signout-dialog {
+    position: fixed; inset: 0; width: min(550px, calc(100vw - 32px));
+    height: fit-content; margin: auto; transform: none; text-align: left;
+}
+.admin-signout-dialog .admin-signout-content { padding: 34px; }
+.admin-signout-dialog h2 { margin: 12px 0 4px; font-size: 22px; line-height: 1.35; }
+.admin-signout-dialog p { margin: 0; font-size: 17px; line-height: 1.65; }
+.admin-signout-dialog .admin-signout-actions { gap: 14px; margin-top: 30px; }
+.admin-signout-dialog .admin-signout-actions button { min-height: 52px; padding: 12px 22px; font-size: 16px; cursor: pointer; }
+@media(max-width:480px) {
+    .admin-signout-dialog .admin-signout-content { padding: 24px; }
+    .admin-signout-dialog p { font-size: 15px; }
+    .admin-signout-dialog .admin-signout-actions button { flex: 1; padding: 10px 14px; }
+}

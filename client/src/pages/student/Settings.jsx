@@ -12,7 +12,7 @@ import {
     updateStudentProfile,
 } from "../../services/authService";
 
-import api from "../../services/api";
+import api, { getStudentToken } from "../../services/api";
 import "./Settings.css";
 
 
@@ -20,10 +20,7 @@ const Settings = () => {
 
     const navigate = useNavigate();
 
-    const token =
-        localStorage.getItem(
-            "votaraToken"
-        );
+    const token = getStudentToken();
 
 
     // =====================================================

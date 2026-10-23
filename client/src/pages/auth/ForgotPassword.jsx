@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import votaraLogo from "../../assets/images/votara-logo.png";
 import api from "../../services/api";
@@ -24,6 +24,22 @@ const ForgotPassword = ({ accountType = "student" }) => {
     const [confirmed, setConfirmed] = useState(false);
     const [resetToken, setResetToken] = useState("");
     const [passwordChanged, setPasswordChanged] = useState(false);
+    const [resendSeconds, setResendSeconds] = useState(0);
+    const [deliveryMessage, setDeliveryMessage] = useState("");
+    const [resending, setResending] = useState(false);
+    const resendReadyAt = useRef(0);
+    useEffect(() => {
+        if(step !== "otp") return;
+        const tick = () => setResendSeconds(Math.max(0,Math.ceil((resendReadyAt.current-Date.now())/1000)));
+        tick();
+        const timer = window.setInterval(tick,1000);
+        return () => window.clearInterval(timer);
+    }, [step]);
+    const startResendCooldown = (seconds=30) => {
+        resendReadyAt.current=Date.now()+seconds*1000;
+        setResendSeconds(seconds);
+    };
+
 
     const passwordRequirements = {
         minLength: newPassword.length >= 8,
@@ -59,7 +75,7 @@ const ForgotPassword = ({ accountType = "student" }) => {
         if (status === 429) {
             return (
                 serverMessage ||
-                "You recently changed your password. Please come back again after 48 hours to change your password, or contact the Electoral Board directly."
+                "Too many requests. Please wait before trying again."
             );
         }
 
@@ -104,6 +120,8 @@ const ForgotPassword = ({ accountType = "student" }) => {
                 email: normalizedEmail,
             });
 
+            startResendCooldown();
+            setDeliveryMessage("");
             setEmail(normalizedEmail);
             setOtp(Array(OTP_LENGTH).fill(""));
             setStep("otp");
@@ -117,6 +135,25 @@ const ForgotPassword = ({ accountType = "student" }) => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleResendCode = async () => {
+        if(loading || confirmed || resendSeconds>0) return;
+        setError("");setDeliveryMessage("");setLoading(true);setResending(true);
+        try {
+            await api.post(authPrefix+"/forgot-password",{email:email.trim().toLowerCase()});
+            setOtp(Array(OTP_LENGTH).fill(""));
+            setResetToken("");
+            startResendCooldown();
+            setDeliveryMessage("If this email is registered, a new code has been sent. Check your inbox and spam folder, and use the latest code.");
+            otpRefs.current[0]?.focus();
+        } catch(err) {
+            if(err.response?.status===429) {
+                const retryAfter=Number(err.response.headers?.["retry-after"]);
+                startResendCooldown(Number.isFinite(retryAfter)&&retryAfter>0?Math.ceil(retryAfter):30);
+            }
+            setError(getApiErrorMessage(err,"We could not resend the code. Please try again shortly."));
+        } finally {setLoading(false);setResending(false);}
     };
 
     const handleOtpChange = (index, value) => {
@@ -345,7 +382,7 @@ const ForgotPassword = ({ accountType = "student" }) => {
                                 }}
                                 placeholder="Enter your registered email"
                                 autoComplete="email"
-                                disabled={loading}
+                                disabled={loading || confirmed}
                                 required
                             />
                         </div>
@@ -353,7 +390,7 @@ const ForgotPassword = ({ accountType = "student" }) => {
                         <button
                             type="submit"
                             className="forgot-primary-button"
-                            disabled={loading}
+                            disabled={loading || confirmed}
                         >
                             {loading
                                 ? "Sending code..."
@@ -409,7 +446,7 @@ const ForgotPassword = ({ accountType = "student" }) => {
                                             event
                                         )
                                     }
-                                    disabled={loading}
+                                    disabled={loading || confirmed}
                                     aria-label={`Verification code digit ${
                                         index + 1
                                     }`}
@@ -420,21 +457,31 @@ const ForgotPassword = ({ accountType = "student" }) => {
                         <button
                             type="submit"
                             className="forgot-primary-button"
-                            disabled={loading}
+                            disabled={loading || confirmed}
                         >
                             {loading
-                                ? "Verifying..."
+                                ? (resending ? "Sending new code..." : "Verifying...")
                                 : "Verify code"}
                         </button>
+
+                        <div className="forgot-resend">
+                            <span>Didn’t receive a code?</span>
+                            <button type="button" onClick={handleResendCode}
+                                disabled={loading || confirmed || resendSeconds>0}>
+                                {resendSeconds>0 ? "Resend code in "+resendSeconds+"s" : resending ? "Sending…" : loading ? "Please wait…" : "Resend code"}
+                            </button>
+                        </div>
+                        {deliveryMessage && <p className="forgot-delivery-status" role="status">{deliveryMessage}</p>}
 
                         <button
                             type="button"
                             className="forgot-text-button"
                             onClick={() => {
+                                setDeliveryMessage("");
                                 setStep("email");
                                 clearError();
                             }}
-                            disabled={loading}
+                            disabled={loading || confirmed}
                         >
                             Use a different email
                         </button>
@@ -484,7 +531,7 @@ const ForgotPassword = ({ accountType = "student" }) => {
                             }}
                             placeholder="Password"
                             autoComplete="new-password"
-                            disabled={loading}
+                            disabled={loading || confirmed}
                             required
                         />
                     </div>
@@ -506,7 +553,7 @@ const ForgotPassword = ({ accountType = "student" }) => {
                             }}
                             placeholder="Re-enter your password"
                             autoComplete="new-password"
-                            disabled={loading}
+                            disabled={loading || confirmed}
                             required
                         />
                     </div>
@@ -623,7 +670,7 @@ const ForgotPassword = ({ accountType = "student" }) => {
                         type="button"
                         className="forgot-logo"
                         onClick={() => navigate("/")}
-                        disabled={loading}
+                        disabled={loading || confirmed}
                     >
                         <img
                             src={votaraLogo}
@@ -729,7 +776,7 @@ const ForgotPassword = ({ accountType = "student" }) => {
                             type="button"
                             className="forgot-back-top"
                             onClick={() => navigate(signInPath)}
-                            disabled={loading}
+                            disabled={loading || confirmed}
                         >
                             {isAdminRecovery ? "Back to admin login" : "Back to VOTARA"}
                         </button>
@@ -749,7 +796,7 @@ const ForgotPassword = ({ accountType = "student" }) => {
                             type="button"
                             className="forgot-back-link"
                             onClick={handleBack}
-                            disabled={loading}
+                            disabled={loading || confirmed}
                         >
                             {isAdminRecovery ? "Admin sign in" : "Sign in"}
                         </button>

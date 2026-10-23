@@ -545,12 +545,12 @@ function AdminDataManagement() {
         URL.revokeObjectURL(url);
     };
     return (
-        <div className="votara-data-page">
+        <div id="admin-data-workspace" className="votara-data-page">
             <AdminTopNav />
 
             <main className="dm-main">
                 <section className="dm-page-heading">
-                    <div className="dm-section-number">03</div>
+
                     <div>
                         <span className="dm-kicker">VOTARA ADMINISTRATION</span>
                         <h1>Data Management</h1>
@@ -712,7 +712,7 @@ function AdminDataManagement() {
                                 <span className="dm-kicker">STUDENT REGISTRY</span>
                                 <h2>Import Dataset CSV</h2>
                                 <p>
-                                    Choose a new CSV to replace the selected file. 1st Year rows are excluded. Existing Student IDs are updated and new Student IDs are inserted into the Supabase <code>students</code> table.
+                                    Upload a CSV to update matching Student IDs and add new students. 1st Year rows are excluded.
                                 </p>
                             </div>
                             <div className="dm-panel-icon blue"><FiUploadCloud /></div>
@@ -765,7 +765,7 @@ function AdminDataManagement() {
                             <div>
                                 <strong>Protected Admin operation</strong>
                                 <span>
-                                    The CSV is validated in the browser and again on the server before Supabase is changed. Student passwords, ballot selections, candidates, party lists, and election records are not modified by this importer.
+                                    Records are validated before import. Account credentials, ballots, candidates, and election records are not changed.
                                 </span>
                             </div>
                         </div>
@@ -829,9 +829,9 @@ function AdminDataManagement() {
                         <article className="dm-panel dm-info-panel">
                             <div className="dm-info-icon"><FiDatabase /></div>
                             <div>
-                                <h3>Backend synchronization</h3>
+                                <h3>How imports update records</h3>
                                 <p>
-                                    The import endpoint reads the current <code>students</code> table, updates matching Student IDs, inserts new Student IDs, and records the operation in VOTARA audit logs.
+                                    Matching Student IDs are updated and new Student IDs are added. Each import is recorded in the audit log.
                                 </p>
                             </div>
                         </article>
@@ -910,7 +910,7 @@ function AdminDataManagement() {
                     </div>
                 </section>
 
-                <div className="admin-pagination"><span>{filteredStudents.length} records · Page {currentRegistryPage} of {totalRegistryPages}</span><button type="button" disabled={currentRegistryPage===1} onClick={()=>setRegistryPage(currentRegistryPage-1)}>Previous</button><button type="button" disabled={currentRegistryPage===totalRegistryPages} onClick={()=>setRegistryPage(currentRegistryPage+1)}>Next</button></div>
+                <nav className="admin-pagination dm-registry-pagination" aria-label="Student registry pages"><span>{filteredStudents.length} records · Page {currentRegistryPage} of {totalRegistryPages}</span><button type="button" disabled={currentRegistryPage===1} onClick={()=>setRegistryPage(currentRegistryPage-1)}>Previous</button><button type="button" disabled={currentRegistryPage===totalRegistryPages} onClick={()=>setRegistryPage(currentRegistryPage+1)}>Next</button></nav>
                 <footer className="dm-footer">
                     <span>VOTARA Data Management</span>
                     <span><FiSettings /> Collections, database controls, and system cleanup remain under System Configuration.</span>

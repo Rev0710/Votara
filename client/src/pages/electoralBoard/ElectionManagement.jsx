@@ -1,3 +1,4 @@
+import VotingPauseConfirmation from "./VotingPauseConfirmation";
 import React, {
     useEffect,
     useMemo,
@@ -26,6 +27,8 @@ import "./ElectionManagement.css";
 // CONSTANTS
 // =========================================================
 
+// Enabled with the matching server voting controls and SQL migration.
+const VOTING_CONTROLS_ENABLED = true;
 const YEAR_LEVELS = [
     "2nd Year",
     "3rd Year",
@@ -836,6 +839,43 @@ function ElectionManagement({ onCreateElection, onNavigate }) {
     // =====================================================
     // LOAD ELECTIONS
     // =====================================================
+
+    const [votingControlBusy, setVotingControlBusy] = useState(false);
+    const [pauseConfirmation, setPauseConfirmation] = useState(null);
+    const [pauseError, setPauseError] = useState("");
+    const [votingControlId, setVotingControlId] = useState("");
+    const controllableElections = elections.filter(item => item.rawStatus === "open" && item.isPublished);
+    const controlledElection = controllableElections.find(item => item.id === votingControlId)
+        || controllableElections[0];
+    const toggleVotingPause = async () => {
+        if (!pauseConfirmation || votingControlBusy) return;
+        const targetElection = pauseConfirmation;
+        setPauseError("");
+        setSuccess("");
+        setVotingControlBusy(true);
+        setError("");
+        try {
+            const response = await api.patch("/elections/"+targetElection.id+"/voting-pause", {
+                paused: !targetElection.voting_paused,
+                expectedPaused: targetElection.voting_paused === true
+            });
+            if (response.data?.success !== true || response.data?.election?.voting_paused !== !targetElection.voting_paused) throw new Error("The server did not confirm the voting change.");
+            setElections(current => current.map(item => item.id === targetElection.id ? {...item, voting_paused:response.data.election.voting_paused} : item));
+            setPauseConfirmation(null);
+            try {localStorage.setItem("votara-voting-update",JSON.stringify({electionId:targetElection.id,changedAt:Date.now()}));} catch {}
+            setSuccess(targetElection.voting_paused
+                ? "Voting resumed. The election date and 8:00 AM–5:00 PM Manila voting hours still apply."
+                : "Online and kiosk voting paused. It will resume automatically tomorrow at 8:00 AM Manila time. Students have been notified.");
+            await loadElections(true);
+            window.dispatchEvent(new Event("votara-platform-update"));
+        } catch (error) {
+            const message = error.response?.data?.message || error.message || "Unable to update voting availability.";
+            setError(message);
+            setPauseError(message);
+            if (error.response?.status === 409) setPauseConfirmation(null);
+            await loadElections(true);
+        } finally {setVotingControlBusy(false);}
+    };
 
     const loadElections =
         async (silent = false) => {
@@ -2587,6 +2627,7 @@ function ElectionManagement({ onCreateElection, onNavigate }) {
 
                 </div>
 
+                <div className="election-header-actions">
                 <button
                     className="election-create-button"
                     type="button"
@@ -2600,6 +2641,23 @@ function ElectionManagement({ onCreateElection, onNavigate }) {
                 >
                     + Create Election
                 </button>
+                {VOTING_CONTROLS_ENABLED && (
+                <div className="election-voting-controls">
+                    {controllableElections.length > 1 && <select aria-label="Election to pause or resume"
+                        value={controlledElection?.id || ""} onChange={event=>setVotingControlId(event.target.value)}>
+                        {controllableElections.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}
+                    </select>}
+                    <button type="button" className="election-create-button election-pause-button"
+                        disabled={!controlledElection || votingControlBusy}
+                        title={controlledElection ? controlledElection.name : "Open and publish an election first"}
+                        onClick={() => {setPauseError(""); setPauseConfirmation({...controlledElection});}}>
+                        {votingControlBusy ? "Updating…" : controlledElection?.voting_paused ? "▶ Resume Voting" : "Ⅱ Pause Voting"}
+                    </button>
+                    <small>Online + kiosk · 8 AM–5 PM Manila</small>
+                </div>
+                )}
+
+                </div>
 
             </div>
 
@@ -2607,8 +2665,12 @@ function ElectionManagement({ onCreateElection, onNavigate }) {
                 ERROR
             ================================================= */}
 
+            {VOTING_CONTROLS_ENABLED && pauseConfirmation && <VotingPauseConfirmation election={pauseConfirmation}
+                busy={votingControlBusy} error={pauseError} onConfirm={toggleVotingPause}
+                onCancel={() => {if(!votingControlBusy){setPauseConfirmation(null);setPauseError("");}}} />}
             {error && (
                 <div
+                    className="election-feedback election-feedback-error" role="alert"
                     style={{
                         background:
                             "#fff1f2",
@@ -2665,23 +2727,9 @@ function ElectionManagement({ onCreateElection, onNavigate }) {
             ================================================= */}
 
             {success && (
-                <div
-                    style={{
-                        background:
-                            "#ecfdf5",
-                        border:
-                            "1px solid #bbf7d0",
-                        color:
-                            "#15803d",
-                        padding:
-                            "14px 17px",
-                        borderRadius:
-                            "12px",
-                        marginBottom:
-                            "18px",
-                    }}
-                >
-                    ✓ {success}
+                <div id="election-action-success" className="election-feedback election-feedback-success" role="status" aria-atomic="true">
+                    <span aria-hidden="true">✓</span>
+                    <span>{success}</span>
                 </div>
             )}
 

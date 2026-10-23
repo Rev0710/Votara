@@ -1,0 +1,27 @@
+.eb-page-party-lists .plm-party-menu-trigger {
+    display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0;
+    padding: 0; border: 1px solid var(--eb-border, #40516b); border-radius: 10px;
+    background: var(--eb-solid, #1c293e); color: var(--eb-text, #eef3ff); cursor: pointer;
+}
+.plm-party-menu-trigger svg { width: 20px; height: 20px; }
+.eb-page-party-lists .plm-party-menu-trigger:hover,
+.eb-page-party-lists .plm-party-menu-trigger[aria-expanded=true] { background: var(--eb-soft, #253650); border-color: var(--eb-link, #8cb5ff); }
+.plm-party-action-menu {
+    position: fixed; z-index: 6000; width: min(212px, calc(100vw - 16px)); max-height: calc(100dvh - 16px);
+    overflow-y: auto; overscroll-behavior: contain; padding: 6px; box-sizing: border-box;
+    border: 1px solid var(--eb-border, #40516b); border-radius: 12px;
+    background: var(--eb-solid, #1c293e); color: var(--eb-text, #eef3ff);
+    box-shadow: 0 12px 36px rgba(5, 12, 26, .22); font-family: Poppins, Arial, sans-serif;
+}
+.plm-party-action-menu button {
+    display: flex; align-items: center; gap: 10px; width: 100%; min-height: 40px;
+    padding: 9px 10px; border: 0; border-radius: 7px; text-align: left;
+    background: transparent; color: var(--eb-text, #eef3ff); font: inherit; font-size: 12px; font-weight: 500; cursor: pointer;
+}
+.plm-party-action-menu button svg { width: 16px; height: 16px; flex-shrink: 0; }
+.plm-party-action-menu button:hover:not(:disabled), .plm-party-action-menu button:focus-visible { background: var(--eb-soft, #253650); }
+.plm-party-action-menu button:disabled { opacity: .55; cursor: not-allowed; }
+.plm-party-action-menu button.plm-party-menu-delete { color: #ff929d; }
+.eb-workspace[data-eb-theme=light] .plm-party-action-menu button.plm-party-menu-delete { color: #b42338; }
+.plm-party-menu-divider { height: 1px; margin: 5px 4px; background: var(--eb-border, #40516b); }
+.plm-party-menu-trigger:focus-visible, .plm-party-action-menu button:focus-visible { outline: 2px solid var(--eb-link, #8cb5ff); outline-offset: 2px; }

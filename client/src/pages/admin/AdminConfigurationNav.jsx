@@ -5,7 +5,7 @@ export default function AdminConfigurationNav() {
     const location = useLocation();
     return (
         <aside className="admin-config-navigation" aria-label="System configuration navigation">
-            <div className="admin-config-navigation-title">CONFIGURATION</div>
+
             <nav aria-label="Configuration">
                 {ADMIN_CONFIGURATION.map((item) => (
                     <Link

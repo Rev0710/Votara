@@ -1083,3 +1083,68 @@
         display: none !important;
     }
 }
+
+.election-header-actions {display:flex;align-items:flex-start;justify-content:flex-end;gap:12px;flex-wrap:wrap;}
+.election-voting-controls {display:flex;flex-direction:column;gap:6px;max-width:300px;}
+.election-voting-controls small {font-size:11px;color:var(--eb-text-muted,#94a3b8);}
+.election-voting-controls select {max-width:100%;padding:8px;border-radius:8px;}
+.election-pause-button:disabled {opacity:.5;cursor:not-allowed;}
+@media(max-width:640px){.election-header-actions{width:100%;justify-content:flex-start;}.election-voting-controls{flex:1;min-width:170px;}}
+/* Alerts own their foreground as well as their background in either EB theme. */
+.election-management-page .election-feedback.election-feedback-error,
+.election-pause-confirmation .election-feedback.election-feedback-error {
+    background:#fff1f2 !important;border:1px solid #fda4af !important;color:#9f1239 !important;
+    padding:14px 17px;border-radius:12px;line-height:1.65;font-size:14px;overflow-wrap:anywhere;
+}
+.election-management-page .election-feedback.election-feedback-error *,
+.election-pause-confirmation .election-feedback.election-feedback-error * {color:#9f1239 !important;}
+.election-management-page .election-feedback.election-feedback-success {
+    background:#ecfdf5 !important;border:1px solid #86efac !important;color:#166534 !important;
+}
+.election-management-page .election-feedback.election-feedback-success * {color:#166534 !important;}
+dialog.election-pause-confirmation {
+    position:fixed;inset:0;margin:0;width:100vw;max-width:none;height:100dvh;max-height:none;
+    padding:20px;box-sizing:border-box;border:0;background:transparent;color:var(--eb-text,#eef3ff);
+}
+dialog.election-pause-confirmation[open] {display:flex;align-items:center;justify-content:center;}
+dialog.election-pause-confirmation::backdrop {background:rgba(6,14,29,.65);backdrop-filter:blur(4px);}
+.election-pause-confirmation .election-pause-confirmation-card {
+    box-sizing:border-box;width:min(480px,100%);max-height:calc(100dvh - 40px);overflow:auto;
+    padding:28px;border-radius:16px;border:1px solid var(--eb-border,#40516b);
+    background:var(--eb-solid,#1c293e);color:var(--eb-text,#eef3ff);
+}
+.election-pause-confirmation .election-pause-eyebrow {color:var(--eb-link,#8cb5ff) !important;font-size:11px;font-weight:700;letter-spacing:.08em;}
+.election-pause-confirmation h2 {margin:12px 0;font-size:24px;line-height:1.3;color:var(--eb-text,#eef3ff) !important;}
+.election-pause-confirmation p {font-size:14px;line-height:1.7;color:var(--eb-muted,#b2c1d9) !important;}
+.election-pause-confirmation p.election-pause-election {color:var(--eb-text,#eef3ff) !important;font-weight:600;overflow-wrap:anywhere;}
+.election-pause-confirmation footer {display:flex;justify-content:flex-end;gap:12px;margin-top:24px;}
+.election-pause-confirmation footer button {
+    min-height:44px;padding:10px 16px;border-radius:9px;border:1px solid var(--eb-border,#40516b);
+    font:inherit;font-size:14px;font-weight:600;cursor:pointer;
+}
+.election-pause-confirmation button.election-pause-cancel {background:var(--eb-soft,#253650);color:var(--eb-text,#eef3ff) !important;}
+.election-pause-confirmation button.election-pause-confirm {background:#1555df;color:#fff !important;border-color:#1555df;}
+.election-pause-confirmation button:disabled {opacity:.65;cursor:wait;}
+.election-pause-confirmation button:focus-visible {outline:3px solid var(--eb-link,#8cb5ff);outline-offset:3px;}
+@media(max-width:480px) {
+    .election-pause-confirmation .election-pause-confirmation-card {padding:22px;}
+    .election-pause-confirmation footer {flex-direction:column-reverse;}
+    .election-pause-confirmation footer button {width:100%;}
+}
+@media(prefers-reduced-transparency:reduce) {
+    dialog.election-pause-confirmation::backdrop {background:rgba(6,14,29,.85);backdrop-filter:none;}
+}
+
+/* This alert outranks the legacy page-wide foreground rules. */
+.election-management-page #election-action-success {
+    display:flex;align-items:flex-start;gap:10px;padding:16px 18px;margin:0 0 18px;
+    background:#12372b !important;border:1px solid #3b946d !important;border-radius:12px;
+    color:#d1fae5 !important;font-size:14px;font-weight:500;line-height:1.65;overflow-wrap:anywhere;
+}
+.election-management-page #election-action-success > span {
+    color:inherit !important;-webkit-text-fill-color:currentColor;
+}
+.election-management-page #election-action-success > span:first-child {flex-shrink:0;font-weight:700;}
+.eb-workspace[data-eb-theme="light"] .election-management-page #election-action-success {
+    background:#e8f7ed !important;border-color:#78bb91 !important;color:#14532d !important;
+}

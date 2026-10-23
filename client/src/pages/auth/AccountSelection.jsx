@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import votaraLogo from "../../assets/images/votara-logo.png";
 import votaraOrbit from "../../assets/images/votara-orbit.png";
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import "./AccountSelection.css";
 
@@ -14,12 +14,13 @@ import api from "../../services/api";
 const AccountSelection = () => {
 
     const navigate = useNavigate();
+    const location = useLocation();
 
 
 
     // admin | eb | register
 
-    const [activeView, setActiveView] = useState("admin");
+    const [activeView, setActiveView] = useState(() => new URLSearchParams(location.search).get("role") === "electoral_board" ? "eb" : "admin");
 
 
 
@@ -56,6 +57,22 @@ const AccountSelection = () => {
     const [showEbPassword, setShowEbPassword] = useState(false);
 
     const [ebLoading, setEbLoading] = useState(false);
+    const [ebRetryAfter, setEbRetryAfter] = useState(0);
+    useEffect(() => {
+        if (!ebRetryAfter) return undefined;
+        const deadline = Date.now() + ebRetryAfter * 1000;
+        const update = () => {
+            const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+            setEbRetryAfter(remaining);
+            if (remaining === 0) setEbError("");
+        };
+        const timer = window.setInterval(update, 1000);
+        document.addEventListener("visibilitychange", update);
+        return () => {
+            window.clearInterval(timer);
+            document.removeEventListener("visibilitychange", update);
+        };
+    }, [ebRetryAfter > 0]);
 
     const [ebError, setEbError] = useState("");
 
@@ -348,6 +365,7 @@ const handleAdminLogin = async (event) => {
     const handleEbLogin = async (event) => {
 
         event.preventDefault();
+        if (ebLoading || ebRetryAfter > 0) return;
 
         setEbError("");
 
@@ -423,6 +441,10 @@ const handleAdminLogin = async (event) => {
         } catch (requestError) {
 
             console.error("EB login error:", requestError);
+            if ([423,429].includes(requestError.response?.status)) {
+                const seconds = Number(requestError.response?.data?.retryAfter || requestError.response?.headers?.["retry-after"]);
+                setEbRetryAfter(Number.isFinite(seconds) && seconds > 0 ? Math.ceil(seconds) : 30);
+            }
 
             setEbError(
                 requestError.response?.data?.message ||
@@ -969,7 +991,7 @@ const handleAdminLogin = async (event) => {
 
                             {ebError && (
 
-                                <div className="account-selection-error">{ebError}</div>
+                                <div className="account-selection-error" role="alert">{ebRetryAfter > 0 ? "Please wait " + ebRetryAfter + " seconds before trying again." : ebError}</div>
 
                             )}
 
@@ -1009,7 +1031,7 @@ const handleAdminLogin = async (event) => {
 
                                         autoComplete="email"
 
-                                        disabled={ebLoading}
+                                        disabled={ebLoading || ebRetryAfter > 0}
 
                                     />
 
@@ -1043,7 +1065,7 @@ const handleAdminLogin = async (event) => {
 
                                             autoComplete="current-password"
 
-                                            disabled={ebLoading}
+                                            disabled={ebLoading || ebRetryAfter > 0}
 
                                         />
 
@@ -1073,11 +1095,11 @@ const handleAdminLogin = async (event) => {
 
                                     className="account-selection-login-button account-selection-eb-login-button"
 
-                                    disabled={ebLoading}
+                                    disabled={ebLoading || ebRetryAfter > 0}
 
                                 >
 
-                                    {ebLoading ? "Logging in..." : "Login as Electoral Board →"}
+                                    {ebLoading ? "Logging in..." : ebRetryAfter > 0 ? "Try again in " + ebRetryAfter + "s" : "Login as Electoral Board →"}
 
                                 </button>
 

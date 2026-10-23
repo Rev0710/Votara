@@ -851,3 +851,32 @@
         flex-direction: column;
     }
 }
+
+/* Reports owns its gutters despite the shared full-width admin main rule. */
+.reports-page #admin-reports-main {
+    box-sizing:border-box;width:100%;max-width:1600px;margin:0 auto;
+    padding:clamp(20px,2.8vw,40px) clamp(18px,3vw,44px) 48px !important;
+    min-width:0;
+}
+#admin-reports-main .reports-header {gap:20px;flex-wrap:wrap;}
+#admin-reports-main .reports-header > div {min-width:0;}
+#admin-reports-main .reports-toolbar {flex-wrap:wrap;gap:16px;}
+#admin-reports-main .reports-toolbar-left {min-width:min(280px,100%);}
+#admin-reports-main .reports-toolbar-actions {display:flex;flex-wrap:wrap;gap:10px;}
+#admin-reports-main :is(.reports-panel,.reports-stat-card,.reports-election-banner) {min-width:0;}
+#admin-reports-main :is(.reports-stat-label,.reports-stat-caption,.reports-field-label,.reports-kicker,.reports-panel-heading > div > span,.reports-election-info > span) {
+    font-size:12px !important;line-height:1.6;
+}
+#admin-reports-main .reports-stat-caption {color:var(--aw-muted,#aebdd3);overflow-wrap:anywhere;}
+#admin-reports-main .reports-election-info {min-width:0;overflow-wrap:anywhere;}
+#admin-reports-main .reports-analysis-grid {grid-template-columns:minmax(260px,.8fr) minmax(0,1.7fr);}
+@media(max-width:1000px) {
+    #admin-reports-main .reports-stat-grid {grid-template-columns:repeat(2,minmax(0,1fr));}
+    #admin-reports-main .reports-analysis-grid {grid-template-columns:minmax(0,1fr) !important;}
+}
+@media(max-width:560px) {
+    #admin-reports-main .reports-stat-grid {grid-template-columns:minmax(0,1fr);}
+    #admin-reports-main .reports-toolbar-actions {width:100%;}
+    #admin-reports-main .reports-toolbar-actions > button {flex:1 1 140px;min-height:44px;}
+    #admin-reports-main .reports-election-banner {flex-wrap:wrap;}
+}

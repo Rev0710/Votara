@@ -492,7 +492,11 @@ export default function Reports() {
                 throw new Error(message);
             }
 
+            if (!String(response.headers.get("content-type") || "").toLowerCase().includes("application/pdf"))
+                throw new Error("The server did not return a PDF. Redeploy the updated backend and try again.");
             const blob = await response.blob();
+            if (await blob.slice(0,5).text() !== "%PDF-")
+                throw new Error("The downloaded report is not a valid PDF. Please try again.");
             const url = URL.createObjectURL(blob);
 
             const contentDisposition =
@@ -505,18 +509,18 @@ export default function Reports() {
 
             const filename =
                 filenameMatch?.[1] ||
-                "VOTARA_Election_Report.xlsx";
+                "VOTARA_Election_Report.pdf";
 
             const anchor =
                 document.createElement("a");
 
             anchor.href = url;
-            anchor.download = filename;
+            anchor.download = filename.replace(/\.[^.]+$/, "") + ".pdf";
             document.body.appendChild(anchor);
             anchor.click();
             anchor.remove();
 
-            URL.revokeObjectURL(url);
+            window.setTimeout(() => URL.revokeObjectURL(url), 60000);
         } catch (err) {
             console.error("Report export error:", err);
 
@@ -538,7 +542,7 @@ export default function Reports() {
         <div className="reports-page">
             <AdminTopNav />
 
-            <main className="reports-main">
+            <main id="admin-reports-main" className="reports-main">
                 <div className="reports-breadcrumb">
                     <span>Admin</span>
                     <span>/</span>
@@ -656,7 +660,7 @@ export default function Reports() {
                             <FiDownload />
                             {exporting
                                 ? "Preparing..."
-                                : "Review report export"}
+                                : "Review PDF export"}
                         </button>
                     </div>
                 </section>

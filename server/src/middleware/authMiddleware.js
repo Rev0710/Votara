@@ -159,6 +159,28 @@ const protectStudent = async (req, res, next) => {
                 studentId
             ).trim();
 
+
+        // Kiosk credentials have their own short-lived operation, not a normal
+        // student login session. They may access only ballot routes.
+        if (decoded.kiosk === true) {
+            if (!/^\/api\/voting(?:\/|$)/.test(req.originalUrl || "") ||
+                !decoded.kioskOperationId || !decoded.kioskSessionId || !decoded.electionId) {
+                return res.status(403).json({success:false, message:"Kiosk access is limited to its active voting operation."});
+            }
+            const {data: operation, error: operationError} = await supabase.from("kiosk_operations")
+                .select("id,kiosk_session_id,operation_status,last_activity_at,kiosk_sessions(id,election_id,session_status)")
+                .eq("id", decoded.kioskOperationId).maybeSingle();
+            if (operationError) return res.status(503).json({success:false, message:"Unable to verify the kiosk operation."});
+            if (!operation || operation.operation_status !== "active" ||
+                operation.kiosk_session_id !== decoded.kioskSessionId ||
+                operation.kiosk_sessions?.session_status !== "active" ||
+                operation.kiosk_sessions?.election_id !== decoded.electionId ||
+                !Number.isFinite(new Date(operation.last_activity_at).getTime()) ||
+                Date.now() - new Date(operation.last_activity_at).getTime() > 2 * 60 * 1000) {
+                return res.status(401).json({success:false, code:"KIOSK_OPERATION_EXPIRED",
+                    message:"This kiosk assistance has ended. Verify the student again."});
+            }
+        } else {
         // Enforce the database-backed single active session for newly issued tokens.
         if (!decoded.userId || !decoded.sid) {
             return res.status(401).json({
@@ -208,6 +230,8 @@ const protectStudent = async (req, res, next) => {
         }
 
 
+
+        }
         // =================================================
         // FIND OFFICIAL STUDENT RECORD
         // =================================================

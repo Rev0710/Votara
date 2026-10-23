@@ -1,3 +1,4 @@
+import useVotingAvailability from "../../hooks/useVotingAvailability";
 import React, {
     useEffect,
     useMemo,
@@ -75,6 +76,7 @@ const Vote = () => {
     const [submitting, setSubmitting] = useState(false);
 
     const [election, setElection] = useState(null);
+    const votingGate = useVotingAvailability(election?.id);
     const [configuration, setConfiguration] = useState(null);
 
     const [positions, setPositions] = useState([]);
@@ -701,6 +703,7 @@ const Vote = () => {
         positionId,
         candidateId
     ) => {
+        if(!votingGate.available){setError(votingGate.message);return;}
 
         const electionStatus =
             String(
@@ -748,6 +751,7 @@ const Vote = () => {
     // =====================================================
 
     const handleReviewVote = () => {
+        if(!votingGate.available){setError(votingGate.message);return;}
 
         setError("");
         setSuccess("");
@@ -830,6 +834,7 @@ const Vote = () => {
 
     const handleSubmitVote =
         async () => {
+            if(!votingGate.available){setError(votingGate.message);return;}
 
             try {
 
@@ -1072,8 +1077,10 @@ const Vote = () => {
 
         return (
             <div className="vote-page">
+            {election?.id && !votingGate.available && <p role="status">{votingGate.message}</p>}
 
                 <main className="vote-main">
+
 
                     <div className="vote-heading">
 
@@ -1115,8 +1122,10 @@ const Vote = () => {
 
         return (
             <div className="vote-page">
+            {election?.id && !votingGate.available && <p role="status">{votingGate.message}</p>}
 
                 <main className="vote-main">
+
 
                     <div className="vote-heading">
 
@@ -1198,8 +1207,10 @@ const Vote = () => {
 
         return (
             <div className="vote-page">
+            {election?.id && !votingGate.available && <p role="status">{votingGate.message}</p>}
 
                 <main className="vote-main">
+
 
                     <div className="vote-heading">
 
@@ -1265,8 +1276,10 @@ const Vote = () => {
 
         return (
             <div className="vote-page">
+            {election?.id && !votingGate.available && <p role="status">{votingGate.message}</p>}
 
                 <main className="vote-main">
+
 
                     <div className="vote-heading">
 
@@ -1314,8 +1327,10 @@ const Vote = () => {
 
         return (
             <div className="vote-page">
+            {election?.id && !votingGate.available && <p role="status">{votingGate.message}</p>}
 
                 <main className="vote-main">
+
 
                     <div className="vote-heading">
 
@@ -1368,8 +1383,10 @@ const Vote = () => {
 
         return (
             <div className="vote-page">
+            {election?.id && !votingGate.available && <p role="status">{votingGate.message}</p>}
 
                 <main className="vote-main">
+
 
                     <div className="vote-heading">
 
@@ -1415,8 +1432,10 @@ const Vote = () => {
 
         return (
             <div className="vote-page">
+            {election?.id && !votingGate.available && <p role="status">{votingGate.message}</p>}
 
                 <main className="vote-main">
+
 
                     <div className="vote-heading">
 
@@ -1577,9 +1596,7 @@ const Vote = () => {
                             onClick={
                                 handleBackToBallot
                             }
-                            disabled={
-                                submitting
-                            }
+                            disabled={submitting}
                         >
                             Back to Ballot
                         </button>
@@ -1590,9 +1607,7 @@ const Vote = () => {
                             onClick={
                                 handleSubmitVote
                             }
-                            disabled={
-                                submitting
-                            }
+                            disabled={submitting || !votingGate.available}
                         >
                             {submitting
                                 ? "Submitting Vote..."
@@ -1614,8 +1629,10 @@ const Vote = () => {
 
     return (
         <div className="vote-page">
+            {election?.id && !votingGate.available && <p role="status">{votingGate.message}</p>}
 
             <main className="vote-main">
+
 
                 {/* =========================================
                     HEADER
@@ -1732,7 +1749,7 @@ const Vote = () => {
                                     type="button"
                                     className={`vote-position-abstain${selections[position.id] ? "" : " is-selected"}`}
                                     aria-pressed={!selections[position.id]}
-                                    disabled={submitting || hasVoted}
+                                    disabled={submitting || hasVoted || !votingGate.available}
                                     onClick={() => setSelections(previous => ({ ...previous, [position.id]: null }))}
                                 >
                                     {selections[position.id] ? "Abstain from this position" : "Abstention selected"}
@@ -1855,6 +1872,7 @@ const Vote = () => {
                                                             <button
                                                                 type="button"
                                                                 className="candidate-vote-button"
+                                                                disabled={!votingGate.available}
                                                                 onClick={() =>
                                                                     handleCandidateSelect(
                                                                         position.id,
@@ -1862,9 +1880,7 @@ const Vote = () => {
                                                                     )
                                                                 }
                                                             >
-                                                                {selected
-                                                                    ? "Selected"
-                                                                    : "Vote"}
+                                                                {votingGate.paused ? "Paused" : selected ? "Selected" : "Vote"}
                                                             </button>
 
                                                         </div>
@@ -1905,9 +1921,9 @@ const Vote = () => {
                         onClick={
                             handleReviewVote
                         }
-                        disabled={submitting}
+                        disabled={submitting || !votingGate.available}
                     >
-                        Review Vote
+                        {votingGate.paused ? "Paused" : "Review Vote"}
                     </button>
 
                 </div>

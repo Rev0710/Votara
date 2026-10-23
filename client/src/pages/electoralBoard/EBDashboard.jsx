@@ -8,7 +8,8 @@ import { FiBarChart2, FiClipboard, FiUserCheck, FiUsers } from "react-icons/fi";
 
 import "./EBDashboard.css";
 
-import api from "../../services/api";
+import api, { clearAccountSession } from "../../services/api";
+import PageLoader from "../../components/transitionloader/PageLoader";
 
 
 import Registrations from "./Registrations";
@@ -39,6 +40,12 @@ const EBDashboard = () => {
     const [activeSection, setActiveSection] =
         useState("dashboard");
     const [partyListContext, setPartyListContext] = useState(null);
+    const [isNavigationLoading, setIsNavigationLoading] = useState(false);
+    const navigationTimer = useRef(null);
+
+    useEffect(() => () => {
+        window.clearTimeout(navigationTimer.current);
+    }, []);
  useEffect(()=>{api.post('/electoral-board/activity',{section:activeSection}).catch(()=>{});},[activeSection]);
 
     // Restore the dashboard section when returning from a standalone
@@ -246,27 +253,9 @@ const EBDashboard = () => {
     //=====================================================
 
     const handleLogout = async () => {
-        try { await api.post('/electoral-board/activity',{section:'settings',event:'logout'},{timeout:2000}); } catch {} 
-
-        localStorage.removeItem(
-            "votaraStaffToken"
-        );
-
-        localStorage.removeItem(
-            "votaraStaffUser"
-        );
-
-        localStorage.removeItem(
-            "votaraEBToken"
-        );
-
-        localStorage.removeItem(
-            "votaraEBUser"
-        );
-
-        navigate(
-            "/account-selection"
-        );
+        try { await api.post("/electoral-board/activity", {section: "settings", event: "logout"}, {timeout: 2000}); } catch {}
+        clearAccountSession("electoral_board");
+        navigate("/admin-login?role=electoral_board", {replace: true});
     };
 
 
@@ -275,6 +264,10 @@ const EBDashboard = () => {
     // =====================================================
 
     const handleNavigation = (section, context = null) => {
+        if (navigationTimer.current !== null) return;
+        if (section === activeSection && !context && !partyListContext) return;
+
+        setIsNavigationLoading(true);
 
         if (section === "reports") section = "results";
 
@@ -284,9 +277,16 @@ const EBDashboard = () => {
         }
 
 
+        // Mount the next section immediately so its requests can start
+        // while the existing VOTARA transition is visible.
+        navigationTimer.current = window.setTimeout(() => {
+            navigationTimer.current = null;
+            setIsNavigationLoading(false);
+        }, 500);
+
         window.scrollTo({
             top: 0,
-            behavior: "smooth",
+            behavior: "auto",
         });
     };
 
@@ -326,6 +326,7 @@ const EBDashboard = () => {
 
     return (
         <div className="eb-dashboard-shell" style={styles.app}>
+            {isNavigationLoading && <PageLoader />}
 
             <main className="eb-main" style={styles.main}>
                 <EBHeader

@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react";
+import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
+import gsap from "gsap";
 import { FiBarChart2, FiCheckCircle, FiChevronDown, FiSearch, FiX } from "react-icons/fi";
 import "./CandidateResults.css";
 
@@ -12,6 +13,7 @@ const resultState = (position) => {
 };
 
 export default function CandidateResults({ positions = [], loading = false }) {
+    const resultsRef = useRef(null);
     const [search, setSearch] = useState("");
     const [positionId, setPositionId] = useState("all");
     const candidateCount = positions.reduce((total, position) => total + (position.candidates?.length || 0), 0);
@@ -28,8 +30,20 @@ export default function CandidateResults({ positions = [], loading = false }) {
     const hasFilters = Boolean(search.trim() || positionId !== "all");
     const clearFilters = () => { setSearch(""); setPositionId("all"); };
 
+    useLayoutEffect(() => {
+        const motion = gsap.matchMedia();
+        motion.add("(prefers-reduced-motion: no-preference)", () => {
+            const cards = resultsRef.current?.querySelectorAll(".cr-position");
+            if (cards?.length) gsap.from(cards, {
+                y: 8, opacity: 0, duration: 0.28, stagger: 0.03,
+                ease: "power2.out", clearProps: "transform,opacity",
+            });
+        });
+        return () => motion.revert();
+    }, [positions]);
+
     return (
-        <section className="candidate-results" aria-labelledby="candidate-results-title" aria-busy={loading}>
+        <section ref={resultsRef} className="candidate-results" aria-labelledby="candidate-results-title" aria-busy={loading}>
             <header className="cr-heading">
                 <div><h2 id="candidate-results-title">Candidate results</h2><p>Vote totals and candidate standings for each position.</p></div>
                 <div className="cr-totals"><span><strong>{number(candidateCount)}</strong> candidates</span><span><strong>{number(positions.length)}</strong> positions</span></div>

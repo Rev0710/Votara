@@ -100,6 +100,12 @@ const submitVote = async ({
     }
 
 
+    // Friendly rejection before RPC; the database repeats this under a row lock.
+    const {data: election, error: electionError} = await supabase.from("elections")
+        .select("*").eq("id",electionId).maybeSingle();
+    if (electionError || !election) throw new Error("Unable to verify election availability.");
+    const gate = require("../utils/electionTime").votingAvailability(election);
+    if (!gate.available) throw new Error(gate.message);
     // -----------------------------------------------------
     // Generate ballot token
     // -----------------------------------------------------

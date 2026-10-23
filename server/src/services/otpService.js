@@ -51,7 +51,7 @@ const verifyOtp = (email, otp, scope = "student") => {
     }
 
     if (Date.now() > record.expiresAt) {
-        otpStore.delete(normalizedEmail);
+        otpStore.delete(otpStoreKey(normalizedEmail, normalizedScope));
 
         return {
             success: false,
@@ -60,7 +60,7 @@ const verifyOtp = (email, otp, scope = "student") => {
     }
 
     if (record.attempts >= MAX_OTP_ATTEMPTS) {
-        otpStore.delete(normalizedEmail);
+        otpStore.delete(otpStoreKey(normalizedEmail, normalizedScope));
 
         return {
             success: false,
@@ -77,7 +77,7 @@ const verifyOtp = (email, otp, scope = "student") => {
         };
     }
 
-    otpStore.delete(normalizedEmail);
+    otpStore.delete(otpStoreKey(normalizedEmail, normalizedScope));
 
     const resetToken = crypto.randomBytes(32).toString("hex");
 

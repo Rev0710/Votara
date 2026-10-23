@@ -1,12 +1,16 @@
+import useVotingAvailability from "../../hooks/useVotingAvailability";
 import PlatformNotifications from '../../components/PlatformNotifications';
 import { useEffect, useMemo, useRef, useState } from "react";
 import "./StudentDashboard.css";
 import "./Settings.css";
 import "./StudentDashboard.workspace.css";
+import "./StudentNavbar.css";
+import "./StudentTheme.css";
 import StudentDotIcon from "../../components/student/StudentDotIcon";
-import { FiMoon, FiSun } from "react-icons/fi";
+import { FiLogOut, FiX, FiMenu, FiMoon, FiSearch, FiSun } from "react-icons/fi";
 import Profile from "./Profile";
-import api from "../../services/api";
+import api, { clearAccountSession, getStudentToken } from "../../services/api";
+import useAccountSession from "../../hooks/useAccountSession";
 import {
     getPartyListsForElection,
     getPartyListCandidates,
@@ -216,6 +220,7 @@ const ELECTION_STATUS_CLASSES = {
 // =====================================================
 
 function StudentDashboard() {
+    useAccountSession("student");
     const contentScrollRef = useRef(null);
     const [platformUpdate,setPlatformUpdate]=useState(null);
     const [studentTheme, setStudentTheme] = useState(() => {
@@ -249,15 +254,10 @@ const [partyRosterError, setPartyRosterError] = useState("");
 );
 
 useEffect(() => {
-    const handleResize = () => {
-        setSidebarOpen(window.matchMedia("(min-width: 721px)").matches);
-    };
-
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-        window.removeEventListener("resize", handleResize);
-    };
+    const desktop = window.matchMedia("(min-width: 721px)");
+    const handleBreakpointChange = event => setSidebarOpen(event.matches);
+    desktop.addEventListener("change", handleBreakpointChange);
+    return () => desktop.removeEventListener("change", handleBreakpointChange);
 }, []);
     const [activeMenu, setActiveMenu] = useState("dashboard");
     useEffect(() => { contentScrollRef.current?.scrollTo({ top: 0, behavior: "instant" }); }, [activeMenu]);
@@ -279,7 +279,7 @@ useEffect(() => {
 
         const refreshSession = async () => {
             if (document.visibilityState !== "visible" || refreshInFlight) return;
-            const token = localStorage.getItem("votaraToken");
+            const token = getStudentToken();
             if (!token) return;
 
             refreshInFlight = true;
@@ -290,7 +290,7 @@ useEffect(() => {
                     { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
                 );
                 const renewedToken = response?.data?.token;
-                if (renewedToken && localStorage.getItem("votaraToken") === token) {
+                if (renewedToken && getStudentToken() === token) {
                     localStorage.setItem("votaraToken", renewedToken);
                 }
             } catch (error) {
@@ -320,6 +320,11 @@ useEffect(() => {
     const [selectedFaq, setSelectedFaq] = useState(null);
 
     const [settingsModal, setSettingsModal] = useState(null);
+    const profileDialog = useRef(null);
+    const studentLogoutInProgress = useRef(false);
+    useEffect(() => {
+        if (settingsModal === "Edit profile" && profileDialog.current && !profileDialog.current.open) profileDialog.current.showModal();
+    }, [settingsModal]);
 
     const [passwordForm, setPasswordForm] = useState({
         currentPassword: "",
@@ -343,6 +348,14 @@ useEffect(() => {
 
 
     const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
+    const [signingOut, setSigningOut] = useState(false);
+    const logoutDialogRef = useRef(null);
+    useEffect(() => {
+        const dialog = logoutDialogRef.current;
+        if (showLogoutConfirmation && dialog && !dialog.open) dialog.showModal();
+        return () => { if (dialog?.open) dialog.close(); };
+    }, [showLogoutConfirmation]);
+
     const [profileImageError, setProfileImageError] = useState(false);
     const [profileImageVersion, setProfileImageVersion] = useState(0);
 
@@ -351,6 +364,7 @@ useEffect(() => {
     // =================================================
 
     const [election, setElection] = useState(null);
+    const votingGate = useVotingAvailability(election?.id);
     const [positions, setPositions] = useState([]);
     const [candidates, setCandidates] = useState([]);
 
@@ -367,6 +381,9 @@ useEffect(() => {
     const [ballotReview,setBallotReview]=useState(false);
     const [voteFeedback,setVoteFeedback]=useState("");
     const [hasVoted, setHasVoted] = useState(false);
+    useEffect(() => {
+        if(votingGate.paused){setSelectedCandidateDetails(null);setBallotReview(false);}
+    }, [votingGate.paused]);
     const [voteConfirmation, setVoteConfirmation] = useState(null);
 
     // =================================================
@@ -418,11 +435,7 @@ useEffect(() => {
 
         const fetchStudent = async () => {
             const storedStudent = readStoredStudent();
-            const token =
-                localStorage.getItem("votaraToken") ||
-                localStorage.getItem("votaraStudentToken") ||
-                localStorage.getItem("studentToken") ||
-                "";
+            const token = getStudentToken();
 
             // Show the saved account immediately while the server refresh runs.
             if (!cancelled && storedStudent) {
@@ -431,8 +444,9 @@ useEffect(() => {
 
             if (!token) {
                 if (!cancelled) {
-                    setStudent(storedStudent || null);
+                    setStudent(null);
                     setLoading(false);
+                    window.location.replace("/student-login");
                 }
                 return;
             }
@@ -754,11 +768,11 @@ useEffect(() => {
         getElectionStatus(election?.status);
 
     const electionStatusLabel =
-        ELECTION_STATUS_LABELS[electionStatus] ||
+        votingGate.paused ? "Paused" : ELECTION_STATUS_LABELS[electionStatus] ||
         "No Election";
 
     const electionStatusClass =
-        ELECTION_STATUS_CLASSES[electionStatus] ||
+        votingGate.paused ? "status-paused" : ELECTION_STATUS_CLASSES[electionStatus] ||
         "status-none";
 
     const electionIsOpen =
@@ -775,7 +789,7 @@ useEffect(() => {
         electionStatus === "cancelled";
 
     const studentCanVote =
-        Boolean(electionIsOpen) &&
+        Boolean(electionIsOpen) && votingGate.available &&
         studentEligible &&
         !hasVoted &&
         !voteLoading;
@@ -794,7 +808,7 @@ const sidebarItems = [
     },
     {
         id: "vote",
-        label: "Vote",
+        label: votingGate.paused ? "Paused" : "Vote",
         icon: voteIcon,
         activeIcon: voteIcon,
     },
@@ -812,7 +826,7 @@ const sidebarItems = [
     },
     {
         id: "guidelines",
-        label: "Voters Guidelines",
+        label: "Voting Guidelines",
         icon: guidelinesIcon,
         activeIcon: guidelinesIcon,
     },
@@ -1256,7 +1270,7 @@ const handleSettingsItemClick = (item) => {
             hasVoted ||
             voteLoading ||
             !electionIsOpen ||
-            !studentEligible
+            !studentEligible || !votingGate.available
         ) {
             return;
         }
@@ -1272,6 +1286,7 @@ const handleSettingsItemClick = (item) => {
     // =================================================
 
         const handleViewDetails = (candidate) => {
+            if (votingGate.paused) return;
             setSelectedCandidateDetails(candidate);
 
         const name =
@@ -1287,6 +1302,7 @@ const handleSettingsItemClick = (item) => {
     // =================================================
 
     const handleSubmitVotes = async (confirmed = false) => {
+        if (!votingGate.available) {setVoteFeedback(votingGate.message); return;}
         if(voteLoading)return;
         setVoteFeedback("");
         if (!election?.id) {
@@ -1464,7 +1480,10 @@ const handleSettingsItemClick = (item) => {
 
     
 const handleLogout = async () => {
-    const token = localStorage.getItem("votaraToken");
+    if (studentLogoutInProgress.current) return;
+    studentLogoutInProgress.current = true;
+    setSigningOut(true);
+    const token = getStudentToken();
 
     // Release the server-side session before leaving the dashboard.
     if (token) {
@@ -1476,7 +1495,7 @@ const handleLogout = async () => {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
-                    timeout: 5000,
+                    timeout: 2000,
                 }
             );
         } catch (error) {
@@ -1487,11 +1506,8 @@ const handleLogout = async () => {
         }
     }
 
-    localStorage.removeItem("votaraToken");
-    localStorage.removeItem("votaraStudentToken");
-    localStorage.removeItem("studentToken");
-    localStorage.removeItem("votaraStudent");
-    window.location.href = "/";
+    clearAccountSession("student");
+    window.location.replace("/student-login");
 };
 
 
@@ -1621,7 +1637,7 @@ const handleLogout = async () => {
                                     hasVoted ||
                                     voteLoading ||
                                     !electionIsOpen ||
-                                    !studentEligible
+                                    !studentEligible || !votingGate.available
                                 }
                                 onClick={() =>
                                     handleVoteSelect(
@@ -1630,7 +1646,7 @@ const handleLogout = async () => {
                                     )
                                 }
                             >
-                                {isSelected
+                                {votingGate.paused ? "Paused" : isSelected
                                     ? "SELECTED · CLEAR"
                                     : "VOTE"}
                             </button>
@@ -1641,6 +1657,7 @@ const handleLogout = async () => {
                                 className="candidate-details-button"
                                 aria-label={`View campaign platform for ${candidateName}`}
                                 title="View campaign platform"
+                                disabled={votingGate.paused}
                                 onClick={() => handleViewDetails(candidate)}
                             >
                                 <svg
@@ -2118,7 +2135,7 @@ const resultsAreVisible =
                                             : "Open the ballot"
                                     }
                                 >
-                                    {hasVoted
+                                    {votingGate.paused ? "Paused" : hasVoted
                                         ? "VOTE SUBMITTED"
                                         : electionIsOpen && studentEligible
                                         ? "Vote Now"
@@ -2130,6 +2147,7 @@ const resultsAreVisible =
                                 <button
                                     type="button"
                                     className="view-candidates-button"
+                                    disabled={votingGate.paused}
                                     onClick={() => handleMenuClick("candidates")}
                                 >
                                     View Candidates
@@ -2526,6 +2544,7 @@ const resultsAreVisible =
                                         {positionCandidates.map((candidate) => (
                                             <article
                                                 className="directory-candidate-card"
+                                                inert={votingGate.paused}
                                                 key={candidate.id}
                                             >
                                                 <div className="directory-candidate-photo">
@@ -2775,7 +2794,7 @@ const resultsAreVisible =
                                             type="button"
                                             className={`vote-position-abstain${selectedVotes[position.id] ? "" : " is-selected"}`}
                                             aria-pressed={!selectedVotes[position.id]}
-                                            disabled={hasVoted || voteLoading || !electionIsOpen || !studentEligible}
+                                            disabled={hasVoted || voteLoading || !electionIsOpen || !studentEligible || !votingGate.available}
                                             onClick={() => setSelectedVotes(previous => ({ ...previous, [position.id]: null }))}
                                         >
                                             {selectedVotes[position.id] ? "Abstain from this position" : "Abstention selected"}
@@ -2793,10 +2812,10 @@ const resultsAreVisible =
                                     <button
                                         type="button"
                                         className="submit-vote-button"
-                                        disabled={voteLoading}
+                                        disabled={voteLoading || !votingGate.available}
                                         onClick={() => handleSubmitVotes()}
                                     >
-                                        {voteLoading ? "SUBMITTING..." : "SUBMIT VOTE"}
+                                        {votingGate.paused ? "Paused" : voteLoading ? "SUBMITTING..." : "SUBMIT VOTE"}
                                     </button>
                                 </section>
                             )}
@@ -2840,7 +2859,7 @@ const resultsAreVisible =
                     <section className="guidelines-container">
                         <div className="student-guidelines-heading">
                             <span className="student-guidelines-eyebrow">VOTER RESOURCES</span>
-                            <h1>Voters Guidelines</h1>
+                            <h1>Voting Guidelines</h1>
                             <p>A little preparation makes every vote count. Follow these guidelines for a smooth and secure voting experience.</p>
                         </div>
                         <div className="student-guidelines-grid">
@@ -3089,7 +3108,7 @@ const resultsAreVisible =
 
             return (
                 <main className="policy-page content-page-animation">
-                    <span className="policy-eyebrow">PRIVACY AND POLICY</span>
+                    <span className="policy-eyebrow">PRIVACY POLICY</span>
 
                     <div className="policy-sheet">
                         <button className="policy-back" type="button"
@@ -3506,7 +3525,7 @@ const resultsAreVisible =
     // =================================================
 
     return (
-        <div className={`student-dashboard ${sidebarOpen ? "is-sidebar-expanded" : "is-sidebar-collapsed"}`} data-student-theme={studentTheme}>
+        <div id="student-workspace" className={`student-dashboard ${sidebarOpen ? "is-sidebar-expanded" : "is-sidebar-collapsed"}`} data-student-theme={studentTheme}>
             {/* ================= NAVBAR ================= */}
 
             
@@ -3516,13 +3535,11 @@ const resultsAreVisible =
                         type="button"
                         className="menu-toggle"
                         onClick={() => setSidebarOpen((previous) => !previous)}
-                        aria-label="Toggle sidebar"
+                        aria-label={sidebarOpen ? "Collapse navigation" : "Open navigation"}
                         aria-expanded={sidebarOpen}
                         aria-controls="student-sidebar"
                     >
-                        <span />
-                        <span />
-                        <span />
+                        <FiMenu aria-hidden="true" />
                     </button>
 
                     <div className="header-greeting">
@@ -3537,6 +3554,7 @@ const resultsAreVisible =
                     <input
                         type="text"
                         placeholder="Search"
+                        aria-label="Search dashboard"
                         value={searchValue}
                         onChange={(event) => setSearchValue(event.target.value)}
                         onKeyDown={(event) => {
@@ -3552,7 +3570,7 @@ const resultsAreVisible =
                         aria-label="Search"
                         onClick={handleSearch}
                     >
-                        ⌕
+                        <FiSearch aria-hidden="true" />
                     </button>
                 </div>
 
@@ -3641,7 +3659,8 @@ const resultsAreVisible =
                                                 : ""
                                         }`}
                                         aria-current={isActive ? "page" : undefined}
-                                        title={item.label}
+                                        disabled={votingGate.paused && ["vote","candidates"].includes(item.id)}
+                                        title={votingGate.paused && ["vote","candidates"].includes(item.id) ? votingGate.message : item.label}
                                         onClick={() =>
                                             handleMenuClick(
                                                 item.id
@@ -3649,9 +3668,7 @@ const resultsAreVisible =
                                         }
                                     >
                                         <span className="sidebar-icon-wrapper">
-                                            {item.id === "candidates" || item.id === "results"
-                                                ? <StudentDotIcon name={item.id} />
-                                                : <img className="student-figma-icon" src={isActive ? item.activeIcon : item.icon} alt="" aria-hidden="true" width="20" height="20" />}
+                                            <StudentDotIcon name={item.id} />
                                         </span>
 
                                         <span className="sidebar-label">
@@ -3691,6 +3708,7 @@ const resultsAreVisible =
                 {/* ================= CONTENT ================= */}
 
                 <div className="student-content-scroll" ref={contentScrollRef} tabIndex={0} aria-label="Student dashboard content">
+                    {election?.id && !votingGate.available && <p className="student-voting-window" role="status"><strong>{votingGate.paused ? "Voting paused" : "Voting update"}</strong><span>{votingGate.message}</span></p>}
                     {renderMainContent()}
                 </div>
             </div>
@@ -3699,7 +3717,7 @@ const resultsAreVisible =
 
 {/* ================= CANDIDATE CAMPAIGN PLATFORM ================= */}
 
-{(ballotReview || voteFeedback) && <div className="candidate-platform-overlay"><section className="candidate-platform-modal ballot-review-modal" role="dialog" aria-modal="true" aria-labelledby="ballot-review-title"><h2 id="ballot-review-title">{voteFeedback?"Voting update":"Review your ballot"}</h2>{voteFeedback?<p role="alert">{voteFeedback}</p>:<><p>Unselected positions count as abstentions. You can submit only the candidates you chose.</p><ul>{eligiblePositions.map(position=><li key={position.id}><strong>{position.name}</strong><span>{selectedVotes[position.id]?(candidates.find(candidate=>candidate.id===selectedVotes[position.id])?.full_name||candidates.find(candidate=>candidate.id===selectedVotes[position.id])?.fullName||"Candidate selected"):"No vote — abstain"}</span></li>)}</ul><p>Your choices cannot be changed after submission.</p></>}<footer><button type="button" onClick={()=>{setBallotReview(false);setVoteFeedback("");}}> {voteFeedback?"Close":"Back to ballot"}</button>{!voteFeedback&&<button type="button" className="primary" disabled={voteLoading} onClick={()=>handleSubmitVotes(true)}>Confirm & submit</button>}</footer></section></div>}
+{(ballotReview || voteFeedback) && <div className="candidate-platform-overlay"><section className="candidate-platform-modal ballot-review-modal" role="dialog" aria-modal="true" aria-labelledby="ballot-review-title"><h2 id="ballot-review-title">{voteFeedback?"Voting update":"Review your ballot"}</h2>{voteFeedback?<p role="alert">{voteFeedback}</p>:<><p>Unselected positions count as abstentions. You can submit only the candidates you chose.</p><ul>{eligiblePositions.map(position=><li key={position.id}><strong>{position.name}</strong><span>{selectedVotes[position.id]?(candidates.find(candidate=>candidate.id===selectedVotes[position.id])?.full_name||candidates.find(candidate=>candidate.id===selectedVotes[position.id])?.fullName||"Candidate selected"):"No vote — abstain"}</span></li>)}</ul><p>Your choices cannot be changed after submission.</p></>}<footer><button type="button" onClick={()=>{setBallotReview(false);setVoteFeedback("");}}> {voteFeedback?"Close":"Back to ballot"}</button>{!voteFeedback&&<button type="button" className="primary" disabled={voteLoading || !votingGate.available} onClick={()=>handleSubmitVotes(true)}>Confirm & submit</button>}</footer></section></div>}
 {selectedCandidateDetails && (
     <div
         className="candidate-platform-overlay"
@@ -3848,8 +3866,11 @@ const resultsAreVisible =
             {/* ================= SETTINGS / PROFILE MODAL ================= */}
 
             {settingsModal === "Edit profile" && (
-                <div
-                    className="settings-modal-overlay"
+                <dialog
+                    ref={profileDialog}
+                    aria-label="My profile"
+                    onCancel={() => setSettingsModal(null)}
+                    className="settings-modal-overlay student-profile-dialog"
                     onClick={() =>
                         setSettingsModal(null)
                     }
@@ -3880,7 +3901,7 @@ const resultsAreVisible =
                             }
                         />
                     </div>
-                </div>
+                </dialog>
             )}
 
             {/* ================= CHANGE PASSWORD MODAL ================= */}
@@ -4117,43 +4138,40 @@ const resultsAreVisible =
             )}
 
             {showLogoutConfirmation && (
-                <div
+                <dialog
+                    ref={logoutDialogRef}
                     className="logout-confirmation-overlay"
-                    onClick={() => setShowLogoutConfirmation(false)}
+                    aria-labelledby="logout-confirmation-title"
+                    aria-describedby="logout-confirmation-description"
+                    onCancel={(event) => {
+                        event.preventDefault();
+                        if (!signingOut) setShowLogoutConfirmation(false);
+                    }}
+                    onClick={(event) => {
+                        if (event.target === event.currentTarget && !signingOut) setShowLogoutConfirmation(false);
+                    }}
                 >
-                    <section
-                        className="logout-confirmation-dialog"
-                        role="dialog"
-                        aria-modal="true"
-                        aria-labelledby="logout-confirmation-title"
-                        aria-describedby="logout-confirmation-description"
-                        onClick={(event) => event.stopPropagation()}
-                    >
-                        <div className="logout-confirmation-symbol" aria-hidden="true">
-                            ?
-                        </div>
-                        <h2 id="logout-confirmation-title">Log out of VOTARA?</h2>
+                    <section className="logout-confirmation-dialog" aria-busy={signingOut}>
+                        <button type="button" className="logout-close-button" aria-label="Close sign-out dialog"
+                            disabled={signingOut} onClick={() => setShowLogoutConfirmation(false)}>
+                            <FiX aria-hidden="true" />
+                        </button>
+                        <div className="logout-confirmation-symbol" aria-hidden="true"><FiLogOut /></div>
+                        <h2 id="logout-confirmation-title">Sign out of Votara?</h2>
                         <p id="logout-confirmation-description">
-                            Are you sure you want to log out of your student account?
+                            You’ll need to sign in again to access your student account.
                         </p>
                         <div className="logout-confirmation-actions">
-                            <button
-                                type="button"
-                                className="logout-cancel-button"
-                                onClick={() => setShowLogoutConfirmation(false)}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="button"
-                                className="logout-confirm-button"
-                                onClick={handleLogout}
-                            >
-                                Yes, log out
+                            <button type="button" className="logout-cancel-button" autoFocus
+                                disabled={signingOut} onClick={() => setShowLogoutConfirmation(false)}>Stay signed in</button>
+                            <button type="button" className="logout-confirm-button"
+                                disabled={signingOut} onClick={handleLogout}>
+                                {signingOut ? "Signing out…" : "Sign out"}
                             </button>
                         </div>
+                        {signingOut && <p className="logout-progress" role="status">Ending your student session…</p>}
                     </section>
-                </div>
+                </dialog>
             )}
 
             </div>

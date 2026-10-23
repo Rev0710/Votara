@@ -1,17 +1,41 @@
-import React from "react";
+import React, { useLayoutEffect, useRef } from "react";
+import gsap from "gsap";
 import "./PageLoader.css";
 
-// Use the same Votara logo asset already used by AdminDashboard.
-// PageLoader.jsx is in src/pages/admin, so this resolves to src/images/Votara.png.
 import VotaraLogo from "/src/images/Votara.png";
 
 export default function PageLoader() {
+    const ringRef = useRef(null);
+    const contentRef = useRef(null);
+    const dotRef = useRef(null);
+
+    useLayoutEffect(() => {
+        const motion = gsap.matchMedia();
+        motion.add("(prefers-reduced-motion: no-preference)", () => {
+            gsap.to(ringRef.current, {
+                rotation: 360,
+                duration: 0.9,
+                repeat: -1,
+                ease: "none",
+            });
+            gsap.from(contentRef.current, {
+                opacity: 0, y: 8, scale: 0.97,
+                duration: 0.25, ease: "power2.out",
+            });
+            gsap.to(dotRef.current, {
+                opacity: 0.35, duration: 0.65,
+                repeat: -1, yoyo: true, ease: "sine.inOut",
+            });
+        });
+        return () => motion.revert();
+    }, []);
+
     return (
-        <div className="votara-page-loader" role="status" aria-label="Loading">
-            <div className="votara-loader-content">
+        <div className="votara-page-loader" role="status" aria-label="Loading VOTARA" aria-live="polite">
+            <div ref={contentRef} className="votara-loader-content" aria-hidden="true">
 
                 <div className="votara-loader-circle">
-                    <div className="votara-loader-ring"></div>
+                    <div ref={ringRef} className="votara-loader-ring" aria-hidden="true"></div>
 
                     <div className="votara-loader-logo">
                         <img
@@ -21,13 +45,10 @@ export default function PageLoader() {
                     </div>
                 </div>
 
-                <div className="votara-loader-brand">Votara</div>
-                <div className="votara-loader-label">LOADING</div>
-
-                <div className="votara-loader-dots" aria-hidden="true">
-                    <span></span>
-                    <span></span>
-                    <span></span>
+                <div className="votara-loader-brand">VOTARA</div>
+                <div className="votara-loader-label">
+                    <span ref={dotRef} className="votara-loader-status-dot" />
+                    Preparing your workspace
                 </div>
 
             </div>

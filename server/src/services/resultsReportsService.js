@@ -175,468 +175,72 @@ const getResultsReportsData = async (
     }
 
 
-    // -----------------------------------------------------
-    // GET ELECTION YEAR LEVELS
-    // -----------------------------------------------------
-
-    const {
-        data: yearLevelRows,
-        error: yearLevelError
-    } = await supabase
-        .from("election_year_levels")
-        .select(
-            `
-            id,
-            year_level
-            `
-        )
-        .eq(
-            "election_id",
-            election.id
-        );
-
-
-    if (yearLevelError) {
-        throw yearLevelError;
-    }
-
-
-    // -----------------------------------------------------
-    // VOTARA YEAR-LEVEL RULE
-    // -----------------------------------------------------
-    //
-    // 1st Year students do NOT participate in the
-    // general election voting configuration.
-    //
-    // 2nd, 3rd, and 4th Year students are eligible.
-    //
-    // -----------------------------------------------------
-
-    const eligibleYearLevels =
-        (
-            yearLevelRows ||
-            []
-        ).filter(
-            (item) =>
-                item.year_level !==
-                "1st Year"
-        );
-
-
-    // -----------------------------------------------------
-    // GET ALLOWED YEAR LEVEL VALUES
-    // -----------------------------------------------------
-
-    const allowedYearLevels =
-        eligibleYearLevels.map(
-            (item) =>
-                item.year_level
-        );
-
-
-    // -----------------------------------------------------
-    // COUNT ELIGIBLE VOTERS
-    // -----------------------------------------------------
-
-    let eligibleVoters = 0;
-
-
-    if (
-        allowedYearLevels.length > 0
-    ) {
-
-        const {
-            count,
-            error:
-                studentCountError
-        } = await supabase
-            .from("students")
-            .select(
-                "id",
-                {
-                    count: "exact",
-                    head: true
-                }
-            )
-            .in(
-                "year_level",
-                allowedYearLevels
-            );
-
-
-        if (studentCountError) {
-            throw studentCountError;
+    // Independent reads share the same election scope and run together.
+    // Page through tally rows: Supabase otherwise caps a result at 1,000 rows.
+    const allRows = async (query) => {
+        const rows = [];
+        for (let offset = 0; ; offset += 1000) {
+            const { data, error } = await query().range(offset, offset + 999)
+                .abortSignal(AbortSignal.timeout(20000));
+            if (error) throw error;
+            rows.push(...(data || []));
+            if (!data || data.length < 1000) return rows;
         }
-
-
-        eligibleVoters =
-            count || 0;
-    }
-
-
-    // -----------------------------------------------------
-    // COUNT VOTERS WHO VOTED
-    // -----------------------------------------------------
-
-    const {
-        count: votersWhoVoted,
-        error:
-            participationError
-    } = await supabase
-        .from("vote_participations")
-        .select(
-            "id",
-            {
-                count: "exact",
-                head: true
-            }
-        )
-        .eq(
-            "election_id",
-            election.id
-        )
-        .eq(
-            "has_voted",
-            true
-        );
-
-
-    if (participationError) {
-        throw participationError;
-    }
-
-
-    const totalVotersWhoVoted =
-        votersWhoVoted || 0;
-
-
-    // -----------------------------------------------------
-    // COUNT SUBMITTED BALLOTS
-    // -----------------------------------------------------
-
-    const {
-        count: submittedBallots,
-        error:
-            ballotsError
-    } = await supabase
-        .from("ballots")
-        .select(
-            "id",
-            {
-                count: "exact",
-                head: true
-            }
-        )
-        .eq(
-            "election_id",
-            election.id
-        )
-        .eq(
-            "status",
-            "submitted"
-        );
-
-
-    if (ballotsError) {
-        throw ballotsError;
-    }
-
-
-    const totalSubmittedBallots =
-        submittedBallots || 0;
-
-
-    // -----------------------------------------------------
-    // REMAINING VOTERS
-    // -----------------------------------------------------
-
-    const remainingVoters =
-        Math.max(
-            eligibleVoters -
-            totalVotersWhoVoted,
-            0
-        );
-
-
-    // -----------------------------------------------------
-    // TURNOUT PERCENTAGE
-    // -----------------------------------------------------
-
-    const turnoutPercentage =
-        eligibleVoters > 0
-            ? Number(
-                (
-                    (
-                        totalVotersWhoVoted /
-                        eligibleVoters
-                    ) * 100
-                ).toFixed(2)
-            )
-            : 0;
-
-
-    // -----------------------------------------------------
-    // GET ACTIVE POSITIONS
-    // -----------------------------------------------------
-
-    const {
-        data: positions,
-        error:
-            positionsError
-    } = await supabase
-        .from("positions")
-        .select(
-            `
-            id,
-            name,
-            description,
-            display_order,
-            is_required,
-            is_active
-            `
-        )
-        .eq(
-            "election_id",
-            election.id
-        )
-        .eq(
-            "is_active",
-            true
-        )
-        .order(
-            "display_order",
-            {
-                ascending: true
-            }
-        );
-
-
-    if (positionsError) {
-        throw positionsError;
-    }
-
-
-    // -----------------------------------------------------
-    // GET ACTIVE CANDIDATES
-    // -----------------------------------------------------
-    //
-    // Candidate approval is NOT used here.
-    //
-    // VOTARA rule:
-    //
-    // If EB added the candidate and the candidate is
-    // active, the candidate is included in the results.
-    //
-    // -----------------------------------------------------
-
-    const {
-        data: candidates,
-        error:
-            candidatesError
-    } = await supabase
-        .from("candidates")
-        .select(
-            `
-            id,
-            position_id,
-            student_id,
-            full_name,
-            profile_picture,
-            platform,
-            party_list_id,
-            is_active
-            `
-        )
-        .eq(
-            "election_id",
-            election.id
-        )
-        .eq(
-            "is_active",
-            true
-        );
-
-
-    if (candidatesError) {
-        throw candidatesError;
-    }
-
-
-    // -----------------------------------------------------
-    // GET PARTY LIST NAMES
-    // -----------------------------------------------------
-
-    const partyListIds =
-        (
-            candidates ||
-            []
-        )
-            .map(
-                (candidate) =>
-                    candidate.party_list_id
-            )
-            .filter(Boolean);
-
-
-    let partyLists = [];
-
-
-    if (
-        partyListIds.length > 0
-    ) {
-
-        const {
-            data,
-            error
-        } = await supabase
-            .from("party_lists")
-            .select(
-                `
-                id,
-                name
-                `
-            )
-            .in(
-                "id",
-                partyListIds
-            );
-
-
-        if (error) {
-            throw error;
-        }
-
-
-        partyLists =
-            data || [];
-    }
-
-
-    // -----------------------------------------------------
-    // PARTY LIST MAP
-    // -----------------------------------------------------
-
-    const partyListMap = {};
-
-
-    partyLists.forEach(
-        (party) => {
-
-            partyListMap[
-                party.id
-            ] =
-                party.name;
-        }
+    };
+    const checkedCount = async (query) => {
+        const { count, error } = await query.abortSignal(AbortSignal.timeout(20000));
+        if (error) throw error;
+        return count || 0;
+    };
+    const [yearLevelRows, positions, candidates, submittedBallotRows, totalVotersWhoVoted] = await Promise.all([
+        allRows(() => supabase.from("election_year_levels").select("id,year_level")
+            .eq("election_id", election.id).order("id")),
+        allRows(() => supabase.from("positions")
+            .select("id,name,description,display_order,is_required,is_active")
+            .eq("election_id", election.id).eq("is_active", true)
+            .order("display_order").order("id")),
+        allRows(() => supabase.from("candidates")
+            .select("id,position_id,student_id,full_name,profile_picture,platform,party_list_id,is_active")
+            .eq("election_id", election.id).eq("is_active", true).order("id")),
+        allRows(() => supabase.from("ballots").select("id")
+            .eq("election_id", election.id).eq("status", "submitted").order("id")),
+        checkedCount(supabase.from("vote_participations").select("id", {count: "exact", head: true})
+            .eq("election_id", election.id).eq("has_voted", true)),
+    ]);
+    const eligibleYearLevels = yearLevelRows.filter(item => item.year_level !== "1st Year");
+    const allowedYearLevels = eligibleYearLevels.map(item => item.year_level);
+    const submittedBallotIds = submittedBallotRows.map(ballot => ballot.id);
+    const partyListIds = [...new Set(candidates.map(candidate => candidate.party_list_id).filter(Boolean))];
+    const batches = (values, size = 200) => Array.from(
+        {length: Math.ceil(values.length / size)}, (_, index) => values.slice(index * size, (index + 1) * size)
     );
-
-
-    // -----------------------------------------------------
-    // GET SUBMITTED BALLOT IDs
-    // -----------------------------------------------------
-    //
-    // IMPORTANT:
-    //
-    // We retrieve ONLY ballot IDs internally so that the
-    // service can aggregate vote totals.
-    //
-    // Ballot IDs are NEVER returned to the frontend.
-    //
-    // Student identity is NEVER returned.
-    //
-    // -----------------------------------------------------
-
-    const {
-        data: submittedBallotRows,
-        error:
-            submittedBallotsQueryError
-    } = await supabase
-        .from("ballots")
-        .select(
-            "id"
-        )
-        .eq(
-            "election_id",
-            election.id
-        )
-        .eq(
-            "status",
-            "submitted"
-        );
-
-
-    if (
-        submittedBallotsQueryError
-    ) {
-        throw submittedBallotsQueryError;
-    }
-
-
-    const submittedBallotIds =
-        (
-            submittedBallotRows ||
-            []
-        ).map(
-            (ballot) =>
-                ballot.id
-        );
-
-
-    // -----------------------------------------------------
-    // GET BALLOT VOTES
-    // -----------------------------------------------------
-    //
-    // IMPORTANT SECURITY RULE:
-    //
-    // We retrieve only:
-    //
-    // - candidate_id
-    // - position_id
-    // - ballot_id
-    //
-    // No student identity is requested.
-    //
-    // The rows are used ONLY to calculate totals.
-    //
-    // They are NEVER returned from this service.
-    //
-    // -----------------------------------------------------
-
-    let ballotVotes = [];
-
-
-    if (
-        submittedBallotIds.length > 0
-    ) {
-
-        const {
-            data,
-            error
-        } = await supabase
-            .from("ballot_votes")
-            .select(
-                `
-                id,
-                candidate_id,
-                position_id,
-                ballot_id
-                `
-            )
-            .in(
-                "ballot_id",
-                submittedBallotIds
-            );
-
-
-        if (error) {
-            throw error;
-        }
-
-
-        ballotVotes =
-            data || [];
-    }
-
-
+    const [eligibleVoters, partyLists, ballotVotes] = await Promise.all([
+        allowedYearLevels.length
+            ? checkedCount(supabase.from("students").select("id", {count: "exact", head: true})
+                .in("year_level", allowedYearLevels))
+            : Promise.resolve(0),
+        (async () => {
+            const rows = [];
+            for (const ids of batches(partyListIds)) {
+                rows.push(...await allRows(() => supabase.from("party_lists").select("id,name").in("id", ids).order("id")));
+            }
+            return rows;
+        })(),
+        (async () => {
+            const rows = [];
+            // Bound IN lists and paginate so every submitted vote is included.
+            for (const ids of batches(submittedBallotIds)) {
+                rows.push(...await allRows(() => supabase.from("ballot_votes")
+                    .select("id,candidate_id,position_id,ballot_id").in("ballot_id", ids).order("id")));
+            }
+            return rows;
+        })(),
+    ]);
+    const totalSubmittedBallots = submittedBallotRows.length;
+    const remainingVoters = Math.max(eligibleVoters - totalVotersWhoVoted, 0);
+    const turnoutPercentage = eligibleVoters > 0
+        ? Number((totalVotersWhoVoted / eligibleVoters * 100).toFixed(2)) : 0;
+    const partyListMap = Object.fromEntries(partyLists.map(party => [party.id, party.name]));
     // -----------------------------------------------------
     // COUNT VOTES PER CANDIDATE
     // -----------------------------------------------------

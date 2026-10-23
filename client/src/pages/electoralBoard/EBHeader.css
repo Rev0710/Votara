@@ -211,3 +211,21 @@
 @media (prefers-reduced-motion: reduce) {
     .eb-board-header * { animation: none; transition: none; }
 }
+
+/* Match the shared sign-out layout and center it in the viewport's top layer. */
+.eb-board-header .eb-signout-dialog {
+    position: fixed; inset: 0; width: min(550px, calc(100vw - 32px));
+    height: fit-content; max-height: calc(100dvh - 32px); margin: auto;
+    transform: none; overflow: auto; text-align: left;
+    background: var(--board-surface); color: var(--board-text);
+}
+.eb-board-header .eb-signout-content { padding: 34px; }
+.eb-board-header .eb-signout-content h2 { margin: 12px 0 4px; color: var(--board-text); font-size: 22px; line-height: 1.35; }
+.eb-board-header .eb-signout-content p { margin: 0; color: var(--board-muted); font-size: 17px; line-height: 1.65; }
+.eb-board-header .eb-signout-actions { justify-content: flex-end; gap: 14px; margin-top: 30px; }
+.eb-board-header .eb-signout-actions button { min-height: 52px; padding: 12px 22px; font-size: 16px; cursor: pointer; }
+@media(max-width:480px) {
+    .eb-board-header .eb-signout-content { padding: 24px; }
+    .eb-board-header .eb-signout-content p { font-size: 15px; }
+    .eb-board-header .eb-signout-actions button { flex: 1; padding: 10px 14px; }
+}

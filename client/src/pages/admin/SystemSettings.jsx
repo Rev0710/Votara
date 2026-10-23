@@ -643,15 +643,7 @@ const SystemSettings = () => {
     // =====================================================
 
     const goTo = (path) => {
-        if (isPageTransitioning) {
-            return;
-        }
-
-        setIsPageTransitioning(true);
-
-        window.setTimeout(() => {
-            navigate(path);
-        }, 700);
+        navigate(path);
     };
 
     const handleLogout = () => {
@@ -684,7 +676,7 @@ const SystemSettings = () => {
                     <>
                         <div className="platform-notice-reference-header">
                             <div className="platform-notice-reference-title">
-                                <span className="platform-notice-reference-breadcrumb"><i /> System messaging</span>
+
                                 <h1>Platform notices</h1>
                                 <p>Publish platform service messages and review exactly what users will see.</p>
                             </div>
@@ -745,7 +737,7 @@ const SystemSettings = () => {
                             <div className="platform-notice-review-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowNoticeReview(false); }}>
                                 <section className="platform-notice-review-modal" role="dialog" aria-modal="true" aria-labelledby="platform-notice-review-title">
                                     <div className="platform-notice-review-header">
-                                        <div><span>System messaging</span><h2 id="platform-notice-review-title">Review &amp; publish</h2><p>Confirm the notice before saving it as the current platform notice.</p></div>
+                                        <div><h2 id="platform-notice-review-title">Review &amp; publish</h2><p>Confirm the notice before saving it as the current platform notice.</p></div>
                                         <button type="button" onClick={() => setShowNoticeReview(false)} aria-label="Close review">×</button>
                                     </div>
                                     <div className="platform-notice-review-preview"><strong>Service notice</strong><p>{settings.platformNoticeDraft ?? settings.platformNotice}</p></div>
@@ -762,12 +754,8 @@ const SystemSettings = () => {
                         <div className="system-config-reference-header">
                             <div className="system-config-reference-title-row">
                                 <div>
-                                    <span className="system-config-reference-breadcrumb">
-                                        <i /> Configuration / Maintenance
-                                    </span>
-                                    <div className="system-config-reference-eyebrow">
-                                        SYSTEM CONFIGURATION
-                                    </div>
+
+
                                     <h1>Maintenance</h1>
                                     <p>
                                         Schedule downtime with a clear audience, time zone and impact review.
@@ -913,7 +901,7 @@ const SystemSettings = () => {
                     <>
                         <div className="backup-reference-header">
                             <div className="backup-reference-title">
-                                <span className="backup-reference-breadcrumb"><i /> Recovery controls</span>
+
                                 <h1>Backup &amp; Restore</h1>
                                 <p>Protect platform records and recover from a verified, encrypted point.</p>
                             </div>
@@ -959,7 +947,7 @@ const SystemSettings = () => {
                     <>
                         <div className="troubleshooting-reference-header">
                             <div className="troubleshooting-reference-title">
-                                <span className="troubleshooting-reference-breadcrumb"><i /> System diagnostics</span>
+
                                 <h1>Troubleshooting</h1>
                                 <p>Investigate availability, inspect incidents and review technical exports.</p>
                             </div>
@@ -996,7 +984,7 @@ const SystemSettings = () => {
                 ) : (
                     <>
                         <div className="security-reference-header">
-                            <div className="security-reference-breadcrumb"><span /> Configuration / Security</div>
+
                             <h1>Security</h1>
                             <p>Review sign-in safeguards, session controls and security events.</p>
                         </div>

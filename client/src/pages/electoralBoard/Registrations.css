@@ -463,3 +463,114 @@
   .decision-actions { flex-wrap: wrap; }
   .decision-actions button { flex: 1 1 125px; }
 }
+
+/* Review dialogs share the workspace theme and scroll independently of the page. */
+.registration-review-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(5, 12, 26, .72);
+  box-sizing: border-box;
+}
+.registration-review-modal {
+  --review-surface: var(--eb-solid, #1c293e);
+  --review-soft: var(--eb-soft, #253650);
+  --review-text: var(--eb-text, #eef3ff);
+  --review-muted: var(--eb-muted, #b2c1d9);
+  --review-line: var(--eb-border, #40516b);
+  --review-link: var(--eb-link, #8cb5ff);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 900px;
+  max-height: calc(100dvh - 48px);
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--review-line);
+  border-radius: 20px;
+  background: var(--review-surface);
+  color: var(--review-text);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .3);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.registration-review-modal *, .registration-review-modal *::before, .registration-review-modal *::after { box-sizing: border-box; }
+.registration-review-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-shrink: 0;
+  padding: 22px 24px;
+  border-bottom: 1px solid var(--review-line);
+}
+.registration-review-modal-header > div { min-width: 0; }
+.registration-review-modal-eyebrow { color: var(--review-link); font-size: 10px; font-weight: 600; letter-spacing: .12em; margin-bottom: 6px; }
+.registration-review-modal-title { margin: 0; font-size: clamp(20px, 3vw, 24px); font-weight: 600; line-height: 1.35; }
+.registration-review-close-button {
+  display: grid; place-items: center; flex: 0 0 36px; width: 36px; height: 36px;
+  border: 1px solid var(--review-line); border-radius: 9px;
+  background: var(--review-soft); color: var(--review-text); font: inherit; font-size: 24px; cursor: pointer;
+}
+.registration-review-modal-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 24px; scrollbar-gutter: stable; }
+.registration-review-detail-section + .registration-review-detail-section { margin-top: 28px; }
+.registration-review-detail-title { margin: 0 0 12px; font-size: 14px; font-weight: 600; }
+.registration-review-detail-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.registration-review-detail-item { min-width: 0; padding: 13px 14px; border: 1px solid var(--review-line); border-radius: 10px; background: var(--review-soft); }
+.registration-review-detail-label { color: var(--review-muted); font-size: 10px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 4px; }
+.registration-review-detail-value { color: var(--review-text); font-size: 13px; font-weight: 500; overflow-wrap: anywhere; }
+.registration-review-documents-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.registration-review-document-card { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 14px; border: 1px solid var(--review-line); border-radius: 12px; background: var(--review-surface); }
+.registration-review-document-icon { display: grid; place-items: center; flex: 0 0 38px; width: 38px; height: 38px; border-radius: 9px; background: var(--review-soft); color: var(--review-link); font-size: 11px; font-weight: 600; }
+.registration-review-document-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.registration-review-document-name { font-size: 13px; font-weight: 600; line-height: 1.5; }
+.registration-review-document-status { color: #80d9aa; font-size: 11px; }
+.registration-review-document-file-name { color: var(--review-muted); font-size: 11px; overflow-wrap: anywhere; }
+.registration-review-document-missing { color: var(--review-muted); font-size: 11px; }
+.eb-workspace[data-eb-theme=light] .registration-review-document-status { color: #146b3c; }
+.registration-review-view-document-button { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 6px 11px; border: 1px solid var(--review-line); border-radius: 8px; background: var(--review-soft); color: var(--review-link); text-decoration: none; font-size: 12px; font-weight: 500; }
+.registration-review-selfie-container { width: min(100%, 260px); border: 1px solid var(--review-line); border-radius: 12px; overflow: hidden; background: var(--review-soft); }
+.registration-review-selfie-image { display: block; width: 100%; max-height: 240px; object-fit: contain; }
+.registration-review-no-file-box { padding: 16px; border: 1px dashed var(--review-line); border-radius: 10px; color: var(--review-muted); font-size: 13px; }
+.registration-review-message-section { margin-top: 28px; }
+.registration-review-label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500; }
+.registration-review-textarea { display: block; width: 100%; min-height: 96px; max-height: 220px; padding: 12px 14px; resize: vertical; border: 1px solid var(--review-line); border-radius: 10px; background: var(--review-soft); color: var(--review-text); font: inherit; font-size: 14px; }
+.registration-review-modal-footer { flex-shrink: 0; padding: 18px 24px; border-top: 1px solid var(--review-line); background: var(--review-surface); }
+.registration-review-modal-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+.registration-review-modal-actions button, .registration-review-confirm-button { min-height: 40px; padding: 9px 14px; border: 1px solid var(--review-line); border-radius: 9px; font: inherit; font-size: 12px; font-weight: 500; cursor: pointer; }
+.registration-review-cancel-button { background: var(--review-surface); color: var(--review-text); }
+.registration-review-correction-button { background: var(--review-soft); color: var(--review-link); }
+.registration-review-reject-button { background: transparent; color: #ff929d; }
+.eb-workspace[data-eb-theme=light] .registration-review-reject-button { color: #b42338; }
+.registration-review-approve-button { background: #167647; color: #fff; border-color: #167647 !important; }
+.registration-review-confirm-box { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--review-line); }
+.registration-review-confirm-box strong { font-size: 13px; font-weight: 600; }
+.registration-review-confirm-text { margin: 4px 0 0; color: var(--review-muted); font-size: 12px; line-height: 1.6; max-width: 55ch; }
+.registration-review-confirm-button { flex-shrink: 0; background: #1555df; color: #fff; border-color: transparent; }
+.registration-review-confirm-button[data-decision=approve] { background: #167647; }
+.registration-review-confirm-button[data-decision=reject] { background: #b42338; }
+.registration-review-modal button:disabled { opacity: .55; cursor: not-allowed; }
+.registration-review-modal :is(button, a):hover:not(:disabled) { filter: brightness(1.12); }
+.registration-review-modal :is(button, a, textarea):focus-visible { outline: 2px solid var(--review-link); outline-offset: 3px; }
+@media (max-width: 700px) {
+  .registration-review-modal-overlay { padding: 12px; }
+  .registration-review-modal { max-height: calc(100dvh - 24px); border-radius: 16px; }
+  .registration-review-modal-header, .registration-review-modal-body, .registration-review-modal-footer { padding: 16px; }
+  .registration-review-detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .registration-review-documents-grid { grid-template-columns: minmax(0, 1fr); }
+  .registration-review-modal-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .registration-review-confirm-box { align-items: stretch; flex-direction: column; gap: 12px; margin-top: 12px; padding-top: 12px; }
+  .registration-review-textarea { font-size: 16px; }
+}
+@media (max-width: 390px) {
+  .registration-review-detail-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-height: 560px) {
+  .registration-review-modal { display: block; overflow-y: auto; overscroll-behavior: contain; }
+  .registration-review-modal-header { position: sticky; top: 0; z-index: 1; background: var(--review-surface); }
+  .registration-review-modal-body { overflow: visible; }
+}

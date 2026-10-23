@@ -1,0 +1,86 @@
+.eb-candidate-details-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    box-sizing: border-box;
+    background: rgba(5, 12, 26, .72);
+    font-family: Poppins, Arial, sans-serif;
+}
+.eb-candidate-details-overlay .eb-candidate-details-dialog[role="dialog"] {
+    --candidate-surface: var(--eb-solid, #1c293e);
+    --candidate-soft: var(--eb-soft, #253650);
+    --candidate-text: var(--eb-text, #eef3ff);
+    --candidate-muted: var(--eb-muted, #b2c1d9);
+    --candidate-line: var(--eb-border, #40516b);
+    --candidate-link: var(--eb-link, #8cb5ff);
+    display: flex;
+    flex-direction: column;
+    width: min(600px, 100%);
+    max-height: calc(100dvh - 48px);
+    min-height: 0;
+    overflow: hidden;
+    border: 1px solid var(--candidate-line);
+    border-radius: 20px;
+    background: var(--candidate-surface);
+    color: var(--candidate-text);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, .3);
+    font-size: 14px;
+    line-height: 1.6;
+}
+.eb-candidate-details-dialog *, .eb-candidate-details-dialog *::before, .eb-candidate-details-dialog *::after { box-sizing: border-box; }
+.eb-candidate-details-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 22px 24px; border-bottom: 1px solid var(--candidate-line); flex-shrink: 0; }
+.eb-candidate-details-header > div { min-width: 0; }
+.eb-candidate-details-header h2 { margin: 0; color: var(--candidate-text); font-size: 21px; font-weight: 600; line-height: 1.35; }
+.eb-candidate-details-header p { margin: 7px 0 0; color: var(--candidate-muted); font-size: 12px; line-height: 1.6; }
+.eb-candidate-details-close { display: grid; place-items: center; flex: 0 0 36px; width: 36px; height: 36px; padding: 0; border: 1px solid var(--candidate-line); border-radius: 9px; background: var(--candidate-soft); color: var(--candidate-text); cursor: pointer; }
+.eb-candidate-details-close svg { width: 18px; height: 18px; }
+.eb-candidate-details-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; padding: 24px; }
+.eb-candidate-details-profile { display: flex; align-items: center; gap: 16px; padding-bottom: 24px; }
+.eb-candidate-details-avatar { display: grid; place-items: center; flex: 0 0 72px; width: 72px; height: 72px; border-radius: 16px; overflow: hidden; border: 1px solid var(--candidate-line); background: var(--candidate-soft); color: var(--candidate-link); font-size: 26px; font-weight: 600; }
+.eb-candidate-details-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.eb-candidate-details-identity { min-width: 0; }
+.eb-candidate-details-identity h3 { margin: 0 0 8px; color: var(--candidate-text); font-size: clamp(18px, 3vw, 21px); line-height: 1.4; font-weight: 600; overflow-wrap: anywhere; }
+.eb-candidate-details-status { display: inline-flex; align-items: center; gap: 6px; color: var(--candidate-muted); font-size: 12px; font-weight: 500; }
+.eb-candidate-details-status[data-active=true] { color: #86dbad; }
+.eb-workspace[data-eb-theme=light] .eb-candidate-details-status[data-active=true] { color: #146b3c; }
+.eb-candidate-details-status svg { flex: 0 0 15px; width: 15px; height: 15px; }
+.eb-candidate-details-list { margin: 0; border-top: 1px solid var(--candidate-line); }
+.eb-candidate-details-row { display: grid; grid-template-columns: minmax(100px, 1fr) minmax(0, 2fr); gap: 20px; align-items: baseline; padding: 13px 0; border-bottom: 1px solid var(--candidate-line); }
+.eb-candidate-details-row dt { color: var(--candidate-muted); font-size: 13px; }
+.eb-candidate-details-row dd { margin: 0; text-align: right; color: var(--candidate-text); font-size: 13px; font-weight: 500; overflow-wrap: anywhere; }
+.eb-candidate-details-platform { margin-top: 24px; padding: 16px; border: 1px solid var(--candidate-line); border-radius: 12px; background: var(--candidate-soft); }
+.eb-candidate-details-platform h4 { margin: 0 0 8px; color: var(--candidate-text); font-size: 12px; font-weight: 600; }
+.eb-candidate-details-platform p { margin: 0; color: var(--candidate-muted); font-size: 13px; line-height: 1.75; white-space: pre-wrap; overflow-wrap: anywhere; }
+.eb-candidate-details-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 18px 24px; border-top: 1px solid var(--candidate-line); flex-shrink: 0; }
+.eb-candidate-details-footer button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 16px; border: 1px solid var(--candidate-line); border-radius: 10px; font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; transition: background-color .18s ease, border-color .18s ease; }
+.eb-candidate-details-secondary { background: var(--candidate-surface); color: var(--candidate-text); }
+.eb-candidate-details-secondary:hover, .eb-candidate-details-close:hover { background: var(--candidate-soft); border-color: var(--candidate-link); }
+.eb-candidate-details-footer .eb-candidate-details-edit { background: #1555df; border-color: #1555df; color: #fff; }
+.eb-candidate-details-footer .eb-candidate-details-edit:hover { background: #1048bf; border-color: #1048bf; }
+.eb-candidate-details-edit svg { width: 15px; height: 15px; }
+.eb-candidate-details-dialog button:focus-visible { outline: 2px solid var(--candidate-link); outline-offset: 3px; }
+@media (max-width: 600px) {
+    .eb-candidate-details-overlay { padding: 12px; }
+    .eb-candidate-details-overlay .eb-candidate-details-dialog[role="dialog"] { max-height: calc(100dvh - 24px); border-radius: 16px; }
+    .eb-candidate-details-header, .eb-candidate-details-body, .eb-candidate-details-footer { padding: 18px; }
+    .eb-candidate-details-header { gap: 12px; }
+    .eb-candidate-details-header h2 { font-size: 20px; }
+    .eb-candidate-details-profile { align-items: flex-start; gap: 12px; padding-bottom: 20px; }
+    .eb-candidate-details-avatar { flex-basis: 56px; width: 56px; height: 56px; border-radius: 12px; }
+    .eb-candidate-details-footer button { flex: 1; padding-inline: 10px; }
+}
+@media (max-width: 390px) {
+    .eb-candidate-details-row { grid-template-columns: minmax(0, 1fr); gap: 4px; padding: 11px 0; }
+    .eb-candidate-details-row dd { text-align: left; }
+}
+@media (max-height: 480px) {
+    .eb-candidate-details-overlay .eb-candidate-details-dialog[role="dialog"] { display: block; overflow-y: auto; }
+    .eb-candidate-details-body { overflow: visible; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .eb-candidate-details-footer button { transition: none; }
+}

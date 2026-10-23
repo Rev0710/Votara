@@ -3,12 +3,14 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FiActivity, FiBarChart2, FiCalendar, FiClipboard, FiFileText, FiGrid, FiHelpCircle, FiLayers, FiLogOut, FiMenu, FiMonitor, FiMoon, FiSettings, FiSun, FiUser, FiUsers, FiX } from "react-icons/fi";
 import PlatformNotifications from "../../components/PlatformNotifications";
 import AdminProfileModal from "./AdminProfileModal";
-import api from "../../services/api";
+import api, { clearAccountSession } from "../../services/api";
+import useAccountSession from "../../hooks/useAccountSession";
 import logo from "../../images/Votara.png";
 import { ADMIN_NAVIGATION, ADMIN_OVERVIEW, isAdminDestinationActive } from "./adminNavigation";
 import "./AdminTopNav.css";
 
 export default function AdminTopNav({ admin = null, onLogout }) {
+    useAccountSession("admin");
     const navigate = useNavigate();
     const location = useLocation();
     const headerRef = useRef(null);
@@ -109,8 +111,7 @@ export default function AdminTopNav({ admin = null, onLogout }) {
     const confirmLogout = () => {
         setShowLogoutConfirm(false);
         if (typeof onLogout === "function") return onLogout();
-        localStorage.removeItem("votaraAdminToken");
-        localStorage.removeItem("votaraAdminUser");
+        clearAccountSession("admin");
         navigate("/admin-login", { replace: true });
     };
     const handleListKeyDown = (event) => {
