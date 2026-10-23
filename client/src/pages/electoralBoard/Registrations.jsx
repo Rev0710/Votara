@@ -12,6 +12,9 @@ import "./Registrations.css"
 const Registrations = ({ onNavigate }) => {
     const navigate = useNavigate();
     const reviewDialogRef = useRef(null);
+    const decisionDialogRef = useRef(null);
+    const decisionTitleId = useId();
+    const decisionMessageId = useId();
     const reviewTitleId = useId();
     const reviewMessageId = useId();
 
@@ -52,6 +55,16 @@ const Registrations = ({ onNavigate }) => {
             if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus();
         };
     }, [showReviewModal]);
+
+    useEffect(() => {
+        const dialog = decisionDialogRef.current;
+        if (!dialog) return;
+        if (showReviewModal && ["approve", "reject"].includes(reviewAction)) {
+            if (!dialog.open) dialog.showModal();
+        } else if (dialog.open) {
+            dialog.close();
+        }
+    }, [showReviewModal, reviewAction]);
 
     // =====================================================
     // LOAD APPLICATIONS
@@ -1285,7 +1298,7 @@ const Registrations = ({ onNavigate }) => {
             {showReviewModal && selectedApplication && (
                 <div className="registration-review-modal-overlay">
                     <div
-                        className="registration-review-modal"
+                        className="registration-review-modal" id="registration-review-dialog"
                         ref={reviewDialogRef}
                         role="dialog"
                         aria-modal="true"
@@ -1310,7 +1323,7 @@ const Registrations = ({ onNavigate }) => {
                             <div>
                                 <div className="registration-review-modal-eyebrow">REGISTRATION REVIEW</div>
                                 <h2 className="registration-review-modal-title" id={reviewTitleId}>
-                                    {reviewAction === "approve" ? "Approve student registration" : reviewAction === "reject" ? "Reject student registration" : reviewAction === "request_correction" ? "Request corrections" : "Student application"}
+                                    Student application
                                 </h2>
                             </div>
                             <button type="button" onClick={closeReview} disabled={actionLoading} aria-label="Close registration review" className="registration-review-close-button">×</button>
@@ -1403,19 +1416,7 @@ const Registrations = ({ onNavigate }) => {
                                 <>
                                     <button
                                         onClick={() => {
-                                            setReviewAction("request_correction");
-                                            setReviewMessage("");
-                                            setError("");
-                                        }}
-                                        disabled={actionLoading}
-                                        className="registration-review-correction-button"
-                                    >
-                                        Request Correction
-                                    </button>
-                                    <button
-                                        onClick={() => {
                                             setReviewAction("reject");
-                                            setReviewMessage("");
                                             setError("");
                                         }}
                                         disabled={actionLoading}
@@ -1426,7 +1427,6 @@ const Registrations = ({ onNavigate }) => {
                                     <button
                                         onClick={() => {
                                             setReviewAction("approve");
-                                            setReviewMessage("");
                                             setError("");
                                         }}
                                         disabled={actionLoading}
@@ -1437,44 +1437,45 @@ const Registrations = ({ onNavigate }) => {
                                 </>
                             )}
                         </div>
-
-                        {reviewAction && reviewAction !== "review" && canReview && (
-                            <div className="registration-review-confirm-box">
-                                <div>
-                                    <strong>
-                                        {reviewAction === "approve"
-                                            ? "Approve this registration?"
-                                            : reviewAction === "reject"
-                                            ? "Reject this registration?"
-                                            : "Request correction?"}
-                                    </strong>
-                                    <p className="registration-review-confirm-text">
-                                        {reviewAction === "approve"
-                                            ? "The student will be allowed to continue to the account activation/login process."
-                                            : reviewAction === "reject"
-                                            ? "The student registration will be marked as rejected."
-                                            : "The student will be notified that corrections are required before the registration can be approved."}
-                                    </p>
-                                </div>
-                                <button
-                                    onClick={submitReview}
-                                    disabled={actionLoading}
-                                    className="registration-review-confirm-button"
-                                    data-decision={reviewAction}
-                                >
-                                    {actionLoading
-                                        ? "Processing..."
-                                        : reviewAction === "approve"
-                                        ? "Confirm Approval"
-                                        : reviewAction === "reject"
-                                        ? "Confirm Rejection"
-                                        : "Send Correction"}
-                                </button>
-                            </div>
-                        )}
                         </div>
                     </div>
                 </div>
+            )}
+            {showReviewModal && selectedApplication && (
+                <dialog
+                    ref={decisionDialogRef}
+                    className="registration-decision-dialog"
+                    aria-labelledby={decisionTitleId}
+                    aria-describedby={decisionMessageId}
+                    aria-busy={actionLoading}
+                    onCancel={(event) => {
+                        event.preventDefault();
+                        if (!actionLoading) { setReviewAction("review"); setError(""); }
+                    }}
+                >
+                    <h2 id={decisionTitleId}>Confirmation</h2>
+                    <p id={decisionMessageId}>
+                        {reviewAction === "approve"
+                            ? `Approve ${selectedApplication.full_name || "this student"}'s registration? The student can continue to account activation and login.`
+                            : `Reject ${selectedApplication.full_name || "this student"}'s registration? The application will be marked as rejected.`}
+                    </p>
+                    {reviewAction === "reject" && (
+                        <label className="registration-decision-reason">
+                            Reason for rejection
+                            <textarea value={reviewMessage} onChange={event => setReviewMessage(event.target.value)}
+                                placeholder="Explain why the application is being rejected" rows={3} disabled={actionLoading} />
+                        </label>
+                    )}
+                    {error && <div className="registration-alert registration-alert-error" role="alert">{error}</div>}
+                    <div className="registration-decision-actions">
+                        <button type="button" autoFocus disabled={actionLoading}
+                            onClick={() => { setReviewAction("review"); setError(""); }}>Cancel</button>
+                        <button type="button" disabled={actionLoading} onClick={submitReview}
+                            className="registration-review-confirm-button" data-decision={reviewAction}>
+                            {actionLoading ? "Processing…" : "Confirm"}
+                        </button>
+                    </div>
+                </dialog>
             )}
         </div>
     );

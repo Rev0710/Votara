@@ -574,3 +574,59 @@
   .registration-review-modal-header { position: sticky; top: 0; z-index: 1; background: var(--review-surface); }
   .registration-review-modal-body { overflow: visible; }
 }
+
+/* Explicit foregrounds keep review details readable under workspace theme rules. */
+#registration-review-dialog :is(.registration-review-modal-title, .registration-review-detail-title, .registration-review-document-name, .registration-review-label) {
+  color: var(--review-text) !important;
+}
+#registration-review-dialog :is(.registration-review-document-file-name, .registration-review-document-missing, .registration-review-no-file-box) {
+  color: var(--review-muted) !important;
+}
+#registration-review-dialog .registration-review-textarea {
+  color: var(--review-text) !important;
+  background: var(--review-soft) !important;
+}
+#registration-review-dialog .registration-review-textarea::placeholder { color: var(--review-muted); opacity: 1; }
+#registration-review-dialog .registration-review-modal-actions { display: flex; align-items: center; flex-wrap: wrap; }
+#registration-review-dialog .registration-review-cancel-button { margin-right: auto; }
+#registration-review-dialog .registration-review-detail-label { font-size: 12px; }
+#registration-review-dialog .registration-review-detail-value { font-size: 14px; }
+#registration-review-dialog .registration-review-detail-title { font-size: 16px; }
+#registration-review-dialog .registration-review-document-status,
+#registration-review-dialog .registration-review-document-file-name,
+#registration-review-dialog .registration-review-document-missing { font-size: 13px; }
+.registration-decision-dialog {
+  box-sizing: border-box;
+  width: min(480px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  padding: 28px;
+  border: 1px solid var(--eb-border, #40516b);
+  border-radius: 16px;
+  background: var(--eb-solid, #1c293e);
+  color: var(--eb-text, #eef3ff);
+  font-family: inherit;
+}
+.registration-decision-dialog::backdrop { background: rgba(5, 12, 26, .74); backdrop-filter: blur(4px); }
+.eb-workspace .registration-decision-dialog h2 { margin: 0 0 12px; color: var(--eb-text, #eef3ff) !important; font-size: 24px; }
+.eb-workspace .registration-decision-dialog p { margin: 0; color: var(--eb-muted, #b2c1d9) !important; font-size: 15px; line-height: 1.65; }
+.eb-workspace .registration-decision-dialog label { display: block; margin-top: 20px; color: var(--eb-text, #eef3ff) !important; font-size: 14px; }
+.eb-workspace .registration-decision-dialog textarea {
+  box-sizing: border-box; display: block; width: 100%; margin-top: 8px; padding: 12px;
+  border: 1px solid var(--eb-border, #40516b); border-radius: 8px;
+  background: var(--eb-soft, #253650) !important; color: var(--eb-text, #eef3ff) !important; font: inherit;
+}
+.registration-decision-dialog textarea::placeholder { color: var(--eb-muted, #b2c1d9); opacity: 1; }
+.registration-decision-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+.registration-decision-actions button {
+  min-height: 44px; padding: 10px 20px; border: 1px solid var(--eb-border, #40516b);
+  border-radius: 9px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.registration-decision-actions button:first-child { background: var(--eb-soft, #253650); color: var(--eb-text, #eef3ff); }
+.registration-decision-actions button:disabled { opacity: .6; cursor: wait; }
+.registration-decision-dialog :is(button, textarea):focus-visible { outline: 2px solid var(--eb-link, #8cb5ff); outline-offset: 3px; }
+@media (max-width: 480px) {
+  .registration-decision-dialog { padding: 20px; }
+  .registration-decision-dialog textarea { font-size: 16px; }
+  #registration-review-dialog .registration-review-modal-actions button { padding: 9px 10px; }
+}
