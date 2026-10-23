@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiCheck, FiShield, FiUser } from "react-icons/fi";
+import { FiArrowLeft, FiCheck, FiShield, FiUser } from "react-icons/fi";
 import { studentLogin } from "../../services/authService";
 import votaraLogo from "../../assets/images/votara-logo.png";
 import "./StudentLogin.css";
@@ -104,7 +104,7 @@ const StudentLogin = () => {
 
                     <div className="student-login-copy">
                         <span className="student-login-kicker">VOTARA&nbsp; / &nbsp;CAMPUS ELECTIONS</span>
-                        <h2>Your vote.<br />Your voice.</h2>
+                        <h2>Your vote. <br />Your voice.</h2>
                         <p>
                             Sign in with your temporary password. After<br className="desktop-break" />
                             your first login, you'll create a new password.
@@ -153,7 +153,8 @@ const StudentLogin = () => {
                                 onClick={handleBack}
                                 disabled={loading || retryAfter>0}
                             >
-                                ← Back to VOTARA
+                                <FiArrowLeft aria-hidden="true" />
+                                <span>Back to VOTARA</span>
                             </button>
 
                             <span className="student-login-label">STUDENT LOGIN</span>

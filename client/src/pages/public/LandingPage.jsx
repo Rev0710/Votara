@@ -2,6 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { SplitText } from "gsap/SplitText";
 import { FiArrowRight, FiArrowUpRight, FiBarChart2, FiCheck, FiChevronDown, FiChevronLeft, FiChevronRight, FiLock, FiMenu, FiShield, FiUser, FiUsers, FiX } from "react-icons/fi";
 import votaraLogo from "../../assets/images/votara-logo.png";
 import votaraSymbol from "../../assets/images/votara-symbol.svg";
@@ -10,7 +11,7 @@ import votingPreview from "../../assets/landing/voting.png";
 import resultsPreview from "../../assets/landing/results.png";
 import "./LandingPage.css";
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger, SplitText);
 
 const STEPS = [
     { title: "Sign up", text: "Create your Votara account and verify your student ID.", detail: "Start with your student details, verify your email, and complete the account setup steps.", image: registrationPreview, alt: "VOTARA registration interface with student ID and email fields", action: "Get started", to: "/register" },
@@ -284,6 +285,24 @@ export default function LandingPage() {
         const context = gsap.context(() => {
             media.add("(prefers-reduced-motion: no-preference)", () => {
                 gsap.from(".lp-hero-copy > *", { y: 24, autoAlpha: 0, duration: .8, stagger: .1, ease: "power3.out", clearProps: "transform,opacity,visibility" });
+                SplitText.create(pageRef.current.querySelector("#lp-privacy-title"), {
+                    type: "lines",
+                    mask: "lines",
+                    linesClass: "lp-privacy-line",
+                    autoSplit: true,
+                    aria: "auto",
+                    onSplit(self) {
+                        return gsap.from(self.lines, {
+                            yPercent: 110,
+                            autoAlpha: 0,
+                            duration: .95,
+                            stagger: .16,
+                            ease: "power3.out",
+                            clearProps: "transform,opacity,visibility",
+                            scrollTrigger: { trigger: self.elements[0], start: "top 85%", once: true },
+                        });
+                    },
+                });
                 gsap.utils.toArray("[data-reveal]").forEach((element) => {
                     gsap.from(element, { y: 24, autoAlpha: 0, duration: .7, ease: "power2.out", clearProps: "transform,opacity,visibility", scrollTrigger: { trigger: element, start: "top 90%", once: true } });
                 });
@@ -310,7 +329,7 @@ export default function LandingPage() {
                 <div className="lp-feature-grid">{FEATURES.map(({ title, text, icon: Icon, className }) => <article className={`lp-feature ${className}`} key={title} data-reveal><span className="lp-feature-icon"><Icon aria-hidden="true" /></span><h3>{title}</h3><p>{text}</p></article>)}</div>
             </div></section>
             <section className="lp-principle lp-container" aria-labelledby="lp-principle-title" data-reveal><span className="lp-principle-icon" aria-hidden="true"><FiCheck /></span><div><h2 id="lp-principle-title">A clearer way to vote.</h2><p>Know the candidates. Review your choices. Submit with confidence.</p></div><a className="lp-text-link" href="#faq">Your questions, answered<FiArrowRight aria-hidden="true" /></a></section>
-            <section id="privacy" className="lp-privacy" aria-labelledby="lp-privacy-title"><div className="lp-container"><div className="lp-privacy-copy" data-reveal><h2 id="lp-privacy-title">Your vote stays private.<br />Your election stays transparent.</h2><p>Votara is designed to verify voter eligibility while keeping ballot selections separate from the student’s identity.</p></div><PrivacyOrbit /><div className="lp-privacy-details"><span><FiShield aria-hidden="true" />Verified voter access</span><span><FiLock aria-hidden="true" />Private ballot selections</span><span><FiBarChart2 aria-hidden="true" />Clear election reporting</span></div></div></section>
+            <section id="privacy" className="lp-privacy" aria-labelledby="lp-privacy-title"><div className="lp-container"><div className="lp-privacy-copy"><h2 id="lp-privacy-title">Your vote stays private. <br />Your election stays transparent.</h2><p data-reveal>Votara is designed to verify voter eligibility while keeping ballot selections separate from the student’s identity.</p></div><PrivacyOrbit /><div className="lp-privacy-details"><span><FiShield aria-hidden="true" />Verified voter access</span><span><FiLock aria-hidden="true" />Private ballot selections</span><span><FiBarChart2 aria-hidden="true" />Clear election reporting</span></div></div></section>
             <section id="faq" className="lp-faq lp-container" aria-labelledby="lp-faq-title"><div className="lp-faq-intro" data-reveal><h2 id="lp-faq-title">Before you vote.</h2><p>Answers to common questions about joining Votara and taking part in an election.</p><Link className="lp-text-link" to="/late-enrollee">Late enrollee?<FiArrowUpRight aria-hidden="true" /></Link></div><div className="lp-faq-list">{FAQS.map((item, index) => <div className={`lp-faq-item ${faqOpen === index ? "is-open" : ""}`} key={item.question}><h3><button id={`lp-faq-button-${index}`} type="button" aria-expanded={faqOpen === index} aria-controls={`lp-faq-answer-${index}`} onClick={() => setFaqOpen(faqOpen === index ? null : index)}>{item.question}<FiChevronDown aria-hidden="true" /></button></h3><div id={`lp-faq-answer-${index}`} role="region" aria-labelledby={`lp-faq-button-${index}`} hidden={faqOpen !== index}><p>{item.answer}</p></div></div>)}</div></section>
             <section id="contact" className="lp-contact lp-container" aria-labelledby="lp-contact-title"><div data-reveal><h2 id="lp-contact-title">Your voice belongs here.</h2><p>Start with your Votara account. Be ready when your campus election opens.</p><div className="lp-contact-actions"><Link className="lp-button lp-button-primary" to="/register">Register as a Voter<FiArrowRight aria-hidden="true" /></Link><Link className="lp-text-link" to="/login">Already registered? Login<FiArrowRight aria-hidden="true" /></Link></div><a className="lp-help-link" href="#faq">Need help getting started? Read the FAQs.</a></div></section>
         </main>

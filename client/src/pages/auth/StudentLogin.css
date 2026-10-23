@@ -7,22 +7,22 @@ box-sizing: border-box;
 width: 100%;
  min-height: 100vh;
 min-height: 100dvh;
- padding: 22px 28px;
+padding: 0;
 display: flex;
-align-items: center;
+align-items: stretch;
 justify-content: center;
-background: #7483aa;
+background: #fff;
+color-scheme: light;
 font-family: "Manrope", Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 color: #11152a;
 }
 .student-login-card {
-width: min(1180px, 100%);
-min-height: 650px;
+width: 100%;
+min-height: 100dvh;
 display: grid;
 grid-template-columns: 42% 58%;
 overflow: hidden;
 background: #fff;
-box-shadow: 0 22px 55px rgba(18, 28, 60, .12);
 animation: loginCardEnter .55s cubic-bezier(.2,.75,.2,1) both;
 }
 .student-login-left {
@@ -386,22 +386,35 @@ to { opacity: 1; transform: translateY(0); }
 .student-login-back-button {
     display: inline-flex;
     align-items: center;
-    padding: 0;
-    margin: 0 0 24px;
+    justify-content: flex-start;
+    gap: 8px;
+    min-height: 44px;
+    max-width: 100%;
+    padding: 10px 0;
+    margin: 0 0 16px;
     border: 0;
     background: transparent;
-    color: #155eef;
+    color: #52637a;
     font: inherit;
-    font-size: 9px;
-    font-weight: 600;
-    line-height: 1.2;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.4;
     cursor: pointer;
     text-decoration: none;
+}
+.student-login-back-button > svg {
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
 }
 
 .student-login-back-button:hover:not(:disabled) {
     color: #0644eb;
+    text-decoration: none;
+}
+.student-login-back-button:hover:not(:disabled) > span {
     text-decoration: underline;
+    text-underline-offset: 3px;
 }
 
 .student-login-back-button:focus-visible {
@@ -417,8 +430,8 @@ to { opacity: 1; transform: translateY(0); }
 
 @media (max-width: 560px) {
     .student-login-back-button {
-        margin-bottom: 20px;
-        font-size: 9px;
+        margin-bottom: 16px;
+        font-size: 13px;
     }
 }
 .student-login-orbit {
@@ -704,8 +717,8 @@ to { opacity: 1; transform: translateY(0); }
     }
 
     .student-login-back-button {
-        margin-bottom: 22px;
-        font-size: 9px;
+        margin-bottom: 16px;
+        font-size: 13px;
     }
 
     .student-login-label {
@@ -781,8 +794,8 @@ to { opacity: 1; transform: translateY(0); }
         padding: 27px 20px 34px;
     }
 }
-.student-login-page { padding:clamp(12px,3vw,40px); overflow:auto; }
-.student-login-page .student-login-card { width:min(1200px,100%); height:auto; min-height:680px; }
+.student-login-page { padding:0; overflow-x:clip; }
+.student-login-page .student-login-card { width:100%; height:auto; min-height:100dvh; }
 .student-login-page .student-login-form-card { width:100%; max-width:520px; padding:clamp(24px,3vw,48px); height:auto; }
 .student-login-page .student-login-right { padding:clamp(20px,3vw,48px); min-width:0; }
 .student-login-page :is(label,.login-description,.login-error) { font-size:15px; line-height:1.6; }
@@ -791,6 +804,23 @@ to { opacity: 1; transform: translateY(0); }
 .student-login-page :is(.student-login-back-button,.forgot-password-link,.student-login-label) { font-size:13px; }
 .student-login-page .student-login-copy p { font-size:16px; line-height:1.6; }
 .student-login-page .student-login-copy h2 { font-size:clamp(36px,4vw,56px); }
-@media(max-width:760px) { .student-login-page .student-login-card { grid-template-columns:1fr; min-height:0; } .student-login-page .student-login-left { min-height:260px; padding:28px; } .student-login-page .student-login-right { min-height:0; padding:20px 12px; } .student-login-page .student-login-orbit { opacity:.35; } }
 .student-login-page :is(.student-login-steps,.student-login-steps div,.student-login-steps span) { font-size:14px; line-height:1.7; }
-@media(max-width:760px) { .student-login-page .student-login-orbit { width:130px; height:130px; left:auto; right:12px; bottom:8px; opacity:.18; } }
+@media (max-width: 900px) {
+    .student-login-page { padding: 0; }
+    .student-login-page .student-login-card { grid-template-columns: minmax(0, 1fr); align-content: start; }
+    .student-login-page .student-login-left { min-height: 0; padding: 24px; }
+    .student-login-page .student-login-copy { margin-top: 24px; }
+    .student-login-page .student-login-kicker { margin-bottom: 12px; font-size: 10px; color: rgba(255,255,255,.8); }
+    .student-login-page .student-login-copy h2 { font-size: 32px; line-height: 1.15; }
+    .student-login-page .student-login-copy h2 br { display: none; }
+    .student-login-page .student-login-copy :is(p, .student-login-steps),
+    .student-login-page .student-login-orbit { display: none; }
+    .student-login-page .student-login-right { min-height: 0; padding: 24px 16px; }
+    .student-login-page .student-login-form-card { padding: 24px; }
+}
+@media (max-width: 560px) {
+    .student-login-page .student-login-right { padding: 24px; }
+    .student-login-page .student-login-form-card { padding: 0; border-radius: 0; box-shadow: none; background: #fff; }
+    .student-login-page .student-login-right { background-image: none; }
+    .student-login-page .student-login-form-card h1 { font-size: 32px; }
+}

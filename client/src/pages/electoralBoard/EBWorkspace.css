@@ -49,7 +49,8 @@
 .eb-workspace .eb-candidate-page{--mpl-bg:var(--eb-bg);--mpl-panel:var(--eb-surface);--mpl-panel-2:var(--eb-soft);--mpl-line:var(--eb-border);--mpl-text:var(--eb-text);--mpl-muted:var(--eb-muted)}
 .eb-workspace .partylist-row{color:var(--eb-text)!important}.eb-workspace .partylist-name{color:var(--eb-text)!important}.eb-workspace .partylist-modal{background:var(--eb-solid)!important;color:var(--eb-text)!important}
 @media(max-width:760px){.eb-workspace .plm-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.eb-workspace .plm-feature-grid{grid-template-columns:1fr!important}.eb-workspace .plm-header-content{width:100%}}
-.eb-workspace[data-eb-low-power=true] *{backdrop-filter:none!important;box-shadow:none!important;animation:none!important;transition:none!important}
+/* Keep the shared navbar glass consistent with Admin; simplify the page content. */
+.eb-workspace[data-eb-low-power=true] *:not(.eb-board-header){backdrop-filter:none!important;box-shadow:none!important;animation:none!important;transition:none!important}
 .eb-workspace .partylist-logo,.eb-workspace .eb-default-avatar{background:var(--eb-solid)!important;border:1px solid var(--eb-border);padding:6px}.eb-workspace .partylist-logo img{mix-blend-mode:normal;object-fit:contain}
 .eb-workspace .partylist-avatar{background:var(--eb-solid)!important;padding:5px;border:1px solid var(--eb-border)}.eb-workspace .partylist-avatar img{object-fit:contain;mix-blend-mode:normal}
 @media(max-width:760px){.eb-workspace .partylist-row{min-width:0!important;grid-template-columns:28px minmax(0,1fr)!important;gap:12px}.eb-workspace .partylist-added,.eb-workspace .partylist-actions{grid-column:2}.eb-workspace .partylist-heading h1{font-size:30px}.eb-workspace .eb-candidate-dialog{width:calc(100vw - 24px)!important}}
@@ -178,7 +179,6 @@
 .eb-workspace[data-eb-theme=light] .rr-page .rr-no-votes-banner :is(strong,p){color:#334155!important}
 .eb-workspace[data-eb-theme=light] .rr-page .rr-loading{min-height:300px;display:grid;place-content:center;text-align:center}
 .eb-workspace[data-eb-theme=light] .rr-page .rr-loading :is(h3,p){font-weight:600}
-.eb-workspace[data-eb-theme=light] .eb-board-header{--board-canvas:#fff;--board-surface:#fff;--board-inset:#edf3ff;--board-line:#cbd7eb;--board-muted:#506481;--board-text:#202d43;--board-brand:#1555df;background:#fff!important;color:var(--board-muted)!important;box-shadow:0 4px 18px #18243a12}
 .eb-workspace[data-eb-theme=light] .eb-board-header :is(.eb-board-tab,.eb-board-duty,.eb-board-menu-toggle,.eb-board-dropdown,.eb-board-dropdown button,.eb-board-mobile-profile,.platform-notification-panel){color:var(--board-text)!important}
 .eb-workspace[data-eb-theme=light] .eb-board-header .eb-board-dropdown{background:var(--board-surface)!important;border-color:var(--board-line)!important}
 .eb-workspace[data-eb-theme=light] .eb-board-header .eb-board-duty{background:var(--board-inset)!important}

@@ -7,6 +7,9 @@
     --board-muted: #a5abc6;
     --board-text: #fff;
     --board-brand: #0040ff;
+    --board-glass: rgba(25, 25, 45, .82);
+    --board-highlight: rgba(255, 255, 255, .08);
+    --board-header-shadow: rgba(8, 8, 24, .18);
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -19,25 +22,38 @@
     padding: 0 40px;
     box-sizing: border-box;
     background: var(--board-canvas);
-    border-bottom: 1px solid rgba(255, 255, 255, .12);
+    border-bottom: 1px solid var(--board-line);
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, .1),
-        0 8px 32px rgba(8, 8, 24, .18);
+        inset 0 1px 0 var(--board-highlight),
+        0 8px 32px var(--board-header-shadow);
     color: var(--board-muted);
     font-family: "Poppins", sans-serif;
     color-scheme: dark;
     isolation: isolate;
 }
+.eb-workspace[data-eb-theme="light"] .eb-board-header {
+    --board-canvas: #fff;
+    --board-surface: #fff;
+    --board-inset: #edf3ff;
+    --board-line: #d8deed;
+    --board-muted: #506481;
+    --board-text: #202d43;
+    --board-brand: #1555df;
+    --board-glass: rgba(255, 255, 255, .92);
+    --board-highlight: rgba(255, 255, 255, .9);
+    --board-header-shadow: rgba(29, 52, 90, .06);
+    color-scheme: light;
+}
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     .eb-board-header {
         background:
-            linear-gradient(115deg, rgba(255, 255, 255, .06), transparent 40%, rgba(255, 255, 255, .025)),
-            rgba(25, 25, 45, .72);
-        backdrop-filter: blur(24px) saturate(160%);
-        -webkit-backdrop-filter: blur(24px) saturate(160%);
+            linear-gradient(115deg, rgba(255, 255, 255, .045), transparent 40%, rgba(255, 255, 255, .02)),
+            var(--board-glass);
+        backdrop-filter: blur(24px) saturate(150%);
+        -webkit-backdrop-filter: blur(24px) saturate(150%);
     }
 }
-@media (prefers-reduced-transparency: reduce) {
+@media (prefers-reduced-transparency: reduce), (prefers-reduced-motion: reduce) {
     .eb-board-header {
         background: var(--board-canvas);
         backdrop-filter: none;

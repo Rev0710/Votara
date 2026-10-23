@@ -37,21 +37,17 @@ import {
 
 // =====================================================
 // VITE ASSET IMPORTS
-// Keep images in client/src/images and import them so Vite
-// bundles them correctly for both local development and Vercel.
+// Import local images and Figma SVGs so Vite bundles them
+// correctly for both local development and Vercel.
 // =====================================================
 
 import votaraLogoSrc from "../../images/Votara.png";
-import dashboardIcon from "../../images/homealt.png";
-import dashboardActiveIcon from "../../images/home.png";
-import voteIcon from "../../images/votealt.png";
-import voteActiveIcon from "../../images/review.png";
+import dashboardIcon from "../../assets/icons/student/dashboard.svg";
+import voteIcon from "../../assets/icons/student/vote.svg";
 import candidatesIcon from "../../images/Candidates.png";
 import resultsIcon from "../../images/Results.png";
-import guidelinesIcon from "../../images/guidelinesalt.png";
-import guidelinesActiveIcon from "../../images/guidelines.png";
-import settingsIcon from "../../images/settingalt.png";
-import settingsActiveIcon from "../../images/setting.png";
+import guidelinesIcon from "../../assets/icons/student/guidelines.svg";
+import settingsIcon from "../../assets/icons/student/settings.svg";
 import logoutIcon from "../../images/logoutalt.png";
 import bellIcon from "../../images/bell.png";
 
@@ -794,13 +790,13 @@ const sidebarItems = [
         id: "dashboard",
         label: "Dashboard",
         icon: dashboardIcon,
-        activeIcon: dashboardActiveIcon,
+        activeIcon: dashboardIcon,
     },
     {
         id: "vote",
         label: "Vote",
         icon: voteIcon,
-        activeIcon: voteActiveIcon,
+        activeIcon: voteIcon,
     },
     {
         id: "candidates",
@@ -818,13 +814,13 @@ const sidebarItems = [
         id: "guidelines",
         label: "Voters Guidelines",
         icon: guidelinesIcon,
-        activeIcon: guidelinesActiveIcon,
+        activeIcon: guidelinesIcon,
     },
     {
         id: "settings",
         label: "Settings",
         icon: settingsIcon,
-        activeIcon: settingsActiveIcon,
+        activeIcon: settingsIcon,
     },
 ];
 
@@ -3652,7 +3648,11 @@ const resultsAreVisible =
                                             )
                                         }
                                     >
-                                        <span className="sidebar-icon-wrapper"><StudentDotIcon name={item.id} /></span>
+                                        <span className="sidebar-icon-wrapper">
+                                            {item.id === "candidates" || item.id === "results"
+                                                ? <StudentDotIcon name={item.id} />
+                                                : <img className="student-figma-icon" src={isActive ? item.activeIcon : item.icon} alt="" aria-hidden="true" width="20" height="20" />}
+                                        </span>
 
                                         <span className="sidebar-label">
                                             {
