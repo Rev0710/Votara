@@ -596,6 +596,9 @@
 #registration-review-dialog .registration-review-document-file-name,
 #registration-review-dialog .registration-review-document-missing { font-size: 13px; }
 .registration-decision-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
   box-sizing: border-box;
   width: min(480px, calc(100vw - 32px));
   max-height: calc(100dvh - 32px);
