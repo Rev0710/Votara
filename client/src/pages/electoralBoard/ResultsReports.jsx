@@ -23,8 +23,6 @@ const ResultsReports = () => {
     const [exporting, setExporting] =
         useState(false);
 
-    const [exportedElectionId, setExportedElectionId] =
-        useState("");
 
     const [releasing, setReleasing] =
         useState(false);
@@ -150,8 +148,6 @@ const ResultsReports = () => {
             electionId
         );
 
-        setExportedElectionId("");
-
         loadResults(
             electionId
         );
@@ -161,7 +157,7 @@ const ResultsReports = () => {
     // EXPORT RESULTS
     // =====================================================
 
-    const handleExportResults = async () => {
+    const handleExportResults = () => {
 
         if (!election?.id) {
             setError(
@@ -170,113 +166,12 @@ const ResultsReports = () => {
             return;
         }
 
-        try {
-
             setExporting(true);
             setError("");
-
-            const endpoint =
-                `/electoral-board/results-reports/export?election_id=${encodeURIComponent(
-                    election.id
-                )}`;
-
-            const response =
-                await api.get(
-                    endpoint,
-                    {
-                        responseType: "blob"
-                    }
-                );
-
-            const contentType =
-                response?.headers?.["content-type"] ||
-                "";
-
-            if (
-                contentType.includes(
-                    "application/json"
-                )
-            ) {
-
-                const text =
-                    await response.data.text();
-
-                let message =
-                    "Unable to export election results.";
-
-                try {
-                    const parsed =
-                        JSON.parse(text);
-
-                    message =
-                        parsed?.message ||
-                        message;
-                } catch {
-                    // Use fallback message.
-                }
-
-                throw new Error(message);
-            }
-
-            const blob =
-                new Blob(
-                    [response.data],
-                    {
-                        type:
-                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                    }
-                );
-
-            const url =
-                window.URL.createObjectURL(
-                    blob
-                );
-
-            const link =
-                document.createElement("a");
-
-            link.href = url;
-
-            const contentDisposition =
-                response?.headers?.[
-                    "content-disposition"
-                ] || "";
-
-            const filenameMatch =
-                contentDisposition.match(
-                    /filename="?([^"]+)"?/i
-                );
-
-            link.setAttribute(
-                "download",
-                filenameMatch?.[1] ||
-                    "VOTARA_Results.xlsx"
-            );
-
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-
-            window.URL.revokeObjectURL(url);
-            setExportedElectionId(election.id);
-
-        } catch (err) {
-
-            console.error(
-                "Results export error:",
-                err
-            );
-
-            setError(
-                err?.response?.data?.message ||
-                err?.message ||
-                "Unable to export election results."
-            );
-
-        } finally {
-
-            setExporting(false);
-        }
+            window.setTimeout(() => {
+                window.print();
+                setExporting(false);
+            }, 80);
     };
 
     const handleReleaseResults = async () => {
@@ -553,8 +448,7 @@ const ResultsReports = () => {
                                 releasing ||
                                 !election?.id ||
                                 data?.resultsReleaseSupported === false ||
-                                !["closed", "completed", "finished"].includes(String(election?.status || "").toLowerCase()) ||
-                                exportedElectionId !== election?.id
+                                !["closed", "completed", "finished"].includes(String(election?.status || "").toLowerCase())
                             }
                             title={
                                 data?.resultsReleaseSupported === false
@@ -563,9 +457,7 @@ const ResultsReports = () => {
                                         ? "Select an election first."
                                         : !["closed", "completed", "finished"].includes(String(election?.status || "").toLowerCase())
                                             ? "Close the election before releasing results."
-                                            : exportedElectionId !== election?.id
-                                                ? "Export this election's Excel report first."
-                                                : "Release the official results to students."
+                                            : "Release the official results to students."
                             }
                         >
                             {releasing ? "Releasing..." : "Release Results"}
@@ -598,7 +490,7 @@ const ResultsReports = () => {
 
                         {exporting
                             ? "Exporting..."
-                            : "Export Excel"}
+                            : "Save as PDF"}
 
                     </button>
 

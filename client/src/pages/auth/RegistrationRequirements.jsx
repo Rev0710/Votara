@@ -112,6 +112,8 @@ const RegistrationRequirements = () => {
 
     const [submitting, setSubmitting] =
         useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [uploadStage, setUploadStage] = useState("");
 
 
     // =====================================================
@@ -197,7 +199,7 @@ const RegistrationRequirements = () => {
         const lateMode =
             registrationType === "late_enrollee" ||
             registrationType === "late" ||
-            savedLateFlag === "true";
+            (!registrationType && savedLateFlag === "true");
 
 
         setIsLateEnrollee(
@@ -971,6 +973,8 @@ const RegistrationRequirements = () => {
             setSubmitting(
                 true
             );
+            setUploadProgress(0);
+            setUploadStage("Preparing your documents…");
 
 
             // =================================================
@@ -999,6 +1003,8 @@ const RegistrationRequirements = () => {
                 await prepareFile(
                     supportingDocument
                 );
+
+            setUploadStage("Sending your application…");
 
 
             // =================================================
@@ -1127,6 +1133,19 @@ const RegistrationRequirements = () => {
                         selfie:
                             selfiePreview,
 
+                    },
+                    {
+                        timeout: 120000,
+                        onUploadProgress: (event) => {
+                            if (event.total) {
+                                setUploadProgress(Math.round((event.loaded / event.total) * 100));
+                                setUploadStage(
+                                    event.loaded >= event.total
+                                        ? "Waiting for server confirmation…"
+                                        : "Sending your application…"
+                                );
+                            }
+                        },
                     }
                 );
 
@@ -1319,6 +1338,7 @@ const RegistrationRequirements = () => {
             setSubmitting(
                 false
             );
+            setUploadStage("");
         }
 
     };
@@ -1666,10 +1686,10 @@ const RegistrationRequirements = () => {
                     "100vh",
 
                 backgroundColor:
-                    "#ffffff",
+                    "#f4f7ff",
 
                 backgroundImage:
-                    "radial-gradient(circle, rgba(38,110,255,0.16) 1px, transparent 1px)",
+                    "radial-gradient(circle, rgba(38,110,255,0.13) 1px, transparent 1px), linear-gradient(135deg, #f7f9ff 0%, #edf4ff 100%)",
 
                 backgroundSize:
                     "16px 16px",
@@ -3353,6 +3373,20 @@ const RegistrationRequirements = () => {
                                 : "Make sure all required information and documents are correct."}
                         </div>
 
+                        {submitting && (
+                            <div
+                                role="status"
+                                aria-live="polite"
+                                style={{ marginTop: "10px", minWidth: "240px", color: "#2456bd", fontSize: "13px", fontWeight: 700 }}
+                            >
+                                <span>{uploadStage || "Submitting your application…"}</span>
+                                {uploadStage.includes("Sending") && <span> {uploadProgress}%</span>}
+                                <div style={{ height: "5px", marginTop: "7px", background: "#dce7ff", borderRadius: "999px", overflow: "hidden" }}>
+                                    <div style={{ width: uploadStage.includes("Waiting") ? "100%" : uploadStage.includes("Sending") ? `${uploadProgress}%` : "35%", height: "100%", background: "#266eff", borderRadius: "999px", transition: "width .2s ease" }} />
+                                </div>
+                            </div>
+                        )}
+
                     </div>
 
 
@@ -3399,7 +3433,9 @@ const RegistrationRequirements = () => {
                     >
                         {submitting
                             ? (
-                                isCorrectionMode
+                                uploadStage.includes("Preparing")
+                                    ? "Preparing files…"
+                                    : isCorrectionMode
                                     ? "Resubmitting..."
                                     : "Submitting..."
                             )

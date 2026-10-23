@@ -6,8 +6,11 @@ import "./ForgotPassword.css";
 
 const OTP_LENGTH = 6;
 
-const ForgotPassword = () => {
+const ForgotPassword = ({ accountType = "student" }) => {
     const navigate = useNavigate();
+    const isAdminRecovery = accountType === "admin";
+    const authPrefix = isAdminRecovery ? "/admin-auth" : "/auth";
+    const signInPath = isAdminRecovery ? "/admin-login" : "/login";
     const otpRefs = useRef([]);
 
     const [step, setStep] = useState("email");
@@ -72,7 +75,7 @@ const ForgotPassword = () => {
 
     const handleBack = () => {
         if (!loading) {
-            navigate("/login");
+            navigate(signInPath);
         }
     };
 
@@ -97,7 +100,7 @@ const ForgotPassword = () => {
         try {
             setLoading(true);
 
-            await api.post("/auth/forgot-password", {
+            await api.post(`${authPrefix}/forgot-password`, {
                 email: normalizedEmail,
             });
 
@@ -197,7 +200,7 @@ const ForgotPassword = () => {
             setLoading(true);
 
             const response = await api.post(
-                "/auth/verify-forgot-password-otp",
+                `${authPrefix}/verify-forgot-password-otp`,
                 {
                     email,
                     otp: enteredOtp,
@@ -258,7 +261,7 @@ const ForgotPassword = () => {
         try {
             setLoading(true);
 
-            await api.post("/auth/reset-password", {
+            await api.post(`${authPrefix}/reset-password`, {
                 email,
                 resetToken,
                 newPassword,
@@ -268,11 +271,12 @@ const ForgotPassword = () => {
             setPasswordChanged(true);
 
             window.setTimeout(() => {
-                navigate("/login", {
+                navigate(signInPath, {
                     replace: true,
                     state: {
-                        message:
-                            "Your password has been changed. You can now sign in with your new password.",
+                        message: isAdminRecovery
+                            ? "Your administrator password has been changed. You can now sign in with your new password."
+                            : "Your password has been changed. You can now sign in with your new password.",
                     },
                 });
             }, 2500);
@@ -600,11 +604,11 @@ const ForgotPassword = () => {
                             ✓
                         </div>
 
-                        <h2>Congratulations!</h2>
+                        <h2>Password updated</h2>
 
                         <p>
-                            Your password was changed
-                            successfully.
+                            {isAdminRecovery ? "Your administrator password was changed" : "Your password was changed"}
+                            {" "}successfully.
                             <br />
                             You will be redirected to the login
                             page.
@@ -724,10 +728,10 @@ const ForgotPassword = () => {
                         <button
                             type="button"
                             className="forgot-back-top"
-                            onClick={() => navigate("/")}
+                            onClick={() => navigate(signInPath)}
                             disabled={loading}
                         >
-                            Back to VOTARA
+                            {isAdminRecovery ? "Back to admin login" : "Back to VOTARA"}
                         </button>
 
                         {error && (
@@ -747,7 +751,7 @@ const ForgotPassword = () => {
                             onClick={handleBack}
                             disabled={loading}
                         >
-                            Sign in
+                            {isAdminRecovery ? "Admin sign in" : "Sign in"}
                         </button>
                     </div>
                 </main>

@@ -41,6 +41,16 @@ const Register = () => {
         yearLevel = "",
         registrationType = "normal",
     }) => {
+        sessionStorage.removeItem("votara_registration_status");
+        sessionStorage.removeItem("votara_correction_message");
+        sessionStorage.setItem(
+            "votara_is_late_enrollee",
+            registrationType === "late_enrollee" ? "true" : "false"
+        );
+        if (registrationType !== "late_enrollee") {
+            sessionStorage.removeItem("votara_late_full_name");
+            sessionStorage.removeItem("votara_late_year_level");
+        }
         sessionStorage.setItem("votara_student_id", cleanStudentId);
         sessionStorage.setItem("votara_full_name", fullName);
         sessionStorage.setItem("votara_year_level", yearLevel);

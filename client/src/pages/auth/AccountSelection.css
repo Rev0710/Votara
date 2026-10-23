@@ -2164,3 +2164,4 @@
 @keyframes account-selection-orbit-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 @media (max-width: 600px) { .account-selection-orbit-scene { width: min(235px, 62vw); height: auto; aspect-ratio: 1; } }
 @media (prefers-reduced-motion: reduce) { .account-selection-orbit-scene .account-selection-orbit { animation: none !important; } }
+.admin-forgot-password-link { display:block; width:fit-content; margin:12px auto 4px; font-size:13px; color:#1757f5 !important; text-decoration:underline; }

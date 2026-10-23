@@ -184,16 +184,12 @@
 .kiosk-voting-alert.success { background: #effbf3; color: #187541; border: 1px solid #bcebc9; }
 .kiosk-voting-alert button { margin-left: auto; border: 0; background: none; font-size: 20px; cursor: pointer; }
 
-/* Keep validation visible above the kiosk content and centered on every viewport. */
+/* Keep validation in the page flow so it never covers the student actions. */
 .kiosk-voting-alert.error {
-    position: fixed;
-    z-index: 1200;
-    top: 50%;
-    left: 50%;
-    width: min(440px, calc(100vw - 32px));
+    position: relative;
+    width: min(640px, 100%);
     box-sizing: border-box;
-    margin: 0;
-    transform: translate(-50%, -50%);
+    margin: 0 auto 18px;
     align-items: center;
     box-shadow: 0 18px 55px rgba(14, 28, 54, .25);
 }
@@ -208,6 +204,12 @@
 .eb-workspace[data-eb-theme=dark] .kiosk-ballot-card p { color: #b2c1d9 !important; }
 .eb-workspace[data-eb-theme=dark] .kiosk-voting-card :is(input,select) { background: #1c293e !important; border-color: #40516b !important; color: #eef3ff !important; }
 .eb-workspace[data-eb-theme=dark] .kiosk-voting-card input::placeholder { color: #b2c1d9 !important; }
+.eb-workspace[data-eb-theme=dark] .kiosk-verification-grid > div { background:#283a56 !important; border:1px solid #40516b !important; }
+.eb-workspace[data-eb-theme=dark] .kiosk-verification-grid span { color:#b2c1d9 !important; }
+.eb-workspace[data-eb-theme=dark] .kiosk-verification-grid strong { color:#f1f5fb !important; }
+.eb-workspace[data-eb-theme=light] .kiosk-verification-grid > div { background:#f3f7ff !important; border:1px solid #d5dfef !important; }
+.eb-workspace[data-eb-theme=light] .kiosk-verification-grid span { color:#566782 !important; }
+.eb-workspace[data-eb-theme=light] .kiosk-verification-grid strong { color:#172033 !important; }
 
 .kiosk-eyebrow {
     color: #266eff;

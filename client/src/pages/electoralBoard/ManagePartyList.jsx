@@ -5345,15 +5345,15 @@ const styles = {
         marginTop:
             "6px",
         background:
-            "#ffffff",
+            "#1d2a42",
         border:
-            "1px solid #dbe4ef",
+            "1px solid #40516b",
         borderRadius:
             "11px",
         overflow:
             "hidden",
         boxShadow:
-            "0 12px 28px rgba(15,39,71,.12)",
+            "0 16px 38px rgba(5,12,28,.3)",
         maxHeight:
             "330px",
         overflowY:
@@ -5364,9 +5364,9 @@ const styles = {
         padding:
             "10px 13px",
         background:
-            "#f7faff",
+            "#263854",
         color:
-            "#667b96",
+            "#c2d0e4",
         fontSize:
             "10px",
         fontWeight:
@@ -5391,9 +5391,9 @@ const styles = {
         border:
             "none",
         borderBottom:
-            "1px solid #edf1f5",
+            "1px solid #3b4c68",
         background:
-            "#ffffff",
+            "#1d2a42",
         cursor:
             "pointer",
         textAlign:
@@ -5408,9 +5408,9 @@ const styles = {
         borderRadius:
             "9px",
         background:
-            "#eff5ff",
+            "#2a4c83",
         color:
-            "#2563eb",
+            "#eaf1ff",
         display:
             "flex",
         alignItems:
@@ -5440,7 +5440,7 @@ const styles = {
 
     resultInformationStrong: {
         color:
-            "#183a62",
+            "#f3f6fd",
         fontSize:
             "12px",
         fontWeight:
@@ -5449,9 +5449,9 @@ const styles = {
 
     resultYear: {
         color:
-            "#2563eb",
+            "#eaf1ff",
         background:
-            "#eff5ff",
+            "#2a4c83",
         padding:
             "5px 8px",
         borderRadius:
@@ -5960,9 +5960,9 @@ const styles = {
         borderRadius:
             "50%",
         background:
-            "#eff6ff",
+            "#266EFF",
         color:
-            "#2563eb",
+            "#ffffff",
         display:
             "flex",
         alignItems:

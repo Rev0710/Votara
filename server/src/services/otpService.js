@@ -9,6 +9,8 @@ const resetTokenStore = new Map();
 
 const normalizeEmail = (email) =>
     String(email || "").trim().toLowerCase();
+const otpStoreKey = (email, scope) =>
+    `${String(scope || "student")}:${normalizeEmail(email)}`;
 
 const hashValue = (value) =>
     crypto
@@ -16,8 +18,9 @@ const hashValue = (value) =>
         .update(String(value))
         .digest("hex");
 
-const generateOtp = (email) => {
+const generateOtp = (email, scope = "student") => {
     const normalizedEmail = normalizeEmail(email);
+    const normalizedScope = String(scope || "student");
 
     if (!normalizedEmail) {
         throw new Error("Email is required.");
@@ -25,18 +28,20 @@ const generateOtp = (email) => {
 
     const otp = String(crypto.randomInt(100000, 1000000));
 
-    otpStore.set(normalizedEmail, {
+    otpStore.set(otpStoreKey(normalizedEmail, normalizedScope), {
         otpHash: hashValue(otp),
         expiresAt: Date.now() + OTP_TTL_MS,
         attempts: 0,
+        scope: normalizedScope,
     });
 
     return otp;
 };
 
-const verifyOtp = (email, otp) => {
+const verifyOtp = (email, otp, scope = "student") => {
     const normalizedEmail = normalizeEmail(email);
-    const record = otpStore.get(normalizedEmail);
+    const normalizedScope = String(scope || "student");
+    const record = otpStore.get(otpStoreKey(normalizedEmail, normalizedScope));
 
     if (!record) {
         return {
@@ -79,6 +84,7 @@ const verifyOtp = (email, otp) => {
     resetTokenStore.set(hashValue(resetToken), {
         email: normalizedEmail,
         expiresAt: Date.now() + RESET_TOKEN_TTL_MS,
+        scope: record.scope,
     });
 
     return {
@@ -87,7 +93,7 @@ const verifyOtp = (email, otp) => {
     };
 };
 
-const validateResetToken = (email, resetToken) => {
+const validateResetToken = (email, resetToken, scope = "student") => {
     const normalizedEmail = normalizeEmail(email);
     const tokenHash = hashValue(resetToken);
     const record = resetTokenStore.get(tokenHash);
@@ -96,10 +102,11 @@ const validateResetToken = (email, resetToken) => {
         return false;
     }
 
-    if (
-        record.email !== normalizedEmail ||
-        Date.now() > record.expiresAt
-    ) {
+    if (record.email !== normalizedEmail || record.scope !== String(scope || "student")) {
+        return false;
+    }
+
+    if (Date.now() > record.expiresAt) {
         resetTokenStore.delete(tokenHash);
         return false;
     }
@@ -107,7 +114,7 @@ const validateResetToken = (email, resetToken) => {
     return true;
 };
 
-const consumeResetToken = (email, resetToken) => {
+const consumeResetToken = (email, resetToken, scope = "student") => {
     const normalizedEmail = normalizeEmail(email);
     const tokenHash = hashValue(resetToken);
     const record = resetTokenStore.get(tokenHash);
@@ -116,10 +123,11 @@ const consumeResetToken = (email, resetToken) => {
         return false;
     }
 
-    if (
-        record.email !== normalizedEmail ||
-        Date.now() > record.expiresAt
-    ) {
+    if (record.email !== normalizedEmail || record.scope !== String(scope || "student")) {
+        return false;
+    }
+
+    if (Date.now() > record.expiresAt) {
         resetTokenStore.delete(tokenHash);
         return false;
     }

@@ -6,9 +6,6 @@ import AdminWorkspace from './src/pages/admin/AdminWorkspace';
 const AdminLateEnrollees = lazy(() => import('./src/pages/admin/AdminLateEnrollees'));
 import VotaraIntro from "./src/components/VotaraIntro";
 
-// =====================================================
-// PUBLIC / AUTH PAGES
-// =====================================================
 const Vote = lazy(() => import("./src/pages/student/Vote"));
 import LandingPage from "./src/pages/public/LandingPage";
 import Contact from "./src/pages/public/Contact";
@@ -263,6 +260,10 @@ if (showInitialIntro) {
                 <Route
                     path="/forgot-password"
                     element={<ForgotPassword />}
+                />
+                <Route
+                    path="/admin-forgot-password"
+                    element={<ForgotPassword accountType="admin" />}
                 />
 
 

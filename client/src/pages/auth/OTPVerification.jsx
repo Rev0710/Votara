@@ -3124,7 +3124,7 @@ const OTPVerification = () => {
 
 
 
-        data.student?.registrationType || registrationType
+        "normal"
 
 
 
@@ -3133,6 +3133,9 @@ const OTPVerification = () => {
 
 
       );
+      sessionStorage.setItem("votara_is_late_enrollee", "false");
+      sessionStorage.removeItem("votara_late_full_name");
+      sessionStorage.removeItem("votara_late_year_level");
 
 
 

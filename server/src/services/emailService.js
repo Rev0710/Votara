@@ -944,7 +944,7 @@ const sendForgotPasswordOTPEmail = async (
 
                 <p>
                     We received a request to reset the password
-                    for your VOTARA student account.
+                    for your VOTARA account.
                 </p>
 
                 <p>

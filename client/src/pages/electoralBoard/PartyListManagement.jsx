@@ -998,6 +998,7 @@ const PartyListManagement = ({ initialElectionId = "", positionContext = null })
 
             {success && (
                 <div
+                    className="plm-success-message"
                     style={
                         styles.successMessage
                     }
@@ -2976,12 +2977,14 @@ const ConfirmationModal = ({
 }) => {
     return (
         <div
+            className="plm-confirm-overlay"
             style={
                 styles.confirmOverlay
             }
         >
 
             <div
+                className="plm-confirm-modal"
                 style={
                     styles.confirmModal
                 }
@@ -3457,6 +3460,7 @@ const styles = {
         gap: "14px",
         padding: "15px",
         border: "1px solid rgba(151, 170, 220, 0.28)",
+        borderLeft: "4px solid #4b8bff",
         borderRadius: "12px",
         background: "var(--plm-feature-bg, rgba(26, 35, 70, 0.62))",
     },
@@ -3555,7 +3559,7 @@ const styles = {
         width: "100%",
         border: "none",
         background: "transparent",
-        color: "#334155",
+        color: "#e8edf7",
         textAlign: "left",
         borderRadius: "7px",
         padding: "9px 10px",
@@ -3579,7 +3583,7 @@ const styles = {
 
     menuDivider: {
         height: "1px",
-        background: "#eef2f7",
+        background: "rgba(203,213,225,.25)",
         margin: "5px 3px",
     },
 
@@ -3651,8 +3655,8 @@ const styles = {
         alignItems: "center",
         borderRadius: "20px",
         padding: "4px 8px",
-        background: "#fff7ed",
-        color: "#c2410c",
+        background: "rgba(245,158,11,.16)",
+        color: "#ffd18a",
         fontSize: "9px",
         fontWeight: "800",
     },
@@ -3662,8 +3666,8 @@ const styles = {
         alignItems: "center",
         borderRadius: "20px",
         padding: "4px 8px",
-        background: "#ecfdf3",
-        color: "#15803d",
+        background: "rgba(34,197,94,.16)",
+        color: "#86efac",
         fontSize: "9px",
         fontWeight: "800",
     },
@@ -3673,8 +3677,8 @@ const styles = {
         alignItems: "center",
         borderRadius: "20px",
         padding: "4px 8px",
-        background: "#fef2f2",
-        color: "#b91c1c",
+        background: "rgba(239,68,68,.16)",
+        color: "#fda4af",
         fontSize: "9px",
         fontWeight: "800",
     },
@@ -3684,8 +3688,8 @@ const styles = {
         alignItems: "center",
         borderRadius: "20px",
         padding: "4px 8px",
-        background: "#eff6ff",
-        color: "#2563eb",
+        background: "rgba(59,130,246,.18)",
+        color: "#bfdbfe",
         fontSize: "9px",
         fontWeight: "800",
     },

@@ -17,6 +17,18 @@
 .eb-page-party-lists,
 .eb-page-party-lists * { box-sizing: border-box; }
 
+.plm-confirm-overlay { z-index:12000 !important; }
+.plm-confirm-modal { color:#172033 !important; background:#fff !important; }
+.plm-confirm-modal :is(h3,strong) { color:#172033 !important; }
+.plm-confirm-modal p { color:#4b5b73 !important; }
+.plm-confirm-modal > div:first-child { background:#266eff !important; color:#fff !important; }
+.plm-success-message {
+  background:#e9f8ef !important;
+  border:1px solid #9bd7ae !important;
+  color:#14532d !important;
+  box-shadow:0 8px 26px rgba(10,35,24,.18);
+}
+
 .eb-page-party-lists .plm-header,
 .eb-page-party-lists > div[style*="styles.electionCard"],
 .eb-page-party-lists > div[style*="styles.statCard"],

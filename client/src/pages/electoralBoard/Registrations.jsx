@@ -1323,14 +1323,14 @@ const Registrations = ({ onNavigate }) => {
 
             {/* Existing review modal remains available for the actual review action. */}
             {showReviewModal && selectedApplication && (
-                <div style={styles.modalOverlay}>
-                    <div style={styles.modal}>
+                <div className="registration-review-overlay" style={styles.modalOverlay}>
+                    <div className="registration-review-modal" style={styles.modal}>
                         <div style={styles.modalHeader}>
                             <div>
                                 <div style={styles.modalEyebrow}>REGISTRATION REVIEW</div>
                                 <h2 style={styles.modalTitle}>Student Application</h2>
                             </div>
-                            <button onClick={closeReview} style={styles.closeButton}>×</button>
+                            <button className="registration-review-close" aria-label="Close registration review" onClick={closeReview} style={styles.closeButton}>×</button>
                         </div>
 
                         <div style={styles.detailSection}>
@@ -1451,7 +1451,8 @@ const Registrations = ({ onNavigate }) => {
                         </div>
 
                         {reviewAction && reviewAction !== "review" && canReview && (
-                            <div style={styles.confirmBox}>
+                            <div className="registration-decision-confirm-overlay" role="alertdialog" aria-modal="true">
+                            <div className="registration-decision-confirm" style={styles.confirmBox}>
                                 <div>
                                     <strong>
                                         {reviewAction === "approve"
@@ -1468,6 +1469,14 @@ const Registrations = ({ onNavigate }) => {
                                             : "The student will be notified that corrections are required before the registration can be approved."}
                                     </p>
                                 </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setReviewAction(null)}
+                                    disabled={actionLoading}
+                                    className="registration-decision-cancel"
+                                >
+                                    Cancel
+                                </button>
                                 <button
                                     onClick={submitReview}
                                     disabled={actionLoading}
@@ -1489,6 +1498,7 @@ const Registrations = ({ onNavigate }) => {
                                         ? "Confirm Rejection"
                                         : "Send Correction"}
                                 </button>
+                            </div>
                             </div>
                         )}
                     </div>
@@ -2212,7 +2222,7 @@ const styles = {
         padding:
             "20px",
         zIndex:
-            "1000",
+            "1800",
     },
 
     modal: {

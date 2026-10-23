@@ -1908,6 +1908,15 @@
   line-height: 1.5;
 }
 
+/* Keep the empty directory state in the student dashboard's dark palette. */
+.student-dashboard .candidate-empty {
+  background:rgba(28,42,66,.9) !important;
+  border-color:#40516b !important;
+  color:#d8e3f5 !important;
+}
+.student-dashboard .candidate-empty :is(h2,h3,strong) { color:#f3f6fd !important; }
+.student-dashboard .candidate-empty p { color:#b9c7dc !important; }
+
 .candidate-vote-button:disabled {
   cursor: not-allowed;
   opacity: 0.5;

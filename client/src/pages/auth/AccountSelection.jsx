@@ -894,7 +894,11 @@ const handleAdminLogin = async (event) => {
 
 
 
-                            <div className="account-selection-register">
+                            <Link to="/admin-forgot-password" className="account-selection-inline-link admin-forgot-password-link">
+                                Forgot password?
+                            </Link>
+
+                            <div className="account-selection-register">
 
                                 <span>Need to create an Admin account?</span>{" "}
 

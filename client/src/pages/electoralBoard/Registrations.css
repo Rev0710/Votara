@@ -349,6 +349,57 @@
 .registration-empty-detail h2{font-size:18px;color:#e7e9f3;margin:10px 0 4px}
 .registration-empty-detail p{font-size:11px;margin:0}
 
+/* Registration review stays above the sticky workspace navigation. */
+.registration-review-overlay { z-index:1800 !important; }
+.registration-review-modal {
+  position:relative !important;
+  color:#172033 !important;
+  background:#fff !important;
+  isolation:isolate;
+}
+.registration-review-modal .registration-review-close,
+.registration-review-modal button[aria-label*="Close"] { position:relative; z-index:2; }
+.registration-review-modal :is(h1,h2,h3,strong,label) { color:#172033 !important; }
+.registration-review-modal :is(p,span,small) { color:#53627a !important; }
+.registration-review-modal .registration-review-close { color:#475569 !important; }
+.registration-decision-confirm-overlay {
+  position:fixed;
+  inset:0;
+  z-index:1900;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:rgba(8,18,38,.62);
+  backdrop-filter:blur(5px);
+}
+.registration-decision-confirm {
+  width:min(440px,100%);
+  display:flex !important;
+  flex-direction:column;
+  gap:12px;
+  padding:26px !important;
+  border:1px solid #d5dfef;
+  border-radius:18px;
+  background:#fff !important;
+  color:#172033 !important;
+  box-shadow:0 24px 80px rgba(5,16,38,.3);
+}
+.registration-decision-confirm strong { color:#172033 !important; font-size:18px; }
+.registration-decision-confirm p { color:#52627b !important; }
+.registration-decision-cancel {
+  align-self:flex-end;
+  min-height:40px;
+  padding:0 18px;
+  border:1px solid #cbd5e1;
+  border-radius:9px;
+  background:#fff;
+  color:#334155;
+  font:inherit;
+  font-weight:700;
+  cursor:pointer;
+}
+
 @media (max-width: 1050px){
   .registration-review-layout{grid-template-columns:230px minmax(0,1fr)}
   .student-meta-grid{grid-template-columns:repeat(2,1fr)}

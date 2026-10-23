@@ -533,6 +533,13 @@ api.interceptors.response.use(
                     "votaraKioskMode"
                 );
 
+                if (
+                    typeof window !== "undefined" &&
+                    window.location.pathname.startsWith("/kiosk-voting")
+                ) {
+                    window.location.replace("/electoral-board/dashboard");
+                }
+
             }
 
         }

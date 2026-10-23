@@ -1043,6 +1043,17 @@
 .election-modal-card label { color: #d5dced !important; }
 .election-modal-card button[style*="background: rgb(255, 255, 255)"],
 .election-modal-card button[style*="background: rgb(241, 245, 249)"] { color: #e2e8f5 !important; }
+.election-modal-card .em-position-presets {
+    background:#202e46 !important;
+    border-color:#40516b !important;
+    color:#eef3fb !important;
+}
+.election-modal-card .em-position-presets strong { color:#f1f5fb !important; }
+.election-modal-card .em-position-preset {
+    background:#2a3b58 !important;
+    color:#eef3fb !important;
+    border-color:#4b607f !important;
+}
 .election-modal-card input,
 .election-modal-card textarea,
 .election-modal-card select { color-scheme: dark; }

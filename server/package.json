@@ -33,6 +33,6 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.9.3",
     "qrcode": "^1.5.4",
-    "xlsx": "^0.18.5"
+    "xlsx": "file:vendor/xlsx-0.20.3.tgz"
   }
 }

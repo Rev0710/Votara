@@ -2399,6 +2399,7 @@ function ElectionManagement({ onCreateElection, onNavigate }) {
                 setSuccess(
                     `${missingPositions.length} standard position${missingPositions.length === 1 ? "" : "s"} added. All 11 VOTARA positions are now configured.`
                 );
+                setShowPositionModal(false);
 
             } catch (err) {
                 console.error(
@@ -3045,6 +3046,7 @@ function ElectionManagement({ onCreateElection, onNavigate }) {
                     >
 
                         <div
+                            className="em-position-presets"
                             style={{
                                 fontSize:
                                     "35px",
@@ -4987,6 +4989,7 @@ function ElectionManagement({ onCreateElection, onNavigate }) {
                                 {STANDARD_POSITION_PRESETS.map(
                                     (preset) => (
                                         <button
+                                            className="em-position-preset"
                                             type="button"
                                             key={preset.name}
                                             onClick={() =>

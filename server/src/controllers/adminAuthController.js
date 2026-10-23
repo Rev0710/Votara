@@ -2,6 +2,13 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const supabase = require("../config/supabase");
+const {
+    generateOtp,
+    verifyOtp,
+    validateResetToken,
+    consumeResetToken,
+} = require("../services/otpService");
+const { sendForgotPasswordOTPEmail } = require("../services/emailService");
 
 // =====================================================
 // CONSTANTS
@@ -53,6 +60,119 @@ const isValidEmail = (email) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
         email
     );
+};
+
+const normalizeEmail = (email) =>
+    String(email || "").trim().toLowerCase();
+
+const findActiveAdminByEmail = async (email) => {
+    const { data, error } = await supabase
+        .from("staff_users")
+        .select("id, email, role, is_active, password_hash")
+        .ilike("email", email)
+        .eq("role", ADMIN_ROLE)
+        .maybeSingle();
+
+    if (error) throw error;
+    return data?.is_active === true ? data : null;
+};
+
+const requestAdminPasswordReset = async (req, res) => {
+    try {
+        const email = normalizeEmail(req.body?.email);
+        if (!isValidEmail(email)) {
+            return res.status(400).json({ success: false, message: "Enter a valid registered administrator email." });
+        }
+
+        const account = await findActiveAdminByEmail(email);
+        if (account) {
+            const otp = generateOtp(email, "admin");
+            await sendForgotPasswordOTPEmail(email, otp);
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "If that email belongs to an active administrator, a verification code has been sent.",
+        });
+    } catch (error) {
+        console.error("Admin password recovery email error:", error);
+        return res.status(503).json({ success: false, message: "Unable to send the verification code right now. Please try again." });
+    }
+};
+
+const verifyAdminPasswordResetOtp = async (req, res) => {
+    try {
+        const email = normalizeEmail(req.body?.email);
+        const otp = String(req.body?.otp || "").trim();
+        if (!isValidEmail(email) || !/^\d{6}$/.test(otp)) {
+            return res.status(400).json({ success: false, message: "Enter the registered email and 6-digit verification code." });
+        }
+
+        const account = await findActiveAdminByEmail(email);
+        if (!account) {
+            return res.status(400).json({ success: false, message: "The verification code is invalid or expired. Request a new code." });
+        }
+
+        const result = verifyOtp(email, otp, "admin");
+        if (!result.success) {
+            return res.status(400).json({ success: false, message: result.message });
+        }
+
+        return res.status(200).json({ success: true, resetToken: result.resetToken });
+    } catch (error) {
+        console.error("Admin password recovery verification error:", error);
+        return res.status(503).json({ success: false, message: "Unable to verify the code right now. Please try again." });
+    }
+};
+
+const resetAdminPassword = async (req, res) => {
+    try {
+        const email = normalizeEmail(req.body?.email);
+        const resetToken = String(req.body?.resetToken || "").trim();
+        const newPassword = String(req.body?.newPassword || "");
+        const confirmPassword = String(req.body?.confirmPassword || "");
+
+        if (!isValidEmail(email) || !resetToken || !newPassword || !confirmPassword) {
+            return res.status(400).json({ success: false, message: "Complete all password reset fields." });
+        }
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({ success: false, message: "The passwords do not match." });
+        }
+        if (!isValidPassword(newPassword) || Buffer.byteLength(newPassword) > 72) {
+            return res.status(400).json({ success: false, message: "Use at least 8 characters with uppercase, lowercase, a number, and a symbol (maximum 72 bytes)." });
+        }
+        if (!validateResetToken(email, resetToken, "admin")) {
+            return res.status(400).json({ success: false, message: "Your reset session is invalid or expired. Request a new verification code." });
+        }
+
+        const account = await findActiveAdminByEmail(email);
+        if (!account) {
+            return res.status(400).json({ success: false, message: "This administrator account is unavailable." });
+        }
+        if (account.password_hash && await bcrypt.compare(newPassword, account.password_hash)) {
+            return res.status(400).json({ success: false, message: "Choose a password different from your current password." });
+        }
+
+        const now = new Date().toISOString();
+        const { error } = await supabase
+            .from("staff_users")
+            .update({
+                password_hash: await bcrypt.hash(newPassword, 12),
+                must_change_password: false,
+                password_changed_at: now,
+                updated_at: now,
+            })
+            .eq("id", account.id)
+            .eq("role", ADMIN_ROLE)
+            .eq("is_active", true);
+
+        if (error) throw error;
+        consumeResetToken(email, resetToken, "admin");
+        return res.status(200).json({ success: true, message: "Administrator password changed successfully." });
+    } catch (error) {
+        console.error("Admin password reset error:", error);
+        return res.status(503).json({ success: false, message: "Unable to update the password right now. Please try again." });
+    }
 };
 
 
@@ -975,5 +1095,8 @@ module.exports = {
     loginAdmin,
 
     keepAdminSession,
+    requestAdminPasswordReset,
+    verifyAdminPasswordResetOtp,
+    resetAdminPassword,
 
 };
