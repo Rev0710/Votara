@@ -94,6 +94,8 @@ const ResultsReports = () => {
                 {params: {election_id: election.id}, responseType: "blob", timeout: 60000});
             if (!String(response.headers["content-type"] || "").includes("application/pdf"))
                 throw new Error("The server did not return a PDF. Please redeploy the updated backend.");
+            if (await response.data.slice(0,5).text() !== "%PDF-")
+                throw new Error("The downloaded report is not a valid PDF. Please try again.");
             const url = URL.createObjectURL(response.data);
             const link = document.createElement("a");
             link.href = url;

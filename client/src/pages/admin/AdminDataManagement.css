@@ -1995,3 +1995,78 @@ code {
         padding-top: 24px !important;
     }
 }
+
+/* Scoped admin data surfaces preserve the dotted background in both themes. */
+#admin-data-workspace {
+    --dm-glass-panel:rgba(24,35,55,.58);
+    --dm-glass-inner:rgba(33,49,73,.30);
+    --dm-status-green:#a2edbe;--dm-status-amber:#ffe1a0;--dm-status-red:#ffc0cb;
+}
+.admin-workspace[data-admin-theme="light"] #admin-data-workspace {
+    --dm-glass-panel:rgba(255,255,255,.54);
+    --dm-glass-inner:rgba(235,243,255,.28);
+    --dm-status-green:#146b3b;--dm-status-amber:#805100;--dm-status-red:#9f1239;
+}
+#admin-data-workspace .dm-page-heading {grid-template-columns:minmax(0,1fr) auto;gap:20px;}
+#admin-data-workspace :is(.dm-stat-card,.dm-panel,.dm-management-card) {
+    background:var(--dm-glass-panel) !important;border:1px solid var(--aw-border) !important;
+    backdrop-filter:saturate(115%);-webkit-backdrop-filter:saturate(115%);
+    box-shadow:0 5px 18px rgba(15,30,55,.04);color:var(--aw-text);
+}
+#admin-data-workspace :is(.dm-stat-icon,.dm-panel-icon,.dm-management-icon,.dm-info-icon) {
+    background:transparent !important;border:0 !important;box-shadow:none !important;border-radius:0;
+}
+#admin-data-workspace :is(.dm-stat-icon,.dm-management-icon) {width:28px;height:32px;flex:0 0 28px;}
+#admin-data-workspace .dm-panel-icon {width:28px;height:28px;}
+#admin-data-workspace .dm-info-icon {width:28px;height:28px;flex:0 0 28px;}
+#admin-data-workspace :is(.dm-stat-icon,.dm-panel-icon,.dm-management-icon,.dm-info-icon) svg {
+    color:var(--aw-link);width:22px;height:22px;
+}
+#admin-data-workspace :is(h1,h2,h3,h4,strong,.dm-record-name,.dm-record-id) {color:var(--aw-text) !important;}
+#admin-data-workspace :is(.dm-stat-copy > span,.dm-stat-copy > small,.dm-kicker,.dm-year-label,.dm-format-list,.dm-footer) {
+    color:var(--aw-muted) !important;font-size:12px !important;line-height:1.6;
+}
+#admin-data-workspace :is(.dm-panel-heading p,.dm-page-heading p,.dm-management-card small,.dm-info-panel p,.dm-registry-heading p) {
+    color:var(--aw-muted) !important;font-size:14px;line-height:1.7;overflow-wrap:anywhere;
+}
+#admin-data-workspace :is(.dm-security-note,.dm-dropzone) {
+    background:var(--dm-glass-inner) !important;border-color:var(--aw-border) !important;color:var(--aw-text);
+}
+#admin-data-workspace .dm-security-note :is(p,small,span) {font-size:12px !important;line-height:1.7;color:var(--aw-muted) !important;}
+#admin-data-workspace .dm-registry-panel :is(table,thead,tbody,tr,td,th) {background:transparent !important;}
+#admin-data-workspace .dm-registry-panel :is(td,th) {font-size:13px !important;line-height:1.6;color:var(--aw-text) !important;}
+#admin-data-workspace .dm-status {
+    background:transparent !important;border:0 !important;border-radius:0;padding:0;
+    font-size:12px !important;font-weight:600;box-shadow:none;
+}
+#admin-data-workspace .dm-status.active {color:var(--dm-status-green) !important;}
+#admin-data-workspace .dm-status.late_enrollee {color:var(--dm-status-amber) !important;}
+#admin-data-workspace .dm-status.inactive {color:var(--aw-muted) !important;}
+#admin-data-workspace .dm-registry-pagination {
+    display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:12px;
+    width:min(1240px,100%);box-sizing:border-box;margin:18px auto 0;padding:0;
+}
+#admin-data-workspace .dm-registry-pagination > span {
+    margin-right:auto;font-size:14px;color:var(--aw-muted);line-height:1.6;font-variant-numeric:tabular-nums;
+}
+#admin-data-workspace .dm-registry-pagination > button {
+    min-height:44px;padding:10px 16px;border:1px solid var(--aw-border);border-radius:9px;
+    background:var(--dm-glass-panel);color:var(--aw-text);font:inherit;font-size:14px;
+}
+#admin-data-workspace .dm-registry-pagination > button:disabled {opacity:.5;cursor:not-allowed;}
+@media(max-width:650px) {
+    #admin-data-workspace .dm-page-heading {grid-template-columns:minmax(0,1fr);gap:16px;}
+    #admin-data-workspace .dm-refresh {justify-self:start;}
+    #admin-data-workspace .dm-registry-pagination {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));}
+    #admin-data-workspace .dm-registry-pagination > span {grid-column:1 / -1;margin:0;}
+}
+@media(prefers-reduced-transparency:reduce) {
+    #admin-data-workspace :is(.dm-stat-card,.dm-panel,.dm-management-card) {
+        background:var(--aw-solid) !important;backdrop-filter:none;-webkit-backdrop-filter:none;
+    }
+}
+
+#admin-data-workspace .dm-format-list > span {font-size:14px;line-height:1.6;color:var(--aw-muted);}
+#admin-data-workspace .dm-format-list b {font-size:11px;color:var(--aw-link);}
+#admin-data-workspace .dm-dropzone > span {font-size:14px;line-height:1.65;color:var(--aw-muted) !important;}
+#admin-data-workspace .dm-dropzone > svg {color:var(--aw-link);}

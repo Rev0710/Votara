@@ -192,3 +192,13 @@
     .late-enrollees-view .le-review-status { align-items: flex-start; flex-direction: column; gap: 10px; }
 }
 @media (prefers-reduced-motion: reduce) { .late-enrollees-view *, .late-enrollees-view *::before, .late-enrollees-view *::after { animation: none !important; transition: none !important; } }
+
+/* Application status is conveyed by colored text, without a filled badge or dot. */
+.admin-workspace[data-admin-theme] .late-enrollees-view .le-status {
+    padding:0;border:0;border-radius:0;background:transparent !important;
+    box-shadow:none;font-size:12px;font-weight:600;line-height:1.6;color:var(--le-muted) !important;
+}
+.admin-workspace[data-admin-theme] .late-enrollees-view .le-status > span {display:none;}
+.admin-workspace[data-admin-theme] .late-enrollees-view .le-status.is-approved {color:var(--le-green) !important;}
+.admin-workspace[data-admin-theme] .late-enrollees-view .le-status.is-pending {color:var(--le-amber) !important;}
+.admin-workspace[data-admin-theme] .late-enrollees-view .le-status.is-rejected {color:var(--le-red) !important;}

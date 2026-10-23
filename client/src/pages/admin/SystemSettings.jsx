@@ -762,9 +762,7 @@ const SystemSettings = () => {
                         <div className="system-config-reference-header">
                             <div className="system-config-reference-title-row">
                                 <div>
-                                    <span className="system-config-reference-breadcrumb">
-                                        <i /> Configuration / Maintenance
-                                    </span>
+
                                     <div className="system-config-reference-eyebrow">
                                         SYSTEM CONFIGURATION
                                     </div>
@@ -913,7 +911,7 @@ const SystemSettings = () => {
                     <>
                         <div className="backup-reference-header">
                             <div className="backup-reference-title">
-                                <span className="backup-reference-breadcrumb"><i /> Recovery controls</span>
+
                                 <h1>Backup &amp; Restore</h1>
                                 <p>Protect platform records and recover from a verified, encrypted point.</p>
                             </div>
@@ -959,7 +957,7 @@ const SystemSettings = () => {
                     <>
                         <div className="troubleshooting-reference-header">
                             <div className="troubleshooting-reference-title">
-                                <span className="troubleshooting-reference-breadcrumb"><i /> System diagnostics</span>
+
                                 <h1>Troubleshooting</h1>
                                 <p>Investigate availability, inspect incidents and review technical exports.</p>
                             </div>
@@ -996,7 +994,7 @@ const SystemSettings = () => {
                 ) : (
                     <>
                         <div className="security-reference-header">
-                            <div className="security-reference-breadcrumb"><span /> Configuration / Security</div>
+
                             <h1>Security</h1>
                             <p>Review sign-in safeguards, session controls and security events.</p>
                         </div>

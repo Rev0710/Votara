@@ -1,5 +1,5 @@
 
-const { PDFDocument } = require("pdfkit");
+const PDFDocument = require("pdfkit");
 
 function buildResultsPdf(report) {
     return new Promise((resolve, reject) => {

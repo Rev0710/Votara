@@ -264,6 +264,7 @@ const exportResultsReports = async (req, res) => {
         const pdf = await buildResultsPdf(buildResultsExportData(results));
         const name = String(results.election.title || "Election")
             .replace(/[^a-z0-9]/gi, "_").replace(/_+/g, "_").replace(/^_|_$/g, "") || "Election";
+        res.setHeader("X-Content-Type-Options", "nosniff");
         res.setHeader("Content-Type", "application/pdf");
         res.setHeader("Content-Disposition", 'attachment; filename="' + name + '_Results.pdf"');
         res.setHeader("Cache-Control", "private, no-store");
