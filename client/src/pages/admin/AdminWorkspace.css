@@ -1,5 +1,5 @@
 .admin-workspace{--aw-bg:#0b1020;--aw-surface:rgba(27,38,58,.84);--aw-solid:#1b263a;--aw-text:#f0f4ff;--aw-muted:#b5c2db;--aw-border:rgba(157,182,230,.25);--aw-soft:#253752;--aw-link:#9fbcff;min-height:100dvh;color:var(--aw-text);background:var(--aw-bg);color-scheme:dark;overflow-wrap:anywhere}
-.admin-workspace[data-admin-theme=light]{--aw-bg:#f8faff;--aw-surface:rgba(255,255,255,.84);--aw-solid:#fff;--aw-text:#242b3b;--aw-muted:#52637a;--aw-border:rgba(118,143,190,.3);--aw-soft:#edf3ff;--aw-link:#2455bc;color-scheme:light}
+.admin-workspace[data-admin-theme=light]{--aw-bg:#f5f7fb;--aw-surface:#fff;--aw-solid:#fff;--aw-text:#1c2a40;--aw-muted:#566880;--aw-border:#d8e1ed;--aw-soft:#f0f4fa;--aw-link:#1856d6;color-scheme:light}
 .admin-workspace{--admin-bg:var(--aw-bg);--admin-card:var(--aw-solid);--admin-card-soft:var(--aw-surface);--admin-text:var(--aw-text);--admin-text-secondary:var(--aw-text);--admin-text-muted:var(--aw-muted);--admin-border:var(--aw-border);--admin-input-bg:var(--aw-solid);--admin-topbar-bg:var(--aw-surface);--admin-hover:var(--aw-soft)}
 .admin-workspace *{box-sizing:border-box;min-width:0}.admin-workspace :is(.admin-dashboard,.votara-data-page,.reports-page,.system-config-page,.admin-audit-page,.admin-user-access-page,.lrm-page){background-color:var(--aw-bg)!important;color:var(--aw-text)!important;min-height:100dvh}.admin-workspace main{width:100%;max-width:1600px;margin-inline:auto}.admin-workspace :is(h1,h2,h3,h4,strong,label,th,td){color:var(--aw-text)!important}.admin-workspace :is(p,small,[class*=subtitle],[class*=description]){color:var(--aw-muted)!important;line-height:1.65}.admin-workspace :is(small,label,[class*=subtitle],[class*=description]){font-size:13px!important}.admin-workspace a{color:var(--aw-link)}
 .admin-workspace :is(section[class*=card],article[class*=card],div[class$="-card"],.student-issue-admin-item,.lrm-application,.lrm-modal,.lrm-confirm-modal,.audit-filter-section,.audit-table-container){background:var(--aw-surface)!important;border:1px solid var(--aw-border)!important;box-shadow:0 8px 24px #0000000c;border-radius:18px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:var(--aw-text)!important}
@@ -130,7 +130,7 @@
 /* One continuous admin canvas, including the gutters around constrained content. */
 .admin-workspace[data-admin-theme]{--aw-dot:rgba(100,144,224,.28);width:100%;max-width:none;min-height:100dvh;background-color:var(--aw-bg)!important;background-image:radial-gradient(circle,var(--aw-dot) 1px,transparent 1.2px)!important;background-size:24px 24px!important;background-position:0 0}
 .admin-workspace[data-admin-theme=light]{--aw-dot:rgba(94,131,200,.25)}
-.admin-workspace[data-admin-theme] > div,
+.admin-workspace[data-admin-theme] > div:not(.votara-page-loader),
 .admin-workspace[data-admin-theme] main,
 .admin-workspace[data-admin-theme] :is(.admin-dashboard,.votara-data-page,.reports-page,.system-config-page,.admin-audit-page,.audit-page,.admin-user-access-page,.lrm-page){background-color:transparent!important;background-image:none!important}
 .admin-workspace[data-admin-theme] main::before{background:none!important}
@@ -175,7 +175,7 @@
 @media(max-width:760px){.admin-workspace[data-admin-theme] :is(.ua-create-grid,.ua-main-grid,.ua-role-switcher,.ua-account-sections){grid-template-columns:minmax(0,1fr)!important}.admin-workspace[data-admin-theme] .ua-account-row{flex-wrap:wrap;gap:12px}.admin-workspace[data-admin-theme] .ua-card{padding:18px!important}}
 @media(max-width:900px){.admin-workspace[data-admin-theme] :is(.admin-user-access-grid,.ua-role-switcher,.ua-account-sections){grid-template-columns:minmax(0,1fr)!important}.admin-workspace[data-admin-theme] .admin-user-access-shell{padding:18px!important;max-width:100%!important}.admin-workspace[data-admin-theme] .ua-role-card{min-width:0!important;width:100%!important}}
 /* Light-mode detail surfaces and glass navigation. */
-.admin-workspace[data-admin-theme] > div{overflow:visible!important}
+.admin-workspace[data-admin-theme] > div:not(.votara-page-loader){overflow:visible!important}
 .admin-workspace[data-admin-theme] .votara-admin-topbar{position:sticky!important;top:0!important;z-index:1000!important;background:rgba(27,38,58,.76)!important;backdrop-filter:blur(12px)!important;-webkit-backdrop-filter:blur(12px)!important;border-bottom:1px solid var(--aw-border)!important}
 .admin-workspace[data-admin-theme=light] .votara-admin-topbar{background:rgba(255,255,255,.76)!important}
 .admin-workspace[data-admin-theme] :is(.admin-user-access-number,.dm-page-number,.dm-heading-number){background:transparent!important;box-shadow:none!important;border:0!important;color:var(--aw-link)!important}

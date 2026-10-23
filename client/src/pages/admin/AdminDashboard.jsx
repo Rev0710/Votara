@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import "./AdminDashboard.css";
 import "./AdminDashboardView.css";
 import "./AdminDashboardLight.css";
-import PageLoader from "/src/components/transitionloader/PageLoader";
 
 import {
     FiUsers,
@@ -186,9 +185,6 @@ useEffect(() => {
 }, []);
 
 
-    // Page transition loader
-    const [isPageTransitioning, setIsPageTransitioning] =
-        useState(false);
 
     const [dashboardLoading, setDashboardLoading] =
         useState(true);
@@ -556,18 +552,7 @@ const checkSystem = async () => {
     // =====================================================
 
     const goTo = (path) => {
-        // Always show the page transition, including when returning
-        // to the dashboard from another navigation page.
-        if (isPageTransitioning) {
-            return;
-        }
-
-        setIsPageTransitioning(true);
-
-        // Start the transition first, then change the route.
-        window.setTimeout(() => {
-            navigate(path);
-        }, 700);
+        navigate(path);
     };
 
     // =====================================================
@@ -624,7 +609,6 @@ const checkSystem = async () => {
 
     return (
         <div className="ad-dashboard admin-polished-page">
-            {isPageTransitioning && <PageLoader />}
             <a className="ad-skip-link" href="#admin-dashboard-content">Skip to dashboard</a>
             <AdminTopNav admin={admin} onLogout={confirmLogout} />
             <main className="ad-main" id="admin-dashboard-content" tabIndex={-1}>

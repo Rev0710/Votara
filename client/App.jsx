@@ -2,7 +2,7 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Component, lazy, Suspense, useEffect, useState } from "react";
 import MaintenanceGate from './src/MaintenanceGate';
 import EBWorkspace from './src/pages/electoralBoard/EBWorkspace';
-import AdminWorkspace from './src/pages/admin/AdminWorkspace';
+import AdminWorkspace, { AdminRouteFallback } from './src/pages/admin/AdminWorkspace';
 const AdminLateEnrollees = lazy(() => import('./src/pages/admin/AdminLateEnrollees'));
 import VotaraIntro from "./src/components/VotaraIntro";
 
@@ -71,7 +71,9 @@ const EBDashboard = lazy(() => import("./src/pages/electoralBoard/EBDashboard"))
 
 import "./App.css";
 import "./src/pages/admin/AdminWorkspace.css";
+import "./src/pages/admin/AdminUIRefinements.css";
 import "./src/pages/electoralBoard/EBWorkspace.css";
+import "./src/pages/electoralBoard/EBLightTheme.css";
 
 
 const LoginPage = () => {
@@ -140,11 +142,12 @@ if (showInitialIntro) {
     return (
         <div
             className="page-transition"
-            key={location.pathname}
+            key={location.pathname === "/admin-dashboard" || location.pathname.startsWith("/admin/") ? "admin-workspace" : location.pathname}
         >
+            <AdminWorkspace>
             <RouteLoadErrorBoundary key={location.pathname}>
-            <Suspense fallback={<div className="route-loading" role="status">Loading VOTARA…</div>}>
-            <MaintenanceGate><AdminWorkspace><EBWorkspace><Routes location={location}>
+            <Suspense fallback={<AdminRouteFallback />}>
+            <MaintenanceGate><EBWorkspace><Routes location={location}>
 <Route path="/admin/late-enrollees" element={<AdminLateEnrollees/>}/>
 
 
@@ -429,9 +432,10 @@ if (showInitialIntro) {
                     path="/vote"
                     element={<Vote />}
                 />
-            </Routes></EBWorkspace></AdminWorkspace></MaintenanceGate>
+            </Routes></EBWorkspace></MaintenanceGate>
             </Suspense>
             </RouteLoadErrorBoundary>
+            </AdminWorkspace>
         </div>
     );
 };

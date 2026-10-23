@@ -1,0 +1,153 @@
+/* Light mode uses the shared EB tokens and explicit component states. */
+.eb-workspace[data-eb-theme="light"] {
+    --eb-success: #176840;
+    --eb-success-soft: #eaf6ef;
+    --eb-warning: #855a0b;
+    --eb-warning-soft: #fff6e3;
+    --eb-danger: #b52c40;
+    --eb-danger-soft: #fff0f2;
+    --eb-focus: #2463eb;
+    --eb-selected: #eaf1ff;
+    --eb-divider: #e5ebf3;
+}
+
+/* Navigation keeps the glass surface, with white text on selected blue items. */
+.eb-workspace[data-eb-theme="light"] .eb-board-header {
+    --board-canvas: #fff;
+    --board-surface: #fff;
+    --board-inset: #f0f4fa;
+    --board-line: #d8e1ed;
+    --board-muted: #566880;
+    --board-text: #1c2a40;
+    --board-glass: rgba(255,255,255,.9);
+    --board-brand: #155dfb;
+    --board-header-shadow: rgba(27,47,84,.04);
+}
+.eb-workspace[data-eb-theme="light"] .eb-board-header :is(.eb-board-tab.is-active,button[aria-current="page"]) {
+    background: var(--board-brand) !important;
+    color: #fff !important;
+}
+.eb-workspace[data-eb-theme="light"] .eb-board-header :is(.eb-board-tab.is-active,button[aria-current="page"]) :is(span,svg) { color: #fff !important; }
+.eb-workspace[data-eb-theme="light"] .eb-board-header :is(.eb-board-dropdown,.platform-notification-panel) { box-shadow: 0 12px 32px #1e365619; }
+.eb-workspace[data-eb-theme="light"] :is(button,a,input,select,textarea):focus-visible { outline: 2px solid var(--eb-focus); outline-offset: 3px; }
+.eb-workspace[data-eb-theme="light"] :is(input:not([type="checkbox"]):not([type="radio"]),textarea,select) {
+    caret-color: var(--eb-text);
+    border-color: var(--eb-border) !important;
+    color-scheme: light;
+}
+.eb-workspace[data-eb-theme="light"] :is(input,textarea)::placeholder { color: #6a7a90 !important; }
+.eb-workspace[data-eb-theme="light"] :is(input,textarea,select):disabled { background: var(--eb-soft) !important; color: var(--eb-muted) !important; }
+
+/* Give operational surfaces a solid white base, so dots stay behind the content. */
+.eb-workspace[data-eb-theme="light"] :is(.eb-panel,.eb-stat-card,.registration-applications,.registration-detail-card,.eb-party-overview-card,.eb-candidates-card,.plm-header,.plm-feature-card,.plm-stat-card,.audit-category-panel,.audit-main-panel,.em-chart-card,.election-management-list-card,.rr-selector-panel,.rr-election-card,.rr-stat-card,.rr-summary-panel,.rr-panel,.rr-position-card) {
+    background: var(--eb-solid) !important;
+    border-color: var(--eb-border) !important;
+    box-shadow: 0 2px 8px #20395605 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+.eb-workspace[data-eb-theme="light"] :is(.eb-review-row,.eb-readiness-list button,.student-detail-header,.student-meta-grid,.verification-section,.audit-activity-item,.rr-election-meta,.rr-panel-header,.rr-position-header) { border-color: var(--eb-divider) !important; }
+.eb-workspace[data-eb-theme="light"] :is(.eb-review-head,.eb-table-header,.partylist-table-header,.election-management-table th,.audit-main-toolbar) { background: var(--eb-soft) !important; }
+
+/* Dashboard secondary actions and status indicators. */
+.eb-workspace[data-eb-theme="light"] .eb-dashboard-home .eb-quick-actions button:not(.primary) { background: var(--eb-soft); color: var(--eb-text); border: 1px solid var(--eb-border); }
+.eb-workspace[data-eb-theme="light"] .eb-dashboard-home .eb-quick-actions button:not(.primary):hover { background: var(--eb-selected); border-color: #b5c9f0; }
+.eb-workspace[data-eb-theme="light"] .eb-dashboard-home .eb-quick-actions button:not(.primary) span { color: var(--eb-link); }
+.eb-workspace[data-eb-theme="light"] .eb-dashboard-home .eb-quick-actions button.primary { background: #155dfb; color: #fff; box-shadow: none; }
+.eb-workspace[data-eb-theme="light"] .eb-dashboard-home .eb-quick-actions button.primary span { color: #fff; }
+.eb-workspace[data-eb-theme="light"] .eb-review-row em.pending { background: var(--eb-warning-soft); color: var(--eb-warning); }
+.eb-workspace[data-eb-theme="light"] .eb-review-row em.approved { background: var(--eb-success-soft); color: var(--eb-success); }
+.eb-workspace[data-eb-theme="light"] .eb-review-row em.active { background: var(--eb-selected); color: var(--eb-link); }
+.eb-workspace[data-eb-theme="light"] .eb-dashboard-home :is(.eb-chart-caption,.eb-turnout-total,.eb-status-text) { color: var(--eb-muted); }
+.eb-workspace[data-eb-theme="light"] .eb-dashboard-home :is(.eb-readiness-bar,.eb-chart-bars) { border-color: var(--eb-border); }
+.eb-workspace[data-eb-theme="light"] .eb-dashboard-home .eb-readiness-bar { background: #e4ebf5; }
+.eb-workspace[data-eb-theme="light"] .eb-dashboard-home .eb-review-row button { color: var(--eb-link); background: var(--eb-selected); border-color: transparent; }
+.eb-workspace[data-eb-theme="light"] .eb-dashboard-home .eb-live-chip { background: var(--eb-selected); color: var(--eb-link); border-color: #c4d6f7; font-size: 11px; }
+.eb-workspace[data-eb-theme="light"] .eb-dashboard-home .eb-turnout-ring { background: conic-gradient(#155dfb var(--turnout), #e4ebf5 0deg); }
+.eb-workspace[data-eb-theme="light"] .eb-dashboard-home .eb-chart-head { color: var(--eb-muted); font-size: 11px; }
+
+/* Registration tabs, information and document labels had remaining navy colors. */
+.eb-workspace[data-eb-theme="light"] .registration-page .application-tabs { background: var(--eb-soft); border: 1px solid var(--eb-border); padding: 3px; }
+.eb-workspace[data-eb-theme="light"] .registration-page .application-tabs button { color: var(--eb-muted); font-size: 11px; min-height: 36px; white-space: normal; line-height: 1.6; padding: 8px 4px; }
+.eb-workspace[data-eb-theme="light"] .registration-page .application-tabs button.active { background: #155dfb; color: #fff; }
+.eb-workspace[data-eb-theme="light"] .registration-page .application-item { color: var(--eb-text); }
+.eb-workspace[data-eb-theme="light"] .registration-page .application-item:hover { background: var(--eb-soft); }
+.eb-workspace[data-eb-theme="light"] .registration-page .application-item.selected { background: var(--eb-selected) !important; border-color: #b6cdf6; }
+.eb-workspace[data-eb-theme="light"] .registration-page :is(.application-item-info span,.student-meta-grid span,.section-heading-row span,.document-preview-box span,.document-card-bottom span,.application-list-empty,.applications-count) { color: var(--eb-muted) !important; }
+.eb-workspace[data-eb-theme="light"] .registration-page :is(.application-avatar,.student-detail-avatar) { background: var(--eb-selected); color: var(--eb-link); border-color: #c4d6f7; }
+.eb-workspace[data-eb-theme="light"] .registration-page .document-preview-card { background: #fff !important; }
+.eb-workspace[data-eb-theme="light"] .registration-page .document-card-bottom a { color: var(--eb-link); border-color: #c4d6f7; background: var(--eb-selected); }
+.eb-workspace[data-eb-theme="light"] .registration-page :is(.student-meta-grid span,.document-card-bottom span,.document-card-bottom a,.document-preview-box span) { font-size: 11px; }
+.eb-workspace[data-eb-theme="light"] .registration-page :is(.status-pending,.detail-status) { color: var(--eb-warning); background: var(--eb-warning-soft); border-color: #e9ce93; }
+.eb-workspace[data-eb-theme="light"] .registration-page .status-approved { color: var(--eb-success); background: var(--eb-success-soft); border-color: #b6d8c4; }
+.eb-workspace[data-eb-theme="light"] .registration-page .status-rejected { color: var(--eb-danger); background: var(--eb-danger-soft); border-color: #e9bbc3; }
+.eb-workspace[data-eb-theme="light"] .registration-page .status-needs_correction { color: var(--eb-link); background: var(--eb-selected); border-color: #c4d6f7; }
+.eb-workspace[data-eb-theme="light"] .registration-page .enrolled-text { color: var(--eb-success) !important; }
+.eb-workspace[data-eb-theme="light"] .registration-alert-success { color: var(--eb-success); background: var(--eb-success-soft); border-color: #b6d8c4; }
+.eb-workspace[data-eb-theme="light"] .registration-alert-error { color: var(--eb-danger); background: var(--eb-danger-soft); border-color: #e9bbc3; }
+.eb-workspace[data-eb-theme="light"] .registration-page .approval-notice { color: var(--eb-muted); background: var(--eb-selected); border-color: #c4d6f7; }
+.eb-workspace[data-eb-theme="light"] .registration-page .approval-notice span { color: var(--eb-link); }
+.eb-workspace[data-eb-theme="light"] .registration-page .decision-reject { color: var(--eb-danger); border-color: #dc9aa5; }
+
+/* Voting Monitoring previously inherited its dark-only glass palette. */
+.eb-workspace[data-eb-theme="light"] .vm-page {
+    --vm-glass-rgb: 255,255,255;
+    --vm-glass-opacity: 1;
+    --vm-glass-blur: 0px;
+    --vm-glass-border: var(--eb-border);
+    --vm-text-primary: var(--eb-text);
+    --vm-text-secondary: var(--eb-muted);
+    --vm-accent: var(--eb-link);
+    color: var(--eb-text);
+}
+.eb-workspace[data-eb-theme="light"] .vm-page :is(.vm-election-card,.vm-stat-card,.vm-panel,.vm-no-activity,.vm-empty-election,.vm-loading) { background: #fff !important; border-color: var(--eb-border) !important; box-shadow: 0 2px 8px #20395605; }
+.eb-workspace[data-eb-theme="light"] .vm-page :is(.vm-header h1,.vm-election-meta strong,.vm-progress-number,.vm-ballot-count) { color: var(--eb-text) !important; }
+.eb-workspace[data-eb-theme="light"] .vm-page :is(.vm-refresh-button,.vm-year-level,.vm-private-badge,.vm-activity-number) { background: var(--eb-soft); color: var(--eb-muted); border-color: var(--eb-border); }
+.eb-workspace[data-eb-theme="light"] .vm-page :is(.vm-election-meta,.vm-activity-row) { border-color: var(--eb-divider); }
+.eb-workspace[data-eb-theme="light"] .vm-page .vm-progress-track { background: #e6edf7; }
+.eb-workspace[data-eb-theme="light"] .vm-page .vm-progress-fill { background: #155dfb; }
+.eb-workspace[data-eb-theme="light"] .vm-page .vm-error { color: var(--eb-danger); background: var(--eb-danger-soft); border-color: #e9bbc3; }
+.eb-workspace[data-eb-theme="light"] .vm-page .vm-error p { color: var(--eb-danger) !important; }
+.eb-workspace[data-eb-theme="light"] .vm-page :is(.vm-election-icon,.vm-stat-icon,.vm-no-activity-icon,.vm-empty-icon) { color: var(--eb-link) !important; }
+.eb-workspace[data-eb-theme="light"] .vm-page .vm-year-level span { color: var(--eb-success); }
+
+/* Audit components use their own semantic variables. */
+.eb-workspace[data-eb-theme="light"] .audit-page {
+    --audit-panel: #fff;
+    --audit-panel-soft: var(--eb-soft);
+    --audit-border: var(--eb-border);
+    --audit-border-soft: var(--eb-divider);
+    --audit-text: var(--eb-text);
+    --audit-muted: var(--eb-muted);
+    --audit-blue-soft: var(--eb-selected);
+    --audit-green: var(--eb-success);
+    --audit-orange: var(--eb-warning);
+    --audit-red: var(--eb-danger);
+}
+.eb-workspace[data-eb-theme="light"] .audit-page :is(.audit-category-item.active,.audit-activity-item:hover,.audit-filter-chip) { background: var(--eb-selected) !important; }
+.eb-workspace[data-eb-theme="light"] .audit-page .audit-activity-detail { background: var(--eb-soft); border-color: var(--eb-border); }
+.eb-workspace[data-eb-theme="light"] .audit-page .audit-activity-arrow { color: var(--eb-muted); }
+.eb-workspace[data-eb-theme="light"] .audit-page .audit-security-notice { background: var(--eb-selected); border-color: #c4d6f7; }
+.eb-workspace[data-eb-theme="light"] .audit-page .audit-error { background: var(--eb-danger-soft); border-color: #e9bbc3; }
+.eb-workspace[data-eb-theme="light"] .audit-page .audit-error :is(strong,p) { color: var(--eb-danger) !important; }
+.eb-workspace[data-eb-theme="light"] .audit-modal { background: var(--eb-solid); color: var(--eb-text); border-color: var(--eb-border); box-shadow: 0 24px 70px #182e5026; }
+.eb-workspace[data-eb-theme="light"] .audit-modal :is(.audit-modal-header,.audit-readable-details,.audit-readable-row,.audit-detail-grid>div) { border-color: var(--eb-border); }
+.eb-workspace[data-eb-theme="light"] .audit-modal :is(.audit-detail-grid>div,.audit-readable-row) { background: var(--eb-soft); }
+.eb-workspace[data-eb-theme="light"] .audit-modal :is(.audit-detail-highlight,.audit-modal-privacy) { background: var(--eb-selected); border-color: #c4d6f7; }
+.eb-workspace[data-eb-theme="light"] .audit-modal :is(p,label,.audit-readable-row span,.audit-detail-highlight span:not(.audit-detail-icon)) { color: var(--eb-muted) !important; }
+.eb-workspace[data-eb-theme="light"] .audit-modal :is(.audit-detail-icon,.audit-modal-privacy>span,.audit-modal-close) { color: var(--eb-link); }
+.eb-workspace[data-eb-theme="light"] .audit-modal :is(label,.audit-readable-row span,.audit-detail-highlight span:not(.audit-detail-icon)) { font-size: 11px; }
+.eb-workspace[data-eb-theme="light"] .audit-modal :is(.audit-detail-section p,.audit-detail-grid strong,.audit-readable-row strong) { font-size: 12px; }
+.eb-workspace[data-eb-theme="light"] .eb-issue-reports article { border-color: var(--eb-border); }
+.eb-workspace[data-eb-theme="light"] .eb-issue-reports [role="alert"] { color: var(--eb-danger) !important; }
+.eb-workspace[data-eb-theme="light"] .eb-issue-reports [role="status"] { color: var(--eb-success) !important; }
+
+/* Report summaries keep semantic outcomes distinct in the light palette. */
+.eb-workspace[data-eb-theme="light"] .rr-page :is(.rr-winner-banner,.rr-tie-banner,.rr-no-votes-banner) { border-radius: 10px; }
+.eb-workspace[data-eb-theme="light"] .rr-page .rr-winner-banner { background: var(--eb-success-soft) !important; border-color: #b6d8c4 !important; }
+.eb-workspace[data-eb-theme="light"] .rr-page .rr-tie-banner { background: var(--eb-warning-soft) !important; border-color: #e9ce93 !important; }
+.eb-workspace[data-eb-theme="light"] .rr-page :is(.rr-winner-banner,.rr-tie-banner) :is(strong,p,span) { color: var(--eb-text) !important; }
+@media (max-width: 600px) {
+    .eb-workspace[data-eb-theme="light"] :is(input,select,textarea) { font-size: 16px; }
+    .eb-workspace[data-eb-theme="light"] .registration-page .application-tabs button { font-size: 10px; }
+}
