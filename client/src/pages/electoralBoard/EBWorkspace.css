@@ -1,6 +1,6 @@
 /* Scoped EB theme; preserve the existing blue palette and all actions. */
 .eb-workspace{--eb-bg:#101729;--eb-surface:rgba(29,40,61,.82);--eb-solid:#1c293e;--eb-soft:#253650;--eb-text:#eef3ff;--eb-muted:#b2c1d9;--eb-border:#40516b;--eb-link:#8cb5ff;min-height:100dvh;background:radial-gradient(circle,rgba(83,137,220,.52) 1.2px,transparent 1.55px) 0 0/24px 24px,var(--eb-bg);color:var(--eb-text);color-scheme:dark}
-.eb-workspace[data-eb-theme=light]{--eb-bg:#f5f8ff;--eb-surface:rgba(255,255,255,.86);--eb-solid:#fff;--eb-soft:#edf3ff;--eb-text:#202d43;--eb-muted:#506481;--eb-border:#cbd7eb;--eb-link:#1455db;background:radial-gradient(circle,rgba(55,116,202,.42) 1.1px,transparent 1.5px) 0 0/24px 24px,var(--eb-bg);color-scheme:light}
+.eb-workspace[data-eb-theme=light]{--eb-bg:#f5f7fb;--eb-surface:#fff;--eb-solid:#fff;--eb-soft:#f0f4fa;--eb-text:#1c2a40;--eb-muted:#566880;--eb-border:#d8e1ed;--eb-link:#1856d6;background:radial-gradient(circle,rgba(67,106,165,.17) .9px,transparent 1.2px) 0 0/24px 24px,var(--eb-bg);color-scheme:light}
 .page-transition:has(.eb-workspace){transform:none!important;animation:none!important}
 .eb-workspace :is(.eb-dashboard-shell,.eb-main,.eb-content,.partylist-page,.partylist-main,.eb-candidate-page,.registration-page,.audit-page,.kiosk-page,.eb-page-party-lists){background-color:transparent!important;color:var(--eb-text)!important;min-width:0}
 .eb-workspace .eb-dashboard-shell{background:transparent!important}
@@ -35,7 +35,6 @@
 .eb-workspace .eb-page-party-lists>div{background:var(--eb-surface)!important;color:var(--eb-text)!important;border-color:var(--eb-border)!important}
 .eb-workspace .plm-feature-title{color:var(--eb-text)!important}.eb-workspace .plm-feature-description{color:var(--eb-muted)!important}
 .eb-workspace .platform-bell{color:var(--eb-text);background:var(--eb-soft);border-color:var(--eb-border)}
-.eb-workspace .platform-notification-panel{background:var(--eb-solid);color:var(--eb-text);border-color:var(--eb-border)}
 .eb-workspace .eb-dashboard-shell .eb-stat-card>div:nth-child(2),.eb-workspace .eb-dashboard-shell .eb-stat-card>div:nth-child(3){color:var(--eb-text)!important}
 .eb-workspace .eb-dashboard-shell .eb-stat-card>div:nth-child(4){color:var(--eb-muted)!important;font-size:13px!important}
 .eb-workspace .eb-turnout-ring::before{background:var(--eb-solid)!important}.eb-workspace .eb-turnout-center{background:transparent!important}
@@ -179,7 +178,7 @@
 .eb-workspace[data-eb-theme=light] .rr-page .rr-no-votes-banner :is(strong,p){color:#334155!important}
 .eb-workspace[data-eb-theme=light] .rr-page .rr-loading{min-height:300px;display:grid;place-content:center;text-align:center}
 .eb-workspace[data-eb-theme=light] .rr-page .rr-loading :is(h3,p){font-weight:600}
-.eb-workspace[data-eb-theme=light] .eb-board-header :is(.eb-board-tab,.eb-board-duty,.eb-board-menu-toggle,.eb-board-dropdown,.eb-board-dropdown button,.eb-board-mobile-profile,.platform-notification-panel){color:var(--board-text)!important}
+.eb-workspace[data-eb-theme=light] .eb-board-header :is(.eb-board-tab,.eb-board-duty,.eb-board-menu-toggle,.eb-board-dropdown,.eb-board-dropdown button,.eb-board-mobile-profile){color:var(--board-text)!important}
 .eb-workspace[data-eb-theme=light] .eb-board-header .eb-board-dropdown{background:var(--board-surface)!important;border-color:var(--board-line)!important}
 .eb-workspace[data-eb-theme=light] .eb-board-header .eb-board-duty{background:var(--board-inset)!important}
 .eb-workspace[data-eb-theme=light] .create-election-page{background:var(--eb-bg)!important;color:var(--eb-text)!important}
@@ -222,9 +221,6 @@
 .eb-workspace[data-eb-theme=light] .eb-board-header .platform-bell img{filter:brightness(0) saturate(100%) invert(18%) sepia(48%) saturate(1714%) hue-rotate(189deg) brightness(91%) contrast(94%);}
 .eb-workspace[data-eb-theme] .eb-board-header .platform-bell:hover{background:var(--board-line);}
 .eb-workspace[data-eb-theme=light] .eb-board-header .platform-bell:hover{background:#dce8fb;}
-.eb-workspace[data-eb-theme] .eb-board-header .platform-notification-panel{background:var(--board-surface)!important;color:var(--board-text)!important;border-color:var(--board-line)!important;box-shadow:0 14px 38px rgba(10,22,44,.2);}
-.eb-workspace[data-eb-theme=light] .eb-board-header .platform-notification-panel :is(header,strong,button,p,div,span){color:#202d43!important;}
-.eb-workspace[data-eb-theme=light] .eb-board-header .platform-notification-panel button:hover{background:#edf3ff;}
 
 /* Electoral Board table statuses are clear text with a semantic color. */
 .eb-workspace[data-eb-theme] .election-status-badge{display:inline-flex!important;align-items:center!important;gap:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;font-size:13px!important;font-weight:650!important;line-height:1.4!important;white-space:nowrap!important;}
@@ -277,7 +273,6 @@
   .eb-workspace[data-eb-theme] .eb-dashboard-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;}
   .eb-workspace[data-eb-theme] .eb-dashboard-main-grid,.eb-workspace[data-eb-theme] .eb-dashboard-bottom-grid{gap:14px!important;}
   .eb-workspace[data-eb-theme] .eb-monitor-content{grid-template-columns:minmax(0,1fr)!important;}
-  .eb-workspace[data-eb-theme] .eb-board-header .platform-notification-panel{right:-48px;width:min(340px,calc(100vw - 24px));}
   .eb-workspace[data-eb-theme] .election-management-table-wrapper{overflow:visible!important;}
   .eb-workspace[data-eb-theme] .election-management-table{display:block!important;width:100%!important;min-width:0!important;}
   .eb-workspace[data-eb-theme] .election-management-table thead{display:none!important;}
@@ -349,12 +344,6 @@
 .eb-workspace[data-eb-theme] .election-modal-overlay>div:not(.election-modal-card){background:var(--eb-solid)!important;color:var(--eb-text)!important;border:1px solid var(--eb-border)!important;}
 .eb-workspace[data-eb-theme] .election-modal-overlay>div:not(.election-modal-card) :is(h1,h2,h3,strong){color:var(--eb-text)!important;}
 .eb-workspace[data-eb-theme] .election-modal-overlay>div:not(.election-modal-card) :is(p,small){color:var(--eb-muted)!important;}
-
-/* Keep notification text, controls, and surfaces legible in both themes. */
-.eb-workspace[data-eb-theme] .eb-board-header .platform-notification-panel{background:var(--eb-solid)!important;color:var(--eb-text)!important;border-color:var(--eb-border)!important;}
-.eb-workspace[data-eb-theme] .eb-board-header .platform-notification-panel :is(header,strong,button,p,div,span){color:var(--eb-text)!important;}
-.eb-workspace[data-eb-theme] .eb-board-header .platform-notification-panel :is(p,.notification-read){color:var(--eb-muted)!important;}
-.eb-workspace[data-eb-theme] .eb-board-header .platform-notification-panel button:hover{background:var(--eb-soft)!important;}
 
 @media(max-width:760px){
   .eb-workspace .rr-candidate-list{grid-template-columns:minmax(0,1fr)!important;padding:12px!important;}

@@ -1,0 +1,46 @@
+/* Shared admin controls follow one palette across the operational pages. */
+.admin-workspace[data-admin-theme="light"] {
+    --aw-dot: rgba(67,106,165,.17);
+}
+.admin-workspace[data-admin-theme="light"] .admin-shared-header[data-navigation-theme="light"] {
+    --nav-canvas: #fff; --nav-surface: #fff; --nav-inset: #f0f4fa;
+    --nav-line: #d8e1ed; --nav-muted: #566880; --nav-text: #1c2a40;
+    --nav-brand: #155dfb; --nav-glass: rgba(255,255,255,.9);
+    --nav-header-shadow: rgba(27,47,84,.04);
+    background: var(--nav-glass);
+}
+.admin-workspace[data-admin-theme="light"] .admin-shared-header[data-navigation-theme="light"] .admin-nav-tab:is([aria-current="page"],.is-active),
+.admin-workspace[data-admin-theme="light"] .admin-shared-header[data-navigation-theme="light"] .admin-nav-dropdown a[aria-current="page"] { background: var(--nav-brand); color: #fff; }
+.admin-workspace[data-admin-theme="light"] .admin-shared-header[data-navigation-theme="light"] .admin-nav-tab:is([aria-current="page"],.is-active) .admin-nav-label { color: #fff; }
+.admin-workspace[data-admin-theme] .admin-shared-header .admin-nav-dropdown { border-radius: 10px; }
+.admin-workspace[data-admin-theme="light"] .admin-shared-header .admin-nav-dropdown { box-shadow: 0 12px 32px #1e365619; }
+.admin-workspace[data-admin-theme="light"] :is(input,textarea)::placeholder { color: #687b93 !important; }
+.admin-workspace[data-admin-theme] :is(input,textarea,select):disabled { background: var(--aw-soft) !important; color: var(--aw-muted) !important; }
+.admin-workspace[data-admin-theme] :is(button,a,input,textarea,select):focus-visible { outline: 2px solid var(--aw-link); outline-offset: 3px; }
+.admin-workspace[data-admin-theme="light"] :is(.reports-toolbar,.reports-election-banner,.reports-panel,.reports-summary-card,.reports-stat-card,.dm-stat-card,.dm-chart-card,.dm-table-card) { background: #fff !important; border-color: var(--aw-border) !important; box-shadow: 0 2px 8px #20395605; }
+
+/* Bring dark-mode overview metrics into the compact summary used in light mode. */
+.admin-workspace[data-admin-theme="dark"] .ad-dashboard .ad-metrics { gap: 0; overflow: hidden; border: 1px solid var(--ad-border); border-radius: 14px; background: var(--ad-surface); }
+.admin-workspace[data-admin-theme="dark"] .ad-dashboard .ad-metric { display: grid; grid-template-columns: minmax(0,1fr) 36px; grid-template-areas: "label icon" "value icon" "detail detail"; gap: 5px 12px; padding: 22px 24px; border: 0; border-right: 1px solid var(--ad-border); border-radius: 0; background: transparent; }
+.admin-workspace[data-admin-theme="dark"] .ad-dashboard .ad-metric:last-child { border-right: 0; }
+.admin-workspace[data-admin-theme="dark"] .ad-dashboard .ad-metric:hover { background: var(--ad-inset); }
+.admin-workspace[data-admin-theme="dark"] .ad-dashboard .ad-metric:focus-visible { position: relative; outline-offset: -4px; }
+.admin-workspace[data-admin-theme="dark"] .ad-dashboard .ad-metric-top { grid-area: icon; align-self: start; margin: 0; }
+.admin-workspace[data-admin-theme="dark"] .ad-dashboard .ad-metric-arrow { display: none; }
+.admin-workspace[data-admin-theme="dark"] .ad-dashboard .ad-metric-label { grid-area: label; font-size: 11px; font-weight: 500; }
+.admin-workspace[data-admin-theme="dark"] .ad-dashboard .ad-metric-number { grid-area: value; margin: 1px 0 3px; font-size: 31px; line-height: 1.2; }
+.admin-workspace[data-admin-theme="dark"] .ad-dashboard .ad-number-skeleton { grid-area: value; }
+.admin-workspace[data-admin-theme="dark"] .ad-dashboard .ad-metric-detail { grid-area: detail; font-size: 11px; }
+@media (min-width: 641px) {
+    .admin-workspace[data-admin-theme] .admin-shared-header[data-navigation-theme] { height: 76px; }
+}
+@media (max-width: 1000px) {
+    .admin-workspace[data-admin-theme="dark"] .ad-dashboard .ad-metrics { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .admin-workspace[data-admin-theme="dark"] .ad-dashboard .ad-metric:nth-child(2n) { border-right: 0; }
+    .admin-workspace[data-admin-theme="dark"] .ad-dashboard .ad-metric:nth-child(n+3) { border-top: 1px solid var(--ad-border); }
+}
+@media (max-width: 600px) {
+    .admin-workspace[data-admin-theme="dark"] .ad-dashboard .ad-metric { padding: 18px 14px; grid-template-columns: minmax(0,1fr) 28px; column-gap: 8px; }
+    .admin-workspace[data-admin-theme="dark"] .ad-dashboard .ad-metric .ad-icon { width: 28px; height: 28px; }
+    .admin-workspace[data-admin-theme] :is(input,textarea,select) { font-size: 16px !important; }
+}

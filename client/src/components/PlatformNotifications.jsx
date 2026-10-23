@@ -1,10 +1,11 @@
-import {notificationStorageKey,unreadNotifications,markNotificationsRead,notificationVersion} from "./notificationReadState";
+import {notificationStorageKey,unreadNotifications,markNotificationsRead} from "./notificationReadState";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { FiBell, FiX } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import "./PlatformNotifications.css";
+import NotificationPanel from "./NotificationPanel";
 
 export default function PlatformNotifications({ admin = false, audience = "student", onStatus, onAction, iconSrc }) {
     const role=admin?"admin":audience;
@@ -167,16 +168,19 @@ export default function PlatformNotifications({ admin = false, audience = "stude
         <button type="button" className="platform-bell" aria-label="Notifications" aria-expanded={open} onClick={() => setOpen(value => !value)}>
             {iconSrc ? <img src={iconSrc} alt="" width="24" height="24" /> : <FiBell aria-hidden="true" />}{unread.length > 0 && <span aria-label={`${unread.length} unread notifications`}>{unread.length}</span>}
         </button>
-        {open && <section className="platform-notification-panel" aria-label="Platform notifications">
-            <header><strong>Notifications</strong><button type="button" aria-label="Close notifications" onClick={() => setOpen(false)}><FiX /></button></header>
-            <div className="platform-read-controls"><span role="status">{unread.length ? `${unread.length} unread` : "All caught up"}</span>{unread.length>0 && <button type="button" onClick={()=>markRead(items)}>Mark all as read</button>}</div>
-            {error && <p role="status">{error}</p>}
-            {!items.length && !error && <p>No current updates.</p>}
-            {items.map(item => <div key={item.id} className={read?.[item.id]===notificationVersion(item)?"notification-read":"notification-unread"}><button type="button" className="platform-notification-item" onClick={() => {
+        {open && <NotificationPanel
+            items={items}
+            read={read}
+            unreadCount={unread.length}
+            error={error}
+            theme={notificationTheme}
+            onClose={() => setOpen(false)}
+            onMarkAllRead={() => markRead(items)}
+            onSelect={item => {
                 markRead([item]);
                 setSelectedNotification(item);
-            }}>{item.text}</button></div>)}
-        </section>}
+            }}
+        />}
         {selectedNotification && createPortal(<div className="platform-notification-overlay" data-theme={notificationTheme === "light" ? "light" : "dark"} data-audience={role} onMouseDown={event => { if (event.target === event.currentTarget) setSelectedNotification(null); }}>
             <section className="platform-notification-dialog" role="dialog" aria-modal="true" aria-labelledby="platform-notification-title">
                 <header><h2 id="platform-notification-title">Notification details</h2><button type="button" aria-label="Close notification" onClick={() => setSelectedNotification(null)}><FiX /></button></header>

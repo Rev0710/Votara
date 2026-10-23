@@ -643,15 +643,7 @@ const SystemSettings = () => {
     // =====================================================
 
     const goTo = (path) => {
-        if (isPageTransitioning) {
-            return;
-        }
-
-        setIsPageTransitioning(true);
-
-        window.setTimeout(() => {
-            navigate(path);
-        }, 700);
+        navigate(path);
     };
 
     const handleLogout = () => {
