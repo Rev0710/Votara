@@ -1,3 +1,3 @@
-// Voting pause, schedule and automatic next-morning resume are enabled.
-// Apply server/voting-controls.sql before deploying this configuration.
-module.exports = {enabled:true};
+// Temporary testing mode: pause/resume and election date/hour limits are disabled.
+// Apply server/testing-voting.sql and deploy both services. Restore with voting-controls.sql.
+module.exports = {enabled:false};

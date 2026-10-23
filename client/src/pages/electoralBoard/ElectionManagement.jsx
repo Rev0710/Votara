@@ -28,7 +28,7 @@ import "./ElectionManagement.css";
 // =========================================================
 
 // Enabled with the matching server voting controls and SQL migration.
-const VOTING_CONTROLS_ENABLED = true;
+const VOTING_CONTROLS_ENABLED = false;
 const YEAR_LEVELS = [
     "2nd Year",
     "3rd Year",
