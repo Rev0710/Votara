@@ -1,2 +1,3 @@
-// Temporary overnight testing switch. Restore to true with voting-controls.sql.
-module.exports = {enabled:false};
+// Voting pause, schedule and automatic next-morning resume are enabled.
+// Apply server/voting-controls.sql before deploying this configuration.
+module.exports = {enabled:true};

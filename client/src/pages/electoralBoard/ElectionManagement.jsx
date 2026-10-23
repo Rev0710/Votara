@@ -27,8 +27,8 @@ import "./ElectionManagement.css";
 // CONSTANTS
 // =========================================================
 
-// Temporary testing switch; restore alongside server voting controls.
-const VOTING_CONTROLS_ENABLED = false;
+// Enabled with the matching server voting controls and SQL migration.
+const VOTING_CONTROLS_ENABLED = true;
 const YEAR_LEVELS = [
     "2nd Year",
     "3rd Year",

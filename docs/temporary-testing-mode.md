@@ -1,3 +1,7 @@
+> Current state: Pause/Resume has been restored in source. Apply the complete
+> server/voting-controls.sql and deploy both services to restore production
+> enforcement and automatic next-morning resume. The testing instructions below
+> are retained only for a future explicitly requested testing session.
 # Temporary overnight testing mode
 
 Pause/resume and voting date/hour restrictions are temporarily disabled.

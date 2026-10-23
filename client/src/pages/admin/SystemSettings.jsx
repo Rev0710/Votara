@@ -684,7 +684,7 @@ const SystemSettings = () => {
                     <>
                         <div className="platform-notice-reference-header">
                             <div className="platform-notice-reference-title">
-                                <span className="platform-notice-reference-breadcrumb"><i /> System messaging</span>
+
                                 <h1>Platform notices</h1>
                                 <p>Publish platform service messages and review exactly what users will see.</p>
                             </div>
@@ -745,7 +745,7 @@ const SystemSettings = () => {
                             <div className="platform-notice-review-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowNoticeReview(false); }}>
                                 <section className="platform-notice-review-modal" role="dialog" aria-modal="true" aria-labelledby="platform-notice-review-title">
                                     <div className="platform-notice-review-header">
-                                        <div><span>System messaging</span><h2 id="platform-notice-review-title">Review &amp; publish</h2><p>Confirm the notice before saving it as the current platform notice.</p></div>
+                                        <div><h2 id="platform-notice-review-title">Review &amp; publish</h2><p>Confirm the notice before saving it as the current platform notice.</p></div>
                                         <button type="button" onClick={() => setShowNoticeReview(false)} aria-label="Close review">×</button>
                                     </div>
                                     <div className="platform-notice-review-preview"><strong>Service notice</strong><p>{settings.platformNoticeDraft ?? settings.platformNotice}</p></div>
@@ -763,9 +763,7 @@ const SystemSettings = () => {
                             <div className="system-config-reference-title-row">
                                 <div>
 
-                                    <div className="system-config-reference-eyebrow">
-                                        SYSTEM CONFIGURATION
-                                    </div>
+
                                     <h1>Maintenance</h1>
                                     <p>
                                         Schedule downtime with a clear audience, time zone and impact review.

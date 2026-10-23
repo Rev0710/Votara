@@ -619,109 +619,109 @@ const checkSystem = async () => {
     ];
 
     if (!admin) {
-        return <div className="ad-dashboard ad-session-loading" role="status"><FiRefreshCw className="ad-spinning" size={24} /><p>Loading your dashboard…</p></div>;
+        return <div className="admin-overview-dashboard admin-overview-session-loading" role="status"><FiRefreshCw className="admin-overview-spinning" size={24} /><p>Loading your dashboard…</p></div>;
     }
 
     return (
-        <div className="ad-dashboard admin-polished-page">
+        <div className="admin-overview-dashboard admin-polished-page">
             {isPageTransitioning && <PageLoader />}
-            <a className="ad-skip-link" href="#admin-dashboard-content">Skip to dashboard</a>
+            <a className="admin-overview-skip-link" href="#admin-dashboard-content">Skip to dashboard</a>
             <AdminTopNav admin={admin} onLogout={confirmLogout} />
-            <main className="ad-main" id="admin-dashboard-content" tabIndex={-1}>
-                <header className="ad-page-heading">
+            <main className="admin-overview-main" id="admin-dashboard-content" tabIndex={-1}>
+                <header className="admin-overview-page-heading">
                     <div>
-                        <div className="ad-eyebrow">Administration <span>/</span> Overview</div>
+                        <div className="admin-overview-eyebrow">Administration <span>/</span> Overview</div>
                         <h1>Admin dashboard</h1>
                         <p>Your accounts, elections, and platform activity in one place.</p>
                     </div>
-                    <div className="ad-heading-actions">
-                        <button type="button" className="ad-button ad-button-secondary" onClick={handleRefresh} disabled={dashboardLoading}>
-                            <FiRefreshCw className={dashboardLoading ? "ad-spinning" : undefined} aria-hidden="true" />
+                    <div className="admin-overview-heading-actions">
+                        <button type="button" className="admin-overview-button admin-overview-button-secondary" onClick={handleRefresh} disabled={dashboardLoading}>
+                            <FiRefreshCw className={dashboardLoading ? "admin-overview-spinning" : undefined} aria-hidden="true" />
                             {dashboardLoading ? "Refreshing…" : "Refresh"}
                         </button>
-                        <button type="button" className="ad-button ad-button-primary" onClick={() => goTo("/admin/users")}>
+                        <button type="button" className="admin-overview-button admin-overview-button-primary" onClick={() => goTo("/admin/users")}>
                             <FiUserPlus aria-hidden="true" />Invite user
                         </button>
                     </div>
                 </header>
 
                 {dashboardError && (
-                    <div className="ad-error" role="alert">
+                    <div className="admin-overview-error" role="alert">
                         <FiAlertCircle size={20} aria-hidden="true" />
                         <div><strong>Unable to refresh dashboard data</strong><p>{dashboardError}{hasData ? " Showing the last available data." : ""}</p></div>
                         <button type="button" onClick={handleRefresh} disabled={dashboardLoading}>Try again <FiRefreshCw aria-hidden="true" /></button>
                     </div>
                 )}
 
-                <section className="ad-metrics" aria-label="Account and election overview" aria-busy={dashboardLoading}>
+                <section className="admin-overview-metrics" aria-label="Account and election overview" aria-busy={dashboardLoading}>
                     {overviewMetrics.map(({ label, value, detail, icon: Icon, path, attention }) => (
-                        <button type="button" className={`ad-metric${attention ? " ad-metric-attention" : ""}`} key={label} onClick={() => goTo(path)}>
-                            <span className="ad-metric-top"><span className="ad-icon"><Icon size={18} aria-hidden="true" /></span><FiChevronRight size={16} className="ad-metric-arrow" aria-hidden="true" /></span>
-                            <span className="ad-metric-label">{label}</span>
-                            {dashboardLoading && !hasData ? <span className="ad-skeleton ad-number-skeleton" aria-label="Loading" /> : <strong className="ad-metric-number">{displayCount(value)}</strong>}
-                            <span className="ad-metric-detail">{detail}{attention && <span className="ad-attention-dot" aria-label="Needs review" />}</span>
+                        <button type="button" className={`admin-overview-metric${attention ? " admin-overview-metric-attention" : ""}`} key={label} onClick={() => goTo(path)}>
+                            <span className="admin-overview-metric-top"><span className="admin-overview-icon"><Icon size={18} aria-hidden="true" /></span><FiChevronRight size={16} className="admin-overview-metric-arrow" aria-hidden="true" /></span>
+                            <span className="admin-overview-metric-label">{label}</span>
+                            {dashboardLoading && !hasData ? <span className="admin-overview-skeleton admin-overview-number-skeleton" aria-label="Loading" /> : <strong className="admin-overview-metric-number">{displayCount(value)}</strong>}
+                            <span className="admin-overview-metric-detail">{detail}{attention && <span className="admin-overview-attention-dot" aria-label="Needs review" />}</span>
                         </button>
                     ))}
                 </section>
 
-                <div className="ad-content-grid">
-                    <section className="ad-panel ad-election-panel" aria-labelledby="ad-election-title">
-                        <div className="ad-panel-heading"><h2 id="ad-election-title">Election overview</h2><button className="ad-text-button" onClick={() => goTo("/admin/reports")}>View reports <FiChevronRight aria-hidden="true" /></button></div>
-                        <div className="ad-election-current">
-                            <span className="ad-election-icon"><FiCalendar size={24} aria-hidden="true" /></span>
-                            <div><span className="ad-label">Current election</span><h3>{dashboardLoading && !hasData ? "Loading election…" : election.election?.title || "No current election"}</h3></div>
-                            <span className="ad-badge">{hasData ? election.status : "Checking"}</span>
+                <div className="admin-overview-content-grid">
+                    <section className="admin-overview-panel admin-overview-election-panel" aria-labelledby="admin-overview-election-title">
+                        <div className="admin-overview-panel-heading"><h2 id="admin-overview-election-title">Election overview</h2><button className="admin-overview-text-button" onClick={() => goTo("/admin/reports")}>View reports <FiChevronRight aria-hidden="true" /></button></div>
+                        <div className="admin-overview-election-current">
+                            <span className="admin-overview-election-icon"><FiCalendar size={24} aria-hidden="true" /></span>
+                            <div><span className="admin-overview-label">Current election</span><h3>{dashboardLoading && !hasData ? "Loading election…" : election.election?.title || "No current election"}</h3></div>
+                            <span className="admin-overview-badge">{hasData ? election.status : "Checking"}</span>
                         </div>
-                        <p className="ad-election-description">Review election schedules, participation, and results from the latest platform data.</p>
-                        <div className="ad-review-callout">
-                            <span className="ad-callout-icon"><FiUserCheck size={20} aria-hidden="true" /></span>
+                        <p className="admin-overview-election-description">Review election schedules, participation, and results from the latest platform data.</p>
+                        <div className="admin-overview-review-callout">
+                            <span className="admin-overview-callout-icon"><FiUserCheck size={20} aria-hidden="true" /></span>
                             <div><strong>{!hasData ? "Registration review" : pending > 0 ? `${displayCount(pending)} application${pending === 1 ? "" : "s"} awaiting review` : "Your review queue is clear"}</strong><p>Check eligibility before approving late enrollees.</p></div>
-                            <button type="button" className="ad-button ad-button-secondary" onClick={() => goTo("/admin/late-enrollees")}>Open queue <FiChevronRight aria-hidden="true" /></button>
+                            <button type="button" className="admin-overview-button admin-overview-button-secondary" onClick={() => goTo("/admin/late-enrollees")}>Open queue <FiChevronRight aria-hidden="true" /></button>
                         </div>
-                        <div className="ad-election-footer"><span><FiShield aria-hidden="true" />Administrative actions are recorded in the audit log.</span><button type="button" className="ad-text-button" onClick={() => goTo("/admin/audit-logs")}>View log</button></div>
+                        <div className="admin-overview-election-footer"><span><FiShield aria-hidden="true" />Administrative actions are recorded in the audit log.</span><button type="button" className="admin-overview-text-button" onClick={() => goTo("/admin/audit-logs")}>View log</button></div>
                     </section>
 
-                    <section className="ad-panel ad-health-panel" aria-labelledby="ad-health-title">
-                        <div className="ad-panel-heading"><h2 id="ad-health-title">Platform health</h2><span className={`ad-status${isOnline ? " ad-status-online" : ""}`}><i aria-hidden="true" />{dashboardLoading && !hasData ? "Checking" : isOnline ? "Operational" : "Needs attention"}</span></div>
-                        <dl className="ad-health-list">
+                    <section className="admin-overview-panel admin-overview-health-panel" aria-labelledby="admin-overview-health-title">
+                        <div className="admin-overview-panel-heading"><h2 id="admin-overview-health-title">Platform health</h2><span className={`admin-overview-status${isOnline ? " admin-overview-status-online" : ""}`}><i aria-hidden="true" />{dashboardLoading && !hasData ? "Checking" : isOnline ? "Operational" : "Needs attention"}</span></div>
+                        <dl className="admin-overview-health-list">
                             <div><dt><FiActivity aria-hidden="true" />API connection</dt><dd>{systemStatus.api}</dd></div>
                             <div><dt><FiDatabase aria-hidden="true" />Database</dt><dd>{hasData && !dashboardError ? health.database : dashboardLoading ? "Checking" : "Unverified"}</dd></div>
                             <div><dt><FiClock aria-hidden="true" />Server uptime</dt><dd>{!hasData || usage.uptimeSeconds == null ? "—" : usage.uptimeSeconds < 3600 ? `${Math.floor(usage.uptimeSeconds / 60)}m` : `${Math.floor(usage.uptimeSeconds / 3600)}h ${Math.floor((usage.uptimeSeconds % 3600) / 60)}m`}</dd></div>
                         </dl>
-                        <div className="ad-memory"><div><span>Server memory</span><strong>{memoryPercent == null ? "—" : `${memoryPercent}%`}</strong></div><progress value={Math.max(0, Math.min(100, Number(memoryPercent) || 0))} max="100" aria-label="Server memory usage" /><span>Node.js heap utilization</span></div>
-                        <button type="button" className="ad-panel-footer-link" onClick={() => goTo("/admin/settings")}>System configuration <FiChevronRight aria-hidden="true" /></button>
+                        <div className="admin-overview-memory"><div><span>Server memory</span><strong>{memoryPercent == null ? "—" : `${memoryPercent}%`}</strong></div><progress value={Math.max(0, Math.min(100, Number(memoryPercent) || 0))} max="100" aria-label="Server memory usage" /><span>Node.js heap utilization</span></div>
+                        <button type="button" className="admin-overview-panel-footer-link" onClick={() => goTo("/admin/settings")}>System configuration <FiChevronRight aria-hidden="true" /></button>
                     </section>
 
-                    <section className="ad-panel ad-activity-panel" aria-labelledby="ad-activity-title" aria-busy={dashboardLoading}>
-                        <div className="ad-panel-heading"><div><h2 id="ad-activity-title">Recent activity</h2><p>The latest actions across your platform.</p></div><button type="button" className="ad-text-button" onClick={() => goTo("/admin/audit-logs")}>View all <FiChevronRight aria-hidden="true" /></button></div>
-                        {dashboardLoading && !hasData ? <div className="ad-activity-loading" role="status" aria-label="Loading recent activity">{[0, 1, 2].map((item) => <div className="ad-skeleton ad-line-skeleton" key={item} />)}</div> : recentLogs.length ? (
-                            <ul className="ad-activity-list">{recentLogs.slice(0, 5).map((log, index) => (
-                                <li key={log.id || `${log.action}-${index}`}><button type="button" onClick={() => goTo("/admin/audit-logs")}><span className="ad-activity-icon"><FiActivity size={16} aria-hidden="true" /></span><span className="ad-activity-copy">{log.description || log.action || "System activity"}</span><time dateTime={log.created_at || undefined}>{log.created_at ? formatRelativeTime(log.created_at) : "—"}</time><FiChevronRight size={14} className="ad-activity-arrow" aria-hidden="true" /></button></li>
+                    <section className="admin-overview-panel admin-overview-activity-panel" aria-labelledby="admin-overview-activity-title" aria-busy={dashboardLoading}>
+                        <div className="admin-overview-panel-heading"><div><h2 id="admin-overview-activity-title">Recent activity</h2><p>The latest actions across your platform.</p></div><button type="button" className="admin-overview-text-button" onClick={() => goTo("/admin/audit-logs")}>View all <FiChevronRight aria-hidden="true" /></button></div>
+                        {dashboardLoading && !hasData ? <div className="admin-overview-activity-loading" role="status" aria-label="Loading recent activity">{[0, 1, 2].map((item) => <div className="admin-overview-skeleton admin-overview-line-skeleton" key={item} />)}</div> : recentLogs.length ? (
+                            <ul className="admin-overview-activity-list">{recentLogs.slice(0, 5).map((log, index) => (
+                                <li key={log.id || `${log.action}-${index}`}><button type="button" onClick={() => goTo("/admin/audit-logs")}><span className="admin-overview-activity-icon"><FiActivity size={16} aria-hidden="true" /></span><span className="admin-overview-activity-copy">{log.description || log.action || "System activity"}</span><time dateTime={log.created_at || undefined}>{log.created_at ? formatRelativeTime(log.created_at) : "—"}</time><FiChevronRight size={14} className="admin-overview-activity-arrow" aria-hidden="true" /></button></li>
                             ))}</ul>
-                        ) : <div className="ad-empty"><FiFileText size={26} aria-hidden="true" /><strong>{dashboardError ? "Activity unavailable" : "No activity yet"}</strong><p>{dashboardError ? "Try refreshing to load platform activity." : "Administrative actions will appear here as your team uses VOTARA."}</p></div>}
-                        <div className="ad-activity-total"><FiFileText aria-hidden="true" /><span>{displayCount(systemDashboard.activityLogs.total)} recorded audit activities</span></div>
+                        ) : <div className="admin-overview-empty"><FiFileText size={26} aria-hidden="true" /><strong>{dashboardError ? "Activity unavailable" : "No activity yet"}</strong><p>{dashboardError ? "Try refreshing to load platform activity." : "Administrative actions will appear here as your team uses VOTARA."}</p></div>}
+                        <div className="admin-overview-activity-total"><FiFileText aria-hidden="true" /><span>{displayCount(systemDashboard.activityLogs.total)} recorded audit activities</span></div>
                     </section>
 
-                    <section className="ad-panel ad-access-panel" aria-labelledby="ad-access-title">
-                        <div className="ad-panel-heading"><h2 id="ad-access-title">Account overview</h2><span className="ad-muted">{displayCount(stats.totalUsers)} total</span></div>
-                        <div className="ad-account-bar" aria-hidden="true"><span style={{ width: `${stats.totalUsers ? Math.min(100, (stats.totalStudents / stats.totalUsers) * 100) : 0}%` }} /></div>
-                        <dl className="ad-account-list"><div><dt><i className="ad-student-dot" />Students / voters</dt><dd>{displayCount(stats.totalStudents)}</dd></div><div><dt><i className="ad-staff-dot" />Staff accounts</dt><dd>{displayCount(stats.totalStaff)}</dd></div></dl>
-                        <button type="button" className="ad-account-action" onClick={() => goTo("/admin/data-management")}><span className="ad-icon"><FiUsers size={18} aria-hidden="true" /></span><span><strong>Student management</strong><span>View and manage registered students</span></span><FiChevronRight aria-hidden="true" /></button>
-                        <button type="button" className="ad-account-action" onClick={() => goTo("/admin/users")}><span className="ad-icon"><FiShield size={18} aria-hidden="true" /></span><span><strong>Staff and access</strong><span>Manage accounts and permissions</span></span><FiChevronRight aria-hidden="true" /></button>
+                    <section className="admin-overview-panel admin-overview-access-panel" aria-labelledby="admin-overview-access-title">
+                        <div className="admin-overview-panel-heading"><h2 id="admin-overview-access-title">Account overview</h2><span className="admin-overview-muted">{displayCount(stats.totalUsers)} total</span></div>
+                        <div className="admin-overview-account-bar" aria-hidden="true"><span style={{ width: `${stats.totalUsers ? Math.min(100, (stats.totalStudents / stats.totalUsers) * 100) : 0}%` }} /></div>
+                        <dl className="admin-overview-account-list"><div><dt><i className="admin-overview-student-dot" />Students / voters</dt><dd>{displayCount(stats.totalStudents)}</dd></div><div><dt><i className="admin-overview-staff-dot" />Staff accounts</dt><dd>{displayCount(stats.totalStaff)}</dd></div></dl>
+                        <button type="button" className="admin-overview-account-action" onClick={() => goTo("/admin/data-management")}><span className="admin-overview-icon"><FiUsers size={18} aria-hidden="true" /></span><span><strong>Student management</strong><span>View and manage registered students</span></span><FiChevronRight aria-hidden="true" /></button>
+                        <button type="button" className="admin-overview-account-action" onClick={() => goTo("/admin/users")}><span className="admin-overview-icon"><FiShield size={18} aria-hidden="true" /></span><span><strong>Staff and access</strong><span>Manage accounts and permissions</span></span><FiChevronRight aria-hidden="true" /></button>
                     </section>
                 </div>
 
-                <section className="ad-panel ad-configuration" aria-labelledby="ad-configuration-title">
-                    <div className="ad-panel-heading"><div><h2 id="ad-configuration-title">Configuration snapshot</h2><p>Your current platform settings.</p></div><button type="button" className="ad-text-button" onClick={() => goTo("/admin/settings")}>Manage settings <FiChevronRight aria-hidden="true" /></button></div>
-                    <dl className="ad-config-grid">{[
+                <section className="admin-overview-panel admin-overview-configuration" aria-labelledby="admin-overview-configuration-title">
+                    <div className="admin-overview-panel-heading"><div><h2 id="admin-overview-configuration-title">Configuration snapshot</h2><p>Your current platform settings.</p></div><button type="button" className="admin-overview-text-button" onClick={() => goTo("/admin/settings")}>Manage settings <FiChevronRight aria-hidden="true" /></button></div>
+                    <dl className="admin-overview-config-grid">{[
                         ["Voting window", systemSettings?.votingPeriod || "Not configured", FiCalendar],
                         ["Session timeout", systemSettings?.sessionTimeout ? `${systemSettings?.sessionTimeout} minutes` : "Not configured", FiClock],
                         ["Automatic backup", systemSettings?.autoBackup ? `Enabled · ${systemSettings.backupFrequency || "Scheduled"}` : "Disabled", FiDatabase],
                         ["Maintenance mode", systemSettings?.maintenanceMode ? "Enabled" : "Disabled", FiSettings],
                     ].map(([label, value, Icon]) => <div key={label}><dt><Icon aria-hidden="true" />{label}</dt><dd>{dashboardLoading && !hasData ? "Loading…" : systemSettings ? value : "Unavailable"}</dd></div>)}</dl>
-                    <div className="ad-security-note"><FiShield size={16} aria-hidden="true" /><span>{!systemSettings ? "Security settings unavailable" : systemSettings?.twoStepVerification ? "Two-step verification is enabled" : "Review your security settings"}</span><button type="button" className="ad-text-button" onClick={() => goTo("/admin/settings?section=security")}>Security settings <FiChevronRight aria-hidden="true" /></button></div>
+                    <div className="admin-overview-security-note"><FiShield size={16} aria-hidden="true" /><span>{!systemSettings ? "Security settings unavailable" : systemSettings?.twoStepVerification ? "Two-step verification is enabled" : "Review your security settings"}</span><button type="button" className="admin-overview-text-button" onClick={() => goTo("/admin/settings?section=security")}>Security settings <FiChevronRight aria-hidden="true" /></button></div>
                 </section>
-                <footer className="ad-footer"><span>VOTARA <span>Administration workspace</span></span><span aria-live="polite">{dashboardLoading ? "Updating dashboard…" : lastUpdated ? `Last updated at ${formatDate(lastUpdated)}` : "Waiting for dashboard data"}</span></footer>
+                <footer className="admin-overview-footer"><span>VOTARA <span>Administration workspace</span></span><span aria-live="polite">{dashboardLoading ? "Updating dashboard…" : lastUpdated ? `Last updated at ${formatDate(lastUpdated)}` : "Waiting for dashboard data"}</span></footer>
             </main>
         </div>
     );
