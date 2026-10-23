@@ -437,3 +437,11 @@
 @media(prefers-reduced-transparency:reduce) {
     #student-workspace dialog.logout-confirmation-overlay::backdrop {background:rgba(6,14,29,.82);backdrop-filter:none;}
 }
+
+#student-workspace .student-voting-window {display:flex;flex-direction:column;gap:4px;}
+#student-workspace .student-voting-window strong {color:var(--student-text);font-size:14px;}
+#student-workspace .student-voting-window span {color:var(--student-muted);}
+#student-workspace .election-card .election-status-badge.status-paused {background:var(--student-warning-bg);color:var(--student-warning) !important;}
+#student-workspace .sidebar-item:disabled {cursor:not-allowed;opacity:.65;}
+#student-workspace .directory-candidate-card[inert] {opacity:.7;cursor:not-allowed;}
+#student-workspace .candidate-vote-button:disabled {cursor:not-allowed;}

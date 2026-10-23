@@ -1807,6 +1807,7 @@ const approveRegistration =
             positionId,
             candidateId
         ) => {
+            if(!votingGate.available)return;
 
             setSelections(
                 (current) => ({
@@ -1826,6 +1827,7 @@ const approveRegistration =
 
     const submitKioskVote =
         async () => {
+            if(!votingGate.available){setError(votingGate.message);return;}
 
             const missing =
                 requiredPositions.filter(
@@ -2288,7 +2290,7 @@ const approveRegistration =
                                 >
 
                                     {
-                                        actionLoading
+                                        votingGate.paused ? "Paused" : actionLoading
                                             ? "Authorizing..."
                                             : "Continue to Vote"
                                     }
@@ -3345,6 +3347,7 @@ const approveRegistration =
 
                                                                         <input
                                                                             type="radio"
+                                                                            disabled={!votingGate.available}
                                                                             name={`position-${position.id}`}
                                                                             checked={
                                                                                 selections[
@@ -3432,7 +3435,7 @@ const approveRegistration =
                             >
 
                                 {
-                                    actionLoading
+                                    votingGate.paused ? "Paused" : actionLoading
                                         ? "Submitting Ballot..."
                                         : "Submit Ballot"
                                 }

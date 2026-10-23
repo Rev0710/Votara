@@ -703,6 +703,7 @@ const Vote = () => {
         positionId,
         candidateId
     ) => {
+        if(!votingGate.available){setError(votingGate.message);return;}
 
         const electionStatus =
             String(
@@ -750,6 +751,7 @@ const Vote = () => {
     // =====================================================
 
     const handleReviewVote = () => {
+        if(!votingGate.available){setError(votingGate.message);return;}
 
         setError("");
         setSuccess("");
@@ -832,6 +834,7 @@ const Vote = () => {
 
     const handleSubmitVote =
         async () => {
+            if(!votingGate.available){setError(votingGate.message);return;}
 
             try {
 
@@ -1746,7 +1749,7 @@ const Vote = () => {
                                     type="button"
                                     className={`vote-position-abstain${selections[position.id] ? "" : " is-selected"}`}
                                     aria-pressed={!selections[position.id]}
-                                    disabled={submitting || hasVoted}
+                                    disabled={submitting || hasVoted || !votingGate.available}
                                     onClick={() => setSelections(previous => ({ ...previous, [position.id]: null }))}
                                 >
                                     {selections[position.id] ? "Abstain from this position" : "Abstention selected"}
@@ -1869,6 +1872,7 @@ const Vote = () => {
                                                             <button
                                                                 type="button"
                                                                 className="candidate-vote-button"
+                                                                disabled={!votingGate.available}
                                                                 onClick={() =>
                                                                     handleCandidateSelect(
                                                                         position.id,
@@ -1876,9 +1880,7 @@ const Vote = () => {
                                                                     )
                                                                 }
                                                             >
-                                                                {selected
-                                                                    ? "Selected"
-                                                                    : "Vote"}
+                                                                {votingGate.paused ? "Paused" : selected ? "Selected" : "Vote"}
                                                             </button>
 
                                                         </div>
@@ -1921,7 +1923,7 @@ const Vote = () => {
                         }
                         disabled={submitting || !votingGate.available}
                     >
-                        Review Vote
+                        {votingGate.paused ? "Paused" : "Review Vote"}
                     </button>
 
                 </div>
