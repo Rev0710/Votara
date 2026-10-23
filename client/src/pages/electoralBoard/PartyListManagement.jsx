@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { getAllElections } from "../../services/electionService";
 import "./PartyListManagement.css";
+import { FiSearch } from "react-icons/fi";
+import PartyActionMenu from "./PartyListActionMenu";
 
 
 // =====================================================
@@ -1294,15 +1296,11 @@ const PartyListManagement = ({ initialElectionId = "", positionContext = null })
             ================================================= */}
 
             <div
-                style={
-                    styles.card
-                }
+                className="plm-party-register"
             >
 
                 <div
-                    style={
-                        styles.tableHeader
-                    }
+                    className="plm-party-list-header"
                 >
 
                     <div>
@@ -1328,23 +1326,20 @@ const PartyListManagement = ({ initialElectionId = "", positionContext = null })
                     </div>
 
                     <div
-                        style={
-                            styles.searchWrapper
-                        }
+                        className="plm-party-search"
                     >
 
                         <span
-                            style={
-                                styles.searchIcon
-                            }
+                            className="plm-party-search-icon"
                         >
-                            🔎
+                            <FiSearch aria-hidden="true" />
                         </span>
 
                         <input
                             type="text"
                             className="plm-search-input"
                             placeholder="Search party list..."
+                            aria-label="Search party lists"
                             value={search}
                             onChange={(
                                 event
@@ -1354,9 +1349,7 @@ const PartyListManagement = ({ initialElectionId = "", positionContext = null })
                                         .value
                                 )
                             }
-                            style={
-                                styles.searchInput
-                            }
+
                         />
 
                     </div>
@@ -1480,9 +1473,7 @@ const PartyListManagement = ({ initialElectionId = "", positionContext = null })
                 ) : (
 
                     <div
-                        style={
-                            styles.partyListContainer
-                        }
+                        className="plm-party-list"
                     >
 
                         {filteredPartyLists.map(
@@ -2554,190 +2545,6 @@ const Feature = ({
 };
 
 // =====================================================
-// PARTY ACTION MENU
-// =====================================================
-
-const PartyActionMenu = ({
-    party,
-    onEdit,
-    onCandidates,
-    onActivate,
-    onDeactivate,
-    onDelete,
-    actionLoading,
-}) => {
-    const [open, setOpen] = useState(false);
-
-    const close = () => setOpen(false);
-
-    const run = (callback) => {
-        close();
-        callback?.();
-    };
-
-    return (
-        <div style={styles.menuWrapper}>
-
-            <button
-                type="button"
-                style={styles.menuButton}
-                onClick={() =>
-                    setOpen(
-                        (value) => !value
-                    )
-                }
-                aria-label={`Actions for ${
-                    party?.name ||
-                    "party list"
-                }`}
-                aria-expanded={open}
-            >
-                ⋮
-            </button>
-
-            {open && (
-                <>
-
-                    <button
-                        type="button"
-                        style={styles.menuBackdrop}
-                        onClick={close}
-                        aria-label="Close menu"
-                    />
-
-                    <div
-                        style={
-                            styles.actionMenu
-                        }
-                    >
-
-                        {/* CANDIDATES */}
-
-                        <button
-                            type="button"
-                            style={
-                                styles.menuItem
-                            }
-                            onClick={() =>
-                                run(
-                                    onCandidates
-                                )
-                            }
-                        >
-                            Candidates
-                        </button>
-
-                        {/* EDIT PARTY LIST */}
-
-                        <button
-                            type="button"
-                            style={
-                                styles.menuItem
-                            }
-                            onClick={() =>
-                                run(
-                                    onEdit
-                                )
-                            }
-                        >
-                            Edit Party List
-                        </button>
-
-                        {/* ACTIVATE / DEACTIVATE */}
-
-                        {party?.is_active ? (
-
-                            <button
-                                type="button"
-                                style={
-                                    styles.menuItem
-                                }
-                                onClick={() =>
-                                    run(
-                                        onDeactivate
-                                    )
-                                }
-                                disabled={
-                                    actionLoading ===
-                                    `deactivate-${party.id}`
-                                }
-                            >
-                                {
-                                    actionLoading ===
-                                    `deactivate-${party.id}`
-                                        ? "Deactivating..."
-                                        : "Deactivate"
-                                }
-                            </button>
-
-                        ) : (
-
-                            <button
-                                type="button"
-                                style={
-                                    styles.menuItem
-                                }
-                                onClick={() =>
-                                    run(
-                                        onActivate
-                                    )
-                                }
-                                disabled={
-                                    actionLoading ===
-                                    `activate-${party.id}`
-                                }
-                            >
-                                {
-                                    actionLoading ===
-                                    `activate-${party.id}`
-                                        ? "Activating..."
-                                        : "Activate"
-                                }
-                            </button>
-
-                        )}
-
-                        <div
-                            style={
-                                styles.menuDivider
-                            }
-                        />
-
-                        {/* DELETE PARTY LIST */}
-
-                        <button
-                            type="button"
-                            style={
-                                styles.menuDeleteItem
-                            }
-                            onClick={() =>
-                                run(
-                                    onDelete
-                                )
-                            }
-                            disabled={
-                                actionLoading ===
-                                `delete-${party.id}`
-                            }
-                        >
-                            {
-                                actionLoading ===
-                                `delete-${party.id}`
-                                    ? "Deleting..."
-                                    : "Delete Party List"
-                            }
-                        </button>
-
-                    </div>
-
-                </>
-            )}
-
-        </div>
-    );
-};
-
-// =====================================================
 // PARTY ROW
 // =====================================================
 
@@ -2752,10 +2559,7 @@ const PartyRow = ({
 }) => {
     return (
         <div
-            className="party-row"
-            style={
-                styles.partyRow
-            }
+            className="party-row plm-party-row"
         >
 
             <PartyLogo
@@ -2765,23 +2569,14 @@ const PartyRow = ({
 
             <div
                 className="party-main"
-                style={
-                    styles.partyMain
-                }
             >
 
                 <div
                     className="party-name-row"
-                    style={
-                        styles.partyNameRow
-                    }
                 >
 
                     <h4
                         className="party-name"
-                        style={
-                            styles.partyName
-                        }
                     >
                         {party.name}
                     </h4>
@@ -2792,25 +2587,12 @@ const PartyRow = ({
                         }
                     />
 
-                    <span
-                        style={
-                            party.is_active
-                                ? styles.activeBadge
-                                : styles.inactiveBadge
-                        }
-                    >
-                        {party.is_active
-                            ? "Active"
-                            : "Inactive"}
-                    </span>
+                    <StatusBadge status={party.is_active ? "active" : "inactive"} />
 
                 </div>
 
                 <p
                     className="party-description"
-                    style={
-                        styles.partyDescription
-                    }
                 >
                     {party.description ||
                         "No description provided."}
@@ -2820,9 +2602,6 @@ const PartyRow = ({
 
             <div
                 className="party-actions"
-                style={
-                    styles.partyActions
-                }
             >
 
                 <PartyActionMenu
@@ -2867,8 +2646,8 @@ const PartyLogo = ({
                     party.logo_url
                 }
                 alt={`${party.name || "Party"} logo`}
+                className="plm-party-logo"
                 style={{
-                    ...styles.partyLogo,
                     width: `${size}px`,
                     height: `${size}px`,
                 }}
@@ -2881,8 +2660,8 @@ const PartyLogo = ({
 
     return (
         <div
+            className="plm-party-logo-fallback"
             style={{
-                ...styles.partyLogoPlaceholder,
                 width: `${size}px`,
                 height: `${size}px`,
             }}
@@ -2901,65 +2680,11 @@ const PartyLogo = ({
 // STATUS BADGE
 // =====================================================
 
-function StatusBadge({
-    status,
-}) {
-
-    const normalized =
-        String(
-            status || ""
-        ).toLowerCase();
-
-    let label = "Pending";
-    let style =
-        styles.pendingBadge;
-
-    if (
-        normalized ===
-        "approved"
-    ) {
-        label = "Approved";
-        style =
-            styles.approvedBadge;
-    }
-
-    if (
-        normalized ===
-        "rejected"
-    ) {
-        label = "Rejected";
-        style =
-            styles.rejectedBadge;
-    }
-
-    if (
-        normalized ===
-        "active"
-    ) {
-        label = "Active";
-        style =
-            styles.approvedBadge;
-    }
-
-    if (
-        normalized ===
-        "inactive"
-    ) {
-        label = "Inactive";
-        style =
-            styles.rejectedBadge;
-    }
-
-    return (
-        <span
-            style={
-                style
-            }
-        >
-            {label}
-        </span>
-    );
-};
+function StatusBadge({ status }) {
+    const normalized = String(status || "pending").trim().toLowerCase();
+    const labels = { approved: "Approved", rejected: "Rejected", active: "Active", inactive: "Inactive" };
+    return <span className="plm-status-badge" data-status={labels[normalized] ? normalized : "pending"}>{labels[normalized] || "Pending"}</span>;
+}
 
 // =====================================================
 // CONFIRMATION MODAL
@@ -3410,187 +3135,6 @@ const styles = {
         alignSelf: "center",
     },
 
-    tableHeader: {
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        gap: "20px",
-        marginBottom: "20px",
-    },
-
-    searchWrapper: {
-        position: "relative",
-        width: "240px",
-    },
-
-    searchIcon: {
-        position: "absolute",
-        left: "11px",
-        top: "50%",
-        transform:
-            "translateY(-50%)",
-        fontSize: "12px",
-    },
-
-    searchInput: {
-        width: "100%",
-        boxSizing: "border-box",
-        border: "1px solid rgba(151, 170, 220, 0.28)",
-        borderRadius: "9px",
-        padding:
-            "10px 12px 10px 32px",
-        fontSize: "11px",
-        outline: "none",
-
-        background: "rgba(12, 18, 40, 0.72)",    },
-
-    partyListContainer: {
-        display: "flex",
-        flexDirection: "column",
-        gap: "10px",
-
-        color: "#f3f6ff",    },
-
-    partyRow: {
-        display: "flex",
-        alignItems: "center",
-        gap: "14px",
-        padding: "15px",
-        border: "1px solid rgba(151, 170, 220, 0.28)",
-        borderRadius: "12px",
-        background: "var(--plm-feature-bg, rgba(26, 35, 70, 0.62))",
-    },
-
-    partyLogo: {
-        objectFit: "cover",
-        borderRadius: "12px",
-        border: "1px solid #e5eaf2",
-        background: "#ffffff",
-        flexShrink: 0,
-    },
-
-    partyLogoPlaceholder: {
-        borderRadius: "12px",
-        background: "rgba(38, 110, 255, 0.18)",
-        color: "#266EFF",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: "19px",
-        fontWeight: "800",
-        flexShrink: 0,
-    },
-
-    partyMain: {
-        flex: 1,
-        minWidth: 0,
-    },
-
-    partyNameRow: {
-        display: "flex",
-        alignItems: "center",
-        gap: "7px",
-        flexWrap: "wrap",
-    },
-
-    partyName: {
-        margin: 0,
-        fontSize: "13px",
-        color: "#f3f6ff",
-        fontWeight: "800",
-    },
-
-    partyDescription: {
-        margin: "6px 0 0",
-        fontSize: "11px",
-        color: "#aeb9d6",
-    },
-
-    menuWrapper: {
-        position: "relative",
-        display: "inline-flex",
-        alignItems: "center",
-    },
-
-    menuButton: {
-        width: "38px",
-        height: "38px",
-        border: "1px solid #dbe2ee",
-        borderRadius: "9px",
-        background: "#ffffff",
-        color: "#334155",
-        fontSize: "23px",
-        lineHeight: 1,
-        fontWeight: "900",
-        cursor: "pointer",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
-    menuBackdrop: {
-        position: "fixed",
-        inset: 0,
-        zIndex: 998,
-        border: "none",
-        background: "transparent",
-        cursor: "default",
-    },
-
-    actionMenu: {
-        position: "absolute",
-        top: "calc(100% + 7px)",
-        right: 0,
-        width: "190px",
-        background: "rgba(19, 25, 52, 0.96)",
-        border: "1px solid rgba(151, 170, 220, 0.28)",
-        borderRadius: "11px",
-        padding: "6px",
-        boxShadow:
-            "0 18px 45px rgba(15, 23, 42, 0.16)",
-        zIndex: 999,
-    },
-
-    menuItem: {
-        width: "100%",
-        border: "none",
-        background: "transparent",
-        color: "#334155",
-        textAlign: "left",
-        borderRadius: "7px",
-        padding: "9px 10px",
-        fontSize: "11px",
-        fontWeight: "700",
-        cursor: "pointer",
-    },
-
-    menuDeleteItem: {
-        width: "100%",
-        border: "none",
-        background: "#fff1f2",
-        color: "#dc2626",
-        textAlign: "left",
-        borderRadius: "7px",
-        padding: "9px 10px",
-        fontSize: "11px",
-        fontWeight: "800",
-        cursor: "pointer",
-    },
-
-    menuDivider: {
-        height: "1px",
-        background: "#eef2f7",
-        margin: "5px 3px",
-    },
-
-    partyActions: {
-        display: "flex",
-        alignItems: "center",
-        gap: "6px",
-        flexWrap: "wrap",
-        justifyContent: "flex-end",
-    },
-
     smallButton: {
         border: "1px solid #dbe2ee",
         background: "#ffffff",
@@ -3644,61 +3188,6 @@ const styles = {
         fontSize: "10px",
         fontWeight: "700",
         cursor: "pointer",
-    },
-
-    pendingBadge: {
-        display: "inline-flex",
-        alignItems: "center",
-        borderRadius: "20px",
-        padding: "4px 8px",
-        background: "#fff7ed",
-        color: "#c2410c",
-        fontSize: "9px",
-        fontWeight: "800",
-    },
-
-    approvedBadge: {
-        display: "inline-flex",
-        alignItems: "center",
-        borderRadius: "20px",
-        padding: "4px 8px",
-        background: "#ecfdf3",
-        color: "#15803d",
-        fontSize: "9px",
-        fontWeight: "800",
-    },
-
-    rejectedBadge: {
-        display: "inline-flex",
-        alignItems: "center",
-        borderRadius: "20px",
-        padding: "4px 8px",
-        background: "#fef2f2",
-        color: "#b91c1c",
-        fontSize: "9px",
-        fontWeight: "800",
-    },
-
-    activeBadge: {
-        display: "inline-flex",
-        alignItems: "center",
-        borderRadius: "20px",
-        padding: "4px 8px",
-        background: "#eff6ff",
-        color: "#2563eb",
-        fontSize: "9px",
-        fontWeight: "800",
-    },
-
-    inactiveBadge: {
-        display: "inline-flex",
-        alignItems: "center",
-        borderRadius: "20px",
-        padding: "4px 8px",
-        background: "#f1f5f9",
-        color: "#64748b",
-        fontSize: "9px",
-        fontWeight: "800",
     },
 
     emptyState: {
