@@ -53,3 +53,23 @@ The SQL has not been executed against the live database by this task.
   deploying Render and Vercel.
 - Local desktop/mobile profile fixtures were visually inspected in both themes.
   Production sessions and live ballots were not exercised.
+## Pause confirmation and deployment troubleshooting
+
+Pause and Resume now require confirmation before sending the update. The dialog
+keeps save errors visible and does not claim success until the returned saved
+pause state matches the requested value. Page alerts have explicit foreground
+colors so EB theme overrides cannot wash out the message.
+
+If the API reports VOTING_CONTROLS_NOT_INSTALLED, run the complete
+server/voting-controls.sql in the Supabase project used by Render. The script
+now also reloads PostgREST's schema cache. Then deploy the changed server and
+client from the same commit. Do not apply only the new column: the notice trigger
+and ballot function must also be installed.
+
+Permission failures and other database failures now have separate messages;
+server logs record the database error code and message. A missing or malformed
+pause flag blocks voting until setup is repaired. An unsuccessful pause request
+never changes the button to Resume or falsely reports that voting was paused.
+
+The database connectivity check during this change could not connect, so no live
+schema inspection or production migration was completed from this workspace.

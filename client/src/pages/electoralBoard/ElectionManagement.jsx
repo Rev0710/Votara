@@ -1,3 +1,4 @@
+import VotingPauseConfirmation from "./VotingPauseConfirmation";
 import React, {
     useEffect,
     useMemo,
@@ -838,26 +839,37 @@ function ElectionManagement({ onCreateElection, onNavigate }) {
     // =====================================================
 
     const [votingControlBusy, setVotingControlBusy] = useState(false);
+    const [pauseConfirmation, setPauseConfirmation] = useState(null);
+    const [pauseError, setPauseError] = useState("");
     const [votingControlId, setVotingControlId] = useState("");
     const controllableElections = elections.filter(item => item.rawStatus === "open" && item.isPublished);
     const controlledElection = controllableElections.find(item => item.id === votingControlId)
         || controllableElections[0];
     const toggleVotingPause = async () => {
-        if (!controlledElection || votingControlBusy) return;
+        if (!pauseConfirmation || votingControlBusy) return;
+        const targetElection = pauseConfirmation;
+        setPauseError("");
+        setSuccess("");
         setVotingControlBusy(true);
         setError("");
         try {
-            await api.patch("/elections/"+controlledElection.id+"/voting-pause", {
-                paused: !controlledElection.voting_paused,
-                expectedPaused: controlledElection.voting_paused === true
+            const response = await api.patch("/elections/"+targetElection.id+"/voting-pause", {
+                paused: !targetElection.voting_paused,
+                expectedPaused: targetElection.voting_paused === true
             });
-            setSuccess(controlledElection.voting_paused
+            if (response.data?.success !== true || response.data?.election?.voting_paused !== !targetElection.voting_paused) throw new Error("The server did not confirm the voting change.");
+            setElections(current => current.map(item => item.id === targetElection.id ? {...item, voting_paused:response.data.election.voting_paused} : item));
+            setPauseConfirmation(null);
+            setSuccess(targetElection.voting_paused
                 ? "Voting resumed. The election date and 8:00 AM–5:00 PM Manila voting hours still apply."
                 : "Online and kiosk voting paused. Students have been notified.");
             await loadElections(true);
             window.dispatchEvent(new Event("votara-platform-update"));
         } catch (error) {
-            setError(error.response?.data?.message || "Unable to update voting availability.");
+            const message = error.response?.data?.message || error.message || "Unable to update voting availability.";
+            setError(message);
+            setPauseError(message);
+            if (error.response?.status === 409) setPauseConfirmation(null);
             await loadElections(true);
         } finally {setVotingControlBusy(false);}
     };
@@ -2634,7 +2646,7 @@ function ElectionManagement({ onCreateElection, onNavigate }) {
                     <button type="button" className="election-create-button election-pause-button"
                         disabled={!controlledElection || votingControlBusy}
                         title={controlledElection ? controlledElection.name : "Open and publish an election first"}
-                        onClick={toggleVotingPause}>
+                        onClick={() => {setPauseError(""); setPauseConfirmation({...controlledElection});}}>
                         {votingControlBusy ? "Updating…" : controlledElection?.voting_paused ? "▶ Resume Voting" : "Ⅱ Pause Voting"}
                     </button>
                     <small>Online + kiosk · 8 AM–5 PM Manila</small>
@@ -2648,8 +2660,12 @@ function ElectionManagement({ onCreateElection, onNavigate }) {
                 ERROR
             ================================================= */}
 
+            {pauseConfirmation && <VotingPauseConfirmation election={pauseConfirmation}
+                busy={votingControlBusy} error={pauseError} onConfirm={toggleVotingPause}
+                onCancel={() => {if(!votingControlBusy){setPauseConfirmation(null);setPauseError("");}}} />}
             {error && (
                 <div
+                    className="election-feedback election-feedback-error" role="alert"
                     style={{
                         background:
                             "#fff1f2",
@@ -2707,6 +2723,7 @@ function ElectionManagement({ onCreateElection, onNavigate }) {
 
             {success && (
                 <div
+                    className="election-feedback election-feedback-success" role="status"
                     style={{
                         background:
                             "#ecfdf5",
