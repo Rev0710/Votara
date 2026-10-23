@@ -601,11 +601,9 @@ function KioskManagement() {
                                 </strong>
 
                                 <p>
-                                    All Electoral Board members
-                                    can use this same active
-                                    kiosk session. Do not start
-                                    another session for the same
-                                    election.
+                                    Multiple devices can assist different students
+                                    at the same time. Open this active session on
+                                    each device for the same election.
                                 </p>
 
                             </div>
@@ -638,9 +636,9 @@ function KioskManagement() {
                                     </p>
 
                                     <small>
-                                        Please wait until the
-                                        other finishes before
-                                        closing the kiosk session.
+                                        Other devices can continue assisting students.
+                                        Close this shared session only after all
+                                        active students have finished.
                                     </small>
 
                                 </div>

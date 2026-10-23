@@ -2,22 +2,20 @@
 
 ## Deploy in this order
 
-1. In Supabase SQL Editor, run server/kiosk-concurrent-assistance.sql once.
-   It replaces a session-wide active-operation unique index if present, adds
-   one-active-operation-per-EB uniqueness, and installs an atomic served counter.
+1. In Supabase SQL Editor, run or rerun server/kiosk-concurrent-assistance.sql.
+   It removes the earlier session-wide and per-EB active-operation limits and
+   installs an atomic served counter. Each device keeps its own operation ID.
    It preserves the tables, student records, ballots, and authentication checks.
-   If an EB already has duplicate active operations, finish/cancel those
-   operations before rerunning the SQL; the transaction rolls back on failure.
 2. Run server/voting-controls.sql in Supabase SQL Editor. This adds pause controls, notification history, and voting-hour enforcement to the ballot transaction.
 3. Commit all changed and new source files, including StudentTheme.css and both SQL files.
 4. Deploy the same commit to Render (server) and Vercel (client).
 
 ## Expected behavior
 
-- Different active EB accounts can assist different students simultaneously in
-  the same shared kiosk session.
-- Each EB member finishes or cancels their own active assistance before starting
-  another. Closing the shared session remains blocked while any assistance is active.
+- Different devices can assist different students simultaneously in the same
+  shared kiosk session, including devices signed into the same EB account.
+- Finishing or cancelling releases only the operation owned by that page.
+  Closing the shared session remains blocked while any assistance is active.
 - Temporary kiosk JWTs are restricted to their active kiosk operation and ballot
   endpoints. Normal student logins still require their database-backed session.
 - A 30-second heartbeat maintains the operation while the kiosk is open.

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { FiClipboard } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import api, { getEBToken } from "../../services/api";
@@ -11,6 +11,9 @@ import "./Registrations.css"
 
 const Registrations = ({ onNavigate }) => {
     const navigate = useNavigate();
+    const reviewDialogRef = useRef(null);
+    const reviewTitleId = useId();
+    const reviewMessageId = useId();
 
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -38,6 +41,18 @@ const Registrations = ({ onNavigate }) => {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
 
+    useEffect(() => {
+        if (!showReviewModal) return;
+        const previousFocus = document.activeElement;
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        reviewDialogRef.current?.querySelector("button")?.focus();
+        return () => {
+            document.body.style.overflow = previousOverflow;
+            if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus();
+        };
+    }, [showReviewModal]);
+
     // =====================================================
     // LOAD APPLICATIONS
     // =====================================================
@@ -47,20 +62,13 @@ const Registrations = ({ onNavigate }) => {
             setError("");
 
             const token = getEBToken();
-
             if (!token) {
                 navigate("/electoral-board/login");
                 return;
             }
 
             const response = await api.get(
-                "/eb/registrations",
-                {
-                    headers: {
-                        Authorization:
-                            `Bearer ${token}`,
-                    },
-                }
+                "/eb/registrations"
             );
 
             const data = response.data;
@@ -231,7 +239,6 @@ const Registrations = ({ onNavigate }) => {
             setSuccess("");
 
             const token = getEBToken();
-
             if (!token) {
                 navigate("/electoral-board/login");
                 return;
@@ -257,13 +264,7 @@ const Registrations = ({ onNavigate }) => {
 
             const response =
                 await api.get(
-                    `/eb/registrations/${application.id}`,
-                    {
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`,
-                        },
-                    }
+                    `/eb/registrations/${application.id}`
                 );
 
             const completeApplication =
@@ -431,7 +432,6 @@ const Registrations = ({ onNavigate }) => {
             setSuccess("");
 
             const token = getEBToken();
-
             if (!token) {
                 navigate("/electoral-board/login");
                 return;
@@ -451,12 +451,7 @@ const Registrations = ({ onNavigate }) => {
             // -------------------------------------------------
 
             const latestResponse = await api.get(
-                `/eb/registrations/${registrationId}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
+                `/eb/registrations/${registrationId}`
             );
 
             const latestApplication =
@@ -506,11 +501,6 @@ const Registrations = ({ onNavigate }) => {
                 {
                     decision: reviewAction,
                     reason: reviewMessage.trim(),
-                },
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
                 }
             );
 
@@ -849,15 +839,11 @@ const Registrations = ({ onNavigate }) => {
 
         return (
             <div
-                style={
-                    styles.documentCard
-                }
+                className="registration-review-document-card"
             >
 
                 <div
-                    style={
-                        styles.documentIcon
-                    }
+                    className="registration-review-document-icon"
                 >
                     {type ===
                     "student_id_front"
@@ -872,15 +858,11 @@ const Registrations = ({ onNavigate }) => {
                 </div>
 
                 <div
-                    style={
-                        styles.documentInfo
-                    }
+                    className="registration-review-document-info"
                 >
 
                     <strong
-                        style={
-                            styles.documentName
-                        }
+                        className="registration-review-document-name"
                     >
                         {getDocumentLabel(
                             type
@@ -891,18 +873,14 @@ const Registrations = ({ onNavigate }) => {
 
                         <>
                             <span
-                                style={
-                                    styles.documentStatus
-                                }
+                                className="registration-review-document-status"
                             >
                                 ✓ Uploaded
                             </span>
 
                             {document.original_file_name && (
                                 <span
-                                    style={
-                                        styles.documentFileName
-                                    }
+                                    className="registration-review-document-file-name"
                                 >
                                     {
                                         document.original_file_name
@@ -915,9 +893,7 @@ const Registrations = ({ onNavigate }) => {
                     ) : (
 
                         <span
-                            style={
-                                styles.documentMissing
-                            }
+                            className="registration-review-document-missing"
                         >
                             Not submitted
                         </span>
@@ -935,9 +911,7 @@ const Registrations = ({ onNavigate }) => {
                             }
                             target="_blank"
                             rel="noreferrer"
-                            style={
-                                styles.viewDocumentButton
-                            }
+                            className="registration-review-view-document-button"
                         >
                             View
                         </a>
@@ -1309,19 +1283,43 @@ const Registrations = ({ onNavigate }) => {
 
             {/* Existing review modal remains available for the actual review action. */}
             {showReviewModal && selectedApplication && (
-                <div className="registration-review-overlay" style={styles.modalOverlay}>
-                    <div className="registration-review-modal" style={styles.modal}>
-                        <div style={styles.modalHeader}>
+                <div className="registration-review-modal-overlay">
+                    <div
+                        className="registration-review-modal"
+                        ref={reviewDialogRef}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby={reviewTitleId}
+                        aria-busy={actionLoading}
+                        onKeyDown={(event) => {
+                            if (event.key === "Escape" && !actionLoading) closeReview();
+                            if (event.key !== "Tab") return;
+                            const controls = [...event.currentTarget.querySelectorAll('button:not(:disabled), a[href], textarea:not(:disabled)')];
+                            const first = controls[0];
+                            const last = controls[controls.length - 1];
+                            if (event.shiftKey && document.activeElement === first) {
+                                event.preventDefault();
+                                last?.focus();
+                            } else if (!event.shiftKey && document.activeElement === last) {
+                                event.preventDefault();
+                                first?.focus();
+                            }
+                        }}
+                    >
+                        <div className="registration-review-modal-header">
                             <div>
-                                <div style={styles.modalEyebrow}>REGISTRATION REVIEW</div>
-                                <h2 style={styles.modalTitle}>Student Application</h2>
+                                <div className="registration-review-modal-eyebrow">REGISTRATION REVIEW</div>
+                                <h2 className="registration-review-modal-title" id={reviewTitleId}>
+                                    {reviewAction === "approve" ? "Approve student registration" : reviewAction === "reject" ? "Reject student registration" : reviewAction === "request_correction" ? "Request corrections" : "Student application"}
+                                </h2>
                             </div>
-                            <button className="registration-review-close" aria-label="Close registration review" onClick={closeReview} style={styles.closeButton}>×</button>
+                            <button type="button" onClick={closeReview} disabled={actionLoading} aria-label="Close registration review" className="registration-review-close-button">×</button>
                         </div>
 
-                        <div style={styles.detailSection}>
-                            <h3 style={styles.detailTitle}>Student Information</h3>
-                            <div style={styles.detailGrid}>
+                        <div className="registration-review-modal-body">
+                        <div className="registration-review-detail-section">
+                            <h3 className="registration-review-detail-title">Student Information</h3>
+                            <div className="registration-review-detail-grid">
                                 <DetailItem label="Student ID" value={selectedApplication.student_id} />
                                 <DetailItem label="Full Name" value={selectedApplication.full_name} />
                                 <DetailItem label="Year Level" value={selectedApplication.year_level} />
@@ -1345,9 +1343,9 @@ const Registrations = ({ onNavigate }) => {
                             </div>
                         </div>
 
-                        <div style={styles.detailSection}>
-                            <h3 style={styles.detailTitle}>Submitted Requirements</h3>
-                            <div style={styles.documentsGrid}>
+                        <div className="registration-review-detail-section">
+                            <h3 className="registration-review-detail-title">Submitted Requirements</h3>
+                            <div className="registration-review-documents-grid">
                                 <DocumentCard application={selectedApplication} type="student_id_front" />
                                 <DocumentCard application={selectedApplication} type="student_id_back" />
                                 <DocumentCard application={selectedApplication} type="enrollment_proof" />
@@ -1355,29 +1353,30 @@ const Registrations = ({ onNavigate }) => {
                             </div>
                         </div>
 
-                        <div style={styles.detailSection}>
-                            <h3 style={styles.detailTitle}>Identity Verification</h3>
+                        <div className="registration-review-detail-section">
+                            <h3 className="registration-review-detail-title">Identity Verification</h3>
                             {getSelfieUrl(selectedApplication) ? (
-                                <div style={styles.selfieContainer}>
+                                <div className="registration-review-selfie-container">
                                     <img
                                         src={getSelfieUrl(selectedApplication)}
                                         alt="Student real-time selfie"
-                                        style={styles.selfieImage}
+                                        className="registration-review-selfie-image"
                                     />
                                 </div>
                             ) : (
-                                <div style={styles.noFileBox}>No selfie preview URL was returned by the server.</div>
+                                <div className="registration-review-no-file-box">No selfie preview URL was returned by the server.</div>
                             )}
                         </div>
 
                         {canReview && (
-                            <div style={styles.messageSection}>
-                                <label style={styles.label}>
+                            <div className="registration-review-message-section">
+                                <label className="registration-review-label" htmlFor={reviewMessageId}>
                                     {reviewAction === "request_correction"
                                         ? "Correction Message"
                                         : "Review Message"}
                                 </label>
                                 <textarea
+                                    id={reviewMessageId}
                                     value={reviewMessage}
                                     onChange={(event) => setReviewMessage(event.target.value)}
                                     placeholder={
@@ -1388,13 +1387,16 @@ const Registrations = ({ onNavigate }) => {
                                             : "Optional note for this review..."
                                     }
                                     rows={4}
-                                    style={styles.textarea}
+                                    className="registration-review-textarea"
                                 />
                             </div>
                         )}
+                        </div>
 
-                        <div style={styles.modalActions}>
-                            <button onClick={closeReview} disabled={actionLoading} style={styles.cancelButton}>
+                        <div className="registration-review-modal-footer">
+                        {error && <div className="registration-alert registration-alert-error" role="alert">{error}</div>}
+                        <div className="registration-review-modal-actions">
+                            <button onClick={closeReview} disabled={actionLoading} className="registration-review-cancel-button">
                                 Close
                             </button>
                             {canReview && (
@@ -1406,7 +1408,7 @@ const Registrations = ({ onNavigate }) => {
                                             setError("");
                                         }}
                                         disabled={actionLoading}
-                                        style={styles.correctionButton}
+                                        className="registration-review-correction-button"
                                     >
                                         Request Correction
                                     </button>
@@ -1417,7 +1419,7 @@ const Registrations = ({ onNavigate }) => {
                                             setError("");
                                         }}
                                         disabled={actionLoading}
-                                        style={styles.rejectButton}
+                                        className="registration-review-reject-button"
                                     >
                                         Reject
                                     </button>
@@ -1428,7 +1430,7 @@ const Registrations = ({ onNavigate }) => {
                                             setError("");
                                         }}
                                         disabled={actionLoading}
-                                        style={styles.approveButton}
+                                        className="registration-review-approve-button"
                                     >
                                         Approve Student
                                     </button>
@@ -1437,8 +1439,7 @@ const Registrations = ({ onNavigate }) => {
                         </div>
 
                         {reviewAction && reviewAction !== "review" && canReview && (
-                            <div className="registration-decision-confirm-overlay" role="alertdialog" aria-modal="true">
-                            <div className="registration-decision-confirm" style={styles.confirmBox}>
+                            <div className="registration-review-confirm-box">
                                 <div>
                                     <strong>
                                         {reviewAction === "approve"
@@ -1447,7 +1448,7 @@ const Registrations = ({ onNavigate }) => {
                                             ? "Reject this registration?"
                                             : "Request correction?"}
                                     </strong>
-                                    <p style={styles.confirmText}>
+                                    <p className="registration-review-confirm-text">
                                         {reviewAction === "approve"
                                             ? "The student will be allowed to continue to the account activation/login process."
                                             : reviewAction === "reject"
@@ -1456,25 +1457,10 @@ const Registrations = ({ onNavigate }) => {
                                     </p>
                                 </div>
                                 <button
-                                    type="button"
-                                    onClick={() => setReviewAction(null)}
-                                    disabled={actionLoading}
-                                    className="registration-decision-cancel"
-                                >
-                                    Cancel
-                                </button>
-                                <button
                                     onClick={submitReview}
                                     disabled={actionLoading}
-                                    style={{
-                                        ...styles.confirmButton,
-                                        background:
-                                            reviewAction === "approve"
-                                                ? "#16804a"
-                                                : reviewAction === "reject"
-                                                ? "#d64545"
-                                                : "#266EFF",
-                                    }}
+                                    className="registration-review-confirm-button"
+                                    data-decision={reviewAction}
                                 >
                                     {actionLoading
                                         ? "Processing..."
@@ -1485,8 +1471,8 @@ const Registrations = ({ onNavigate }) => {
                                         : "Send Correction"}
                                 </button>
                             </div>
-                            </div>
                         )}
+                        </div>
                     </div>
                 </div>
             )}
@@ -1571,23 +1557,17 @@ const DetailItem = ({
 
     return (
         <div
-            style={
-                styles.detailItem
-            }
+            className="registration-review-detail-item"
         >
 
             <div
-                style={
-                    styles.detailLabel
-                }
+                className="registration-review-detail-label"
             >
                 {label}
             </div>
 
             <div
-                style={
-                    styles.detailValue
-                }
+                className="registration-review-detail-value"
             >
                 {value ||
                     "Not provided"}
@@ -2192,113 +2172,13 @@ const styles = {
             "1px solid #edf0f5",
     },
 
-    modalOverlay: {
-        position:
-            "fixed",
-        inset:
-            "0",
-        background:
-            "rgba(7,20,38,0.55)",
-        display:
-            "flex",
-        alignItems:
-            "center",
-        justifyContent:
-            "center",
-        padding:
-            "20px",
-        zIndex:
-            "1800",
-    },
 
-    modal: {
-        width:
-            "100%",
-        maxWidth:
-            "900px",
-        maxHeight:
-            "92vh",
-        overflowY:
-            "auto",
-        background:
-            "#ffffff",
-        borderRadius:
-            "18px",
-        boxShadow:
-            "0 25px 70px rgba(0,0,0,0.20)",
-    },
 
-    modalHeader: {
-        padding:
-            "22px 25px",
-        borderBottom:
-            "1px solid #edf0f5",
-        display:
-            "flex",
-        justifyContent:
-            "space-between",
-        alignItems:
-            "flex-start",
-    },
 
-    modalEyebrow: {
-        fontSize:
-            "9px",
-        fontWeight:
-            "800",
-        color:
-            "#266EFF",
-        letterSpacing:
-            "1.3px",
-        marginBottom:
-            "6px",
-    },
 
-    modalTitle: {
-        margin:
-            "0",
-        fontSize:
-            "21px",
-        fontWeight:
-            "800",
-        color:
-            "#172033",
-    },
 
-    closeButton: {
-        width:
-            "34px",
-        height:
-            "34px",
-        border:
-            "none",
-        borderRadius:
-            "8px",
-        background:
-            "#f1f4f8",
-        color:
-            "#64748b",
-        cursor:
-            "pointer",
-        fontSize:
-            "20px",
-    },
 
-    detailSection: {
-        padding:
-            "22px 25px",
-    },
 
-    detailTitle: {
-        margin:
-            "0 0 15px",
-        fontSize:
-            "14px",
-        fontWeight:
-            "800",
-        color:
-            "#172033",
-    },
 
     sectionDescription: {
         margin:
@@ -2311,210 +2191,20 @@ const styles = {
             "1.6",
     },
 
-    detailGrid: {
-        display:
-            "grid",
-        gridTemplateColumns:
-            "repeat(3, minmax(0, 1fr))",
-        gap:
-            "13px",
-    },
 
-    detailItem: {
-        background:
-            "#f8faff",
-        borderRadius:
-            "9px",
-        padding:
-            "12px",
-        border:
-            "1px solid #edf1f7",
-    },
 
-    detailLabel: {
-        fontSize:
-            "9px",
-        color:
-            "#8a95a6",
-        fontWeight:
-            "700",
-        textTransform:
-            "uppercase",
-        letterSpacing:
-            "0.4px",
-        marginBottom:
-            "4px",
-    },
 
-    detailValue: {
-        fontSize:
-            "11px",
-        color:
-            "#344054",
-        fontWeight:
-            "600",
-        wordBreak:
-            "break-word",
-    },
 
-    documentsGrid: {
-        display:
-            "grid",
-        gridTemplateColumns:
-            "repeat(2, minmax(0, 1fr))",
-        gap:
-            "10px",
-    },
 
-    documentCard: {
-        border:
-            "1px solid #e4eaf2",
-        borderRadius:
-            "11px",
-        padding:
-            "12px",
-        display:
-            "flex",
-        alignItems:
-            "center",
-        gap:
-            "10px",
-        background:
-            "#fbfcfe",
-    },
 
-    documentIcon: {
-        width:
-            "38px",
-        height:
-            "38px",
-        minWidth:
-            "38px",
-        borderRadius:
-            "9px",
-        background:
-            "#edf3ff",
-        color:
-            "#266EFF",
-        display:
-            "flex",
-        alignItems:
-            "center",
-        justifyContent:
-            "center",
-        fontSize:
-            "10px",
-        fontWeight:
-            "800",
-    },
 
-    documentInfo: {
-        flex:
-            "1",
-        minWidth:
-            "0",
-        display:
-            "flex",
-        flexDirection:
-            "column",
-        gap:
-            "2px",
-    },
 
-    documentName: {
-        fontSize:
-            "11px",
-        color:
-            "#172033",
-        fontWeight:
-            "800",
-    },
 
-    documentStatus: {
-        fontSize:
-            "9px",
-        color:
-            "#16804a",
-        fontWeight:
-            "700",
-    },
 
-    documentFileName: {
-        fontSize:
-            "9px",
-        color:
-            "#8a95a6",
-        overflow:
-            "hidden",
-        textOverflow:
-            "ellipsis",
-        whiteSpace:
-            "nowrap",
-    },
 
-    documentMissing: {
-        fontSize:
-            "9px",
-        color:
-            "#d64545",
-        fontWeight:
-            "700",
-    },
 
-    viewDocumentButton: {
-        display:
-            "inline-flex",
-        alignItems:
-            "center",
-        justifyContent:
-            "center",
-        textDecoration:
-            "none",
-        border:
-            "none",
-        background:
-            "#edf3ff",
-        color:
-            "#266EFF",
-        borderRadius:
-            "7px",
-        padding:
-            "7px 10px",
-        cursor:
-            "pointer",
-        fontSize:
-            "9px",
-        fontWeight:
-            "800",
-        whiteSpace:
-            "nowrap",
-    },
 
-    selfieContainer: {
-        width:
-            "100%",
-        maxWidth:
-            "330px",
-        border:
-            "1px solid #e4eaf2",
-        borderRadius:
-            "12px",
-        overflow:
-            "hidden",
-        background:
-            "#fbfcfe",
-    },
 
-    selfieImage: {
-        width:
-            "100%",
-        display:
-            "block",
-        maxHeight:
-            "380px",
-        objectFit:
-            "cover",
-    },
 
     selfieFooter: {
         padding:
@@ -2537,20 +2227,6 @@ const styles = {
             "700",
     },
 
-    noFileBox: {
-        padding:
-            "16px",
-        border:
-            "1px dashed #cbd5e1",
-        borderRadius:
-            "10px",
-        background:
-            "#f8fafc",
-        color:
-            "#64748b",
-        fontSize:
-            "10px",
-    },
 
     verificationNotice: {
         margin:
@@ -2603,190 +2279,16 @@ const styles = {
             "1.6",
     },
 
-    messageSection: {
-        padding:
-            "0 25px 20px",
-    },
 
-    label: {
-        display:
-            "block",
-        fontSize:
-            "11px",
-        fontWeight:
-            "800",
-        color:
-            "#344054",
-        marginBottom:
-            "7px",
-    },
 
-    textarea: {
-        width:
-            "100%",
-        boxSizing:
-            "border-box",
-        border:
-            "1px solid #d7dee8",
-        borderRadius:
-            "9px",
-        padding:
-            "11px",
-        resize:
-            "vertical",
-        minHeight:
-            "90px",
-        outline:
-            "none",
-        fontFamily:
-            "inherit",
-        fontSize:
-            "11px",
-        color:
-            "#172033",
-    },
 
-    modalActions: {
-        padding:
-            "17px 25px",
-        borderTop:
-            "1px solid #edf0f5",
-        display:
-            "flex",
-        justifyContent:
-            "flex-end",
-        gap:
-            "9px",
-        flexWrap:
-            "wrap",
-    },
 
-    cancelButton: {
-        border:
-            "1px solid #d7dee8",
-        background:
-            "#ffffff",
-        color:
-            "#475467",
-        borderRadius:
-            "8px",
-        padding:
-            "10px 15px",
-        cursor:
-            "pointer",
-        fontSize:
-            "11px",
-        fontWeight:
-            "700",
-    },
 
-    correctionButton: {
-        border:
-            "none",
-        background:
-            "#eef4ff",
-        color:
-            "#266EFF",
-        borderRadius:
-            "8px",
-        padding:
-            "10px 15px",
-        cursor:
-            "pointer",
-        fontSize:
-            "11px",
-        fontWeight:
-            "800",
-    },
 
-    rejectButton: {
-        border:
-            "none",
-        background:
-            "#fff0f0",
-        color:
-            "#d64545",
-        borderRadius:
-            "8px",
-        padding:
-            "10px 15px",
-        cursor:
-            "pointer",
-        fontSize:
-            "11px",
-        fontWeight:
-            "800",
-    },
 
-    approveButton: {
-        border:
-            "none",
-        background:
-            "#16804a",
-        color:
-            "#ffffff",
-        borderRadius:
-            "8px",
-        padding:
-            "10px 17px",
-        cursor:
-            "pointer",
-        fontSize:
-            "11px",
-        fontWeight:
-            "800",
-    },
 
-    confirmBox: {
-        margin:
-            "0 25px 22px",
-        padding:
-            "15px",
-        borderRadius:
-            "10px",
-        background:
-            "#f8faff",
-        border:
-            "1px solid #dce6f8",
-        display:
-            "flex",
-        justifyContent:
-            "space-between",
-        alignItems:
-            "center",
-        gap:
-            "15px",
-    },
 
-    confirmText: {
-        margin:
-            "5px 0 0",
-        fontSize:
-            "10px",
-        color:
-            "#64748b",
-        lineHeight:
-            "1.5",
-    },
 
-    confirmButton: {
-        border:
-            "none",
-        color:
-            "#ffffff",
-        borderRadius:
-            "8px",
-        padding:
-            "10px 15px",
-        cursor:
-            "pointer",
-        fontSize:
-            "11px",
-        fontWeight:
-            "800",
-        whiteSpace:
-            "nowrap",
-    },
 };
 
 // =====================================================

@@ -1785,22 +1785,8 @@ const startKioskOperation = async (
                 sessionId
             );
 
-        const activeOperations =
-            await getActiveOperationCount(session.id, req.user.userId);
 
-        if (
-            activeOperations > 0
-        ) {
-            return res.status(409).json({
-                success: false,
-                code:
-                    "EB_OPERATION_IN_USE",
-
-                message:
-                    "Finish or cancel your current student assistance before starting another. Other EB members can assist students independently.",
-            });
-        }
-
+        // Each device opens an independent operation in the shared session.
         const operation =
             await createKioskOperation({
                 sessionId:
@@ -2034,12 +2020,9 @@ const abortKioskOperation = async (
             id,
         } = req.params;
 
-        const operation =
-            await cancelKioskOperation(
-                id
-            );
+        const existingOperation = await getKioskOperation(id);
 
-        if (!operation) {
+        if (!existingOperation) {
             return res.status(404).json({
                 success: false,
                 message:
@@ -2047,9 +2030,15 @@ const abortKioskOperation = async (
             });
         }
 
+        // Repeated cleanup, or cleanup after the inactivity timeout, must
+        // not leave the client stuck trying to cancel an already ended job.
+        const operation = existingOperation.operation_status === "active"
+            ? await cancelKioskOperation(id)
+            : existingOperation;
+
         return res.json({
             success: true,
-            operation,
+            operation: operation || await getKioskOperation(id),
         });
     } catch (error) {
         console.error(
@@ -2363,21 +2352,9 @@ const authorizeKioskStudent =
                 });
             }
 
-            const activeOperations =
-                await getActiveOperationCount(session.id, req.user.userId);
 
-            if (
-                activeOperations > 0
-            ) {
-                return res.status(409).json({
-                    success: false,
-                    code:
-                        "EB_OPERATION_IN_USE",
+            // Each device opens an independent operation in the shared session.
 
-                    message:
-                        "Finish or cancel your current student assistance before starting another. Other EB members can assist students independently.",
-                });
-            }
 
             const operation =
                 await createKioskOperation({
@@ -2669,22 +2646,7 @@ const submitKioskRegistration =
                     ? "normal"
                     : "late_enrollee";
 
-            const activeOperations =
-                await getActiveOperationCount(session.id, req.user.userId);
-
-            if (
-                activeOperations > 0
-            ) {
-                return res.status(409).json({
-                    success: false,
-                    code:
-                        "EB_OPERATION_IN_USE",
-
-                    message:
-                        "Finish or cancel your current student assistance before starting another. Other EB members can assist students independently.",
-                });
-            }
-
+            // Each device opens an independent operation in the shared session.
             operation =
                 await createKioskOperation({
                     sessionId:

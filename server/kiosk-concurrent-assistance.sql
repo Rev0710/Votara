@@ -1,6 +1,6 @@
 
--- Apply once in Supabase SQL Editor before deploying concurrent kiosk assistance.
--- This keeps one active operation per EB member within a shared session.
+-- Apply or reapply in Supabase SQL Editor before deploying multi-device kiosk assistance.
+-- Each device owns an independent operation, including devices using the same EB account.
 BEGIN;
 
 DO $$
@@ -25,9 +25,8 @@ BEGIN
     END LOOP;
 END $$;
 
-CREATE UNIQUE INDEX IF NOT EXISTS kiosk_one_active_operation_per_eb
-    ON public.kiosk_operations(kiosk_session_id, eb_member_id)
-    WHERE operation_status = 'active';
+-- Remove the older per-member limit while preserving operation IDs and voter safeguards.
+DROP INDEX IF EXISTS public.kiosk_one_active_operation_per_eb;
 
 -- Avoid losing increments when different EB members finish simultaneously.
 CREATE OR REPLACE FUNCTION public.increment_kiosk_students_served(p_session_id uuid)
