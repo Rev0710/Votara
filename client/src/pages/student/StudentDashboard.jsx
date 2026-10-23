@@ -3,8 +3,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import "./StudentDashboard.css";
 import "./Settings.css";
 import "./StudentDashboard.workspace.css";
+import "./StudentNavbar.css";
 import StudentDotIcon from "../../components/student/StudentDotIcon";
-import { FiLogOut, FiMoon, FiSun } from "react-icons/fi";
+import { FiLogOut, FiMenu, FiMoon, FiSearch, FiSun } from "react-icons/fi";
 import Profile from "./Profile";
 import api, { clearAccountSession, getStudentToken } from "../../services/api";
 import useAccountSession from "../../hooks/useAccountSession";
@@ -3514,13 +3515,11 @@ const resultsAreVisible =
                         type="button"
                         className="menu-toggle"
                         onClick={() => setSidebarOpen((previous) => !previous)}
-                        aria-label="Toggle sidebar"
+                        aria-label={sidebarOpen ? "Collapse navigation" : "Open navigation"}
                         aria-expanded={sidebarOpen}
                         aria-controls="student-sidebar"
                     >
-                        <span />
-                        <span />
-                        <span />
+                        <FiMenu aria-hidden="true" />
                     </button>
 
                     <div className="header-greeting">
@@ -3535,6 +3534,7 @@ const resultsAreVisible =
                     <input
                         type="text"
                         placeholder="Search"
+                        aria-label="Search dashboard"
                         value={searchValue}
                         onChange={(event) => setSearchValue(event.target.value)}
                         onKeyDown={(event) => {
@@ -3550,7 +3550,7 @@ const resultsAreVisible =
                         aria-label="Search"
                         onClick={handleSearch}
                     >
-                        ⌕
+                        <FiSearch aria-hidden="true" />
                     </button>
                 </div>
 

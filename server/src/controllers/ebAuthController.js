@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const supabase = require("../config/supabase");
+const EB_LOGIN_LOCK_SECONDS = 30;
 
 // =========================================================
 // PASSWORD VALIDATION
@@ -331,14 +332,21 @@ const loginEB = async (req, res) => {
         // Check temporary lock
         // -------------------------------------------------
 
-        if (
-            user.locked_until &&
-            new Date(user.locked_until) > new Date()
-        ) {
+
+        if (user.locked_until && new Date(user.locked_until).getTime() > Date.now()) {
+            let retryAfter = Math.max(1, Math.ceil((new Date(user.locked_until).getTime() - Date.now()) / 1000));
+            // Shorten locks issued under the previous two-minute policy once.
+            if (retryAfter > EB_LOGIN_LOCK_SECONDS) {
+                const { error: lockError } = await supabase.from("staff_users")
+                    .update({locked_until: new Date(Date.now() + EB_LOGIN_LOCK_SECONDS * 1000).toISOString()})
+                    .eq("id", user.id);
+                if (lockError) throw lockError;
+                retryAfter = EB_LOGIN_LOCK_SECONDS;
+            }
+            res.setHeader("Retry-After", String(retryAfter));
             return res.status(423).json({
-                success: false,
-                message:
-                    `Your account is temporarily locked. Try again in ${Math.max(1, Math.ceil((new Date(user.locked_until).getTime() - Date.now()) / 1000))} seconds.`
+                success: false, locked: true, retryAfter,
+                message: "Your account is temporarily locked. Try again in " + retryAfter + " seconds."
             });
         }
 
@@ -364,7 +372,7 @@ const loginEB = async (req, res) => {
             if (failedAttempts >= 5) {
 
                 const lockedUntil = new Date(
-                Date.now() + 2 * 60 * 1000
+                Date.now() + EB_LOGIN_LOCK_SECONDS * 1000
             );
 
                 await supabase
@@ -381,10 +389,11 @@ const loginEB = async (req, res) => {
                     })
                     .eq("id", user.id);
 
+
+                res.setHeader("Retry-After", String(EB_LOGIN_LOCK_SECONDS));
                 return res.status(423).json({
-                    success: false,
-                    message:
-                        "Too many failed login attempts. Your account is locked for 2 minutes."
+                    success: false, locked: true, retryAfter: EB_LOGIN_LOCK_SECONDS,
+                    message: "Too many failed login attempts. Try again in " + EB_LOGIN_LOCK_SECONDS + " seconds."
                 });
             }
 

@@ -1,0 +1,79 @@
+
+/* Keep the student shell aligned even when the shared legacy Vote CSS loads later. */
+.student-dashboard[data-student-theme] #student-sidebar {
+    box-sizing: border-box; width: var(--student-sidebar); min-width: 0;
+    max-width: var(--student-sidebar); margin: 0; padding: 18px 14px;
+    border-right: 1px solid var(--student-border);
+}
+.student-dashboard[data-student-theme] .top-navbar {
+    grid-template-columns: minmax(0,1fr) minmax(180px,300px) 44px 44px;
+    align-items: center; column-gap: 14px;
+}
+.student-dashboard[data-student-theme] .top-navbar .nav-left {
+    display: flex; align-items: center; min-width: 0; gap: 12px; grid-column: 1; grid-row: 1;
+}
+.student-dashboard[data-student-theme] .top-navbar .menu-toggle {
+    display: grid; place-items: center; flex: 0 0 44px;
+    width: 44px; min-width: 44px; height: 44px; min-height: 44px;
+    margin: 0; padding: 0; border: 1px solid var(--student-border); border-radius: 12px;
+    background: var(--student-surface); color: var(--student-text); cursor: pointer;
+}
+.student-dashboard[data-student-theme] .top-navbar .menu-toggle svg { display: block; width: 22px; height: 22px; }
+.student-dashboard[data-student-theme] .top-navbar .header-greeting { flex: 1; min-width: 0; overflow: hidden; }
+.student-dashboard[data-student-theme] .top-navbar .header-greeting h1 {
+    margin: 0; line-height: 1.3; font-size: clamp(18px,1.7vw,26px);
+    color: var(--student-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.student-dashboard[data-student-theme] .top-navbar .header-greeting p {
+    margin: 3px 0 0; font-size: 12px; line-height: 1.4; color: var(--student-muted);
+}
+.student-dashboard[data-student-theme] .top-navbar .search-container {
+    display: flex; align-items: center; justify-self: stretch;
+    grid-column: 2; grid-row: 1; width: 100%; min-width: 0; max-width: none;
+    height: 44px; min-height: 44px; flex: none; padding: 0 0 0 14px; margin: 0;
+    border: 1px solid var(--student-border); border-radius: 12px;
+    background: var(--student-solid); color: var(--student-text); box-shadow: none;
+}
+.student-dashboard[data-student-theme] .top-navbar .search-container input {
+    flex: 1 1 0; width: 0; min-width: 0; height: 100%; min-height: 0;
+    margin: 0; padding: 0; border: 0 !important; border-radius: 0;
+    background: transparent !important; color: var(--student-text) !important;
+    -webkit-text-fill-color: var(--student-text); caret-color: var(--student-text);
+    font-family: inherit; font-size: 14px; line-height: normal;
+}
+.student-dashboard[data-student-theme] .top-navbar .search-container input::placeholder {
+    color: var(--student-muted); -webkit-text-fill-color: var(--student-muted); opacity: 1;
+}
+.student-dashboard[data-student-theme] .top-navbar .search-button {
+    display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px;
+    margin: 0; padding: 0; border: 0; border-radius: 10px; background: transparent;
+    color: var(--student-text); cursor: pointer; transform: none;
+}
+.student-dashboard[data-student-theme] .top-navbar .search-button svg { display: block; width: 18px; height: 18px; }
+.student-dashboard[data-student-theme] .top-navbar .search-container:focus-within {
+    background: var(--student-solid); border-color: var(--student-blue);
+    outline: 2px solid var(--student-blue); outline-offset: 2px; box-shadow: none;
+}
+.student-dashboard[data-student-theme] .top-navbar .student-theme-toggle {
+    grid-column: 3; grid-row: 1; width: 44px; height: 44px; margin: 0;
+}
+.student-dashboard[data-student-theme] .top-navbar .student-platform-bell {
+    grid-column: 4; grid-row: 1; width: 44px; height: 44px; margin: 0; justify-self: end;
+}
+.student-dashboard[data-student-theme] .top-navbar .platform-bell {
+    width: 44px; height: 44px; color: var(--student-text); background: var(--student-surface);
+}
+@media(max-width:1000px) {
+    .student-dashboard[data-student-theme] .top-navbar { grid-template-columns: minmax(0,1fr) 44px 44px; }
+    .student-dashboard[data-student-theme] .top-navbar .nav-left { grid-column: 1/-1; grid-row: 1; }
+    .student-dashboard[data-student-theme] .top-navbar .search-container { grid-column: 1; grid-row: 2; }
+    .student-dashboard[data-student-theme] .top-navbar .student-theme-toggle { grid-column: 2; grid-row: 2; }
+    .student-dashboard[data-student-theme] .top-navbar .student-platform-bell { grid-column: 3; grid-row: 2; }
+}
+@media(max-width:720px) {
+    .student-dashboard[data-student-theme] #student-sidebar {
+        width: min(280px,88vw); max-width: 88vw; min-width: 0;
+        top: var(--student-header-height); height: calc(100dvh - var(--student-header-height));
+        max-height: calc(100dvh - var(--student-header-height)); padding: 18px 14px;
+    }
+}
