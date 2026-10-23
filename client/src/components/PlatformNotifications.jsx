@@ -53,6 +53,14 @@ export default function PlatformNotifications({ admin = false, audience = "stude
             };
             await Promise.allSettled([
                 capture(async () => {
+                    if (admin || audience !== "student") return;
+                    const response = await api.get("/voting/notices");
+                    for (const notice of response.data.notices || []) {
+                        next.push({id:"voting-notice-"+notice.id,text:notice.message,action:"vote"});
+                    }
+                }),
+
+                capture(async () => {
                     const response = await api.get("/system/maintenance-status");
                     const status = response.data.maintenance || {};
                     if (live) onStatus?.(status);

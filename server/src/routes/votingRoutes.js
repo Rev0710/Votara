@@ -34,4 +34,5 @@ router.get(
 );
 
 
+router.get("/notices", protectStudent, require("../controllers/votingControlController").notices);
 module.exports = router;

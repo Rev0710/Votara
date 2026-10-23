@@ -837,6 +837,31 @@ function ElectionManagement({ onCreateElection, onNavigate }) {
     // LOAD ELECTIONS
     // =====================================================
 
+    const [votingControlBusy, setVotingControlBusy] = useState(false);
+    const [votingControlId, setVotingControlId] = useState("");
+    const controllableElections = elections.filter(item => item.rawStatus === "open" && item.isPublished);
+    const controlledElection = controllableElections.find(item => item.id === votingControlId)
+        || controllableElections[0];
+    const toggleVotingPause = async () => {
+        if (!controlledElection || votingControlBusy) return;
+        setVotingControlBusy(true);
+        setError("");
+        try {
+            await api.patch("/elections/"+controlledElection.id+"/voting-pause", {
+                paused: !controlledElection.voting_paused,
+                expectedPaused: controlledElection.voting_paused === true
+            });
+            setSuccess(controlledElection.voting_paused
+                ? "Voting resumed. The election date and 8:00 AM–5:00 PM Manila voting hours still apply."
+                : "Online and kiosk voting paused. Students have been notified.");
+            await loadElections(true);
+            window.dispatchEvent(new Event("votara-platform-update"));
+        } catch (error) {
+            setError(error.response?.data?.message || "Unable to update voting availability.");
+            await loadElections(true);
+        } finally {setVotingControlBusy(false);}
+    };
+
     const loadElections =
         async (silent = false) => {
 
@@ -2587,6 +2612,7 @@ function ElectionManagement({ onCreateElection, onNavigate }) {
 
                 </div>
 
+                <div className="election-header-actions">
                 <button
                     className="election-create-button"
                     type="button"
@@ -2600,6 +2626,21 @@ function ElectionManagement({ onCreateElection, onNavigate }) {
                 >
                     + Create Election
                 </button>
+                <div className="election-voting-controls">
+                    {controllableElections.length > 1 && <select aria-label="Election to pause or resume"
+                        value={controlledElection?.id || ""} onChange={event=>setVotingControlId(event.target.value)}>
+                        {controllableElections.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}
+                    </select>}
+                    <button type="button" className="election-create-button election-pause-button"
+                        disabled={!controlledElection || votingControlBusy}
+                        title={controlledElection ? controlledElection.name : "Open and publish an election first"}
+                        onClick={toggleVotingPause}>
+                        {votingControlBusy ? "Updating…" : controlledElection?.voting_paused ? "▶ Resume Voting" : "Ⅱ Pause Voting"}
+                    </button>
+                    <small>Online + kiosk · 8 AM–5 PM Manila</small>
+                </div>
+
+                </div>
 
             </div>
 

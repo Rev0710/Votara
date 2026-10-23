@@ -511,38 +511,19 @@ const expireStaleOperations = async (
     }
 };
 
-const getActiveOperationCount = async (
-    sessionId
-) => {
-    await expireStaleOperations(
-        sessionId
-    );
-
-    const {
-        count,
-        error,
-    } = await supabase
-        .from("kiosk_operations")
-        .select("id", {
-            count: "exact",
-            head: true,
-        })
-        .eq(
-            "kiosk_session_id",
-            sessionId
-        )
-        .eq(
-            "operation_status",
-            "active"
-        );
-
-    if (error) {
-        throw error;
-    }
-
+const getActiveOperationCount = async (sessionId, ebMemberId = null) => {
+    await expireStaleOperations(sessionId);
+    let query = supabase.from("kiosk_operations").select("id", {count: "exact", head: true})
+        .eq("kiosk_session_id", sessionId).eq("operation_status", "active");
+    if (ebMemberId) query = query.eq("eb_member_id", ebMemberId);
+    const {count, error} = await query;
+    if (error) throw error;
     return count || 0;
 };
 
+// =========================================================
+// TOUCH SHARED SESSION
+// =========================================================
 const touchKioskSession = async (
     sessionId
 ) => {
@@ -897,6 +878,10 @@ const createKioskOperation = async ({
         .single();
 
     if (error) {
+        if (error.code === "23505") {
+            const busy = new Error("Finish or cancel your current student assistance before starting another.");
+            busy.status = 409; busy.code = "EB_OPERATION_IN_USE"; throw busy;
+        }
         throw error;
     }
 
@@ -1033,49 +1018,9 @@ const completeKioskOperation =
             incrementStudentServed &&
             updatedOperation
         ) {
-            const {
-                data: session,
-                error:
-                    sessionError,
-            } = await supabase
-                .from(
-                    "kiosk_sessions"
-                )
-                .select(
-                    "students_served"
-                )
-                .eq(
-                    "id",
-                    operation.kiosk_session_id
-                )
-                .maybeSingle();
-
-            if (sessionError) {
-                throw sessionError;
-            }
-
-            await supabase
-                .from(
-                    "kiosk_sessions"
-                )
-                .update({
-                    students_served:
-                        Number(
-                            session
-                                ?.students_served ||
-                                0
-                        ) + 1,
-
-                    last_activity_at:
-                        nowIso(),
-
-                    updated_at:
-                        nowIso(),
-                })
-                .eq(
-                    "id",
-                    operation.kiosk_session_id
-                );
+            const {error: counterError} = await supabase.rpc("increment_kiosk_students_served",
+                {p_session_id: operation.kiosk_session_id});
+            if (counterError) console.error("Kiosk served counter update failed:", counterError.message);
         } else {
             await touchKioskSession(
                 operation.kiosk_session_id
@@ -1841,9 +1786,7 @@ const startKioskOperation = async (
             );
 
         const activeOperations =
-            await getActiveOperationCount(
-                session.id
-            );
+            await getActiveOperationCount(session.id, req.user.userId);
 
         if (
             activeOperations > 0
@@ -1851,10 +1794,10 @@ const startKioskOperation = async (
             return res.status(409).json({
                 success: false,
                 code:
-                    "SESSION_IN_USE",
+                    "EB_OPERATION_IN_USE",
 
                 message:
-                    "Please wait until the other finishes. A student is currently being assisted or is voting.",
+                    "Finish or cancel your current student assistance before starting another. Other EB members can assist students independently.",
             });
         }
 
@@ -1879,7 +1822,8 @@ const startKioskOperation = async (
             error
         );
 
-        return res.status(500).json({
+        return res.status(error.status || 500).json({
+                code: error.code,
             success: false,
             message:
                 error.message ||
@@ -2349,6 +2293,11 @@ const authorizeKioskStudent =
                     sessionId
                 );
 
+            const {data: votingElection, error: votingElectionError} = await supabase
+                .from("elections").select("*").eq("id",session.election_id).maybeSingle();
+            if (votingElectionError || !votingElection) throw new Error("Unable to verify election availability.");
+            const gate = require("../utils/electionTime").votingAvailability(votingElection);
+            if (!gate.available) return res.status(409).json({success:false,code:"VOTING_UNAVAILABLE",message:gate.message});
             const {
                 data: student,
                 error:
@@ -2415,9 +2364,7 @@ const authorizeKioskStudent =
             }
 
             const activeOperations =
-                await getActiveOperationCount(
-                    session.id
-                );
+                await getActiveOperationCount(session.id, req.user.userId);
 
             if (
                 activeOperations > 0
@@ -2425,10 +2372,10 @@ const authorizeKioskStudent =
                 return res.status(409).json({
                     success: false,
                     code:
-                        "SESSION_IN_USE",
+                        "EB_OPERATION_IN_USE",
 
                     message:
-                        "Please wait until the other finishes. A student is currently being assisted or is voting.",
+                        "Finish or cancel your current student assistance before starting another. Other EB members can assist students independently.",
                 });
             }
 
@@ -2489,7 +2436,8 @@ const authorizeKioskStudent =
                 error
             );
 
-            return res.status(500).json({
+            return res.status(error.status || 500).json({
+                code: error.code,
                 success: false,
                 message:
                     error.message ||
@@ -2721,6 +2669,34 @@ const submitKioskRegistration =
                     ? "normal"
                     : "late_enrollee";
 
+            const activeOperations =
+                await getActiveOperationCount(session.id, req.user.userId);
+
+            if (
+                activeOperations > 0
+            ) {
+                return res.status(409).json({
+                    success: false,
+                    code:
+                        "EB_OPERATION_IN_USE",
+
+                    message:
+                        "Finish or cancel your current student assistance before starting another. Other EB members can assist students independently.",
+                });
+            }
+
+            operation =
+                await createKioskOperation({
+                    sessionId:
+                        session.id,
+
+                    ebMemberId:
+                        req.user.userId,
+
+                    operationType:
+                        "registration",
+                });
+
             let registration;
 
             if (
@@ -2817,36 +2793,6 @@ const submitKioskRegistration =
                 registration =
                     data;
             }
-
-            const activeOperations =
-                await getActiveOperationCount(
-                    session.id
-                );
-
-            if (
-                activeOperations > 0
-            ) {
-                return res.status(409).json({
-                    success: false,
-                    code:
-                        "SESSION_IN_USE",
-
-                    message:
-                        "Please wait until the other finishes. A student is currently being assisted or is voting.",
-                });
-            }
-
-            operation =
-                await createKioskOperation({
-                    sessionId:
-                        session.id,
-
-                    ebMemberId:
-                        req.user.userId,
-
-                    operationType:
-                        "registration",
-                });
 
             const storagePrefix =
                 `registrations/${registration.id}`;
@@ -3164,12 +3110,14 @@ const submitKioskRegistration =
                 },
             });
         } catch (error) {
+            if (operation?.id) await cancelKioskOperation(operation.id).catch(() => {});
             console.error(
                 "❌ Kiosk registration submission error:",
                 error
             );
 
-            return res.status(500).json({
+            return res.status(error.status || 500).json({
+                code: error.code,
                 success: false,
                 message:
                     error.message ||

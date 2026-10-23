@@ -49,6 +49,8 @@ router.get(
 );
 
 // Get election by ID
+router.get("/:id/voting-availability", require("../controllers/votingControlController").availability);
+router.patch("/:id/voting-pause", require("../controllers/votingControlController").setPaused);
 router.get("/:id", getElectionById);
 
 // Update election

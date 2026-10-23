@@ -42,6 +42,7 @@ export const getStudentToken = () => {
             const payload = JSON.parse(atob(encoded + "=".repeat((4 - encoded.length % 4) % 4)));
             // Only select student credentials. Signature and account/session
             // validation remain the server's responsibility.
+            if (payload.kiosk === true) continue;
             if (payload.role && payload.role !== "student") continue;
             if (!(payload.studentId || payload.student_id || payload.studentNumber)) continue;
             if (payload.exp && Number(payload.exp) * 1000 <= Date.now()) continue;

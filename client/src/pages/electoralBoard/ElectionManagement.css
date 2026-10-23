@@ -1083,3 +1083,10 @@
         display: none !important;
     }
 }
+
+.election-header-actions {display:flex;align-items:flex-start;justify-content:flex-end;gap:12px;flex-wrap:wrap;}
+.election-voting-controls {display:flex;flex-direction:column;gap:6px;max-width:300px;}
+.election-voting-controls small {font-size:11px;color:var(--eb-text-muted,#94a3b8);}
+.election-voting-controls select {max-width:100%;padding:8px;border-radius:8px;}
+.election-pause-button:disabled {opacity:.5;cursor:not-allowed;}
+@media(max-width:640px){.election-header-actions{width:100%;justify-content:flex-start;}.election-voting-controls{flex:1;min-width:170px;}}

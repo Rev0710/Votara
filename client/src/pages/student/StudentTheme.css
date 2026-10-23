@@ -1,0 +1,246 @@
+
+/* Student-owned tokens outrank shared legacy styles regardless of lazy chunk order. */
+#student-workspace[data-student-theme] {
+    --student-bg:#f3f7ff; --student-solid:#fff; --student-text:#17263d;
+    --student-muted:#4f627c; --student-border:rgba(98,128,174,.26);
+    --student-soft:#eaf1fc; --student-link:#174fb8; --student-blue:#155dfb;
+    --student-glass:rgba(255,255,255,.86); --student-surface:var(--student-glass);
+    --student-positive:#08693d; --student-positive-bg:#e3f7ec;
+    --student-negative:#a61c32; --student-negative-bg:#fff0f3;
+    --student-warning:#805100; --student-warning-bg:#fff5d6;
+    background:var(--student-bg); color:var(--student-text); color-scheme:light;
+}
+#student-workspace[data-student-theme="dark"] {
+    --student-bg:#101725; --student-solid:#1b293e; --student-text:#edf3ff;
+    --student-muted:#b7c7df; --student-border:rgba(159,184,225,.3);
+    --student-soft:#263b57; --student-link:#a9c7ff;
+    --student-glass:rgba(29,44,65,.8);
+    --student-positive:#a2edbe; --student-positive-bg:#153d2b;
+    --student-negative:#ffc0cb; --student-negative-bg:#482635;
+    --student-warning:#ffe1a0; --student-warning-bg:#44371c;
+    color-scheme:dark;
+}
+#student-workspace .student-content-scroll {
+    padding-top:var(--student-header-height) !important;
+    color:var(--student-text);
+}
+#student-workspace #student-sidebar { background:var(--student-solid); color:var(--student-text); }
+#student-workspace #student-sidebar :is(.sidebar-item,.logout-button) { color:var(--student-text); }
+#student-workspace #student-sidebar :is(.sidebar-profile,.sidebar-help-card,.logout-button) {
+    background:var(--student-soft); border-color:var(--student-border);
+}
+#student-workspace #student-sidebar :is(.sidebar-profile-info h3,.profile-details h3,.sidebar-help-card strong) { color:var(--student-text); }
+#student-workspace #student-sidebar :is(.sidebar-edit-profile,.sidebar-help-card p) { color:var(--student-muted); }
+#student-workspace #student-sidebar .sidebar-item.active { color:#fff; background:#155dfb; }
+#student-workspace #student-sidebar .sidebar-item:not(.active):hover { background:var(--student-soft); color:var(--student-text); }
+#student-workspace #student-sidebar .student-dot-icon { width:24px; height:24px; fill:currentColor; stroke:none; }
+#student-workspace .top-navbar .menu-toggle { color:var(--student-text) !important; }
+#student-workspace .top-navbar .menu-toggle svg { stroke:currentColor; fill:none; stroke-width:2; opacity:1; }
+
+/* Cards keep one translucent surface and one set of readable foregrounds. */
+#student-workspace :is(.results-card,.calendar-card,.process-card,.candidate-card,
+.directory-candidate-card,.student-result-card,.student-results-election,.student-results-message,
+.candidates-empty-state,.settings-item,.student-guidelines-card,.student-guidelines-support,
+.about-votara-sheet,.about-votara-info-card,.policy-sheet,.contact-sheet,.contact-info-card,
+.contact-support-card,.contact-hours,.contact-department-grid article,.faq-section,.faq-item,
+.announcement-card,.profile-card,.profile-error-card) {
+    background:var(--student-glass) !important; color:var(--student-text) !important;
+    border:1px solid var(--student-border); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    box-shadow:0 6px 22px rgba(10,28,55,.06);
+}
+#student-workspace :is(.student-content-scroll,.profile-settings-modal,.password-modal,.student-report-modal,.settings-modal) :is(h1,h2,h3,h4,h5,h6) {
+    color:var(--student-text) !important;
+}
+#student-workspace :is(.student-content-scroll,.profile-settings-modal,.password-modal,.student-report-modal,.settings-modal) :is(p,small) {
+    color:var(--student-muted);
+}
+#student-workspace :is(.live-result-row,.student-result-candidate,.profile-info-item,.security-summary,
+.student-report-detail-card,.student-report-history-item,.password-requirements,.vote-status-panel,
+.vote-confirmation-panel,.vote-confirmation-summary,.candidate-card-bottom,.directory-candidate-info) {
+    color:var(--student-text); background:var(--student-soft) !important; border-color:var(--student-border);
+}
+#student-workspace :is(.live-results-header h3,.process-text strong,.student-result-candidate-info strong,
+.directory-candidate-info strong,.profile-info-item strong,.profile-identity strong,.student-report-detail-card strong,
+.student-report-detail-card p,.student-report-history-copy strong,.policy-sheet strong,.contact-sheet strong) {
+    color:var(--student-text) !important;
+}
+#student-workspace :is(.process-text span,.live-results-header p,.directory-platform p,.directory-party-name,
+.student-result-candidate-info span,.profile-info-item > span,.profile-identity p,.profile-photo-actions small) {
+    color:var(--student-muted) !important;
+}
+#student-workspace :is(.calendar-tabs,.calendar-day,.countdown,.countdown-values > div) {
+    background:var(--student-soft) !important; color:var(--student-text) !important;
+}
+#student-workspace :is(.calendar-tabs button,.countdown strong,.countdown small,.countdown-values span,.calendar-card .date strong,.calendar-card .date span) {
+    color:var(--student-text) !important;
+}
+#student-workspace .calendar-tabs .selected-tab { background:var(--student-solid); }
+#student-workspace .election-card :is(h1,h2,h3,p,strong,small) { color:#fff !important; }
+#student-workspace .election-card :is(.election-status-badge,.election-status-badge strong) { background:#e6f7ed; color:#076336 !important; }
+#student-workspace .announcement-card :is(h2,h3,p) { color:var(--student-text) !important; }
+#student-workspace .announcement-card button { color:var(--student-link); background:var(--student-soft); border-color:var(--student-border); }
+#student-workspace :is(.candidate-affiliation-badge,.directory-position-badge,.live-results-note,.live-results-badge) {
+    color:var(--student-link); background:var(--student-soft); border-color:var(--student-border);
+}
+#student-workspace :is(.settings-item,.settings-item > span,.policy-contents a,.contact-sheet a,
+.student-report-detail-card a,.student-guidelines-eyebrow,.about-votara-eyebrow) { color:var(--student-link); }
+
+/* Modal backplates are opaque enough for text; cards inside retain the glass effect. */
+#student-workspace :is(.profile-settings-modal,.password-modal,.student-report-modal,.settings-modal,.candidate-platform-modal,.logout-confirmation-dialog) {
+    background:var(--student-solid) !important; color:var(--student-text) !important; border-color:var(--student-border);
+}
+#student-workspace .votara-profile-page {
+    width:100%; max-width:none; min-height:0; margin:0;
+    background:transparent !important; color:var(--student-text) !important;
+}
+#student-workspace .profile-header { min-width:0; padding-right:0; }
+#student-workspace :is(.profile-header h1,.profile-identity h2,.profile-section-header h2,.profile-form label > span,.password-form label > span) {
+    color:var(--student-text) !important;
+}
+#student-workspace :is(.profile-eyebrow,.profile-section-header > div > span,.password-modal-eyebrow) { color:var(--student-link) !important; }
+#student-workspace .profile-form { display:block; width:100%; max-width:none; }
+#student-workspace .profile-form-grid {
+    display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; width:100%; max-width:none;
+}
+#student-workspace .profile-form-grid label { min-width:0; width:100%; }
+#student-workspace .profile-info-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; width:100%; }
+#student-workspace .profile-info-item { min-width:0; overflow-wrap:anywhere; }
+#student-workspace :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),textarea,select) {
+    background:var(--student-solid) !important; color:var(--student-text) !important;
+    -webkit-text-fill-color:var(--student-text); border-color:var(--student-border); caret-color:var(--student-text);
+    font-family:inherit; font-size:16px; max-width:100%; box-sizing:border-box;
+}
+#student-workspace :is(.profile-form,.password-form,.password-change-form) :is(input,select,textarea) {
+    width:100%; min-width:0; min-height:46px;
+}
+#student-workspace :is(input,textarea)::placeholder { color:var(--student-muted); -webkit-text-fill-color:var(--student-muted); opacity:1; }
+#student-workspace :is(.profile-outline-btn,.profile-secondary-btn,.profile-link-btn,.profile-back-btn,.profile-modal-close,
+.password-cancel-button,.student-report-secondary,.student-report-close,.student-report-quiet,.logout-cancel-button) {
+    color:var(--student-text) !important; background:var(--student-soft) !important; border-color:var(--student-border) !important;
+}
+#student-workspace :is(.profile-primary-btn,.password-submit-button,.student-report-primary,.student-report-submit,.candidate-vote-button,.submit-vote-button) {
+    color:#fff !important; background:#155dfb !important; border-color:#155dfb !important; -webkit-text-fill-color:#fff;
+}
+#student-workspace :is(.profile-status-badge,.profile-success-alert,.password-success-content,.password-match-message.is-valid,.password-requirement.is-valid) {
+    color:var(--student-positive) !important; background:var(--student-positive-bg); border-color:var(--student-positive);
+}
+#student-workspace :is(.profile-error-alert,.password-error,.student-report-error,.vote-error,.election-error,.vote-feedback) {
+    color:var(--student-negative) !important; background:var(--student-negative-bg); border-color:var(--student-negative);
+}
+#student-workspace :is(.password-requirement,.password-requirement > span,.student-report-empty) { color:var(--student-muted); }
+#student-workspace .password-requirement.is-valid > span { color:var(--student-positive) !important; }
+#student-workspace :is(.profile-warning-modal,.profile-warning-icon) { color:var(--student-warning); background:var(--student-warning-bg); border-color:var(--student-warning); }
+#student-workspace :is(.logout-confirm-button,.profile-warning-confirm) { background:#b91c1c !important; color:#fff !important; }
+#student-workspace :is(button,a,input,textarea,select):focus-visible { outline:3px solid var(--student-link); outline-offset:3px; }
+#student-workspace button:disabled { opacity:.65; cursor:not-allowed; }
+#student-workspace .student-content-scroll :is(.faq-button,.faq-answer) { background:var(--student-glass) !important; color:var(--student-text) !important; }
+@media(max-width:900px) {
+    #student-workspace .profile-info-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    #student-workspace .profile-hero-card { grid-template-columns:minmax(0,1fr); gap:20px; }
+}
+@media(max-width:600px) {
+    #student-workspace :is(.profile-form-grid,.profile-info-grid,.password-form) { grid-template-columns:minmax(0,1fr) !important; }
+    #student-workspace .profile-photo-section { flex-wrap:wrap; justify-content:flex-start; }
+    #student-workspace .profile-photo-actions { min-width:0; flex:1; }
+    #student-workspace .profile-form-actions { flex-wrap:wrap; gap:12px; }
+    #student-workspace .profile-form-actions button { flex:1 1 120px; min-height:44px; }
+    #student-workspace .candidate-card-top h3 { font-size:21px; }
+}
+@supports not (backdrop-filter:blur(1px)) {
+    #student-workspace :is(.profile-card,.candidate-card,.results-card,.calendar-card,.process-card,.settings-item,.student-guidelines-card) { background:var(--student-solid) !important; }
+}
+@media(prefers-reduced-transparency:reduce) {
+    #student-workspace { --student-glass:var(--student-solid); }
+    #student-workspace * { backdrop-filter:none !important; -webkit-backdrop-filter:none !important; }
+}
+
+#student-workspace .student-content-scroll p { font-size:14px; line-height:1.65; overflow-wrap:anywhere; }
+#student-workspace :is(.profile-header p,.profile-photo-actions small,.profile-info-item > span,.process-text span) { font-size:12px; line-height:1.55; }
+#student-workspace :is(.student-result-candidate-info,.live-result-candidate,.directory-candidate-info,.contact-department-grid article) { min-width:0; overflow-wrap:anywhere; }
+#student-workspace .student-content-scroll :is(table,.student-results-table) { max-width:100%; }
+#student-workspace .student-content-scroll :is(.table-wrapper,.student-results-table-wrapper) { overflow-x:auto; }
+#student-workspace .student-content-scroll :is(.candidate-card,.student-result-card,.directory-candidate-card) h3 { overflow-wrap:anywhere; }
+#student-workspace .profile-photo-placeholder { background:#155dfb !important; color:#fff; }
+#student-workspace .profile-photo-wrapper { background:var(--student-soft); box-shadow:none; }
+@media(max-width:600px) {
+    #student-workspace .profile-photo-section { display:flex; flex-direction:row; align-items:center; flex-wrap:wrap; gap:14px; }
+    #student-workspace .profile-photo-wrapper { width:96px; height:96px; flex:0 0 96px; }
+    #student-workspace .profile-photo-placeholder { width:100%; height:100%; font-size:30px; }
+    #student-workspace .profile-photo { width:100%; height:100%; }
+    #student-workspace .profile-photo-actions { flex:1 1 140px; min-width:0; }
+}
+#student-workspace :is(.policy-document,.policy-contents,.about-votara-capabilities,.about-votara-principles,.about-votara-principle,.contact-note,.contact-self-service details,.contact-self-service summary,.contact-eb-support,.contact-support-list,.student-report-selected-category,.student-report-reference,.student-report-timeline > div,.vote-confirmation-privacy) {
+ background:var(--student-soft) !important;color:var(--student-text) !important;border-color:var(--student-border) !important;
+}
+#student-workspace .student-voting-window {padding:14px 18px;border:1px solid var(--student-border);border-radius:12px;background:var(--student-soft);color:var(--student-text);margin:0 0 20px;}
+/* FAQ glass uses a light tint without blur so the existing dotted ground stays visible. */
+#student-workspace[data-student-theme] {
+    --student-faq-glass:rgba(255,255,255,.48);
+    --student-faq-row:rgba(255,255,255,.18);
+    --student-faq-hover:rgba(255,255,255,.38);
+}
+#student-workspace[data-student-theme="dark"] {
+    --student-faq-glass:rgba(27,41,62,.42);
+    --student-faq-row:rgba(38,59,87,.12);
+    --student-faq-hover:rgba(61,86,120,.24);
+}
+#student-workspace .student-content-scroll .faq-section {
+    background:var(--student-faq-glass) !important;
+    backdrop-filter:saturate(115%); -webkit-backdrop-filter:saturate(115%);
+    border-color:var(--student-border); box-shadow:none;
+}
+#student-workspace .student-content-scroll .faq-item {
+    background:var(--student-faq-row) !important;
+    backdrop-filter:none; -webkit-backdrop-filter:none; box-shadow:none;
+    border-color:var(--student-border); overflow:hidden;
+}
+#student-workspace .student-content-scroll :is(.faq-button,.faq-answer) {
+    background:transparent !important; box-shadow:none; color:var(--student-text) !important;
+}
+#student-workspace .student-content-scroll :is(.faq-item:hover,.faq-item:focus-within) {
+    background:var(--student-faq-hover) !important;
+}
+#student-workspace .student-content-scroll .faq-button {
+    min-height:52px; font-size:14px; line-height:1.5;
+}
+#student-workspace .student-content-scroll .faq-answer {
+    font-size:14px; line-height:1.65; color:var(--student-muted) !important;
+}
+#student-workspace .student-content-scroll .faq-intro p {color:var(--student-muted);}
+
+/* Keep calendar metadata legible instead of the legacy 6–9px labels. */
+#student-workspace .calendar-card .calendar-tabs button {
+    min-height:44px; font-size:13px; line-height:1.4; white-space:normal;
+}
+#student-workspace .calendar-card .countdown {padding:12px;}
+#student-workspace .calendar-card .countdown > small {
+    display:block; font-size:14px; line-height:1.5;
+    color:var(--student-text) !important; overflow-wrap:anywhere;
+}
+#student-workspace .calendar-card .countdown-values {
+    display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px;
+}
+#student-workspace .calendar-card .countdown-values > span {
+    padding:9px 6px; gap:4px; font-size:11px; line-height:1.5;
+    color:var(--student-muted) !important; background:var(--student-solid);
+    border:1px solid var(--student-border); overflow-wrap:anywhere;
+}
+#student-workspace .calendar-card .countdown-values strong {
+    display:block; font-size:14px; line-height:1.4; color:var(--student-text) !important;
+}
+#student-workspace .calendar-card .date {flex-shrink:0;}
+#student-workspace .calendar-card .date strong {font-size:12px;line-height:1.5;}
+#student-workspace .calendar-card .date > span {font-size:22px;font-weight:700;line-height:1.3;}
+@media(max-width:420px) {
+    #student-workspace .calendar-card .election-time {flex-direction:column;align-items:stretch;}
+    #student-workspace .calendar-card .date {flex-direction:row;justify-content:flex-start;gap:8px;}
+    #student-workspace .calendar-card .date > span {margin-top:0;}
+    #student-workspace .calendar-card .countdown-values {gap:5px;}
+    #student-workspace .calendar-card .countdown-values strong {font-size:13px;}
+}
+@media(prefers-reduced-transparency:reduce) {
+    #student-workspace .student-content-scroll :is(.faq-section,.faq-item,.faq-item:hover,.faq-item:focus-within) {
+        background:var(--student-solid) !important;
+        backdrop-filter:none; -webkit-backdrop-filter:none;
+    }
+}

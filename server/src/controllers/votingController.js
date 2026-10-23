@@ -101,43 +101,20 @@ const validateKioskVotingSession = async (student) => {
 // =========================================================
 // MARK KIOSK STUDENT AS SERVED
 // =========================================================
-const markKioskStudentServed = async (
-    session
-) => {
-    if (!session?.id) {
-        return;
-    }
 
-    const {
-        error,
-    } = await supabase
-        .from("kiosk_sessions")
-        .update({
-            students_served:
-                Number(
-                    session.students_served || 0
-                ) + 1,
-
-            last_activity_at:
-                new Date().toISOString(),
-        })
-        .eq(
-            "id",
-            session.id
-        )
-        .eq(
-            "session_status",
-            "active"
-        );
-
-    if (error) {
-        console.error(
-            "⚠️ Unable to update kiosk students served:",
-            error
-        );
+const markKioskStudentServed = async (session, operationId) => {
+    if (!session?.id || !operationId) return;
+    const {data: completed, error} = await supabase.from("kiosk_operations")
+        .update({operation_status:"completed", ended_at:new Date().toISOString(),
+            last_activity_at:new Date().toISOString(), updated_at:new Date().toISOString()})
+        .eq("id", operationId).eq("kiosk_session_id", session.id)
+        .eq("operation_status", "active").select("id").maybeSingle();
+    if (error) { console.error("Unable to complete kiosk operation:", error.message); return; }
+    if (completed) {
+        const {error: counterError} = await supabase.rpc("increment_kiosk_students_served", {p_session_id:session.id});
+        if (counterError) console.error("Unable to update kiosk served count:", counterError.message);
     }
 };
-
 
 // =========================================================
 // SUBMIT VOTE
@@ -225,9 +202,7 @@ const submitVote = async (
         // =====================================================
 
         if (kioskSession) {
-            await markKioskStudentServed(
-                kioskSession
-            );
+            await markKioskStudentServed(kioskSession, req.student.kioskOperationId);
         }
 
         // =====================================================

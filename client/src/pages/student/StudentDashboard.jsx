@@ -1,9 +1,11 @@
+import useVotingAvailability from "../../hooks/useVotingAvailability";
 import PlatformNotifications from '../../components/PlatformNotifications';
 import { useEffect, useMemo, useRef, useState } from "react";
 import "./StudentDashboard.css";
 import "./Settings.css";
 import "./StudentDashboard.workspace.css";
 import "./StudentNavbar.css";
+import "./StudentTheme.css";
 import StudentDotIcon from "../../components/student/StudentDotIcon";
 import { FiLogOut, FiMenu, FiMoon, FiSearch, FiSun } from "react-icons/fi";
 import Profile from "./Profile";
@@ -354,6 +356,7 @@ useEffect(() => {
     // =================================================
 
     const [election, setElection] = useState(null);
+    const votingGate = useVotingAvailability(election?.id);
     const [positions, setPositions] = useState([]);
     const [candidates, setCandidates] = useState([]);
 
@@ -812,7 +815,7 @@ const sidebarItems = [
     },
     {
         id: "guidelines",
-        label: "Voters Guidelines",
+        label: "Voting Guidelines",
         icon: guidelinesIcon,
         activeIcon: guidelinesIcon,
     },
@@ -1287,6 +1290,7 @@ const handleSettingsItemClick = (item) => {
     // =================================================
 
     const handleSubmitVotes = async (confirmed = false) => {
+        if (!votingGate.available) {setVoteFeedback(votingGate.message); return;}
         if(voteLoading)return;
         setVoteFeedback("");
         if (!election?.id) {
@@ -2774,7 +2778,7 @@ const resultsAreVisible =
                                             type="button"
                                             className={`vote-position-abstain${selectedVotes[position.id] ? "" : " is-selected"}`}
                                             aria-pressed={!selectedVotes[position.id]}
-                                            disabled={hasVoted || voteLoading || !electionIsOpen || !studentEligible}
+                                            disabled={hasVoted || voteLoading || !electionIsOpen || !studentEligible || !votingGate.available}
                                             onClick={() => setSelectedVotes(previous => ({ ...previous, [position.id]: null }))}
                                         >
                                             {selectedVotes[position.id] ? "Abstain from this position" : "Abstention selected"}
@@ -2792,7 +2796,7 @@ const resultsAreVisible =
                                     <button
                                         type="button"
                                         className="submit-vote-button"
-                                        disabled={voteLoading}
+                                        disabled={voteLoading || !votingGate.available}
                                         onClick={() => handleSubmitVotes()}
                                     >
                                         {voteLoading ? "SUBMITTING..." : "SUBMIT VOTE"}
@@ -2839,7 +2843,7 @@ const resultsAreVisible =
                     <section className="guidelines-container">
                         <div className="student-guidelines-heading">
                             <span className="student-guidelines-eyebrow">VOTER RESOURCES</span>
-                            <h1>Voters Guidelines</h1>
+                            <h1>Voting Guidelines</h1>
                             <p>A little preparation makes every vote count. Follow these guidelines for a smooth and secure voting experience.</p>
                         </div>
                         <div className="student-guidelines-grid">
@@ -3505,7 +3509,7 @@ const resultsAreVisible =
     // =================================================
 
     return (
-        <div className={`student-dashboard ${sidebarOpen ? "is-sidebar-expanded" : "is-sidebar-collapsed"}`} data-student-theme={studentTheme}>
+        <div id="student-workspace" className={`student-dashboard ${sidebarOpen ? "is-sidebar-expanded" : "is-sidebar-collapsed"}`} data-student-theme={studentTheme}>
             {/* ================= NAVBAR ================= */}
 
             
@@ -3647,9 +3651,7 @@ const resultsAreVisible =
                                         }
                                     >
                                         <span className="sidebar-icon-wrapper">
-                                            {item.id === "candidates" || item.id === "results"
-                                                ? <StudentDotIcon name={item.id} />
-                                                : <img className="student-figma-icon" src={isActive ? item.activeIcon : item.icon} alt="" aria-hidden="true" width="20" height="20" />}
+                                            <StudentDotIcon name={item.id} />
                                         </span>
 
                                         <span className="sidebar-label">
@@ -3689,6 +3691,7 @@ const resultsAreVisible =
                 {/* ================= CONTENT ================= */}
 
                 <div className="student-content-scroll" ref={contentScrollRef} tabIndex={0} aria-label="Student dashboard content">
+                    {election?.id && !votingGate.available && <p className="student-voting-window" role="status">{votingGate.message}</p>}
                     {renderMainContent()}
                 </div>
             </div>
@@ -3697,7 +3700,7 @@ const resultsAreVisible =
 
 {/* ================= CANDIDATE CAMPAIGN PLATFORM ================= */}
 
-{(ballotReview || voteFeedback) && <div className="candidate-platform-overlay"><section className="candidate-platform-modal ballot-review-modal" role="dialog" aria-modal="true" aria-labelledby="ballot-review-title"><h2 id="ballot-review-title">{voteFeedback?"Voting update":"Review your ballot"}</h2>{voteFeedback?<p role="alert">{voteFeedback}</p>:<><p>Unselected positions count as abstentions. You can submit only the candidates you chose.</p><ul>{eligiblePositions.map(position=><li key={position.id}><strong>{position.name}</strong><span>{selectedVotes[position.id]?(candidates.find(candidate=>candidate.id===selectedVotes[position.id])?.full_name||candidates.find(candidate=>candidate.id===selectedVotes[position.id])?.fullName||"Candidate selected"):"No vote — abstain"}</span></li>)}</ul><p>Your choices cannot be changed after submission.</p></>}<footer><button type="button" onClick={()=>{setBallotReview(false);setVoteFeedback("");}}> {voteFeedback?"Close":"Back to ballot"}</button>{!voteFeedback&&<button type="button" className="primary" disabled={voteLoading} onClick={()=>handleSubmitVotes(true)}>Confirm & submit</button>}</footer></section></div>}
+{(ballotReview || voteFeedback) && <div className="candidate-platform-overlay"><section className="candidate-platform-modal ballot-review-modal" role="dialog" aria-modal="true" aria-labelledby="ballot-review-title"><h2 id="ballot-review-title">{voteFeedback?"Voting update":"Review your ballot"}</h2>{voteFeedback?<p role="alert">{voteFeedback}</p>:<><p>Unselected positions count as abstentions. You can submit only the candidates you chose.</p><ul>{eligiblePositions.map(position=><li key={position.id}><strong>{position.name}</strong><span>{selectedVotes[position.id]?(candidates.find(candidate=>candidate.id===selectedVotes[position.id])?.full_name||candidates.find(candidate=>candidate.id===selectedVotes[position.id])?.fullName||"Candidate selected"):"No vote — abstain"}</span></li>)}</ul><p>Your choices cannot be changed after submission.</p></>}<footer><button type="button" onClick={()=>{setBallotReview(false);setVoteFeedback("");}}> {voteFeedback?"Close":"Back to ballot"}</button>{!voteFeedback&&<button type="button" className="primary" disabled={voteLoading || !votingGate.available} onClick={()=>handleSubmitVotes(true)}>Confirm & submit</button>}</footer></section></div>}
 {selectedCandidateDetails && (
     <div
         className="candidate-platform-overlay"

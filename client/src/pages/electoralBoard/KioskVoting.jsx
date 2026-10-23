@@ -1,3 +1,4 @@
+import useVotingAvailability from "../../hooks/useVotingAvailability";
 import React, {
     useEffect,
     useMemo,
@@ -17,6 +18,8 @@ import {
     approveKioskRegistration,
     setKioskPersonalPassword,
     getActiveKioskSession,
+    heartbeatKioskOperation,
+    abortKioskOperation,
 } from "../../services/kioskService";
 
 import {
@@ -208,6 +211,15 @@ const normalizePositions = (
 // =====================================================
 
 function KioskVoting() {
+    const [activeOperationId, setActiveOperationId] = useState(null);
+    useEffect(() => {
+        if (!activeOperationId) return undefined;
+        const touch = () => heartbeatKioskOperation(activeOperationId).catch(error => {
+            if ([400,404,409].includes(error.response?.status)) setActiveOperationId(null);
+        });
+        const timer = window.setInterval(touch, 30000);
+        return () => window.clearInterval(timer);
+    }, [activeOperationId]);
 
     const navigate =
         useNavigate();
@@ -263,6 +275,7 @@ function KioskVoting() {
         session,
         setSession,
     ] = useState(null);
+    const votingGate = useVotingAvailability(session?.election_id);
 
     const [
         studentId,
@@ -464,6 +477,7 @@ function KioskVoting() {
     const handleBackToKioskManagement =
         () => {
 
+            clearStudentSession();
             // Stop camera first.
             stopSelfieCamera();
 
@@ -565,6 +579,11 @@ function KioskVoting() {
     const clearStudentSession =
         () => {
 
+            if (activeOperationId) {
+                abortKioskOperation(activeOperationId).catch(error => console.warn("Unable to release kiosk assistance:", error?.message));
+                setActiveOperationId(null);
+            }
+            localStorage.removeItem("votaraKioskOperationId");
             // Make sure camera is stopped.
             stopSelfieCamera();
 
@@ -806,6 +825,10 @@ function KioskVoting() {
     const activateKioskToken =
         (response) => {
 
+            if (response.operationId) {
+                setActiveOperationId(response.operationId);
+                localStorage.setItem("votaraKioskOperationId", response.operationId);
+            }
             localStorage.setItem(
                 "votaraKioskToken",
                 response.token
@@ -1435,9 +1458,8 @@ function KioskVoting() {
                     });
 
 
-                setRegistrationReview(
-                    response
-                );
+                setRegistrationReview(response);
+                if (response.operationId) setActiveOperationId(response.operationId);
 
                 setStep(
                     "review-registration"
@@ -1808,9 +1830,9 @@ const approveRegistration =
                     );
 
 
-                setSubmittedBallot(
-                    response
-                );
+                setSubmittedBallot(response);
+                setActiveOperationId(null);
+                localStorage.removeItem("votaraKioskOperationId");
 
 
                 setStep(
@@ -1890,6 +1912,7 @@ const approveRegistration =
     return (
 
         <div className="kiosk-voting-page">
+            {session?.election_id && !votingGate.available && <p className="kiosk-alert kiosk-alert-error" role="status">{votingGate.message}</p>}
 
             {/* =================================================
                 HEADER
@@ -2188,12 +2211,7 @@ const approveRegistration =
                                 <button
                                     type="button"
                                     className="kiosk-main-button"
-                                    onClick={
-                                        authorizeStudent
-                                    }
-                                    disabled={
-                                        actionLoading
-                                    }
+                                    onClick={authorizeStudent} disabled={actionLoading || !votingGate.available}
                                 >
 
                                     {
@@ -3364,12 +3382,7 @@ const approveRegistration =
                             <button
                                 type="button"
                                 className="kiosk-main-button"
-                                onClick={
-                                    submitKioskVote
-                                }
-                                disabled={
-                                    actionLoading
-                                }
+                                onClick={submitKioskVote} disabled={actionLoading || !votingGate.available}
                             >
 
                                 {

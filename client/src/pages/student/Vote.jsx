@@ -1,3 +1,4 @@
+import useVotingAvailability from "../../hooks/useVotingAvailability";
 import React, {
     useEffect,
     useMemo,
@@ -75,6 +76,7 @@ const Vote = () => {
     const [submitting, setSubmitting] = useState(false);
 
     const [election, setElection] = useState(null);
+    const votingGate = useVotingAvailability(election?.id);
     const [configuration, setConfiguration] = useState(null);
 
     const [positions, setPositions] = useState([]);
@@ -1072,8 +1074,10 @@ const Vote = () => {
 
         return (
             <div className="vote-page">
+            {election?.id && !votingGate.available && <p role="status">{votingGate.message}</p>}
 
                 <main className="vote-main">
+
 
                     <div className="vote-heading">
 
@@ -1115,8 +1119,10 @@ const Vote = () => {
 
         return (
             <div className="vote-page">
+            {election?.id && !votingGate.available && <p role="status">{votingGate.message}</p>}
 
                 <main className="vote-main">
+
 
                     <div className="vote-heading">
 
@@ -1198,8 +1204,10 @@ const Vote = () => {
 
         return (
             <div className="vote-page">
+            {election?.id && !votingGate.available && <p role="status">{votingGate.message}</p>}
 
                 <main className="vote-main">
+
 
                     <div className="vote-heading">
 
@@ -1265,8 +1273,10 @@ const Vote = () => {
 
         return (
             <div className="vote-page">
+            {election?.id && !votingGate.available && <p role="status">{votingGate.message}</p>}
 
                 <main className="vote-main">
+
 
                     <div className="vote-heading">
 
@@ -1314,8 +1324,10 @@ const Vote = () => {
 
         return (
             <div className="vote-page">
+            {election?.id && !votingGate.available && <p role="status">{votingGate.message}</p>}
 
                 <main className="vote-main">
+
 
                     <div className="vote-heading">
 
@@ -1368,8 +1380,10 @@ const Vote = () => {
 
         return (
             <div className="vote-page">
+            {election?.id && !votingGate.available && <p role="status">{votingGate.message}</p>}
 
                 <main className="vote-main">
+
 
                     <div className="vote-heading">
 
@@ -1415,8 +1429,10 @@ const Vote = () => {
 
         return (
             <div className="vote-page">
+            {election?.id && !votingGate.available && <p role="status">{votingGate.message}</p>}
 
                 <main className="vote-main">
+
 
                     <div className="vote-heading">
 
@@ -1577,9 +1593,7 @@ const Vote = () => {
                             onClick={
                                 handleBackToBallot
                             }
-                            disabled={
-                                submitting
-                            }
+                            disabled={submitting}
                         >
                             Back to Ballot
                         </button>
@@ -1590,9 +1604,7 @@ const Vote = () => {
                             onClick={
                                 handleSubmitVote
                             }
-                            disabled={
-                                submitting
-                            }
+                            disabled={submitting || !votingGate.available}
                         >
                             {submitting
                                 ? "Submitting Vote..."
@@ -1614,8 +1626,10 @@ const Vote = () => {
 
     return (
         <div className="vote-page">
+            {election?.id && !votingGate.available && <p role="status">{votingGate.message}</p>}
 
             <main className="vote-main">
+
 
                 {/* =========================================
                     HEADER
@@ -1905,7 +1919,7 @@ const Vote = () => {
                         onClick={
                             handleReviewVote
                         }
-                        disabled={submitting}
+                        disabled={submitting || !votingGate.available}
                     >
                         Review Vote
                     </button>
