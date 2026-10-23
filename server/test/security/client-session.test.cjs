@@ -79,3 +79,39 @@ test("Electoral Board election changes retain the board credential", () => {
     const context = browserContext({ votaraStaffToken: token }, "/electoral-board/election-management");
     assert.equal(context.request({ url: "/elections/e1/publish", headers: {} }).headers.Authorization, `Bearer ${token}`);
 });
+
+test("registration list uses the board session when a different staff role is also stored", async () => {
+    const boardToken = jwt.sign({ role: "electoral_board" }, "test-only-secret", { expiresIn: "1h" });
+    const otherToken = jwt.sign({ role: "admin" }, "test-only-secret", { expiresIn: "1h" });
+    const context = browserContext({ votaraEBToken: boardToken, votaraStaffToken: otherToken }, "/electoral-board/dashboard");
+    let authorization;
+    const api = vm.runInContext("api", context);
+    api.get = async (url, config = {}) => {
+        authorization = context.request({ url, headers: {}, ...config }).headers.Authorization;
+        return { data: { applications: [] } };
+    };
+    for (const setter of ["setError", "setApplications", "setLoading", "setRefreshing"]) context[setter] = () => {};
+    context.navigate = () => assert.fail("Registration review must not redirect to Admin login");
+    const component = fs.readFileSync(path.resolve(__dirname, "../../../client/src/pages/electoralBoard/Registrations.jsx"), "utf8");
+    const start = component.indexOf("    const loadApplications = async () => {");
+    const end = component.indexOf("\n    };", start) + "\n    };".length;
+    assert.ok(start >= 0 && end > start, "Registration loader must be present");
+    vm.runInContext(`${component.slice(start, end)}\nglobalThis.loadRegistrationApplications = loadApplications;`, context);
+    await context.loadRegistrationApplications();
+    assert.equal(authorization, `Bearer ${boardToken}`);
+});
+
+test("registration requests skip expired board tokens and use the current board staff session", () => {
+    const expired = jwt.sign({ role: "electoral_board", exp: 1 }, "test-only-secret");
+    const current = jwt.sign({ role: "electoral_board" }, "test-only-secret", { expiresIn: "1h" });
+    const context = browserContext({ votaraEBToken: expired, votaraStaffToken: current }, "/electoral-board/dashboard");
+    for (const url of ["/eb/registrations", "/eb/registrations/r1", "/eb/registrations/r1/review"]) {
+        assert.equal(context.request({ url, headers: {} }).headers.Authorization, `Bearer ${current}`);
+    }
+});
+
+test("registration requests never substitute an administrator or student for a missing board session", () => {
+    const admin = jwt.sign({ role: "admin" }, "test-only-secret");
+    const context = browserContext({ votaraStaffToken: admin, votaraAdminToken: admin, votaraToken: "student-token" }, "/electoral-board/dashboard");
+    assert.equal(context.request({ url: "/eb/registrations", headers: {} }).headers.Authorization, undefined);
+});

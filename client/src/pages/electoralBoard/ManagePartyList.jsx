@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import "./ManagePartyList.css";
+import CandidateDetailsDialog from "./CandidateDetailsDialog";
 import VotaraLogo from "/src/images/Votara.png";
 
 /*
@@ -3190,229 +3191,24 @@ const deleteCandidate = async (
                 DETAILS MODAL
             =================================================== */}
 
-            {showDetails &&
-                selectedCandidate && (
-                <ModalOverlay className={individualCandidacy ? "eb-individual-modal-overlay" : ""}>
-                        <div
-                            style={
-                                styles.detailsModal
-                            }
-                        >
-                            <div
-                                style={
-                                    styles.modalHeader
-                                }
-                            >
-                                <div>
-                                    <div
-                                        style={
-                                            styles.overline
-                                        }
-                                    >
-                                        CANDIDATE DETAILS
-                                    </div>
-
-                                    <h2
-                                        style={
-                                            styles.modalTitle
-                                        }
-                                    >
-                                        Candidate
-                                        Information
-                                    </h2>
-
-                                    <p
-                                        style={
-                                            styles.modalDescription
-                                        }
-                                    >
-                                        Review the
-                                        candidate's
-                                        election
-                                        information.
-                                    </p>
-                                </div>
-
-                                <button
-                                    style={
-                                        styles.closeButton
-                                    }
-                                    onClick={() =>
-                                        setShowDetails(
-                                            false
-                                        )
-                                    }
-                                >
-                                    ×
-                                </button>
-                            </div>
-
-                            <div
-                                style={
-                                    styles.detailsBody
-                                }
-                            >
-                                <div
-                                    style={
-                                        styles.detailProfile
-                                    }
-                                >
-                                    <div
-                                        style={
-                                            styles.detailAvatar
-                                        }
-                                    >
-                                        {selectedCandidate.profile_picture ? (
-                                            <img
-                                                src={
-                                                    selectedCandidate.profile_picture
-                                                }
-                                                alt={getStudentName(
-                                                    selectedCandidate
-                                                )}
-                                                style={
-                                                    styles.avatarImage
-                                                }
-                                            />
-                                        ) : (
-                                            getStudentName(
-                                                selectedCandidate
-                                            )
-                                                ?.charAt(
-                                                    0
-                                                )
-                                                ?.toUpperCase()
-                                        )}
-                                    </div>
-
-                                    <div>
-                                        <h3
-                                            style={
-                                                styles.detailName
-                                            }
-                                        >
-                                            {getStudentName(
-                                                selectedCandidate
-                                            )}
-                                        </h3>
-
-                                        <span
-                                            style={
-                                                selectedCandidate.is_active
-                                                    ? styles.activeBadge
-                                                    : styles.inactiveBadge
-                                            }
-                                        >
-                                            <span
-                                                style={
-                                                    styles.statusDot
-                                                }
-                                            />
-
-                                            {selectedCandidate.is_active
-                                                ? "Active Candidate"
-                                                : "Inactive Candidate"}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <DetailRow
-                                    label="Student ID"
-                                    value={getStudentId(
-                                        selectedCandidate
-                                    )}
-                                />
-
-                                <DetailRow
-                                    label="Year Level"
-                                    value={
-                                        normalizeYear(
-                                            selectedCandidate
-                                                ?.student
-                                                ?.year_level
-                                        ) ||
-                                        "N/A"
-                                    }
-                                />
-
-                                <DetailRow
-                                    label="Position"
-                                    value={getPositionName(
-                                        selectedCandidate
-                                    )}
-                                />
-
-                                <DetailRow
-                                    label="Party List"
-                                    value={getPartyName(
-                                        selectedCandidate
-                                    )}
-                                />
-
-                                <DetailRow
-                                    label="Election"
-                                    value={
-                                        selectedElection?.title ||
-                                        "N/A"
-                                    }
-                                />
-
-                                <div
-                                    style={
-                                        styles.platformDetails
-                                    }
-                                >
-                                    <span>
-                                        PLATFORM /
-                                        DESCRIPTION
-                                    </span>
-
-                                    <p>
-                                        {selectedCandidate.platform ||
-                                            "No platform or description provided."}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div
-                                style={
-                                    styles.modalFooter
-                                }
-                            >
-                                <button
-                                    style={
-                                        styles.secondaryButton
-                                    }
-                                    onClick={() =>
-                                        setShowDetails(
-                                            false
-                                        )
-                                    }
-                                >
-                                    Close
-                                </button>
-
-                                <button
-                                    className="votara-button"
-                                    style={
-                                        styles.primaryButton
-                                    }
-                                    onClick={() => {
-                                        setShowDetails(
-                                            false
-                                        );
-
-                                        openEditModal(
-                                            selectedCandidate
-                                        );
-                                    }}
-                                >
-                                    Edit Candidate
-                                </button>
-                            </div>
-                        </div>
-                    </ModalOverlay>
-                )}
+            {showDetails && selectedCandidate && (
+                <CandidateDetailsDialog
+                    name={getStudentName(selectedCandidate)}
+                    studentId={getStudentId(selectedCandidate)}
+                    yearLevel={normalizeYear(selectedCandidate?.student?.year_level) || "N/A"}
+                    position={getPositionName(selectedCandidate)}
+                    partyList={getPartyName(selectedCandidate)}
+                    election={selectedElection?.title || "N/A"}
+                    platform={selectedCandidate.platform}
+                    profilePicture={selectedCandidate.profile_picture}
+                    isActive={selectedCandidate.is_active}
+                    onClose={() => setShowDetails(false)}
+                    onEdit={() => {
+                        setShowDetails(false);
+                        openEditModal(selectedCandidate);
+                    }}
+                />
+            )}
 
             {/* ==================================================
                 CONFIRMATION MODAL
@@ -3807,28 +3603,6 @@ function ReviewItem({
 // ============================================================
 // DETAIL ROW
 // ============================================================
-
-function DetailRow({
-    label,
-    value,
-}) {
-    return (
-        <div
-            style={
-                styles.detailRow
-            }
-        >
-            <span>
-                {label}
-            </span>
-
-            <strong>
-                {value}
-            </strong>
-        </div>
-    );
-}
-
 
 // ============================================================
 // EMPTY STATE
@@ -5009,22 +4783,6 @@ const styles = {
             "votaraFade .18s ease",
     },
 
-    detailsModal: {
-        width:
-            "min(570px, 100%)",
-        maxHeight:
-            "90vh",
-        overflow:
-            "auto",
-        background:
-            "#ffffff",
-        borderRadius:
-            "18px",
-        boxShadow:
-            "0 25px 70px rgba(0,0,0,.25)",
-        animation:
-            "votaraFade .18s ease",
-    },
 
     modalHeader: {
         padding:
@@ -5845,89 +5603,11 @@ const styles = {
     // DETAILS
     // ========================================================
 
-    detailsBody: {
-        padding:
-            "22px 24px",
-    },
 
-    detailProfile: {
-        display:
-            "flex",
-        alignItems:
-            "center",
-        gap:
-            "15px",
-        paddingBottom:
-            "20px",
-        marginBottom:
-            "15px",
-        borderBottom:
-            "1px solid #e7edf4",
-    },
 
-    detailAvatar: {
-        width:
-            "70px",
-        height:
-            "70px",
-        borderRadius:
-            "15px",
-        background:
-            "#eff5ff",
-        color:
-            "#2563eb",
-        display:
-            "flex",
-        alignItems:
-            "center",
-        justifyContent:
-            "center",
-        fontSize:
-            "27px",
-        fontWeight:
-            800,
-        overflow:
-            "hidden",
-        flexShrink:
-            0,
-    },
 
-    detailName: {
-        margin:
-            "0 0 8px",
-        color:
-            "#0b1f3a",
-        fontSize:
-            "18px",
-        fontWeight:
-            800,
-    },
 
-    detailRow: {
-        display:
-            "flex",
-        justifyContent:
-            "space-between",
-        gap:
-            "20px",
-        padding:
-            "12px 0",
-        borderBottom:
-            "1px solid #edf1f5",
-        fontSize:
-            "12px",
-    },
 
-    platformDetails: {
-        marginTop:
-            "17px",
-        background:
-            "#f8fafc",
-        borderRadius:
-            "10px",
-        padding:
-            "14px",
-    },
 
     // ========================================================
     // CONFIRMATION

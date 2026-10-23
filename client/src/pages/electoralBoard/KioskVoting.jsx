@@ -9,6 +9,8 @@ import {
     useNavigate,
     useSearchParams,
 } from "react-router-dom";
+import { FiAlertCircle, FiArrowRight, FiArrowUpRight, FiCamera, FiCheckCircle, FiCreditCard, FiFileText, FiRefreshCw, FiUser } from "react-icons/fi";
+import gsap from "gsap";
 
 import {
     verifyKioskStudent,
@@ -17,7 +19,11 @@ import {
     approveKioskRegistration,
     setKioskPersonalPassword,
     getActiveKioskSession,
+    abortKioskOperation,
+    finishKioskOperation,
+    heartbeatKioskOperation,
 } from "../../services/kioskService";
+import { createKioskOperationSession } from "../../services/kioskOperationSession";
 
 import {
     getElectionConfiguration,
@@ -40,6 +46,12 @@ const YEARS = [
     "3rd Year",
     "4th Year",
 ];
+
+const REVIEW_DOCUMENT_LABELS = {
+    student_id_front: "School ID - Front",
+    student_id_back: "School ID - Back",
+    enrollment_proof: "Enrollment proof",
+};
 
 
 // =====================================================
@@ -238,6 +250,17 @@ function KioskVoting() {
 
     const selfieStreamRef =
         useRef(null);
+
+    const verifiedCardRef = useRef(null);
+
+    const operationSessionRef = useRef(null);
+    if (!operationSessionRef.current) {
+        operationSessionRef.current = createKioskOperationSession({
+            abort: abortKioskOperation,
+            finish: finishKioskOperation,
+        });
+    }
+    const [activeOperationId, setActiveOperationId] = useState(null);
 
 
     // =================================================
@@ -458,42 +481,76 @@ function KioskVoting() {
 
 
     // =================================================
+    // KEEP THE CURRENT ASSISTANCE ACTIVE
+    // =================================================
+
+    useEffect(() => {
+        if (!activeOperationId) return;
+        let stopped = false;
+        let inFlight = false;
+        const timer = window.setInterval(async () => {
+            if (inFlight || operationSessionRef.current.id !== activeOperationId) return;
+            inFlight = true;
+            try {
+                await heartbeatKioskOperation(activeOperationId);
+            } catch (err) {
+                if (!stopped && operationSessionRef.current.id === activeOperationId) {
+                    setError(err?.response?.data?.message || "Unable to refresh the active kiosk assistance. Please check the connection.");
+                }
+            } finally {
+                inFlight = false;
+            }
+        }, 30000);
+        return () => { stopped = true; window.clearInterval(timer); };
+    }, [activeOperationId]);
+
+    useEffect(() => () => {
+        operationSessionRef.current.release().catch(() => {
+            console.warn("Kiosk assistance cleanup could not finish. The inactivity timeout will release it.");
+        });
+    }, []);
+
+
+    // =================================================
+    // VERIFIED STUDENT ENTRANCE
+    // =================================================
+
+    useEffect(() => {
+        if (step !== "verified" || !verifiedCardRef.current ||
+            window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+        const context = gsap.context(() => {
+            gsap.from(".kiosk-card-heading, .kiosk-verification-grid, .kiosk-action-row", {
+                y: 10,
+                opacity: 0,
+                duration: .35,
+                stagger: .06,
+                ease: "power2.out",
+                clearProps: "transform,opacity",
+            });
+        }, verifiedCardRef);
+
+        return () => context.revert();
+    }, [step]);
+
+
+    // =================================================
     // BACK TO KIOSK MANAGEMENT
     // =================================================
 
     const handleBackToKioskManagement =
-        () => {
+        async () => {
 
-            // Stop camera first.
-            stopSelfieCamera();
+            if (!await clearStudentSession()) return;
 
-
-            // When Kiosk Management opened
-            // this page in a new tab.
-            if (
-                window.opener &&
-                !window.opener.closed
-            ) {
-
-                window.close();
-
-                return;
-            }
-
-
-            // Fallback when opened directly.
-            if (
-                window.history.length > 1
-            ) {
-
-                navigate(-1);
-
-                return;
-            }
-
-
+            // Kiosks open in a separate tab with noopener, so browser
+            // history and window.close() cannot reliably return to management.
             navigate(
-                "/electoral-board/dashboard"
+                "/electoral-board/dashboard",
+                {
+                    replace: true,
+                    state: { returnToSection: "kiosk" },
+                }
             );
         };
 
@@ -563,10 +620,21 @@ function KioskVoting() {
     // =================================================
 
     const clearStudentSession =
-        () => {
+        async () => {
 
             // Make sure camera is stopped.
             stopSelfieCamera();
+
+            setActionLoading(true);
+            try {
+                await operationSessionRef.current.release();
+                setActiveOperationId(null);
+            } catch (err) {
+                setError(err?.response?.data?.message || "Unable to end the current assistance. Please try again before starting another student.");
+                return false;
+            } finally {
+                setActionLoading(false);
+            }
 
 
             localStorage.removeItem(
@@ -588,6 +656,8 @@ function KioskVoting() {
             localStorage.removeItem(
                 "votaraKioskMode"
             );
+
+            localStorage.removeItem("votaraKioskOperationId");
 
 
             setStudent(null);
@@ -629,6 +699,7 @@ function KioskVoting() {
             setSuccess("");
 
             setError("");
+            return true;
         };
 
 
@@ -765,6 +836,10 @@ function KioskVoting() {
 
                 setError("");
 
+                // Retry cleanup from this page before reserving another slot.
+                await operationSessionRef.current.release();
+                setActiveOperationId(null);
+
 
                 const response =
                     await authorizeKioskStudent(
@@ -805,6 +880,9 @@ function KioskVoting() {
 
     const activateKioskToken =
         (response) => {
+
+            operationSessionRef.current.track(response.operationId);
+            setActiveOperationId(operationSessionRef.current.id);
 
             localStorage.setItem(
                 "votaraKioskToken",
@@ -914,9 +992,10 @@ function KioskVoting() {
 
                 console.error(err);
 
-                clearStudentSession();
+                const cleared = await clearStudentSession();
 
                 setError(
+                    (!cleared && "The ballot could not load and the current assistance could not be released. Please try Cancel again.") ||
                     err?.response?.data?.message ||
                     err.message ||
                     "Unable to load the voting ballot."
@@ -1435,6 +1514,8 @@ function KioskVoting() {
                     });
 
 
+                operationSessionRef.current.track(response.operationId);
+                setActiveOperationId(operationSessionRef.current.id);
                 setRegistrationReview(
                     response
                 );
@@ -1534,6 +1615,9 @@ const approveRegistration =
             setActivationToken(
                 response.activationToken
             );
+
+            operationSessionRef.current.track(response.operationId);
+            setActiveOperationId(operationSessionRef.current.id);
 
 
             setStudent(
@@ -1812,6 +1896,14 @@ const approveRegistration =
                     response
                 );
 
+                operationSessionRef.current.markCompleted();
+                try {
+                    await operationSessionRef.current.release();
+                    setActiveOperationId(null);
+                } catch {
+                    setError("Your vote was recorded. Kiosk cleanup is still pending; select Next Student to retry it.");
+                }
+
 
                 setStep(
                     "complete"
@@ -1840,13 +1932,13 @@ const approveRegistration =
     // =====================================================
 
     const nextStudent =
-        () => {
+        async () => {
 
             stopSelfieCamera();
 
-            clearStudentSession();
+            if (!await clearStudentSession()) return;
 
-            initialize();
+            await initialize();
         };
 
 
@@ -1904,6 +1996,7 @@ const approveRegistration =
                         handleBackToKioskManagement
                     }
                     aria-label="Back to Kiosk Management"
+                    disabled={actionLoading}
                 >
 
                     <span className="kiosk-back-arrow">
@@ -2084,14 +2177,15 @@ const approveRegistration =
                 {step === "verified" &&
                     student && (
 
-                        <section className="kiosk-voting-card">
+                        <section className="kiosk-voting-card kiosk-verified-card" ref={verifiedCardRef}>
 
                             <div className="kiosk-card-heading">
 
                                 <div>
 
-                                    <span className="kiosk-eyebrow">
-                                        STUDENT VERIFIED
+                                    <span className="kiosk-eyebrow kiosk-verified-label">
+                                        <FiCheckCircle aria-hidden="true" />
+                                        Student verified
                                     </span>
 
                                     <h2>
@@ -2115,9 +2209,7 @@ const approveRegistration =
                                 </div>
 
 
-                                <span className="kiosk-check">
-                                    ✓
-                                </span>
+
 
                             </div>
 
@@ -2147,7 +2239,8 @@ const approveRegistration =
                                         Eligibility
                                     </span>
 
-                                    <strong>
+                                    <strong className="kiosk-eligible-status">
+                                        <FiCheckCircle aria-hidden="true" />
                                         Eligible to vote
                                     </strong>
 
@@ -2201,6 +2294,7 @@ const approveRegistration =
                                             ? "Authorizing..."
                                             : "Continue to Vote"
                                     }
+                                    <FiArrowRight aria-hidden="true" />
 
                                 </button>
 
@@ -2217,7 +2311,7 @@ const approveRegistration =
 
                 {step === "register" && (
 
-                    <section className="kiosk-voting-card">
+                    <section className="kiosk-voting-card kiosk-assisted-registration">
 
                         <div className="kiosk-card-heading">
 
@@ -2252,7 +2346,7 @@ const approveRegistration =
                                 STUDENT INFORMATION
                             ========================================= */}
 
-                            <div className="kiosk-form-grid">
+                            <div className="kiosk-form-grid" role="group" aria-label="Student details">
 
                                 <label>
 
@@ -2381,21 +2475,23 @@ const approveRegistration =
                                 DOCUMENTS
                             ========================================= */}
 
-                            <div className="kiosk-doc-grid">
+                            <div className="kiosk-doc-grid" role="group" aria-label="Verification documents">
 
 
                                 {/* =====================================
                                     SCHOOL ID FRONT
                                 ===================================== */}
 
-                                <label className="kiosk-file-box">
+                                <label className="kiosk-file-box" data-selected={Boolean(registration.studentIdFront)}>
 
-                                    <span>
+                                    <span className="kiosk-document-title">
+                                        <FiCreditCard aria-hidden="true" />
                                         School ID - Front
                                     </span>
 
                                     <input
                                         type="file"
+                                        aria-label="School ID - Front"
                                         accept="image/jpeg,image/png,application/pdf"
                                         onChange={
                                             (event) =>
@@ -2412,7 +2508,7 @@ const approveRegistration =
                                             registration
                                                 .studentIdFront
                                                 ?.name ||
-                                            "Choose file · max 5MB"
+                                            "JPG, PNG or PDF · Up to 5 MB"
                                         }
                                     </small>
 
@@ -2423,14 +2519,16 @@ const approveRegistration =
                                     SCHOOL ID BACK
                                 ===================================== */}
 
-                                <label className="kiosk-file-box">
+                                <label className="kiosk-file-box" data-selected={Boolean(registration.studentIdBack)}>
 
-                                    <span>
+                                    <span className="kiosk-document-title">
+                                        <FiCreditCard aria-hidden="true" />
                                         School ID - Back
                                     </span>
 
                                     <input
                                         type="file"
+                                        aria-label="School ID - Back"
                                         accept="image/jpeg,image/png,application/pdf"
                                         onChange={
                                             (event) =>
@@ -2447,7 +2545,7 @@ const approveRegistration =
                                             registration
                                                 .studentIdBack
                                                 ?.name ||
-                                            "Choose file · max 5MB"
+                                            "JPG, PNG or PDF · Up to 5 MB"
                                         }
                                     </small>
 
@@ -2458,14 +2556,16 @@ const approveRegistration =
                                     ENROLLMENT PROOF
                                 ===================================== */}
 
-                                <label className="kiosk-file-box">
+                                <label className="kiosk-file-box" data-selected={Boolean(registration.enrollmentProof)}>
 
-                                    <span>
+                                    <span className="kiosk-document-title">
+                                        <FiFileText aria-hidden="true" />
                                         Registration / Enrollment Proof
                                     </span>
 
                                     <input
                                         type="file"
+                                        aria-label="Registration / Enrollment Proof"
                                         accept="image/jpeg,image/png,application/pdf"
                                         onChange={
                                             (event) =>
@@ -2482,7 +2582,7 @@ const approveRegistration =
                                             registration
                                                 .enrollmentProof
                                                 ?.name ||
-                                            "Choose file · max 5MB"
+                                            "JPG, PNG or PDF · Up to 5 MB"
                                         }
                                     </small>
 
@@ -2493,9 +2593,10 @@ const approveRegistration =
                                     REAL-TIME SELFIE
                                 ===================================== */}
 
-                                <div className="kiosk-file-box kiosk-selfie-box">
+                                <div className="kiosk-file-box kiosk-selfie-box" data-selected={Boolean(registration.selfie)}>
 
-                                    <span>
+                                    <span className="kiosk-document-title">
+                                        <FiCamera aria-hidden="true" />
                                         Real-Time Selfie
                                     </span>
 
@@ -2587,22 +2688,8 @@ const approveRegistration =
                                                     onClick={
                                                         startSelfieCamera
                                                     }
-                                                    style={{
-                                                        width:
-                                                            "100%",
-                                                        minHeight:
-                                                            "52px",
-                                                        border:
-                                                            "none",
-                                                        borderRadius:
-                                                            "12px",
-                                                        cursor:
-                                                            "pointer",
-                                                        fontWeight:
-                                                            "700",
-                                                    }}
                                                 >
-                                                    📷 Open Camera
+                                                    <FiCamera aria-hidden="true" /> Open camera
                                                 </button>
 
                                             )}
@@ -2620,22 +2707,8 @@ const approveRegistration =
                                                     onClick={
                                                         captureSelfie
                                                     }
-                                                    style={{
-                                                        width:
-                                                            "100%",
-                                                        minHeight:
-                                                            "52px",
-                                                        border:
-                                                            "none",
-                                                        borderRadius:
-                                                            "12px",
-                                                        cursor:
-                                                            "pointer",
-                                                        fontWeight:
-                                                            "700",
-                                                    }}
                                                 >
-                                                    📸 Take Selfie
+                                                    <FiCamera aria-hidden="true" /> Take selfie
                                                 </button>
 
                                             )}
@@ -2706,22 +2779,8 @@ const approveRegistration =
                                                     onClick={
                                                         retakeSelfie
                                                     }
-                                                    style={{
-                                                        width:
-                                                            "100%",
-                                                        minHeight:
-                                                            "52px",
-                                                        border:
-                                                            "none",
-                                                        borderRadius:
-                                                            "12px",
-                                                        cursor:
-                                                            "pointer",
-                                                        fontWeight:
-                                                            "700",
-                                                    }}
                                                 >
-                                                    🔄 Retake Selfie
+                                                    <FiRefreshCw aria-hidden="true" /> Retake selfie
                                                 </button>
 
                                             </div>
@@ -2741,7 +2800,7 @@ const approveRegistration =
                                             registration
                                                 .selfie
 
-                                                ? "✓ Real-time selfie captured successfully."
+                                                ? <><FiCheckCircle aria-hidden="true" /> Real-time selfie captured successfully.</>
 
                                                 : "Your selfie must be taken using the device camera."
                                         }
@@ -2805,7 +2864,7 @@ const approveRegistration =
                 {step === "review-registration" &&
                     registrationReview && (
 
-                        <section className="kiosk-voting-card">
+                        <section className="kiosk-voting-card kiosk-registration-review">
 
                             <div className="kiosk-card-heading">
 
@@ -2829,6 +2888,8 @@ const approveRegistration =
 
 
                             <div className="kiosk-review-student">
+                                <span className="kiosk-review-avatar" aria-hidden="true"><FiUser /></span>
+                                <div className="kiosk-review-identity">
 
                                 <strong>
                                     {
@@ -2853,6 +2914,7 @@ const approveRegistration =
                                             .yearLevel
                                     }
                                 </span>
+                                </div>
 
                             </div>
 
@@ -2873,20 +2935,22 @@ const approveRegistration =
                                             }
                                             href={
                                                 document.url ||
-                                                "#"
+                                                undefined
                                             }
                                             target="_blank"
                                             rel="noreferrer"
                                             className="kiosk-review-document"
+                                            aria-disabled={!document.url || undefined}
+                                            tabIndex={document.url ? undefined : -1}
                                         >
 
-                                            <span>
-                                                📄
+                                            <span className="kiosk-review-document-icon">
+                                                {document.type?.startsWith("student_id") ? <FiCreditCard aria-hidden="true" /> : <FiFileText aria-hidden="true" />}
                                             </span>
 
                                             <strong>
                                                 {
-                                                    document.type
+                                                    REVIEW_DOCUMENT_LABELS[document.type] || document.type
                                                         .replaceAll(
                                                             "_",
                                                             " "
@@ -2895,8 +2959,9 @@ const approveRegistration =
                                             </strong>
 
                                             <small>
-                                                Open document
+                                                {document.url ? "Open document" : "Document unavailable"}
                                             </small>
+                                            <FiArrowUpRight className="kiosk-review-document-arrow" aria-hidden="true" />
 
                                         </a>
 
@@ -2919,8 +2984,8 @@ const approveRegistration =
                                         className="kiosk-review-document"
                                     >
 
-                                        <span>
-                                            📷
+                                        <span className="kiosk-review-document-icon">
+                                            <FiCamera aria-hidden="true" />
                                         </span>
 
                                         <strong>
@@ -2930,6 +2995,7 @@ const approveRegistration =
                                         <small>
                                             Open selfie
                                         </small>
+                                        <FiArrowUpRight className="kiosk-review-document-arrow" aria-hidden="true" />
 
                                     </a>
 
@@ -2938,9 +3004,9 @@ const approveRegistration =
                             </div>
 
 
-                            <div className="kiosk-warning-box">
-
-                                Approve only after the Electoral Board has verified the student's identity and submitted documents.
+                            <div className="kiosk-warning-box" role="note">
+                                <FiAlertCircle aria-hidden="true" />
+                                <span>Approve only after the Electoral Board has verified the student's identity and submitted documents.</span>
 
                             </div>
 

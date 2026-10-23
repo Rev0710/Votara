@@ -1840,24 +1840,8 @@ const startKioskOperation = async (
                 sessionId
             );
 
-        const activeOperations =
-            await getActiveOperationCount(
-                session.id
-            );
 
-        if (
-            activeOperations > 0
-        ) {
-            return res.status(409).json({
-                success: false,
-                code:
-                    "SESSION_IN_USE",
-
-                message:
-                    "Please wait until the other finishes. A student is currently being assisted or is voting.",
-            });
-        }
-
+        // Each device opens an independent operation in the shared session.
         const operation =
             await createKioskOperation({
                 sessionId:
@@ -2090,12 +2074,9 @@ const abortKioskOperation = async (
             id,
         } = req.params;
 
-        const operation =
-            await cancelKioskOperation(
-                id
-            );
+        const existingOperation = await getKioskOperation(id);
 
-        if (!operation) {
+        if (!existingOperation) {
             return res.status(404).json({
                 success: false,
                 message:
@@ -2103,9 +2084,15 @@ const abortKioskOperation = async (
             });
         }
 
+        // Repeated cleanup, or cleanup after the inactivity timeout, must
+        // not leave the client stuck trying to cancel an already ended job.
+        const operation = existingOperation.operation_status === "active"
+            ? await cancelKioskOperation(id)
+            : existingOperation;
+
         return res.json({
             success: true,
-            operation,
+            operation: operation || await getKioskOperation(id),
         });
     } catch (error) {
         console.error(
@@ -2414,23 +2401,9 @@ const authorizeKioskStudent =
                 });
             }
 
-            const activeOperations =
-                await getActiveOperationCount(
-                    session.id
-                );
 
-            if (
-                activeOperations > 0
-            ) {
-                return res.status(409).json({
-                    success: false,
-                    code:
-                        "SESSION_IN_USE",
+            // Each device opens an independent operation in the shared session.
 
-                    message:
-                        "Please wait until the other finishes. A student is currently being assisted or is voting.",
-                });
-            }
 
             const operation =
                 await createKioskOperation({
@@ -2818,23 +2791,9 @@ const submitKioskRegistration =
                     data;
             }
 
-            const activeOperations =
-                await getActiveOperationCount(
-                    session.id
-                );
 
-            if (
-                activeOperations > 0
-            ) {
-                return res.status(409).json({
-                    success: false,
-                    code:
-                        "SESSION_IN_USE",
+            // Each device opens an independent operation in the shared session.
 
-                    message:
-                        "Please wait until the other finishes. A student is currently being assisted or is voting.",
-                });
-            }
 
             operation =
                 await createKioskOperation({
