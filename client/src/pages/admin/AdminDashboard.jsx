@@ -608,14 +608,9 @@ const checkSystem = async () => {
     }
 
     return (
-<<<<<<< HEAD
         <div className="admin-overview-dashboard admin-polished-page">
             {isPageTransitioning && <PageLoader />}
             <a className="admin-overview-skip-link" href="#admin-dashboard-content">Skip to dashboard</a>
-=======
-        <div className="ad-dashboard admin-polished-page">
-            <a className="ad-skip-link" href="#admin-dashboard-content">Skip to dashboard</a>
->>>>>>> 09393e2a881c2383efa5100c05b62743d29bb383
             <AdminTopNav admin={admin} onLogout={confirmLogout} />
             <main className="admin-overview-main" id="admin-dashboard-content" tabIndex={-1}>
                 <header className="admin-overview-page-heading">
