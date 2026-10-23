@@ -244,3 +244,118 @@
         backdrop-filter:none; -webkit-backdrop-filter:none;
     }
 }
+
+/* Shared gutters keep the hours notice aligned with every student page below it. */
+#student-workspace .student-content-scroll > .student-voting-window {
+    box-sizing:border-box; width:auto; max-width:none;
+    margin:clamp(18px,2.5vw,38px) clamp(18px,2.5vw,38px) 0;
+    padding:14px 18px; font-size:14px; line-height:1.6;
+    color:var(--student-text); background:var(--student-soft);
+    border:1px solid var(--student-border); border-radius:12px; overflow-wrap:anywhere;
+}
+#student-workspace .student-content-scroll > .student-voting-window + main {
+    padding-top:22px; min-height:0;
+}
+
+/* Password labels contain text nodes, rather than the spans used by profile forms. */
+#student-workspace .password-modal .password-change-form > label {
+    color:var(--student-text) !important; font-size:14px; line-height:1.5;
+}
+#student-workspace .password-modal :is(.password-modal-heading > p,.password-success-content > p,.password-requirement) {
+    color:var(--student-muted) !important;
+}
+#student-workspace .password-modal .password-requirement.is-valid,
+#student-workspace .password-modal .password-requirement.is-valid > span,
+#student-workspace .password-modal .password-match-message.is-valid {
+    color:var(--student-positive) !important;
+}
+#student-workspace .password-modal :is(.password-match-message.is-invalid,.password-error) {
+    color:var(--student-negative) !important;
+}
+#student-workspace .password-modal .password-requirements h3 {font-size:14px;}
+#student-workspace .password-modal .password-requirement {font-size:13px;line-height:1.6;}
+
+/* Terms and Privacy share the student palette and a comfortable reading layout. */
+#student-workspace .policy-page {min-width:0;color:var(--student-text);}
+#student-workspace .policy-page > .policy-eyebrow {
+    display:block;margin:0 0 14px;font-size:12px;line-height:1.5;color:var(--student-link);
+}
+#student-workspace .policy-page .policy-sheet {
+    max-width:1400px; padding:clamp(16px,2.4vw,32px);
+    border:1px solid var(--student-border);border-radius:18px;
+    background:var(--student-glass) !important;box-shadow:none;
+}
+#student-workspace .policy-page .policy-layout {
+    display:grid;grid-template-columns:220px minmax(0,1fr);
+    gap:clamp(20px,2.4vw,32px);align-items:start;
+}
+#student-workspace .policy-page .policy-contents {
+    position:sticky;top:calc(var(--student-header-height,88px) + 20px);
+    padding:20px;gap:4px;border:1px solid var(--student-border);border-radius:14px;
+    background:var(--student-soft) !important;box-sizing:border-box;
+}
+#student-workspace .policy-page .policy-contents h2 {font-size:16px;margin:0 0 10px;}
+#student-workspace .policy-page .policy-contents a {
+    display:block;min-height:40px;padding:9px 10px;box-sizing:border-box;
+    font-size:13px;line-height:1.6;color:var(--student-text) !important;
+    border-radius:8px;overflow-wrap:anywhere;text-decoration:none;
+}
+#student-workspace .policy-page .policy-contents a:is(:hover,:focus-visible) {
+    background:var(--student-solid);color:var(--student-link) !important;
+}
+#student-workspace .policy-page :is(.policy-back,.policy-contents > button,.policy-inline-button) {
+    min-height:42px;padding:10px 14px;border:1px solid var(--student-border);border-radius:9px;
+    font:inherit;font-size:13px;line-height:1.5;font-weight:600;
+    background:var(--student-soft);color:var(--student-link);cursor:pointer;
+}
+#student-workspace .policy-page .policy-contents > button {background:var(--student-solid);margin-top:14px;}
+#student-workspace .policy-page .policy-back {margin-bottom:24px;}
+#student-workspace .policy-page .policy-contents > p {
+    font-size:12px;line-height:1.7;color:var(--student-muted);margin:12px 0 0;
+}
+#student-workspace .policy-page .policy-document {
+    padding:clamp(18px,2.5vw,34px);min-width:0;border:1px solid var(--student-border);
+    border-radius:14px;background:var(--student-solid) !important;box-sizing:border-box;
+    overflow-wrap:anywhere;
+}
+#student-workspace .policy-page .policy-document > h1 {
+    font-size:clamp(26px,2.8vw,34px);line-height:1.2;letter-spacing:-.5px;margin:0 0 14px;
+}
+#student-workspace .policy-page .policy-subtitle {
+    max-width:72ch;font-size:15px;line-height:1.7;margin:0 0 24px;color:var(--student-muted);
+}
+#student-workspace .policy-page .policy-notice {
+    padding:16px 18px;border:1px solid var(--student-border);border-left:3px solid var(--student-blue);
+    border-radius:10px;background:var(--student-soft);color:var(--student-text);font-size:13px;line-height:1.8;
+}
+#student-workspace .policy-page .policy-document section {
+    margin:0;padding:24px 0;border-bottom:1px solid var(--student-border);
+    scroll-margin-top:calc(var(--student-header-height,88px) + 24px);
+}
+#student-workspace .policy-page .policy-document section:last-child {border-bottom:0;padding-bottom:0;}
+#student-workspace .policy-page .policy-document section h2 {
+    font-size:19px;line-height:1.5;margin:0 0 12px;
+}
+#student-workspace .policy-page .policy-document section h3 {font-size:14px;line-height:1.6;margin:18px 0 6px;}
+#student-workspace .policy-page .policy-document section p {
+    max-width:76ch;font-size:14px;line-height:1.85;color:var(--student-muted);margin:0 0 12px;
+}
+
+/* A modest increase preserves the collapsed sidebar's room for the logo mark. */
+#student-workspace #student-sidebar .sidebar-brand {font-size:22px;gap:10px;min-height:42px;}
+#student-workspace #student-sidebar .sidebar-brand-logo {
+    width:28px;height:28px;flex:0 0 28px;object-fit:contain;
+}
+@media(max-width:1000px) {
+    #student-workspace .policy-page .policy-layout {grid-template-columns:minmax(0,1fr);}
+    #student-workspace .policy-page .policy-contents {
+        position:static;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 10px;
+    }
+    #student-workspace .policy-page .policy-contents :is(h2,button,p) {grid-column:1 / -1;}
+}
+@media(max-width:520px) {
+    #student-workspace .policy-page .policy-contents {padding:14px;grid-template-columns:minmax(0,1fr);}
+    #student-workspace .policy-page .policy-document {padding:18px;}
+    #student-workspace .policy-page .policy-notice {padding:14px;}
+    #student-workspace .student-content-scroll > .student-voting-window {padding:12px 14px;font-size:13px;}
+}

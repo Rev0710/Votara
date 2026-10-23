@@ -3092,7 +3092,7 @@ const resultsAreVisible =
 
             return (
                 <main className="policy-page content-page-animation">
-                    <span className="policy-eyebrow">PRIVACY AND POLICY</span>
+                    <span className="policy-eyebrow">PRIVACY POLICY</span>
 
                     <div className="policy-sheet">
                         <button className="policy-back" type="button"
