@@ -42,7 +42,10 @@ export const getStudentToken = () => {
             const payload = JSON.parse(atob(encoded + "=".repeat((4 - encoded.length % 4) % 4)));
             // Only select student credentials. Signature and account/session
             // validation remain the server's responsibility.
+
+
             if (payload.kiosk === true) continue;
+
             if (payload.role && payload.role !== "student") continue;
             if (!(payload.studentId || payload.student_id || payload.studentNumber)) continue;
             if (payload.exp && Number(payload.exp) * 1000 <= Date.now()) continue;
@@ -552,8 +555,16 @@ const studentContext = ["/student-dashboard", "/change-password", "/upload-profi
             ) {
 
                 console.warn(
-                    "Kiosk student session expired."
+                    "Kiosk student session expired. Returning to kiosk student ID entry."
                 );
+
+                // Preserve the active kiosk session ID so the kiosk can
+                // re-open at student ID entry instead of sending the
+                // operator to the Electoral Board dashboard.
+                const kioskSessionId =
+                    localStorage.getItem("votaraKioskSessionId") ||
+                    new URLSearchParams(window.location.search).get("sessionId") ||
+                    "";
 
                 localStorage.removeItem(
                     "votaraKioskToken"
@@ -583,7 +594,10 @@ const studentContext = ["/student-dashboard", "/change-password", "/upload-profi
                     typeof window !== "undefined" &&
                     window.location.pathname.startsWith("/kiosk-voting")
                 ) {
-                    window.location.replace("/electoral-board/dashboard");
+                    const kioskUrl = kioskSessionId
+                        ? `/kiosk-voting?sessionId=${encodeURIComponent(kioskSessionId)}`
+                        : "/kiosk-voting";
+                    window.location.replace(kioskUrl);
                 }
 
             }
