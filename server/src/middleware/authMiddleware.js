@@ -397,6 +397,165 @@ const protectStudent = async (req, res, next) => {
 };
 
 
+
+// =====================================================
+// VOTING AUTHENTICATION: STUDENT PORTAL OR EB KIOSK
+// =====================================================
+// Normal student requests continue through protectStudent,
+// including the database-backed active student-session check.
+// Kiosk requests use their signed kiosk token and must prove
+// that the kiosk session is active and assigned to the same
+// election. The official student record is still resolved
+// server-side; the client cannot choose the voter UUID.
+const protectVotingStudent = async (req, res, next) => {
+    try {
+        const authHeader = req.headers.authorization;
+        const token = authHeader && authHeader.startsWith("Bearer ")
+            ? authHeader.substring(7).trim()
+            : null;
+
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: "Authentication required.",
+            });
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        // Preserve the existing normal student security path.
+        if (decoded.kiosk !== true) {
+            return protectStudent(req, res, next);
+        }
+
+        if (decoded.role !== "student") {
+            return res.status(403).json({
+                success: false,
+                message: "Student access is required.",
+            });
+        }
+
+        const studentId = String(
+            decoded.studentId || decoded.student_id || decoded.studentNumber || ""
+        ).trim();
+
+        if (!studentId || !decoded.kioskSessionId || !decoded.electionId) {
+            return res.status(401).json({
+                success: false,
+                code: "KIOSK_TOKEN_INVALID",
+                message: "The kiosk authorization is incomplete. Please verify the student again.",
+            });
+        }
+
+        // The request's election must match the signed kiosk token.
+        const requestedElectionId =
+            req.params?.electionId ||
+            req.body?.electionId;
+
+        if (
+            requestedElectionId &&
+            String(requestedElectionId) !== String(decoded.electionId)
+        ) {
+            return res.status(403).json({
+                success: false,
+                code: "KIOSK_ELECTION_MISMATCH",
+                message: "This kiosk session is assigned to a different election.",
+            });
+        }
+
+        // Confirm the kiosk session remains active and belongs to this election.
+        const { data: kioskSession, error: kioskSessionError } = await supabase
+            .from("kiosk_sessions")
+            .select("id, election_id, session_status")
+            .eq("id", decoded.kioskSessionId)
+            .maybeSingle();
+
+        if (kioskSessionError) {
+            console.error("Kiosk session verification failed:", kioskSessionError.message);
+            return res.status(503).json({
+                success: false,
+                code: "KIOSK_SESSION_CHECK_FAILED",
+                message: "Unable to verify the kiosk session. Please try again.",
+            });
+        }
+
+        if (
+            !kioskSession ||
+            String(kioskSession.session_status).toLowerCase() !== "active"
+        ) {
+            return res.status(401).json({
+                success: false,
+                code: "KIOSK_SESSION_INVALID",
+                message: "The kiosk session is no longer active. Please return to kiosk verification.",
+            });
+        }
+
+        if (String(kioskSession.election_id) !== String(decoded.electionId)) {
+            return res.status(403).json({
+                success: false,
+                code: "KIOSK_ELECTION_MISMATCH",
+                message: "The kiosk session does not match its assigned election.",
+            });
+        }
+
+        // Resolve the official student record on the server.
+        const { data: studentRecord, error: studentError } = await supabase
+            .from("students")
+            .select("id, student_id, full_name, year_level, enrollment_status")
+            .eq("student_id", studentId)
+            .maybeSingle();
+
+        if (studentError) {
+            console.error("Kiosk student lookup failed:", studentError.message);
+            return res.status(503).json({
+                success: false,
+                message: "Unable to verify the student record. Please try again.",
+            });
+        }
+
+        if (!studentRecord) {
+            return res.status(401).json({
+                success: false,
+                code: "KIOSK_STUDENT_NOT_FOUND",
+                message: "The verified student record could not be found.",
+            });
+        }
+
+        if (
+            studentRecord.enrollment_status &&
+            String(studentRecord.enrollment_status).toUpperCase() !== "ACTIVE"
+        ) {
+            return res.status(403).json({
+                success: false,
+                code: "STUDENT_NOT_ACTIVE",
+                message: "This student is not currently eligible to vote.",
+            });
+        }
+
+        req.student = {
+            ...decoded,
+            id: studentRecord.id,
+            studentId: studentRecord.student_id,
+            fullName: studentRecord.full_name,
+            yearLevel: studentRecord.year_level,
+            enrollmentStatus: studentRecord.enrollment_status,
+            kiosk: true,
+            kioskSessionId: kioskSession.id,
+            electionId: kioskSession.election_id,
+        };
+
+        return next();
+    } catch (error) {
+        console.error("Voting authentication error:", error.message);
+        return res.status(401).json({
+            success: false,
+            code: "VOTING_TOKEN_INVALID",
+            message: "The voting authorization is invalid or has expired. Please verify the student again.",
+        });
+    }
+};
+
+
 // =====================================================
 // EXPORT
 // =====================================================
@@ -404,5 +563,6 @@ const protectStudent = async (req, res, next) => {
 module.exports = {
 
     protectStudent,
+    protectVotingStudent,
 
 };

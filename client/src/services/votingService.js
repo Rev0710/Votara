@@ -66,10 +66,16 @@ const getVotingAuthConfig = () => {
     const studentToken =
         getStudentToken();
 
-    const token =
-        kioskMode && kioskToken
-            ? kioskToken
-            : studentToken;
+    // Kiosk ballots must always use the temporary token issued by the
+    // server for the verified student in the active kiosk session. Never
+    // fall back to a regular Student Portal token while kiosk mode is on.
+    if (kioskMode && !kioskToken) {
+        throw new Error(
+            "Kiosk authorization is missing. Return to student ID entry and verify the student again."
+        );
+    }
+
+    const token = kioskMode ? kioskToken : studentToken;
 
     if (!token) {
         throw new Error(

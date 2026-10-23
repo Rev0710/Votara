@@ -3249,6 +3249,110 @@ const approveKioskRegistration =
             }
 
             // -------------------------------------------------
+            // ALREADY APPROVED BY ADMIN: CONTINUE TO VOTING
+            // -------------------------------------------------
+            // The EB button can be clicked after Admin has approved
+            // the application. In that case, do not attempt to approve
+            // it again. Validate the kiosk operation and official records,
+            // close the registration operation, then issue a voting token.
+            if (application.application_status === "approved") {
+                const operation = await getKioskOperation(operationId);
+
+                if (!operation) {
+                    return res.status(404).json({
+                        success: false,
+                        code: "KIOSK_OPERATION_NOT_FOUND",
+                        message: "The assisted registration operation could not be found.",
+                    });
+                }
+
+                if (
+                    String(operation.kiosk_session_id) !== String(session.id) ||
+                    operation.operation_type !== "registration" ||
+                    operation.operation_status !== "active"
+                ) {
+                    return res.status(409).json({
+                        success: false,
+                        code: "INVALID_KIOSK_OPERATION",
+                        message: "The registration operation is no longer active for this kiosk session. Please verify the student ID again.",
+                    });
+                }
+
+                const { data: approvedStudent, error: approvedStudentError } = await supabase
+                    .from("students")
+                    .select("id, student_id, full_name, year_level, enrollment_status")
+                    .eq("student_id", application.student_id)
+                    .maybeSingle();
+
+                if (approvedStudentError) throw approvedStudentError;
+
+                if (!approvedStudent) {
+                    return res.status(409).json({
+                        success: false,
+                        code: "APPROVED_STUDENT_NOT_FOUND",
+                        message: "The application is approved, but the official student record is not available yet. Refresh the student ID verification and try again.",
+                    });
+                }
+
+                const account = await getStudentAccount(approvedStudent.student_id);
+                if (!account) {
+                    return res.status(409).json({
+                        success: false,
+                        code: "APPROVED_ACCOUNT_NOT_FOUND",
+                        message: "The application is approved, but the student's VOTARA account is not ready yet. Ask the Admin to finish account activation.",
+                    });
+                }
+
+                await ensureYearEligibility(session.election_id, approvedStudent.year_level);
+
+                const participation = await getParticipation(session.election_id, approvedStudent.id);
+                if (participation?.has_voted) {
+                    return res.status(409).json({
+                        success: false,
+                        code: "ALREADY_VOTED",
+                        message: "This student has already voted in this election.",
+                    });
+                }
+
+                // End the registration operation without counting a served voter.
+                await completeKioskOperation(operationId, false);
+
+                const votingOperation = await createKioskOperation({
+                    sessionId: session.id,
+                    ebMemberId: req.user.userId,
+                    operationType: "voting",
+                });
+
+                const normalizedYear = await ensureYearEligibility(
+                    session.election_id,
+                    approvedStudent.year_level
+                );
+
+                const token = createKioskStudentToken({
+                    student: approvedStudent,
+                    session: {
+                        ...session,
+                        kioskOperationId: votingOperation.id,
+                    },
+                });
+
+                return res.json({
+                    success: true,
+                    alreadyApproved: true,
+                    token,
+                    operationId: votingOperation.id,
+                    student: {
+                        id: approvedStudent.id,
+                        studentId: approvedStudent.student_id,
+                        fullName: approvedStudent.full_name,
+                        yearLevel: normalizedYear,
+                    },
+                    electionId: session.election_id,
+                    sessionId: session.id,
+                });
+            }
+
+            // -------------------------------------------------
             // REGISTRATION MUST STILL BE PENDING
             // -------------------------------------------------
 

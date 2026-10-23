@@ -1513,7 +1513,11 @@ const approveRegistration =
 
             setSuccess("");
 
-
+            // The backend handles both cases safely:
+            // - pending_review: perform the existing assisted-registration approval flow
+            // - approved: end the registration operation and authorize this student to vote
+            // Keep the existing flow for applications that still require
+            // kiosk-side approval and account activation.
             const response =
                 await approveKioskRegistration({
 
@@ -1531,20 +1535,37 @@ const approveRegistration =
                 });
 
 
+            // If the Admin already approved the application, the backend
+            // returns a kiosk voting token. Continue straight to the ballot.
+            if (response.token && response.alreadyApproved) {
+                activateKioskToken(response);
+
+                setStudent(response.student);
+
+                setSuccess(
+                    "Registration already approved. Continuing to the ballot..."
+                );
+
+                await loadVotingConfiguration(
+                    response.electionId,
+                    response.student
+                );
+
+                return;
+            }
+
+            // Otherwise preserve the original pending-registration flow.
             setActivationToken(
                 response.activationToken
             );
-
 
             setStudent(
                 response.student
             );
 
-
             setSuccess(
                 "Registration approved. The student must create a personal 8-character password before voting."
             );
-
 
             setStep(
                 "set-password"

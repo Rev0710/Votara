@@ -8,7 +8,7 @@ const {
 } = require("../controllers/votingController");
 
 const {
-    protectStudent,
+    protectVotingStudent,
 } = require("../middleware/authMiddleware");
 
 
@@ -18,7 +18,7 @@ const {
 
 router.post(
     "/submit",
-    protectStudent,
+    protectVotingStudent,
     submitVote
 );
 
@@ -29,7 +29,7 @@ router.post(
 
 router.get(
     "/status/:electionId",
-    protectStudent,
+    protectVotingStudent,
     checkVoteStatus
 );
 
