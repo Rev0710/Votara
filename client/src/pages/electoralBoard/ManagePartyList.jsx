@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import "./ManagePartyList.css";
 import CandidateDetailsDialog from "./CandidateDetailsDialog";
+import CandidatePhotoPreview from "./CandidatePhotoPreview";
 import VotaraLogo from "/src/images/Votara.png";
 
 /*
@@ -2875,83 +2876,12 @@ const deleteCandidate = async (
                                         </small>
                                     </button>
                                 ) : (
-                                    <div
-                                        className="eb-candidate-image-preview"
-                                        style={
-                                            styles.imagePreviewBox
-                                        }
-                                    >
-                                        <img
-                                            src={
-                                                form.profile_picture
-                                            }
-                                            alt="Candidate preview"
-                                            style={
-                                                styles.largeImagePreview
-                                            }
-                                        />
-
-                                        <div
-                                            style={
-                                                styles.imagePreviewInformation
-                                            }
-                                        >
-                                            <span
-                                                style={
-                                                    styles.imageReadyBadge
-                                                }
-                                            >
-                                                ✓ Photo
-                                                Ready
-                                            </span>
-
-                                            <strong>
-                                                Candidate
-                                                profile
-                                                picture
-                                            </strong>
-
-                                            <p>
-                                                This photo
-                                                will be
-                                                used as the
-                                                candidate's
-                                                profile
-                                                image.
-                                            </p>
-
-                                            <div
-                                                style={
-                                                    styles.imageButtons
-                                                }
-                                            >
-                                                <button
-                                                    type="button"
-                                                    style={
-                                                        styles.secondaryButton
-                                                    }
-                                                    onClick={() =>
-                                                        fileInputRef.current?.click()
-                                                    }
-                                                >
-                                                    Change
-                                                    Photo
-                                                </button>
-
-                                                <button
-                                                    type="button"
-                                                    style={
-                                                        styles.removeButton
-                                                    }
-                                                    onClick={
-                                                        removeImage
-                                                    }
-                                                >
-                                                    Remove
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <CandidatePhotoPreview
+                                        src={form.profile_picture}
+                                        onChange={() => fileInputRef.current?.click()}
+                                        onRemove={removeImage}
+                                        disabled={loading}
+                                    />
                                 )}
 
                                 <input
@@ -3942,24 +3872,7 @@ const styles = {
             "pointer",
     },
 
-    removeButton: {
-        background:
-            "#fff5f5",
-        color:
-            "#dc2626",
-        border:
-            "1px solid #fecaca",
-        borderRadius:
-            "9px",
-        padding:
-            "10px 14px",
-        fontWeight:
-            700,
-        fontSize:
-            "12px",
-        cursor:
-            "pointer",
-    },
+
 
     clearSearch: {
         position:
@@ -5433,74 +5346,15 @@ const styles = {
             "3px",
     },
 
-    imagePreviewBox: {
-        display:
-            "flex",
-        gap:
-            "18px",
-        alignItems:
-            "center",
-        padding:
-            "15px",
-        border:
-            "1px solid #dbe5f0",
-        borderRadius:
-            "13px",
-        background:
-            "#f9fbfe",
-    },
 
-    largeImagePreview: {
-        width:
-            "105px",
-        height:
-            "105px",
-        borderRadius:
-            "13px",
-        objectFit:
-            "cover",
-        border:
-            "1px solid #d9e3ee",
-        flexShrink:
-            0,
-    },
 
-    imagePreviewInformation: {
-        display:
-            "flex",
-        flexDirection:
-            "column",
-        alignItems:
-            "flex-start",
-        gap:
-            "6px",
-    },
 
-    imageReadyBadge: {
-        display:
-            "inline-flex",
-        background:
-            "#ecfdf5",
-        color:
-            "#15803d",
-        padding:
-            "5px 8px",
-        borderRadius:
-            "999px",
-        fontSize:
-            "9px",
-        fontWeight:
-            800,
-    },
 
-    imageButtons: {
-        display:
-            "flex",
-        gap:
-            "7px",
-        marginTop:
-            "4px",
-    },
+
+
+
+
+
 
     // ========================================================
     // FINAL REVIEW

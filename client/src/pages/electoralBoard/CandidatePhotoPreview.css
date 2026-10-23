@@ -1,0 +1,68 @@
+.eb-candidate-photo-preview {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    border: 1px solid var(--eb-border, #cbd7eb);
+    border-radius: 14px;
+    background: var(--eb-soft, #edf3ff);
+    color: var(--eb-text, #202d43);
+}
+
+.eb-candidate-photo-preview .eb-candidate-photo-preview-image {
+    width: 104px;
+    height: 104px;
+    flex: 0 0 104px;
+    object-fit: cover;
+    border: 1px solid var(--eb-border, #cbd7eb);
+    border-radius: 12px;
+}
+
+.eb-candidate-photo-preview-content { display: grid; justify-items: start; gap: 7px; min-width: 0; }
+.eb-candidate-photo-preview .eb-candidate-photo-ready {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 8px;
+    border: 1px solid #3f7763;
+    border-radius: 6px;
+    background: #183f35;
+    color: #a4edc8 !important;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.4;
+}
+[data-eb-theme="light"] .eb-candidate-photo-preview .eb-candidate-photo-ready {
+    background: #e8f8ee;
+    color: #16643b !important;
+    border-color: #abd8bc;
+}
+.eb-candidate-photo-preview .eb-candidate-photo-preview-title { font-size: 14px; line-height: 1.5; font-weight: 600; }
+.eb-candidate-photo-preview .eb-candidate-photo-preview-description { margin: 0; font-size: 12px; line-height: 1.6; color: var(--eb-muted, #506481); }
+.eb-candidate-photo-preview-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
+.eb-candidate-photo-preview .eb-candidate-photo-preview-actions button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 40px;
+    padding: 9px 13px;
+    border: 1px solid var(--eb-border, #cbd7eb);
+    border-radius: 8px;
+    background: var(--eb-solid, #fff);
+    color: var(--eb-text, #202d43);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+}
+.eb-candidate-photo-preview .eb-candidate-photo-preview-actions .eb-candidate-photo-remove { background: transparent; border-color: transparent; color: #ffb0b8; }
+[data-eb-theme="light"] .eb-candidate-photo-preview .eb-candidate-photo-preview-actions .eb-candidate-photo-remove { color: #b42332; }
+.eb-candidate-photo-preview-actions svg { width: 14px; height: 14px; flex-shrink: 0; }
+.eb-candidate-photo-preview-actions button:hover:not(:disabled) { border-color: var(--eb-link, #1455db); }
+.eb-candidate-photo-preview-actions button:focus-visible { outline: 2px solid var(--eb-link, #1455db); outline-offset: 3px; }
+.eb-candidate-photo-preview-actions button:disabled { opacity: .55; cursor: wait; }
+@media (max-width: 540px) {
+    .eb-candidate-photo-preview { align-items: flex-start; flex-direction: column; gap: 14px; padding: 16px; }
+    .eb-candidate-photo-preview-content { width: 100%; }
+}
