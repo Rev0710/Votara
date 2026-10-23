@@ -5,6 +5,7 @@ const requireStaff = require("./src/middleware/requireStaff");
 const adminStudentIssueReportsRoutes = require("./src/routes/adminStudentIssueReportsRoutes");
 
 const express = require("express");
+const { parseJsonBody, handleBodyParserError } = require("./src/middleware/requestBody");
 
 const cors = require("cors");
 
@@ -394,11 +395,7 @@ app.use((req, res, next) => {
 
 app.use(
 
-    express.json({
-
-        limit: "12mb",
-
-    })
+    parseJsonBody
 
 );
 
@@ -1315,6 +1312,8 @@ app.use(
 
 
 // =====================================================
+
+app.use(handleBodyParserError);
 
 // ERROR HANDLER
 

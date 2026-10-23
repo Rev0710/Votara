@@ -459,12 +459,9 @@ const RegistrationRequirements = () => {
         }
 
 
-        canvas.width =
-            video.videoWidth;
-
-
-        canvas.height =
-            video.videoHeight;
+        const captureScale = Math.min(1, 1280 / Math.max(video.videoWidth, video.videoHeight));
+        canvas.width = Math.max(1, Math.round(video.videoWidth * captureScale));
+        canvas.height = Math.max(1, Math.round(video.videoHeight * captureScale));
 
 
         const context =
@@ -673,8 +670,13 @@ const RegistrationRequirements = () => {
         }
 
 
-        const data =
-            await fileToDataUrl(
+        if (file.size > 5 * 1024 * 1024) {
+            const sizeError = new Error(`${file.name} is too large. Choose a file that is 5 MB or smaller.`);
+            sizeError.code = "REGISTRATION_FILE_TOO_LARGE";
+            throw sizeError;
+        }
+
+        const data = await fileToDataUrl(
                 file
             );
 
@@ -1329,7 +1331,13 @@ const RegistrationRequirements = () => {
 
             setError(
                 serverMessage ||
-                "Unable to submit your registration requirements. Please try again."
+                (err.code === "REGISTRATION_FILE_TOO_LARGE"
+                    ? err.message
+                    : err?.response?.status === 413
+                        ? "Your files are too large to submit together. Choose smaller files and try again."
+                        : err.code === "ECONNABORTED"
+                            ? "The server took too long to respond. Your files are still selected. Please try again."
+                            : "Unable to submit your registration requirements. Please try again.")
             );
 
 
