@@ -359,3 +359,81 @@
     #student-workspace .policy-page .policy-notice {padding:14px;}
     #student-workspace .student-content-scroll > .student-voting-window {padding:12px 14px;font-size:13px;}
 }
+
+/* Candidate summaries follow the active theme as a foreground/background pair. */
+#student-workspace .student-content-scroll .candidates-election-banner {
+    background:var(--student-glass) !important;color:var(--student-text);
+    border:1px solid var(--student-border);box-shadow:none;
+}
+#student-workspace .student-content-scroll .candidates-election-banner > span {
+    color:var(--student-link) !important;font-size:12px;line-height:1.6;
+}
+#student-workspace .student-content-scroll .candidates-election-banner h2 {
+    color:var(--student-text) !important;overflow-wrap:anywhere;
+}
+#student-workspace .student-content-scroll .candidates-election-banner p {
+    color:var(--student-muted) !important;font-size:14px;
+}
+#student-workspace .candidate-platform-modal :is(h2,h3,h4,strong) {color:var(--student-text) !important;}
+#student-workspace .candidate-platform-modal :is(p,li,.candidate-platform-empty) {color:var(--student-muted) !important;}
+#student-workspace .candidate-platform-modal .candidate-platform-kicker {color:var(--student-link) !important;}
+#student-workspace .candidate-platform-modal :is(.candidate-platform-close,.candidate-platform-footer button) {
+    color:var(--student-text);background:var(--student-soft);border-color:var(--student-border);
+}
+
+/* The native dialog keeps focus above the navbar and returns it on dismissal. */
+#student-workspace dialog.logout-confirmation-overlay {
+    position:fixed;inset:0;box-sizing:border-box;margin:0;
+    width:100vw;max-width:none;height:100dvh;max-height:none;
+    padding:20px;border:0;background:transparent;overflow:auto;
+    color:var(--student-text);backdrop-filter:none;animation:none;
+}
+#student-workspace dialog.logout-confirmation-overlay[open] {display:flex;align-items:center;justify-content:center;}
+#student-workspace dialog.logout-confirmation-overlay::backdrop {
+    background:rgba(6,14,29,.58);backdrop-filter:blur(4px);
+}
+#student-workspace .logout-confirmation-dialog {
+    position:relative;width:min(440px,100%);box-sizing:border-box;margin:auto;
+    padding:28px;border:1px solid var(--student-border);border-radius:18px;
+    background:var(--student-solid) !important;color:var(--student-text) !important;
+    box-shadow:0 20px 60px rgba(0,0,0,.2);text-align:left;
+    max-height:calc(100dvh - 40px);overflow:auto;animation:none;
+}
+#student-workspace .logout-confirmation-symbol {
+    display:flex;align-items:center;justify-content:flex-start;width:32px;height:32px;
+    margin:0 0 16px;border-radius:0;background:transparent;
+    color:var(--student-link);font-size:26px;
+}
+#student-workspace .logout-confirmation-dialog h2 {
+    margin:0 28px 10px 0;font-size:23px;line-height:1.3;color:var(--student-text) !important;
+}
+#student-workspace .logout-confirmation-dialog p {
+    margin:0;color:var(--student-muted) !important;font-size:14px;line-height:1.7;
+}
+#student-workspace .logout-close-button {
+    position:absolute;top:16px;right:16px;display:grid;place-items:center;
+    width:40px;height:40px;padding:0;border:1px solid transparent;border-radius:9px;
+    background:transparent;color:var(--student-muted);cursor:pointer;font-size:20px;
+}
+#student-workspace .logout-close-button:hover {background:var(--student-soft);color:var(--student-text);}
+#student-workspace .logout-confirmation-actions {justify-content:flex-end;gap:12px;margin-top:26px;}
+#student-workspace .logout-confirmation-actions button {
+    min-height:44px;padding:10px 16px;font-size:14px;line-height:1.5;font-weight:600;
+}
+#student-workspace .logout-confirmation-actions .logout-cancel-button {
+    background:var(--student-soft) !important;color:var(--student-text) !important;
+    border:1px solid var(--student-border) !important;
+}
+#student-workspace .logout-confirmation-actions .logout-confirm-button {
+    background:#b91c1c !important;color:#fff !important;border:1px solid #b91c1c;
+}
+#student-workspace .logout-confirmation-actions .logout-confirm-button:hover {background:#991b1b !important;}
+#student-workspace .logout-confirmation-dialog .logout-progress {margin-top:16px;font-size:12px;}
+@media(max-width:480px) {
+    #student-workspace .logout-confirmation-dialog {padding:24px 20px;}
+    #student-workspace .logout-confirmation-actions {display:flex;flex-direction:column-reverse;}
+    #student-workspace .logout-confirmation-actions button {width:100%;}
+}
+@media(prefers-reduced-transparency:reduce) {
+    #student-workspace dialog.logout-confirmation-overlay::backdrop {background:rgba(6,14,29,.82);backdrop-filter:none;}
+}

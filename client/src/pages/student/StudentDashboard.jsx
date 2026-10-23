@@ -7,7 +7,7 @@ import "./StudentDashboard.workspace.css";
 import "./StudentNavbar.css";
 import "./StudentTheme.css";
 import StudentDotIcon from "../../components/student/StudentDotIcon";
-import { FiLogOut, FiMenu, FiMoon, FiSearch, FiSun } from "react-icons/fi";
+import { FiLogOut, FiX, FiMenu, FiMoon, FiSearch, FiSun } from "react-icons/fi";
 import Profile from "./Profile";
 import api, { clearAccountSession, getStudentToken } from "../../services/api";
 import useAccountSession from "../../hooks/useAccountSession";
@@ -348,6 +348,14 @@ useEffect(() => {
 
 
     const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
+    const [signingOut, setSigningOut] = useState(false);
+    const logoutDialogRef = useRef(null);
+    useEffect(() => {
+        const dialog = logoutDialogRef.current;
+        if (showLogoutConfirmation && dialog && !dialog.open) dialog.showModal();
+        return () => { if (dialog?.open) dialog.close(); };
+    }, [showLogoutConfirmation]);
+
     const [profileImageError, setProfileImageError] = useState(false);
     const [profileImageVersion, setProfileImageVersion] = useState(0);
 
@@ -1470,6 +1478,7 @@ const handleSettingsItemClick = (item) => {
 const handleLogout = async () => {
     if (studentLogoutInProgress.current) return;
     studentLogoutInProgress.current = true;
+    setSigningOut(true);
     const token = getStudentToken();
 
     // Release the server-side session before leaving the dashboard.
@@ -4121,43 +4130,40 @@ const resultsAreVisible =
             )}
 
             {showLogoutConfirmation && (
-                <div
+                <dialog
+                    ref={logoutDialogRef}
                     className="logout-confirmation-overlay"
-                    onClick={() => setShowLogoutConfirmation(false)}
+                    aria-labelledby="logout-confirmation-title"
+                    aria-describedby="logout-confirmation-description"
+                    onCancel={(event) => {
+                        event.preventDefault();
+                        if (!signingOut) setShowLogoutConfirmation(false);
+                    }}
+                    onClick={(event) => {
+                        if (event.target === event.currentTarget && !signingOut) setShowLogoutConfirmation(false);
+                    }}
                 >
-                    <section
-                        className="logout-confirmation-dialog"
-                        role="dialog"
-                        aria-modal="true"
-                        aria-labelledby="logout-confirmation-title"
-                        aria-describedby="logout-confirmation-description"
-                        onClick={(event) => event.stopPropagation()}
-                    >
-                        <div className="logout-confirmation-symbol" aria-hidden="true">
-                            <FiLogOut />
-                        </div>
-                        <h2 id="logout-confirmation-title">Sign out?</h2>
+                    <section className="logout-confirmation-dialog" aria-busy={signingOut}>
+                        <button type="button" className="logout-close-button" aria-label="Close sign-out dialog"
+                            disabled={signingOut} onClick={() => setShowLogoutConfirmation(false)}>
+                            <FiX aria-hidden="true" />
+                        </button>
+                        <div className="logout-confirmation-symbol" aria-hidden="true"><FiLogOut /></div>
+                        <h2 id="logout-confirmation-title">Sign out of Votara?</h2>
                         <p id="logout-confirmation-description">
-                            Are you sure you want to log out of your student account?
+                            You’ll need to sign in again to access your student account.
                         </p>
                         <div className="logout-confirmation-actions">
-                            <button
-                                type="button"
-                                className="logout-cancel-button"
-                                onClick={() => setShowLogoutConfirmation(false)}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="button"
-                                className="logout-confirm-button"
-                                onClick={handleLogout}
-                            >
-                                Sign out
+                            <button type="button" className="logout-cancel-button" autoFocus
+                                disabled={signingOut} onClick={() => setShowLogoutConfirmation(false)}>Stay signed in</button>
+                            <button type="button" className="logout-confirm-button"
+                                disabled={signingOut} onClick={handleLogout}>
+                                {signingOut ? "Signing out…" : "Sign out"}
                             </button>
                         </div>
+                        {signingOut && <p className="logout-progress" role="status">Ending your student session…</p>}
                     </section>
-                </div>
+                </dialog>
             )}
 
             </div>
