@@ -36,12 +36,12 @@ The SQL has not been executed against the live database by this task.
   a published, open election. A selector appears if several elections are open.
 - Both online and kiosk voting follow this control. Conflicting staff changes
   require refreshing rather than overwriting another EB member's decision.
-- The election date uses Asia/Manila. Voting starts no earlier than 08:00 and
-  ends strictly at 17:00. Narrower configured hours are respected. Resume never
-  overrides the date, hours, publication, or open-status checks.
+- Election and scheduled continuation dates use Asia/Manila. Voting starts no earlier than 08:00 and
+  ends strictly at 17:00. Narrower configured hours are respected. A saved overnight pause permits its scheduled continuation date. Publication,
+  open status, configured hours, and one ballot per student still apply.
 - The server and the database ballot transaction enforce these restrictions.
   The transaction locks the election row, ordering pauses against submissions.
-- Voting screens refresh availability every 15 seconds. Submission always
+- Voting screens refresh availability every 5 seconds. Submission always
   rechecks availability on the server, including between screen refreshes.
 - Student notification bells display opening, closing, pause, and resume notices.
   Pause/resume history is recorded by a database trigger. Scheduled notices use
@@ -73,3 +73,32 @@ never changes the button to Resume or falsely reports that voting was paused.
 
 The database connectivity check during this change could not connect, so no live
 schema inspection or production migration was completed from this workspace.
+## Automatic next-morning resume and student controls
+
+Run the UPDATED complete server/voting-controls.sql in the Supabase project
+configured on Render, even if an earlier version was already applied. It now
+adds voting_resumes_at and resume_due_voting_controls(), updates notification
+triggers and the ballot function, and reloads PostgREST's schema cache. Applying
+only a column does not install the complete feature. Existing accounts and
+ballots are preserved. Redeploy Render and Vercel after applying the migration.
+
+- EB confirmation schedules each pause to end the following day at 08:00
+  Asia/Manila. The server computes the timestamp; the client cannot choose it.
+- The original election date remains intact. Its scheduled resume date becomes
+  an allowed continuation day, subject to the 08:00–17:00 limit and any narrower
+  configured voting hours. Resuming does not clear existing vote participation.
+- The ballot transaction interprets a due scheduled pause as resumed, even if
+  no process ran at exactly 08:00. Requests reconcile the stored pause flag and
+  record a resume notification with the scheduled boundary timestamp.
+- Student and kiosk screens refresh the server state every five seconds while
+  visible, and on focus. Same-browser tabs also signal each other to refresh.
+- While paused, Vote becomes Paused; candidate controls, candidate navigation,
+  selections, and submission are disabled. Student notices display the exact
+  automatic resume date and time. Resume restores controls when hours allow.
+- Existing selections are preserved during a pause. Previously submitted ballots
+  remain recorded and cannot be submitted again on the continuation day.
+- Browser feedback alone is not enforcement: all ballot submissions still pass
+  the server and database pause/hour checks.
+
+Local client compilation and server syntax checks passed for this update.
+No production migration or live ballot was executed from this workspace.

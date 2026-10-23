@@ -1,7 +1,9 @@
 const supabase = require("../config/supabase");
 
-const {votingAvailability} = require("../utils/electionTime");
+const {votingAvailability,nextVotingResume} = require("../utils/electionTime");
 exports.availability = async (req,res) => {
+    const {error:resumeError}=await supabase.rpc("resume_due_voting_controls");
+    if(resumeError) return res.status(503).json({success:false,message:"Voting is temporarily unavailable. Please contact the Electoral Board."});
     const {data,error}=await supabase.from("elections").select("*").eq("id",req.params.id).maybeSingle();
     if(error) return res.status(503).json({success:false,message:"Voting availability could not be checked."});
     if(!data) return res.status(404).json({success:false,message:"Election not found."});
@@ -10,7 +12,9 @@ exports.availability = async (req,res) => {
 exports.setPaused = async (req,res) => {
     if(typeof req.body?.paused !== "boolean" || typeof req.body?.expectedPaused !== "boolean")
         return res.status(400).json({success:false,message:"Provide paused and expectedPaused as booleans."});
-    const {data,error}=await supabase.from("elections").update({voting_paused:req.body.paused})
+    const {error:resumeError}=await supabase.rpc("resume_due_voting_controls");
+    const changes={voting_paused:req.body.paused,...(req.body.paused ? {voting_resumes_at:nextVotingResume()} : {})};
+    const {data,error}=resumeError ? {data:null,error:resumeError} : await supabase.from("elections").update(changes)
         .eq("id",req.params.id).eq("status","open").eq("is_published",true)
         .eq("voting_paused",req.body.expectedPaused).select("*").maybeSingle();
     if(error) {

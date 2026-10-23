@@ -177,6 +177,7 @@ const createElection = async (
 // =========================================================
 
 const getAllElections = async () => {
+    await supabase.rpc("resume_due_voting_controls");
 
     try {
 
@@ -2173,6 +2174,7 @@ const deleteElection = async (
 
 const getActiveElection =
     async () => {
+        await supabase.rpc("resume_due_voting_controls");
 
         const {
             data: election,

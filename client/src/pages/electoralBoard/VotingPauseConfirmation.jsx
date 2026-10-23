@@ -18,7 +18,7 @@ export default function VotingPauseConfirmation({election,busy,error,onConfirm,o
             <p className="election-pause-election">{election.name || election.title}</p>
             <p id="voting-pause-description">{paused
                 ? "Students and kiosk users may submit ballots again during the election’s configured voting hours, between 8 AM and 5 PM Manila time."
-                : "This will block new ballot submissions from both student accounts and kiosks. Ballots already recorded will be kept."}</p>
+                : "This will block new ballot submissions from both student accounts and kiosks. Ballots already recorded will be kept. Voting will resume automatically tomorrow at 8:00 AM Manila time."}</p>
             <p>Students will receive a notification after the change is saved.</p>
             {error && <div className="election-feedback election-feedback-error" role="alert">{error}</div>}
             <footer>

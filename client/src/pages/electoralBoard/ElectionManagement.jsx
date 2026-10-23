@@ -860,9 +860,10 @@ function ElectionManagement({ onCreateElection, onNavigate }) {
             if (response.data?.success !== true || response.data?.election?.voting_paused !== !targetElection.voting_paused) throw new Error("The server did not confirm the voting change.");
             setElections(current => current.map(item => item.id === targetElection.id ? {...item, voting_paused:response.data.election.voting_paused} : item));
             setPauseConfirmation(null);
+            try {localStorage.setItem("votara-voting-update",JSON.stringify({electionId:targetElection.id,changedAt:Date.now()}));} catch {}
             setSuccess(targetElection.voting_paused
                 ? "Voting resumed. The election date and 8:00 AM–5:00 PM Manila voting hours still apply."
-                : "Online and kiosk voting paused. Students have been notified.");
+                : "Online and kiosk voting paused. It will resume automatically tomorrow at 8:00 AM Manila time. Students have been notified.");
             await loadElections(true);
             window.dispatchEvent(new Event("votara-platform-update"));
         } catch (error) {

@@ -2,6 +2,20 @@
 BEGIN;
 ALTER TABLE public.elections ADD COLUMN IF NOT EXISTS voting_paused boolean NOT NULL DEFAULT false;
 
+ALTER TABLE public.elections ADD COLUMN IF NOT EXISTS voting_resumes_at timestamptz;
+
+-- A due pause is also interpreted as resumed inside the ballot transaction.
+-- Reconcile its stored flag and notification when any client requests updates.
+CREATE OR REPLACE FUNCTION public.resume_due_voting_controls()
+RETURNS void LANGUAGE sql SECURITY DEFINER SET search_path=public,pg_temp AS $$
+ UPDATE public.elections SET voting_paused=false
+ WHERE voting_paused=true AND voting_resumes_at IS NOT NULL
+ AND voting_resumes_at<=clock_timestamp() AND status='open' AND is_published=true;
+$$;
+REVOKE ALL ON FUNCTION public.resume_due_voting_controls() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.resume_due_voting_controls() TO service_role;
+
+
 CREATE TABLE IF NOT EXISTS public.election_voting_notices (
  id text PRIMARY KEY,
  election_id uuid NOT NULL REFERENCES public.elections(id) ON DELETE CASCADE,
@@ -14,16 +28,24 @@ GRANT ALL ON public.election_voting_notices TO service_role;
 
 CREATE OR REPLACE FUNCTION public.record_voting_control_notice()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
+DECLARE v_automatic boolean;
 BEGIN
  IF NEW.voting_paused IS DISTINCT FROM OLD.voting_paused THEN
-  INSERT INTO public.election_voting_notices(id,election_id,message)
+  v_automatic := NOT NEW.voting_paused AND NEW.voting_resumes_at IS NOT NULL
+    AND NEW.voting_resumes_at <= clock_timestamp();
+  INSERT INTO public.election_voting_notices(id,election_id,message,created_at)
   VALUES(gen_random_uuid()::text, NEW.id, NEW.title || CASE WHEN NEW.voting_paused
-    THEN ': voting has been paused by the Electoral Board. Online and kiosk ballots are temporarily unavailable.'
-    ELSE ': voting has been resumed by the Electoral Board. Voting remains available only on the election date, from 8:00 AM to 5:00 PM (Asia/Manila), within the configured schedule.' END);
+    THEN ': voting is paused for online students and kiosks. It will resume automatically on '
+      || to_char(NEW.voting_resumes_at AT TIME ZONE 'Asia/Manila','FMMonth DD, YYYY FMHH12:MI AM')
+      || ' (Asia/Manila).'
+    WHEN v_automatic THEN ': voting has resumed automatically. Online and kiosk ballots are available within the configured voting hours.'
+    ELSE ': voting has been resumed by the Electoral Board. Voting hours still apply.' END,
+    CASE WHEN v_automatic THEN NEW.voting_resumes_at ELSE clock_timestamp() END);
  END IF;
  RETURN NEW;
 END;
 $$;
+
 DROP TRIGGER IF EXISTS election_voting_control_notice ON public.elections;
 CREATE TRIGGER election_voting_control_notice AFTER UPDATE OF voting_paused ON public.elections
 FOR EACH ROW EXECUTE FUNCTION public.record_voting_control_notice();
@@ -34,6 +56,7 @@ CREATE OR REPLACE FUNCTION public.get_election_voting_notices()
 RETURNS SETOF public.election_voting_notices
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
 BEGIN
+ PERFORM public.resume_due_voting_controls();
  INSERT INTO public.election_voting_notices(id,election_id,message,created_at)
  SELECT e.id::text || '-' || n.kind || '-' || n.at_time::text, e.id,
  e.title || CASE WHEN n.kind='opens'
@@ -41,9 +64,10 @@ BEGIN
   ELSE ': voting hours have closed. Online and kiosk ballots can no longer be submitted.' END,
  n.at_time
  FROM public.elections e
+ CROSS JOIN LATERAL (SELECT e.election_date AS voting_day UNION SELECT (e.voting_resumes_at AT TIME ZONE 'Asia/Manila')::date WHERE e.voting_resumes_at IS NOT NULL AND (e.voting_resumes_at AT TIME ZONE 'Asia/Manila')::date >= e.election_date) d
  CROSS JOIN LATERAL (VALUES
- ('opens', (e.election_date + GREATEST(COALESCE(e.start_time::time,'08:00'::time),'08:00'::time)) AT TIME ZONE 'Asia/Manila'),
- ('closes', (e.election_date + LEAST(COALESCE(e.end_time::time,'17:00'::time),'17:00'::time)) AT TIME ZONE 'Asia/Manila')
+ ('opens', (d.voting_day + GREATEST(COALESCE(e.start_time::time,'08:00'::time),'08:00'::time)) AT TIME ZONE 'Asia/Manila'),
+ ('closes', (d.voting_day + LEAST(COALESCE(e.end_time::time,'17:00'::time),'17:00'::time)) AT TIME ZONE 'Asia/Manila')
  ) n(kind,at_time)
  WHERE e.is_published=true AND e.status IN ('open','closed')
  AND n.at_time <= now() AND n.at_time >= now()-interval '30 days'
@@ -245,10 +269,10 @@ BEGIN
 
 
     -- Enforced inside the ballot transaction while the election row is locked.
-    IF COALESCE(v_election.voting_paused, false) THEN
+    IF COALESCE(v_election.voting_paused, false) AND (v_election.voting_resumes_at IS NULL OR clock_timestamp() < v_election.voting_resumes_at) THEN
         RAISE EXCEPTION 'Voting is paused by the Electoral Board.';
     END IF;
-    IF (clock_timestamp() AT TIME ZONE 'Asia/Manila')::date <> v_election.election_date
+    IF ((clock_timestamp() AT TIME ZONE 'Asia/Manila')::date < v_election.election_date OR ((clock_timestamp() AT TIME ZONE 'Asia/Manila')::date <> v_election.election_date AND (clock_timestamp() AT TIME ZONE 'Asia/Manila')::date IS DISTINCT FROM (v_election.voting_resumes_at AT TIME ZONE 'Asia/Manila')::date))
        OR (clock_timestamp() AT TIME ZONE 'Asia/Manila')::time <
           GREATEST(COALESCE(v_election.start_time::time, '08:00'::time), '08:00'::time)
        OR (clock_timestamp() AT TIME ZONE 'Asia/Manila')::time >=

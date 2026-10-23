@@ -381,6 +381,9 @@ useEffect(() => {
     const [ballotReview,setBallotReview]=useState(false);
     const [voteFeedback,setVoteFeedback]=useState("");
     const [hasVoted, setHasVoted] = useState(false);
+    useEffect(() => {
+        if(votingGate.paused){setSelectedCandidateDetails(null);setBallotReview(false);}
+    }, [votingGate.paused]);
     const [voteConfirmation, setVoteConfirmation] = useState(null);
 
     // =================================================
@@ -765,11 +768,11 @@ useEffect(() => {
         getElectionStatus(election?.status);
 
     const electionStatusLabel =
-        ELECTION_STATUS_LABELS[electionStatus] ||
+        votingGate.paused ? "Paused" : ELECTION_STATUS_LABELS[electionStatus] ||
         "No Election";
 
     const electionStatusClass =
-        ELECTION_STATUS_CLASSES[electionStatus] ||
+        votingGate.paused ? "status-paused" : ELECTION_STATUS_CLASSES[electionStatus] ||
         "status-none";
 
     const electionIsOpen =
@@ -786,7 +789,7 @@ useEffect(() => {
         electionStatus === "cancelled";
 
     const studentCanVote =
-        Boolean(electionIsOpen) &&
+        Boolean(electionIsOpen) && votingGate.available &&
         studentEligible &&
         !hasVoted &&
         !voteLoading;
@@ -805,7 +808,7 @@ const sidebarItems = [
     },
     {
         id: "vote",
-        label: "Vote",
+        label: votingGate.paused ? "Paused" : "Vote",
         icon: voteIcon,
         activeIcon: voteIcon,
     },
@@ -1267,7 +1270,7 @@ const handleSettingsItemClick = (item) => {
             hasVoted ||
             voteLoading ||
             !electionIsOpen ||
-            !studentEligible
+            !studentEligible || !votingGate.available
         ) {
             return;
         }
@@ -1283,6 +1286,7 @@ const handleSettingsItemClick = (item) => {
     // =================================================
 
         const handleViewDetails = (candidate) => {
+            if (votingGate.paused) return;
             setSelectedCandidateDetails(candidate);
 
         const name =
@@ -1633,7 +1637,7 @@ const handleLogout = async () => {
                                     hasVoted ||
                                     voteLoading ||
                                     !electionIsOpen ||
-                                    !studentEligible
+                                    !studentEligible || !votingGate.available
                                 }
                                 onClick={() =>
                                     handleVoteSelect(
@@ -1642,7 +1646,7 @@ const handleLogout = async () => {
                                     )
                                 }
                             >
-                                {isSelected
+                                {votingGate.paused ? "Paused" : isSelected
                                     ? "SELECTED · CLEAR"
                                     : "VOTE"}
                             </button>
@@ -1653,6 +1657,7 @@ const handleLogout = async () => {
                                 className="candidate-details-button"
                                 aria-label={`View campaign platform for ${candidateName}`}
                                 title="View campaign platform"
+                                disabled={votingGate.paused}
                                 onClick={() => handleViewDetails(candidate)}
                             >
                                 <svg
@@ -2130,7 +2135,7 @@ const resultsAreVisible =
                                             : "Open the ballot"
                                     }
                                 >
-                                    {hasVoted
+                                    {votingGate.paused ? "Paused" : hasVoted
                                         ? "VOTE SUBMITTED"
                                         : electionIsOpen && studentEligible
                                         ? "Vote Now"
@@ -2142,6 +2147,7 @@ const resultsAreVisible =
                                 <button
                                     type="button"
                                     className="view-candidates-button"
+                                    disabled={votingGate.paused}
                                     onClick={() => handleMenuClick("candidates")}
                                 >
                                     View Candidates
@@ -2538,6 +2544,7 @@ const resultsAreVisible =
                                         {positionCandidates.map((candidate) => (
                                             <article
                                                 className="directory-candidate-card"
+                                                inert={votingGate.paused}
                                                 key={candidate.id}
                                             >
                                                 <div className="directory-candidate-photo">
@@ -2808,7 +2815,7 @@ const resultsAreVisible =
                                         disabled={voteLoading || !votingGate.available}
                                         onClick={() => handleSubmitVotes()}
                                     >
-                                        {voteLoading ? "SUBMITTING..." : "SUBMIT VOTE"}
+                                        {votingGate.paused ? "Paused" : voteLoading ? "SUBMITTING..." : "SUBMIT VOTE"}
                                     </button>
                                 </section>
                             )}
@@ -3652,7 +3659,8 @@ const resultsAreVisible =
                                                 : ""
                                         }`}
                                         aria-current={isActive ? "page" : undefined}
-                                        title={item.label}
+                                        disabled={votingGate.paused && ["vote","candidates"].includes(item.id)}
+                                        title={votingGate.paused && ["vote","candidates"].includes(item.id) ? votingGate.message : item.label}
                                         onClick={() =>
                                             handleMenuClick(
                                                 item.id
@@ -3700,7 +3708,7 @@ const resultsAreVisible =
                 {/* ================= CONTENT ================= */}
 
                 <div className="student-content-scroll" ref={contentScrollRef} tabIndex={0} aria-label="Student dashboard content">
-                    {election?.id && !votingGate.available && <p className="student-voting-window" role="status">{votingGate.message}</p>}
+                    {election?.id && !votingGate.available && <p className="student-voting-window" role="status"><strong>{votingGate.paused ? "Voting paused" : "Voting update"}</strong><span>{votingGate.message}</span></p>}
                     {renderMainContent()}
                 </div>
             </div>
