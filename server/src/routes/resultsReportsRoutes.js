@@ -26,7 +26,7 @@ router.get(
 // EXPORT RESULTS & REPORTS
 // =========================================================
 
-// GET Excel export of election results
+// GET downloadable PDF export of election results
 router.get(
     "/export",
     exportResultsReports

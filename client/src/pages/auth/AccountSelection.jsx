@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import votaraLogo from "../../assets/images/votara-logo.png";
 import votaraOrbit from "../../assets/images/votara-orbit.png";
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import "./AccountSelection.css";
 
@@ -14,12 +14,13 @@ import api from "../../services/api";
 const AccountSelection = () => {
 
     const navigate = useNavigate();
+    const location = useLocation();
 
 
 
     // admin | eb | register
 
-    const [activeView, setActiveView] = useState("admin");
+    const [activeView, setActiveView] = useState(() => new URLSearchParams(location.search).get("role") === "electoral_board" ? "eb" : "admin");
 
 
 

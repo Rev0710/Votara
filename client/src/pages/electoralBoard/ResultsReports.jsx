@@ -2,176 +2,114 @@ import React, {
     useCallback,
     useEffect,
     useMemo,
+    useRef,
     useState
 } from "react";
 
-import api from "../../services/api";
+import api, { getEBToken } from "../../services/api";
 import "./ResultsReports.css";
 
 // =========================================================
 // RESULTS & REPORTS
 // =========================================================
 
+let resultsSnapshot = null;
+
 const ResultsReports = () => {
 
-    const [loading, setLoading] =
-        useState(true);
 
-    const [refreshing, setRefreshing] =
-        useState(false);
+    const sessionToken = getEBToken();
+    const snapshot = resultsSnapshot?.token === sessionToken &&
+        Date.now() - resultsSnapshot.at < 30000 ? resultsSnapshot.data : null;
+    const [loading, setLoading] = useState(!snapshot);
+    const [refreshing, setRefreshing] = useState(false);
+    const [exporting, setExporting] = useState(false);
+    const [releasing, setReleasing] = useState(false);
+    const [error, setError] = useState("");
+    const [data, setData] = useState(snapshot);
+    const [selectedElectionId, setSelectedElectionId] = useState(snapshot?.election?.id || "");
+    const activeRequest = useRef(null);
+    const currentData = useRef(snapshot);
+    const tokenRef = useRef(sessionToken);
 
-    const [exporting, setExporting] =
-        useState(false);
-
-
-    const [releasing, setReleasing] =
-        useState(false);
-
-    const [error, setError] =
-        useState("");
-
-    const [data, setData] =
-        useState(null);
-
-    const [selectedElectionId, setSelectedElectionId] =
-        useState("");
-
-    // =====================================================
-    // LOAD RESULTS
-    // =====================================================
-
-    const loadResults = useCallback(
-        async (
-            electionId = "",
-            isRefresh = false,
-            silent = false
-        ) => {
-
-            try {
-
-                if (!silent) {
-                    if (isRefresh) {
-                        setRefreshing(true);
-                    } else {
-                        setLoading(true);
-                    }
-                }
-
-                if (!silent) setError("");
-
-                const endpoint =
-                    electionId
-                        ? `/electoral-board/results-reports?election_id=${encodeURIComponent(
-                            electionId
-                        )}`
-                        : "/electoral-board/results-reports";
-
-                const response =
-                    await api.get(endpoint);
-
-                if (
-                    !response?.data?.success
-                ) {
-                    throw new Error(
-                        response?.data?.message ||
-                        "Unable to load election results."
-                    );
-                }
-
-                setData(
-                    response.data
-                );
-
-                if (
-                    !selectedElectionId &&
-                    response.data?.election?.id
-                ) {
-                    setSelectedElectionId(
-                        response.data.election.id
-                    );
-                }
-
-            } catch (err) {
-
-                console.error(
-                    "Results & Reports error:",
-                    err
-                );
-
-                if (!silent) {
-                    setError(
-                        err?.response?.data?.message ||
-                        err?.message ||
-                        "Unable to load election results."
-                    );
-                }
-
-            } finally {
-
-                if (!silent) {
-                    setLoading(false);
-                    setRefreshing(false);
-                }
+    const loadResults = useCallback(async (electionId = "", isRefresh = false, silent = false) => {
+        if (silent && activeRequest.current) return;
+        activeRequest.current?.abort();
+        const controller = new AbortController();
+        activeRequest.current = controller;
+        const keepVisible = currentData.current &&
+            (!electionId || String(currentData.current.election?.id) === String(electionId));
+        setLoading(!keepVisible);
+        if (!silent) setRefreshing(Boolean(keepVisible) || isRefresh);
+        setError("");
+        try {
+            const query = electionId ? "?election_id=" + encodeURIComponent(electionId) : "";
+            const response = await api.get("/electoral-board/results-reports" + query,
+                {signal: controller.signal, timeout: 30000});
+            if (!response.data?.success) throw new Error(response.data?.message || "Unable to load election results.");
+            if (controller.signal.aborted) return;
+            currentData.current = response.data;
+            resultsSnapshot = {token: tokenRef.current, data: response.data, at: Date.now()};
+            setData(response.data);
+            setSelectedElectionId(response.data.election?.id || "");
+        } catch (err) {
+            if (controller.signal.aborted) return;
+            setSelectedElectionId(currentData.current?.election?.id || "");
+            setError(err?.code === "ECONNABORTED"
+                ? "The results request took too long. Please try Refresh again."
+                : err?.response?.data?.message || err?.message || "Unable to load election results.");
+        } finally {
+            if (activeRequest.current === controller) {
+                activeRequest.current = null;
+                setLoading(false);
+                setRefreshing(false);
             }
-        },
-        [selectedElectionId]
-    );
-
-    // =====================================================
-    // INITIAL LOAD
-    // =====================================================
-
-    useEffect(() => {
-        loadResults();
+        }
     }, []);
 
     useEffect(() => {
-        const refreshTimer = window.setInterval(() => {
-            loadResults(selectedElectionId || data?.election?.id || "", false, true);
+        loadResults(currentData.current?.election?.id || "");
+        const timer = window.setInterval(() => {
+            if (document.visibilityState === "visible")
+                loadResults(currentData.current?.election?.id || "", false, true);
         }, 30000);
+        return () => {
+            window.clearInterval(timer);
+            activeRequest.current?.abort();
+        };
+    }, [loadResults]);
 
-        return () => window.clearInterval(refreshTimer);
-    }, [data?.election?.id, loadResults, selectedElectionId]);
-
-    // =====================================================
-    // ELECTION CHANGE
-    // =====================================================
-
-    const handleElectionChange = (
-        event
-    ) => {
-
-        const electionId =
-            event.target.value;
-
-        setSelectedElectionId(
-            electionId
-        );
-
-        loadResults(
-            electionId
-        );
+    const handleElectionChange = event => {
+        setSelectedElectionId(event.target.value);
+        loadResults(event.target.value);
     };
 
-    // =====================================================
-    // EXPORT RESULTS
-    // =====================================================
 
-    const handleExportResults = () => {
-
-        if (!election?.id) {
-            setError(
-                "Please select an election before exporting results."
-            );
-            return;
-        }
-
-            setExporting(true);
-            setError("");
-            window.setTimeout(() => {
-                window.print();
-                setExporting(false);
-            }, 80);
+    const handleExportResults = async () => {
+        if (!election?.id || exporting) return;
+        setExporting(true);
+        setError("");
+        try {
+            const response = await api.get("/electoral-board/results-reports/export",
+                {params: {election_id: election.id}, responseType: "blob", timeout: 60000});
+            if (!String(response.headers["content-type"] || "").includes("application/pdf"))
+                throw new Error("The server did not return a PDF. Please redeploy the updated backend.");
+            const url = URL.createObjectURL(response.data);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = (election.title || "Election").replace(/[^a-z0-9_-]/gi, "_") + "_Results.pdf";
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+        } catch (err) {
+            let message = err?.code === "ECONNABORTED"
+                ? "PDF export took too long. Please try again." : err?.message || "Unable to export results.";
+            if (err?.response?.data instanceof Blob) {
+                try { message = JSON.parse(await err.response.data.text()).message || message; } catch {}
+            }
+            setError(message);
+        } finally { setExporting(false); }
     };
 
     const handleReleaseResults = async () => {
@@ -386,7 +324,7 @@ const ResultsReports = () => {
         return (
             <div className="rr-page">
 
-                <div className="rr-loading">
+                <div className="rr-loading" role="status" aria-live="polite">
 
                     <div className="rr-spinner" />
 
@@ -490,7 +428,7 @@ const ResultsReports = () => {
 
                         {exporting
                             ? "Exporting..."
-                            : "Save as PDF"}
+                            : "Export as PDF"}
 
                     </button>
 

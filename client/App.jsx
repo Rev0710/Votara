@@ -65,7 +65,7 @@ const SystemSettings = lazy(() => import("./src/pages/admin/SystemSettings"));
 const StudentDashboard = lazy(() => import("./src/pages/student/StudentDashboard"));
 const Settings = lazy(() => import("./src/pages/student/Settings"));
 
-const ElectoralBoardLogin = lazy(() => import("./src/pages/auth/ElectoralBoardLogin"));
+
 
 const EBDashboard = lazy(() => import("./src/pages/electoralBoard/EBDashboard"));
 
@@ -301,7 +301,7 @@ if (showInitialIntro) {
 
                 <Route
                     path="/electoral-board/login"
-                    element={<ElectoralBoardLogin />}
+                    element={<Navigate to="/admin-login?role=electoral_board" replace />}
                 />
 
 

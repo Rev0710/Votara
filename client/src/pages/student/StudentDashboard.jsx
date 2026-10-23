@@ -4,7 +4,7 @@ import "./StudentDashboard.css";
 import "./Settings.css";
 import "./StudentDashboard.workspace.css";
 import StudentDotIcon from "../../components/student/StudentDotIcon";
-import { FiMoon, FiSun } from "react-icons/fi";
+import { FiLogOut, FiMoon, FiSun } from "react-icons/fi";
 import Profile from "./Profile";
 import api from "../../services/api";
 import {
@@ -4130,9 +4130,9 @@ const resultsAreVisible =
                         onClick={(event) => event.stopPropagation()}
                     >
                         <div className="logout-confirmation-symbol" aria-hidden="true">
-                            ?
+                            <FiLogOut />
                         </div>
-                        <h2 id="logout-confirmation-title">Log out of VOTARA?</h2>
+                        <h2 id="logout-confirmation-title">Sign out?</h2>
                         <p id="logout-confirmation-description">
                             Are you sure you want to log out of your student account?
                         </p>
@@ -4149,7 +4149,7 @@ const resultsAreVisible =
                                 className="logout-confirm-button"
                                 onClick={handleLogout}
                             >
-                                Yes, log out
+                                Sign out
                             </button>
                         </div>
                     </section>
