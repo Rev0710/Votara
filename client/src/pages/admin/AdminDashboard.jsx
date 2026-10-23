@@ -22,7 +22,7 @@ import {
     FiChevronRight,
 } from "react-icons/fi";
 
-import api from "../../services/api";
+import api, { clearAccountSession } from "../../services/api";
 import { getAdminConnectionError, isAdminSessionRejection } from "../../services/adminSession";
 
 // =========================================================
@@ -547,20 +547,8 @@ const checkSystem = async () => {
     // =====================================================
 
     const confirmLogout = () => {
-        localStorage.removeItem(
-            "votaraAdminToken"
-        );
-
-        localStorage.removeItem(
-            "votaraAdminUser"
-        );
-
-        localStorage.removeItem("votaraStaffToken");
-        localStorage.removeItem("votaraStaffUser");
-
-        navigate("/admin-login", {
-            replace: true,
-        });
+        clearAccountSession("admin");
+        navigate("/admin-login", { replace: true });
     };
 
     // =====================================================

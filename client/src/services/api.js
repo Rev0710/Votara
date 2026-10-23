@@ -30,13 +30,27 @@ const api = axios.create({
 // TOKEN HELPERS
 // =====================================================
 
-const getStudentToken = () => {
-    return (
-        localStorage.getItem("votaraToken") ||
-        localStorage.getItem("votaraStudentToken") ||
-        localStorage.getItem("studentToken") ||
-        ""
-    );
+
+export const getStudentToken = () => {
+    for (const key of ["votaraToken", "votaraStudentToken", "studentToken"]) {
+        const token = localStorage.getItem(key);
+        if (!token) continue;
+        try {
+            const parts = token.split(".");
+            if (parts.length !== 3) continue;
+            const encoded = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+            const payload = JSON.parse(atob(encoded + "=".repeat((4 - encoded.length % 4) % 4)));
+            // Only select student credentials. Signature and account/session
+            // validation remain the server's responsibility.
+            if (payload.role && payload.role !== "student") continue;
+            if (!(payload.studentId || payload.student_id || payload.studentNumber)) continue;
+            if (payload.exp && Number(payload.exp) * 1000 <= Date.now()) continue;
+            return token;
+        } catch {
+            // Try a supported legacy student key if this entry is malformed.
+        }
+    }
+    return "";
 };
 
 // =====================================================
@@ -121,6 +135,29 @@ export const getEBToken = () => {
     return "";
 };
 
+
+export const getSessionIdentity = token => {
+    try {
+        const encoded = String(token).split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+        const claims = JSON.parse(atob(encoded + "=".repeat((4 - encoded.length % 4) % 4)));
+        return {expired: Boolean(claims.exp && Number(claims.exp) * 1000 <= Date.now()), role: claims.role || (claims.studentId || claims.student_id || claims.studentNumber ? "student" : ""),
+            id: String(claims.userId || claims.id || claims.studentId || claims.student_id || claims.studentNumber || "")};
+    } catch { return {role: "", id: ""}; }
+};
+
+export const clearAccountSession = role => {
+    const keys = role === "student"
+        ? ["votaraToken", "votaraStudentToken", "studentToken", "votaraStudent"]
+        : role === "admin" ? ["votaraAdminToken", "votaraAdminUser"]
+        : ["votaraEBToken", "votaraEBUser", "votaraKioskToken", "votaraKioskStudent",
+            "votaraKioskElectionId", "votaraKioskSessionId", "votaraKioskOperationId", "votaraKioskMode"];
+    keys.forEach(key => localStorage.removeItem(key));
+    if (role !== "student" && getSessionIdentity(localStorage.getItem("votaraStaffToken")).role === role) {
+        localStorage.removeItem("votaraStaffToken");
+        localStorage.removeItem("votaraStaffUser");
+    }
+};
+
 // =====================================================
 // KIOSK TOKEN
 // =====================================================
@@ -132,7 +169,7 @@ const getKioskToken = () => {
     );
 };
 
-let ebSessionRedirectStarted = false;
+let sessionRedirectStarted = false;
 
 // =====================================================
 // REQUEST TYPE HELPERS
@@ -188,10 +225,8 @@ api.interceptors.request.use(
                 ).toLowerCase()
                 : "";
 
-        const kioskMode =
-            localStorage.getItem(
-                "votaraKioskMode"
-            ) === "true";
+        const kioskMode = currentPath.startsWith("/kiosk-voting") &&
+            localStorage.getItem("votaraKioskMode") === "true";
 
         const studentToken =
             getStudentToken();
@@ -212,17 +247,7 @@ api.interceptors.request.use(
         // LOGIN REQUEST
         // =================================================
 
-        const isLoginRequest =
-            normalizedRequestUrl.includes(
-                "/staff-auth/login"
-            ) ||
-            normalizedRequestUrl.includes(
-                "/eb-auth/login"
-            ) ||
-            normalizedRequestUrl.includes(
-                "/auth/login"
-            );
-
+        const isLoginRequest = /\/(?:admin-auth|staff-auth|eb-auth|auth)\/login(?:\/|$|\?)/.test(normalizedRequestUrl);
         // =================================================
         // ADMIN REQUEST
         // =================================================
@@ -260,9 +285,34 @@ api.interceptors.request.use(
         // Never overwrite it here.
         // =================================================
 
+
+        // Student-owned endpoints never use EB/admin/staff credentials.
+        // Shared election/candidate endpoints use the active student page's session.
+        const isStudentRequest =
+            /^\/students(?:\/|$)/.test(normalizedRequestUrl) ||
+            /^\/profile(?:\/|$)/.test(normalizedRequestUrl) ||
+            /^\/auth\/(?:me|session\/keepalive|student-logout)(?:\/|$)/.test(normalizedRequestUrl);
+        const isStudentContext = [
+            "/student-dashboard", "/change-password", "/upload-profile-picture", "/vote", "/profile", "/settings",
+        ].includes(currentPath);
+
         const existingAuthorization =
             config.headers?.Authorization ||
             config.headers?.authorization;
+
+        if (isLoginRequest) {
+            config.headers?.delete?.("Authorization");
+            if (config.headers) { delete config.headers.Authorization; delete config.headers.authorization; }
+            return config;
+        }
+        if (isStudentRequest) {
+            config.headers = config.headers || {};
+            config.headers.delete?.("Authorization");
+            delete config.headers.Authorization;
+            delete config.headers.authorization;
+            if (studentToken) config.headers.Authorization = "Bearer " + studentToken;
+            return config;
+        }
 
         if (existingAuthorization) {
             return config;
@@ -275,9 +325,7 @@ api.interceptors.request.use(
         // Login must not send an old JWT.
         // =================================================
 
-        if (isLoginRequest) {
-            return config;
-        }
+
 
         let token = "";
 
@@ -299,14 +347,11 @@ api.interceptors.request.use(
         // NORMAL STUDENT VOTING
         // =================================================
 
-        else if (
-            isVotingRequest(requestUrl) &&
-            studentToken
-        ) {
-
+        else if (isStudentRequest || isVotingRequest(requestUrl) ||
+            (isStudentContext && !isEBRequest && !isAdminRequest && !isKioskRequest(requestUrl))) {
             token = studentToken;
-
         }
+
 
         // =================================================
         // KIOSK NON-VOTING
@@ -453,34 +498,34 @@ api.interceptors.response.use(
                 : "";
             const isEBContext = currentPath.startsWith("/electoral-board/");
             const normalizedRequestUrl = String(requestUrl).toLowerCase();
-            const isEBAuthRequest = normalizedRequestUrl.includes("/eb-auth/login") ||
-                normalizedRequestUrl.includes("/eb-auth/register");
-
-            // An expired or revoked EB session must not leave the workspace
-            // making repeated protected requests without a valid token.
-            if (isEBContext && error.response.status === 401 && !isEBAuthRequest) {
-                localStorage.removeItem("votaraEBToken");
-                localStorage.removeItem("votaraEBUser");
-                localStorage.removeItem("votaraStaffToken");
-                localStorage.removeItem("votaraStaffUser");
-                if (!ebSessionRedirectStarted && typeof window !== "undefined") {
-                    ebSessionRedirectStarted = true;
-                    console.warn("Electoral Board session expired. Redirecting to sign in.");
-                    window.location.replace("/electoral-board/login");
+const studentContext = ["/student-dashboard", "/change-password", "/upload-profile-picture", "/vote", "/profile", "/settings"].includes(currentPath);
+            const adminContext = currentPath === "/admin-dashboard" || currentPath.startsWith("/admin/");
+            const role = studentContext ? "student" : isEBContext ? "electoral_board" : adminContext ? "admin" : "";
+            const authFailure = error.response.status === 401 ||
+                (error.response.status === 403 && /Student access is required|(?:Staff|Administrator|Electoral Board) account is inactive/i.test(error.response.data?.message || ""));
+            const authRequest = /\/(?:auth|eb-auth|admin-auth|staff-auth)\/(?:login|register|forgot-password|reset-password)/.test(normalizedRequestUrl);
+            // Ignore an old request that failed after this tab received a newer login/renewal.
+            const sentHeader = error.config?.headers?.Authorization || error.config?.headers?.authorization || "";
+            const sentToken = String(sentHeader).replace(/^Bearer\s+/i, "");
+            const currentToken = role === "student" ? getStudentToken()
+                : role === "electoral_board" ? getEBToken() : getAdminToken();
+            if (role && authFailure && !authRequest && (!sentToken || !currentToken || sentToken === currentToken)) {
+                clearAccountSession(role);
+                if (!sessionRedirectStarted) {
+                    sessionRedirectStarted = true;
+                    window.location.replace(role === "student" ? "/student-login"
+                        : role === "electoral_board" ? "/admin-login?role=electoral_board" : "/admin-login");
                 }
                 return Promise.reject(error);
             }
-
             console.error(
                 "API Error:",
                 error.response.status,
                 error.response.data
             );
 
-            const kioskMode =
-                localStorage.getItem(
-                    "votaraKioskMode"
-                ) === "true";
+            const kioskMode = currentPath.startsWith("/kiosk-voting") &&
+            localStorage.getItem("votaraKioskMode") === "true";
 
             const isKioskVotingRequest =
                 kioskMode &&

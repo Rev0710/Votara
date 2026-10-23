@@ -45,6 +45,9 @@ const StudentLogin = () => {
             localStorage.removeItem("votaraStaffUser");
             localStorage.removeItem("votaraEBUser");
 
+            localStorage.removeItem("votaraStudentToken");
+            localStorage.removeItem("studentToken");
+            localStorage.removeItem("votaraStudent");
             localStorage.setItem("votaraToken", data.token);
 
             if (data.student) {

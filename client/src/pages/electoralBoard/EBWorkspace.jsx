@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import api from "../../services/api";
+import useAccountSession from "../../hooks/useAccountSession";
 
 const getElectoralBoardSession = () => {
     for (const key of ["votaraEBToken", "votaraStaffToken"]) {
@@ -20,6 +21,8 @@ const getElectoralBoardSession = () => {
     }
     return null;
 };
+
+function EBSessionWatch() { useAccountSession("electoral_board"); return null; }
 
 export default function EBWorkspace({ children }) {
     const { pathname } = useLocation();
@@ -96,6 +99,7 @@ export default function EBWorkspace({ children }) {
 
     return themedPath ? (
         <div className="eb-workspace" data-eb-theme={theme} data-eb-low-power={lowPower}>
+            {isEBPath && !isEBPublicPath && <EBSessionWatch />}
             {children}
         </div>
     ) : children;

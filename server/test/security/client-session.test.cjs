@@ -64,8 +64,9 @@ test("explicit staff authorization survives registration-header attachment", () 
     assert.equal(config.headers["X-Registration-Token"], "private-token");
 });
 test("student voting retains its existing student credential", () => {
-    const context = browserContext({ votaraToken: "student-token" }, "/vote");
-    assert.equal(context.request({ url: "/voting/submit", headers: {}, data: {} }).headers.Authorization, "Bearer student-token");
+    const token = jwt.sign({role: "student", studentId: "57476"}, "test-only-secret");
+    const context = browserContext({ votaraToken: token }, "/vote");
+    assert.equal(context.request({ url: "/voting/submit", headers: {}, data: {} }).headers.Authorization, "Bearer " + token);
 });
 test("kiosk voting retains its temporary kiosk credential", () => {
     const context = browserContext({ votaraToken: "student-token", votaraKioskMode: "true", votaraKioskToken: "kiosk-token" }, "/kiosk-voting");
@@ -187,4 +188,54 @@ test("successful EB sign-in updates the legacy staff slot as well as the EB slot
     assert.equal(context.localStorage.getItem("votaraEBToken"), ebToken);
     assert.equal(context.localStorage.getItem("votaraStaffToken"), ebToken);
     assert.equal(JSON.parse(context.localStorage.getItem("votaraStaffUser")).role, "electoral_board");
+});
+
+test("student profile uses its student token when EB and admin sessions remain saved", () => {
+    const student = jwt.sign({ role: "student", studentId: "57476" }, "test-only-secret");
+    const eb = jwt.sign({ role: "electoral_board" }, "test-only-secret");
+    const context = browserContext({ votaraToken: student, votaraEBToken: eb, votaraStaffToken: eb,
+        votaraAdminToken: "admin-token" }, "/student-dashboard");
+    for (const url of ["/students/profile", "/students/results", "/students/password", "/elections/active"]) {
+        assert.equal(context.request({url, headers: {}}).headers.Authorization, "Bearer " + student);
+    }
+});
+test("student-owned endpoints select student credentials even outside the student page", () => {
+    const student = jwt.sign({ role: "student", studentId: "57476" }, "test-only-secret");
+    const eb = jwt.sign({ role: "electoral_board" }, "test-only-secret");
+    const context = browserContext({votaraToken: student, votaraEBToken: eb}, "/");
+    assert.equal(context.request({url: "/students/profile", headers: {}}).headers.Authorization, "Bearer " + student);
+});
+test("student token selection skips expired or wrong-role primary entries", () => {
+    const student = jwt.sign({role: "student", studentId: "57476"}, "test-only-secret");
+    for (const stale of [
+        jwt.sign({role: "electoral_board"}, "test-only-secret"),
+        jwt.sign({role: "student", studentId: "57476"}, "test-only-secret", {expiresIn: -1}),
+        "malformed-token",
+    ]) {
+        const context = browserContext({votaraToken: stale, votaraStudentToken: student}, "/student-dashboard");
+        assert.equal(context.request({url: "/students/profile", headers: {}}).headers.Authorization, "Bearer " + student);
+    }
+});
+test("student endpoints never fall back to saved staff credentials when no student session exists", () => {
+    const eb = jwt.sign({role: "electoral_board"}, "test-only-secret");
+    const context = browserContext({votaraEBToken: eb, votaraStaffToken: eb}, "/student-dashboard");
+    for (const url of ["/students/profile", "/students/results", "/elections/active", "/voting/submit"]) {
+        assert.equal(context.request({url, headers: {}}).headers.Authorization, undefined);
+    }
+});
+test("legacy student credentials are supported only with a student identifier", () => {
+    const student = jwt.sign({student_id: "57476"}, "test-only-secret");
+    const context = browserContext({studentToken: student}, "/student-dashboard");
+    assert.equal(context.request({url: "/students/profile", headers: {}}).headers.Authorization, "Bearer " + student);
+});
+test("explicit kiosk authorization still takes precedence on voting requests", () => {
+    const context = browserContext({}, "/kiosk-voting");
+    assert.equal(context.request({url: "/voting/submit", headers: {Authorization: "Bearer kiosk-token"}})
+        .headers.Authorization, "Bearer kiosk-token");
+});
+
+test("a saved kiosk flag cannot replace the normal student's voting session", () => {
+    const student = jwt.sign({role: "student", studentId: "57476"}, "test-only-secret");
+    const context = browserContext({votaraToken: student, votaraKioskMode: "true", votaraKioskToken: "kiosk-token"}, "/student-dashboard");
+    assert.equal(context.request({url: "/voting/submit", headers: {}}).headers.Authorization, "Bearer " + student);
 });

@@ -8,7 +8,7 @@ import { FiBarChart2, FiClipboard, FiUserCheck, FiUsers } from "react-icons/fi";
 
 import "./EBDashboard.css";
 
-import api from "../../services/api";
+import api, { clearAccountSession } from "../../services/api";
 
 
 import Registrations from "./Registrations";
@@ -246,27 +246,9 @@ const EBDashboard = () => {
     //=====================================================
 
     const handleLogout = async () => {
-        try { await api.post('/electoral-board/activity',{section:'settings',event:'logout'},{timeout:2000}); } catch {} 
-
-        localStorage.removeItem(
-            "votaraStaffToken"
-        );
-
-        localStorage.removeItem(
-            "votaraStaffUser"
-        );
-
-        localStorage.removeItem(
-            "votaraEBToken"
-        );
-
-        localStorage.removeItem(
-            "votaraEBUser"
-        );
-
-        navigate(
-            "/account-selection"
-        );
+        try { await api.post("/electoral-board/activity", {section: "settings", event: "logout"}, {timeout: 2000}); } catch {}
+        clearAccountSession("electoral_board");
+        navigate("/admin-login?role=electoral_board", {replace: true});
     };
 
 

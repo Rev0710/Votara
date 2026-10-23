@@ -6,7 +6,8 @@ import "./StudentDashboard.workspace.css";
 import StudentDotIcon from "../../components/student/StudentDotIcon";
 import { FiLogOut, FiMoon, FiSun } from "react-icons/fi";
 import Profile from "./Profile";
-import api from "../../services/api";
+import api, { clearAccountSession, getStudentToken } from "../../services/api";
+import useAccountSession from "../../hooks/useAccountSession";
 import {
     getPartyListsForElection,
     getPartyListCandidates,
@@ -216,6 +217,7 @@ const ELECTION_STATUS_CLASSES = {
 // =====================================================
 
 function StudentDashboard() {
+    useAccountSession("student");
     const contentScrollRef = useRef(null);
     const [platformUpdate,setPlatformUpdate]=useState(null);
     const [studentTheme, setStudentTheme] = useState(() => {
@@ -249,15 +251,10 @@ const [partyRosterError, setPartyRosterError] = useState("");
 );
 
 useEffect(() => {
-    const handleResize = () => {
-        setSidebarOpen(window.matchMedia("(min-width: 721px)").matches);
-    };
-
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-        window.removeEventListener("resize", handleResize);
-    };
+    const desktop = window.matchMedia("(min-width: 721px)");
+    const handleBreakpointChange = event => setSidebarOpen(event.matches);
+    desktop.addEventListener("change", handleBreakpointChange);
+    return () => desktop.removeEventListener("change", handleBreakpointChange);
 }, []);
     const [activeMenu, setActiveMenu] = useState("dashboard");
     useEffect(() => { contentScrollRef.current?.scrollTo({ top: 0, behavior: "instant" }); }, [activeMenu]);
@@ -279,7 +276,7 @@ useEffect(() => {
 
         const refreshSession = async () => {
             if (document.visibilityState !== "visible" || refreshInFlight) return;
-            const token = localStorage.getItem("votaraToken");
+            const token = getStudentToken();
             if (!token) return;
 
             refreshInFlight = true;
@@ -290,7 +287,7 @@ useEffect(() => {
                     { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
                 );
                 const renewedToken = response?.data?.token;
-                if (renewedToken && localStorage.getItem("votaraToken") === token) {
+                if (renewedToken && getStudentToken() === token) {
                     localStorage.setItem("votaraToken", renewedToken);
                 }
             } catch (error) {
@@ -320,6 +317,11 @@ useEffect(() => {
     const [selectedFaq, setSelectedFaq] = useState(null);
 
     const [settingsModal, setSettingsModal] = useState(null);
+    const profileDialog = useRef(null);
+    const studentLogoutInProgress = useRef(false);
+    useEffect(() => {
+        if (settingsModal === "Edit profile" && profileDialog.current && !profileDialog.current.open) profileDialog.current.showModal();
+    }, [settingsModal]);
 
     const [passwordForm, setPasswordForm] = useState({
         currentPassword: "",
@@ -418,11 +420,7 @@ useEffect(() => {
 
         const fetchStudent = async () => {
             const storedStudent = readStoredStudent();
-            const token =
-                localStorage.getItem("votaraToken") ||
-                localStorage.getItem("votaraStudentToken") ||
-                localStorage.getItem("studentToken") ||
-                "";
+            const token = getStudentToken();
 
             // Show the saved account immediately while the server refresh runs.
             if (!cancelled && storedStudent) {
@@ -431,8 +429,9 @@ useEffect(() => {
 
             if (!token) {
                 if (!cancelled) {
-                    setStudent(storedStudent || null);
+                    setStudent(null);
                     setLoading(false);
+                    window.location.replace("/student-login");
                 }
                 return;
             }
@@ -1464,7 +1463,9 @@ const handleSettingsItemClick = (item) => {
 
     
 const handleLogout = async () => {
-    const token = localStorage.getItem("votaraToken");
+    if (studentLogoutInProgress.current) return;
+    studentLogoutInProgress.current = true;
+    const token = getStudentToken();
 
     // Release the server-side session before leaving the dashboard.
     if (token) {
@@ -1476,7 +1477,7 @@ const handleLogout = async () => {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
-                    timeout: 5000,
+                    timeout: 2000,
                 }
             );
         } catch (error) {
@@ -1487,11 +1488,8 @@ const handleLogout = async () => {
         }
     }
 
-    localStorage.removeItem("votaraToken");
-    localStorage.removeItem("votaraStudentToken");
-    localStorage.removeItem("studentToken");
-    localStorage.removeItem("votaraStudent");
-    window.location.href = "/";
+    clearAccountSession("student");
+    window.location.replace("/student-login");
 };
 
 
@@ -3848,8 +3846,11 @@ const resultsAreVisible =
             {/* ================= SETTINGS / PROFILE MODAL ================= */}
 
             {settingsModal === "Edit profile" && (
-                <div
-                    className="settings-modal-overlay"
+                <dialog
+                    ref={profileDialog}
+                    aria-label="My profile"
+                    onCancel={() => setSettingsModal(null)}
+                    className="settings-modal-overlay student-profile-dialog"
                     onClick={() =>
                         setSettingsModal(null)
                     }
@@ -3880,7 +3881,7 @@ const resultsAreVisible =
                             }
                         />
                     </div>
-                </div>
+                </dialog>
             )}
 
             {/* ================= CHANGE PASSWORD MODAL ================= */}
