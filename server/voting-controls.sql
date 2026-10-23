@@ -636,4 +636,5 @@ $function$
 REVOKE ALL ON FUNCTION public.submit_votara_vote(uuid,uuid,jsonb,text) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.submit_votara_vote(uuid,uuid,jsonb,text) TO service_role;
 REVOKE ALL ON FUNCTION public.record_voting_control_notice() FROM PUBLIC, anon, authenticated;
+NOTIFY pgrst, 'reload schema';
 COMMIT;

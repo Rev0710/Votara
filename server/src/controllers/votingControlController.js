@@ -8,12 +8,25 @@ exports.availability = async (req,res) => {
     return res.json({success:true,...votingAvailability(data)});
 };
 exports.setPaused = async (req,res) => {
-    if(typeof req.body.paused !== "boolean" || typeof req.body.expectedPaused !== "boolean")
+    if(typeof req.body?.paused !== "boolean" || typeof req.body?.expectedPaused !== "boolean")
         return res.status(400).json({success:false,message:"Provide paused and expectedPaused as booleans."});
     const {data,error}=await supabase.from("elections").update({voting_paused:req.body.paused})
         .eq("id",req.params.id).eq("status","open").eq("is_published",true)
         .eq("voting_paused",req.body.expectedPaused).select("*").maybeSingle();
-    if(error) return res.status(503).json({success:false,message:"Unable to change voting availability. Confirm the voting-controls SQL migration has been applied."});
+    if(error) {
+        console.error("Voting pause database error:", {code:error.code,message:error.message});
+        const missing = ["42703","42P01","42883","PGRST204","PGRST205","PGRST202"].includes(error.code);
+        const denied = error.code === "42501";
+        return res.status(503).json({
+            success:false,
+            code:missing ? "VOTING_CONTROLS_NOT_INSTALLED" : denied ? "VOTING_CONTROLS_PERMISSION_DENIED" : "VOTING_CONTROL_UPDATE_FAILED",
+            message:missing
+                ? "Voting controls are not installed or the database schema cache is outdated. Run server/voting-controls.sql in Supabase SQL Editor, then retry. No voting setting was changed."
+                : denied
+                ? "The server does not have permission to update voting controls. Ask the administrator to check the Supabase server key and migration permissions. No voting setting was changed."
+                : "The database could not save this voting change. No voting setting was changed. Try again; if it continues, ask the administrator to check the server logs."
+        });
+    }
     if(!data) return res.status(409).json({success:false,message:"The election changed. Refresh before trying again."});
     try {
         await require("../services/auditLogsService").createAuditLog({
