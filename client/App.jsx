@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { Component, lazy, Suspense, useEffect, useState } from "react";
 import MaintenanceGate from './src/MaintenanceGate';
 import EBWorkspace from './src/pages/electoralBoard/EBWorkspace';
 import AdminWorkspace from './src/pages/admin/AdminWorkspace';
@@ -32,7 +32,25 @@ const StaffChangePassword = lazy(() => import("./src/pages/auth/StaffChangePassw
 // =====================================================
 
 const AdminDashboard = lazy(() => import("./src/pages/admin/AdminDashboard"));
-const RegistrationRequirements = lazy(() => import("./src/pages/auth/RegistrationRequirements"));
+const registrationRequirementsChunkRetryKey = "votara:registration-requirements-chunk-retry";
+const RegistrationRequirements = lazy(() =>
+    import("./src/pages/auth/RegistrationRequirements")
+        .catch((error) => {
+            // A tab left open across a deployment can request a chunk from the
+            // previous build. Refresh once to load the matching HTML and assets.
+            if (!sessionStorage.getItem(registrationRequirementsChunkRetryKey)) {
+                sessionStorage.setItem(registrationRequirementsChunkRetryKey, "1");
+                window.location.reload();
+                return new Promise(() => {});
+            }
+
+            throw error;
+        })
+        .then((module) => {
+            sessionStorage.removeItem(registrationRequirementsChunkRetryKey);
+            return module;
+        })
+);
 const AdminDataManagement = lazy(() => import("./src/pages/admin/AdminDataManagement"));
 const AdminUserAccessManagement = lazy(() => import("./src/pages/admin/AdminUserAccessManagement"));
 
@@ -75,6 +93,36 @@ const LoginPage = () => {
     );
 };
 
+class RouteLoadErrorBoundary extends Component {
+    state = { hasError: false };
+
+    static getDerivedStateFromError() {
+        return { hasError: true };
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return (
+                <main className="route-load-error" role="alert">
+                    <h1>This page couldn’t load</h1>
+                    <p>Please refresh and try again.</p>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            sessionStorage.removeItem(registrationRequirementsChunkRetryKey);
+                            window.location.reload();
+                        }}
+                    >
+                        Refresh page
+                    </button>
+                </main>
+            );
+        }
+
+        return this.props.children;
+    }
+}
+
 
 const App = () => {
     const location = useLocation();
@@ -97,6 +145,7 @@ if (showInitialIntro) {
             className="page-transition"
             key={location.pathname}
         >
+            <RouteLoadErrorBoundary key={location.pathname}>
             <Suspense fallback={<div className="route-loading" role="status">Loading VOTARA…</div>}>
             <MaintenanceGate><AdminWorkspace><EBWorkspace><Routes location={location}>
 <Route path="/admin/late-enrollees" element={<AdminLateEnrollees/>}/>
@@ -381,6 +430,7 @@ if (showInitialIntro) {
                 />
             </Routes></EBWorkspace></AdminWorkspace></MaintenanceGate>
             </Suspense>
+            </RouteLoadErrorBoundary>
         </div>
     );
 };

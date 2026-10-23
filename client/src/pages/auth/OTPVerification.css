@@ -9,7 +9,6 @@
 }
 
 
-
 html,
 
 body,
@@ -2002,4 +2001,102 @@ body {
     .otp-disclaimer-actions { flex-direction: column-reverse; align-items: stretch; }
     .otp-disclaimer-back,
     .otp-disclaimer-agree { width: 100%; }
+}
+
+/* Match the readable type scale used by the account login screens. */
+.otp-left-kicker,
+.otp-content .otp-kicker {
+  font-size: 11px;
+}
+
+.otp-left-content h2 {
+  font-size: 30px;
+}
+
+.otp-content h1 {
+  font-size: 30px;
+}
+
+.otp-left-description,
+.otp-content p,
+.otp-content strong,
+.otp-email-display {
+  font-size: 14px;
+}
+
+.otp-step,
+.otp-back-top,
+.resend-button,
+.verify-button,
+.otp-error,
+.otp-success {
+  font-size: 13px;
+}
+
+.otp-disclaimer-header .otp-disclaimer-kicker,
+.otp-disclaimer-label {
+  font-size: 11px;
+}
+
+.otp-disclaimer-header h2 {
+  font-size: 32px;
+}
+
+.otp-disclaimer-header p,
+.otp-disclaimer-intro,
+.otp-disclaimer-item p,
+.otp-disclaimer-confirmation {
+  font-size: 14px;
+}
+
+.otp-disclaimer-item strong {
+  font-size: 15px;
+}
+
+.otp-disclaimer-number {
+  font-size: 12px;
+}
+
+.otp-disclaimer-back,
+.otp-disclaimer-agree {
+  min-height: 42px;
+  height: auto;
+  font-size: 14px;
+}
+
+@media (max-width: 700px) {
+  .otp-left-content h2 {
+    font-size: 25px;
+  }
+
+  .otp-left-description,
+  .otp-content p,
+  .otp-content strong,
+  .otp-email-display,
+  .otp-step,
+  .otp-back-top,
+  .resend-button,
+  .otp-error,
+  .otp-success {
+    font-size: 13px;
+  }
+
+  .otp-content h1 {
+    font-size: 25px;
+  }
+
+  .otp-disclaimer-header h2 {
+    font-size: 25px;
+  }
+
+  .otp-disclaimer-header p,
+  .otp-disclaimer-intro,
+  .otp-disclaimer-item p,
+  .otp-disclaimer-confirmation {
+    font-size: 13px;
+  }
+
+  .otp-disclaimer-item strong {
+    font-size: 14px;
+  }
 }

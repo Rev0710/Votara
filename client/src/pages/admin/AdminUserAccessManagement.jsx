@@ -4,6 +4,7 @@ import {
     FiEye,
     FiSearch,
     FiAlertCircle,
+    FiAlertTriangle,
     FiKey,
     FiRefreshCw,
     FiShield,
@@ -81,17 +82,25 @@ export default function AdminUserAccessManagement() {
     const [resettingId, setResettingId] = useState(null);
     const [statusUpdatingId, setStatusUpdatingId] = useState(null);
     const [selectedAccount, setSelectedAccount] = useState(null);
+    const [deleteConfirmation, setDeleteConfirmation] = useState(null);
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
     const [accountSearch, setAccountSearch] = useState("");
     const [accountRole, setAccountRole] = useState("all");
     const accountDialog = useRef(null);
+    const deleteConfirmationDialog = useRef(null);
 
     useEffect(() => {
         const dialog = accountDialog.current;
         if (selectedAccount && !dialog.open) dialog.showModal();
         else if (!selectedAccount && dialog.open) dialog.close();
     }, [selectedAccount]);
+
+    useEffect(() => {
+        const dialog = deleteConfirmationDialog.current;
+        if (deleteConfirmation && !dialog.open) dialog.showModal();
+        else if (!deleteConfirmation && dialog.open) dialog.close();
+    }, [deleteConfirmation]);
 
     const isAdmin = role === "admin";
 
@@ -279,8 +288,7 @@ export default function AdminUserAccessManagement() {
 
     const handleDeleteAccount = async (account) => {
         if (!account || !account.id || statusUpdatingId) return;
-        const confirmed = window.confirm("Permanently delete this staff account?\n\nName: " + (account.full_name || "Staff account") + "\nEmail: " + account.email + "\nRole: " + (account._role === "admin" ? "Administrator" : "Electoral Board") + "\n\nThis removes the account from both staff lists and the database. Existing report history is kept, and the email can be reused after deletion succeeds.\n\nThis cannot be undone.");
-        if (!confirmed) return;
+        setDeleteConfirmation(null);
         setStatusUpdatingId(account.id);
         setError("");
         setMessage("");
@@ -442,7 +450,18 @@ export default function AdminUserAccessManagement() {
                     <div className="ux-recovery-note"><FiKey aria-hidden="true" /><div><strong>Account recovery</strong><p>Generate a temporary password for this active account. The password will appear in the Generated credentials panel and must be changed after sign-in.</p></div></div>
                     {error && <p className="ux-modal-message ux-modal-error" role="alert">{error}</p>}
                     {message && <p className="ux-modal-message" role="status">{message}{credentials.user?.id === selectedAccount.id ? " Close these details to view the temporary credentials." : ""}</p>}
-                    <footer className="ux-dialog-actions ux-account-actions"><button type="button" className="ux-button ux-secondary" onClick={() => setSelectedAccount(null)}>Close</button><button type="button" className="ux-button ux-danger" disabled={statusUpdatingId === selectedAccount.id} onClick={() => handleDeleteAccount(selectedAccount)}>{statusUpdatingId === selectedAccount.id ? "Deleting…" : "Delete account"}</button><button type="button" className="ux-button ux-primary" disabled={resettingId === selectedAccount.id || !selectedAccount.is_active || statusUpdatingId === selectedAccount.id} onClick={() => handleResetPassword(selectedAccount)}><FiKey aria-hidden="true" />{resettingId === selectedAccount.id ? "Generating…" : "Generate temporary password"}</button></footer>
+                    <footer className="ux-dialog-actions ux-account-actions"><button type="button" className="ux-button ux-secondary" onClick={() => setSelectedAccount(null)}>Close</button><button type="button" className="ux-button ux-danger" disabled={statusUpdatingId === selectedAccount.id} onClick={() => setDeleteConfirmation(selectedAccount)}>{statusUpdatingId === selectedAccount.id ? "Deleting…" : "Delete account"}</button><button type="button" className="ux-button ux-primary" disabled={resettingId === selectedAccount.id || !selectedAccount.is_active || statusUpdatingId === selectedAccount.id} onClick={() => handleResetPassword(selectedAccount)}><FiKey aria-hidden="true" />{resettingId === selectedAccount.id ? "Generating…" : "Generate temporary password"}</button></footer>
+                </div>}
+            </dialog>
+            <dialog ref={deleteConfirmationDialog} className="ux-confirm-dialog" aria-labelledby="ux-delete-confirm-title" aria-describedby="ux-delete-confirm-copy" onCancel={() => setDeleteConfirmation(null)} onClick={(event) => { if (event.target === event.currentTarget) setDeleteConfirmation(null); }}>
+                {deleteConfirmation && <div className="ux-confirm-content">
+                    <div className="ux-confirm-mark"><FiAlertTriangle aria-hidden="true" /></div>
+                    <p className="ux-confirm-eyebrow">Permanent action</p>
+                    <h2 id="ux-delete-confirm-title">Delete this staff account?</h2>
+                    <p className="ux-confirm-copy" id="ux-delete-confirm-copy">This removes their staff sign-in from VOTARA. The email can be used for another staff role after deletion succeeds.</p>
+                    <div className="ux-confirm-person"><span className="ux-avatar">{deleteConfirmation.profile_photo_url ? <img src={deleteConfirmation.profile_photo_url} alt="" /> : getInitials(deleteConfirmation.full_name)}</span><div><strong>{deleteConfirmation.full_name || "Staff account"}</strong><span>{deleteConfirmation.email}</span></div><span className="ux-confirm-role">{deleteConfirmation._role === "admin" ? "Administrator" : "Electoral Board"}</span></div>
+                    <p className="ux-confirm-retention">Existing report history is retained. This action cannot be undone.</p>
+                    <footer className="ux-confirm-actions"><button type="button" className="ux-button ux-secondary" autoFocus onClick={() => setDeleteConfirmation(null)}>Keep account</button><button type="button" className="ux-button ux-danger" disabled={statusUpdatingId === deleteConfirmation.id} onClick={() => handleDeleteAccount(deleteConfirmation)}>{statusUpdatingId === deleteConfirmation.id ? "Deleting…" : "Delete permanently"}</button></footer>
                 </div>}
             </dialog>
         </div>

@@ -233,7 +233,7 @@ function Walkthrough() {
         <div ref={stageRef} className="lp-walkthrough-stage">
             <div ref={bubbleRef} className="lp-walkthrough-bubble" aria-hidden="true"><span className="lp-bubble-fill" /></div>
             <div ref={burstRef} className="lp-bubble-burst" aria-hidden="true"><span className="lp-bubble-ring" />{Array.from({ length: 8 }, (_, i) => <span key={i} className="lp-bubble-drop" />)}</div>
-            <div ref={cardsRef} className="lp-bubble-cards" aria-hidden="true">{["left", "right"].map((side) => <div key={side} className={`lp-vote-preview lp-vote-preview-${side}`}><span className="lp-vote-preview-arrow"><FiArrowUpRight /></span><span className="lp-vote-preview-label">Cast votes</span><span className="lp-vote-preview-value">1 207</span><span className="lp-vote-preview-progress"><span /></span></div>)}</div>
+            <div ref={cardsRef} className="lp-bubble-cards" aria-hidden="true">{["left", "right"].map((side) => <div key={side} className={`lp-vote-preview lp-vote-preview-${side}`}><span className="lp-vote-preview-arrow"><FiArrowUpRight /></span><span className="lp-vote-preview-label">Cast votes</span><span className="lp-vote-preview-value">400+</span><span className="lp-vote-preview-progress"><span /></span></div>)}</div>
             <div className="lp-section-heading"><h2 id="lp-how-title">Your vote, in three steps.</h2><p>A clear path from joining Votara to following the results.</p></div>
             <div ref={viewportRef} className="lp-step-viewport" onScroll={handleSwipe}>
                 <div ref={trackRef} className="lp-step-track">
