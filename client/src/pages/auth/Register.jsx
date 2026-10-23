@@ -1,6 +1,7 @@
 import { registrationHeaders, saveRegistrationToken } from "../../services/registrationSession";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { FiArrowLeft } from "react-icons/fi";
 import votaraLogo from "../../assets/images/votara-logo.png";
 import "./Register.css";
 
@@ -280,15 +281,11 @@ const Register = () => {
                 </section>
 
                 <section className="register-right">
-                    <Link
-                        to="/"
-                        className="register-back-top"
-                        aria-label="Go back to VOTARA home"
-                    >
-                        ← Back to Votara
-                    </Link>
-
                     <div className="register-content">
+                        <Link to="/" className="register-back-top">
+                            <FiArrowLeft aria-hidden="true" />
+                            <span>Back to VOTARA</span>
+                        </Link>
 
                         <div className="register-heading">
                             <span className="register-kicker">

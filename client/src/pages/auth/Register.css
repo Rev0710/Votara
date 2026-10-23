@@ -20,21 +20,22 @@
 
     min-height: 100dvh;
 
-    padding: 18px 26px;
+    padding: 0;
 
     display: flex;
 
-    align-items: center;
+    align-items: stretch;
 
     justify-content: center;
 
-    background: #7483aa;
+    background: #fff;
+    color-scheme: light;
 
     font-family: "Manrope", Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 
     color: #11152a;
 
-    overflow: hidden;
+    overflow-x: clip;
 
 }
 
@@ -42,11 +43,11 @@
 
 .register-card {
 
-    width: min(1050px, 100%);
+    width: 100%;
 
-    height: min(590px, calc(100vh - 36px));
+    height: auto;
 
-    min-height: 560px;
+    min-height: 100dvh;
 
     display: grid;
 
@@ -56,7 +57,6 @@
 
     background: #fff;
 
-    box-shadow: 0 22px 55px rgba(18, 28, 60, .12);
 
     animation: registerCardEnter .55s cubic-bezier(.2,.75,.2,1) both;
 
@@ -1789,35 +1789,34 @@
 
 .register-back-top {
 
-    position: absolute;
-
-    top: 28px;
-
-    left: 32px;
-
-    z-index: 10;
+    position: static;
 
     display: inline-flex;
 
     align-items: center;
 
-    justify-content: center;
+    justify-content: flex-start;
+    align-self: flex-start;
+    gap: 8px;
+    min-height: 44px;
+    max-width: 100%;
 
-    padding: 0;
+    padding: 10px 0;
+    margin: 0 0 16px;
 
     border: 0;
 
     background: transparent;
 
-    color: #155eef;
+    color: #52637a;
 
     font-family: inherit;
 
-    font-size: 9px;
+    font-size: 13px;
 
-    line-height: 1.2;
+    line-height: 1.4;
 
-    font-weight: 600;
+    font-weight: 500;
 
     text-decoration: none;
 
@@ -1828,10 +1827,12 @@
 
 
 .register-back-top:hover {
-
-    text-decoration: underline;
+    color: #0644eb;
+    text-decoration: none;
 
 }
+.register-back-top > svg { flex: 0 0 16px; width: 16px; height: 16px; }
+.register-back-top:hover > span { text-decoration: underline; text-underline-offset: 3px; }
 
 
 
@@ -2251,9 +2252,9 @@
 
 
 
-.register-page { padding:clamp(12px,3vw,40px); overflow:auto; }
-.register-page .register-card { width:min(1200px,100%); height:auto; min-height:680px; overflow:hidden; }
-.register-page .register-right { min-width:0; padding:clamp(20px,3vw,44px); height:auto; overflow:visible; }
+.register-page { padding:0; overflow-x:clip; }
+.register-page .register-card { width:100%; height:auto; min-height:100dvh; overflow:hidden; }
+.register-page .register-right { min-width:0; padding:clamp(20px,3vw,48px); height:auto; overflow:visible; }
 .register-page :is(.register-form-card,.register-form-container) { width:100%; max-width:540px; height:auto; padding:clamp(24px,3vw,44px); }
 .register-page :is(label,.register-form p,.register-description) { font-size:15px; line-height:1.6; }
 .register-page input { font-size:16px; min-height:48px; width:100%; }
@@ -2262,7 +2263,7 @@
 .register-page .register-left-copy p { font-size:16px; line-height:1.6; }
 .register-page .register-steps { font-size:14px; line-height:1.8; }
 @media(max-width:760px) { .register-page .register-card { grid-template-columns:1fr; min-height:0; } .register-page .register-left { min-height:280px; padding:28px; } .register-page .register-left-copy h2 { font-size:38px; } .register-page .register-right { padding:20px 12px; min-height:0; } .register-page .register-orbit { opacity:.3; } }
-.register-page .register-content { width:100%; max-width:540px; height:auto; min-height:0; padding:clamp(24px,3vw,44px); }
+.register-page .register-content { width:100%; max-width:520px; height:auto; min-height:0; padding:clamp(24px,3vw,48px); }
 .register-page .register-heading p { font-size:15px; line-height:1.6; }
 .register-page .register-heading h1 { font-size:clamp(28px,3vw,38px); line-height:1.2; }
 .register-page :is(.register-kicker,.register-back-top) { font-size:13px; }
@@ -2271,3 +2272,20 @@
 .register-page .register-heading h1 { white-space:normal; }
 .register-page .register-links { margin-top:28px; }
 .register-page .register-links a { font-size:13px; line-height:1.6; }
+@media (max-width: 900px) {
+    .register-page { padding: 0; }
+    .register-page .register-card { grid-template-columns: minmax(0, 1fr); align-content: start; }
+    .register-page .register-left { min-height: 0; padding: 24px; }
+    .register-page .register-left-copy { margin-top: 24px; }
+    .register-page .register-eyebrow { margin-bottom: 12px; font-size: 10px; color: rgba(255,255,255,.8); }
+    .register-page .register-left-copy h2 { font-size: 32px; line-height: 1.15; }
+    .register-page .register-left-copy :is(p, .register-steps),
+    .register-page .register-orbit { display: none; }
+    .register-page .register-right { min-height: 0; padding: 24px 16px; }
+    .register-page .register-content { padding: 24px; }
+}
+@media (max-width: 560px) {
+    .register-page .register-right { padding: 24px; background-image: none; }
+    .register-page .register-content { padding: 0; border-radius: 0; box-shadow: none; background: #fff; }
+    .register-page .register-heading h1 { font-size: 32px; }
+}

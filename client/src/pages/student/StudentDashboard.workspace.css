@@ -76,6 +76,7 @@
 .student-dashboard .sidebar-label { display: block; overflow: visible; text-overflow: clip; white-space: normal; text-align: left; }
 .student-dashboard .sidebar-icon-wrapper { display: flex; align-items: center; width: 24px; height: 24px; flex: 0 0 24px; }
 .student-dashboard .student-dot-icon { display: block; width: 24px; height: 24px; }
+.student-dashboard .student-figma-icon { display: block; width: 20px; height: 20px; flex: none; object-fit: contain; }
 .student-dashboard .sidebar-bottom { flex: 0 0 auto; margin: 0; padding: 14px 0 0; gap: 12px; }
 .student-dashboard .sidebar-help-card { margin: 0; padding: 12px; }
 .student-dashboard .sidebar-help-card strong { color: #ffffff; font-size: 12px; }
