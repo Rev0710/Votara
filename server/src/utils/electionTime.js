@@ -1,3 +1,4 @@
+const votingControls = require("../config/votingControls");
 const partsInManila = (now) => Object.fromEntries(new Intl.DateTimeFormat("en-CA", {
     timeZone:"Asia/Manila",year:"numeric",month:"2-digit",day:"2-digit",
     hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"
@@ -8,6 +9,10 @@ function nextVotingResume(now=new Date()) {
     return new Date(Date.UTC(Number(p.year),Number(p.month)-1,Number(p.day)+1)).toISOString();
 }
 function votingAvailability(election, now=new Date()) {
+    if(!votingControls.enabled) {
+        const available=election.is_published === true && election.status === "open";
+        return {available,paused:false,resumesAt:null,controlsEnabled:false,message:available?"":"This election is not open for voting.",timezone:"Asia/Manila",serverTime:now.toISOString()};
+    }
     const p=partsInManila(now);
     const date=p.year+"-"+p.month+"-"+p.day;
     const time=p.hour+":"+p.minute+":"+p.second;

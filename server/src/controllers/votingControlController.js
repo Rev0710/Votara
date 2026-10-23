@@ -1,8 +1,9 @@
+const votingControls = require("../config/votingControls");
 const supabase = require("../config/supabase");
 
 const {votingAvailability,nextVotingResume} = require("../utils/electionTime");
 exports.availability = async (req,res) => {
-    const {error:resumeError}=await supabase.rpc("resume_due_voting_controls");
+    const {error:resumeError}=(votingControls.enabled ? await supabase.rpc("resume_due_voting_controls") : {error:null});
     if(resumeError) return res.status(503).json({success:false,message:"Voting is temporarily unavailable. Please contact the Electoral Board."});
     const {data,error}=await supabase.from("elections").select("*").eq("id",req.params.id).maybeSingle();
     if(error) return res.status(503).json({success:false,message:"Voting availability could not be checked."});
@@ -10,9 +11,10 @@ exports.availability = async (req,res) => {
     return res.json({success:true,...votingAvailability(data)});
 };
 exports.setPaused = async (req,res) => {
+    if(!votingControls.enabled) return res.status(409).json({success:false,code:"VOTING_CONTROLS_DISABLED",message:"Pause and resume are temporarily disabled for testing."});
     if(typeof req.body?.paused !== "boolean" || typeof req.body?.expectedPaused !== "boolean")
         return res.status(400).json({success:false,message:"Provide paused and expectedPaused as booleans."});
-    const {error:resumeError}=await supabase.rpc("resume_due_voting_controls");
+    const {error:resumeError}=(votingControls.enabled ? await supabase.rpc("resume_due_voting_controls") : {error:null});
     const changes={voting_paused:req.body.paused,...(req.body.paused ? {voting_resumes_at:nextVotingResume()} : {})};
     const {data,error}=resumeError ? {data:null,error:resumeError} : await supabase.from("elections").update(changes)
         .eq("id",req.params.id).eq("status","open").eq("is_published",true)
@@ -43,6 +45,7 @@ exports.setPaused = async (req,res) => {
     return res.json({success:true,election:data,...votingAvailability(data)});
 };
 exports.notices = async (req,res) => {
+    if(!votingControls.enabled) return res.json({success:true,notices:[]});
     const {data,error}=await supabase.rpc("get_election_voting_notices");
     if(error) return res.status(503).json({success:false,message:"Voting notifications could not be refreshed."});
     return res.json({success:true,notices:data||[]});

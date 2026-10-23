@@ -27,6 +27,8 @@ import "./ElectionManagement.css";
 // CONSTANTS
 // =========================================================
 
+// Temporary testing switch; restore alongside server voting controls.
+const VOTING_CONTROLS_ENABLED = false;
 const YEAR_LEVELS = [
     "2nd Year",
     "3rd Year",
@@ -2639,6 +2641,7 @@ function ElectionManagement({ onCreateElection, onNavigate }) {
                 >
                     + Create Election
                 </button>
+                {VOTING_CONTROLS_ENABLED && (
                 <div className="election-voting-controls">
                     {controllableElections.length > 1 && <select aria-label="Election to pause or resume"
                         value={controlledElection?.id || ""} onChange={event=>setVotingControlId(event.target.value)}>
@@ -2652,6 +2655,7 @@ function ElectionManagement({ onCreateElection, onNavigate }) {
                     </button>
                     <small>Online + kiosk · 8 AM–5 PM Manila</small>
                 </div>
+                )}
 
                 </div>
 
@@ -2661,7 +2665,7 @@ function ElectionManagement({ onCreateElection, onNavigate }) {
                 ERROR
             ================================================= */}
 
-            {pauseConfirmation && <VotingPauseConfirmation election={pauseConfirmation}
+            {VOTING_CONTROLS_ENABLED && pauseConfirmation && <VotingPauseConfirmation election={pauseConfirmation}
                 busy={votingControlBusy} error={pauseError} onConfirm={toggleVotingPause}
                 onCancel={() => {if(!votingControlBusy){setPauseConfirmation(null);setPauseError("");}}} />}
             {error && (
@@ -2723,24 +2727,9 @@ function ElectionManagement({ onCreateElection, onNavigate }) {
             ================================================= */}
 
             {success && (
-                <div
-                    className="election-feedback election-feedback-success" role="status"
-                    style={{
-                        background:
-                            "#ecfdf5",
-                        border:
-                            "1px solid #bbf7d0",
-                        color:
-                            "#15803d",
-                        padding:
-                            "14px 17px",
-                        borderRadius:
-                            "12px",
-                        marginBottom:
-                            "18px",
-                    }}
-                >
-                    ✓ {success}
+                <div id="election-action-success" className="election-feedback election-feedback-success" role="status" aria-atomic="true">
+                    <span aria-hidden="true">✓</span>
+                    <span>{success}</span>
                 </div>
             )}
 

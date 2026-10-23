@@ -538,7 +538,7 @@ export default function Reports() {
         <div className="reports-page">
             <AdminTopNav />
 
-            <main className="reports-main">
+            <main id="admin-reports-main" className="reports-main">
                 <div className="reports-breadcrumb">
                     <span>Admin</span>
                     <span>/</span>
