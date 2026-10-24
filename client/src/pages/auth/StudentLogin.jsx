@@ -109,13 +109,13 @@ const StudentLogin = () => {
                         <span className="student-login-kicker">VOTARA&nbsp; / &nbsp;CAMPUS ELECTIONS</span>
                         <h2>Your vote. <br />Your voice.</h2>
                         <p>
-                            Sign in with your temporary password. After<br className="desktop-break" />
-                            your first login, you'll create a new password.
+                            Use your personal VOTARA password, or the<br className="desktop-break" />
+                            temporary password issued after approval.
                         </p>
 
                         <div className="student-login-steps">
-                            <span><b>01</b> Sign in with your issued password</span>
-                            <span><b>02</b> Create a new password</span>
+                            <span><b>01</b> Sign in with your VOTARA password</span>
+                            <span><b>02</b> Keep your account secure</span>
                         </div>
                     </div>
 
@@ -163,8 +163,8 @@ const StudentLogin = () => {
                             <span className="student-login-label">STUDENT LOGIN</span>
                             <h1>Welcome back</h1>
                         <p className="login-description">
-                            Sign in with your student ID and the temporary<br className="desktop-break" />
-                            password sent after your registration is approved.
+                            Sign in with your student ID and your VOTARA password. <br className="desktop-break" />
+                            New users can use the temporary password sent after approval.
                         </p>
 
                         {retryAfter>0 && <p role="status">Please wait {retryAfter} seconds before trying again.</p>}
@@ -195,7 +195,7 @@ const StudentLogin = () => {
                                 />
                             </div>
 
-                            <label htmlFor="password">Temporary password</label>
+                            <label htmlFor="password">Password</label>
                             <div className="login-input-group">
                                 <input
                                     id="password"
@@ -238,10 +238,12 @@ const StudentLogin = () => {
                             >
                                 Sign up
                             </button>
-                            <button type="button" className="student-signup-button" onClick={() => navigate("/activate-kiosk-account")} disabled={loading}>
-                                Already registered at the kiosk? Activate your account.
-                            </button>
+                            
                         </form>
+                        <div className="student-kiosk-activation">
+                            <p>Already registered at the kiosk?</p>
+                            <button type="button" onClick={()=>navigate("/activate-kiosk-account")} disabled={loading}>Activate your online account <span aria-hidden="true">→</span></button>
+                        </div>
                     </div>
                 </div>
             </section>

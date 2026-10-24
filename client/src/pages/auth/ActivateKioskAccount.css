@@ -23,3 +23,17 @@
 @media(prefers-color-scheme:dark){.kiosk-account-page{--activation-bg:#101725;--activation-surface:#1b293e;--activation-text:#edf3ff;--activation-muted:#b7c7df;--activation-line:#40516b;--activation-soft:#263b57;color-scheme:dark}.kiosk-account-back,.kiosk-account-inline-actions button{color:#a9c7ff}.kiosk-account-card .kiosk-account-error{background:#482635;color:#ffc0cb}.kiosk-account-card .kiosk-account-status{background:#153d2b;color:#a2edbe}}
 @media(max-width:380px){.kiosk-account-page{padding:12px}.kiosk-account-card{padding:18px}.kiosk-account-inline-actions{flex-direction:column}}
 .kiosk-account-card h1:focus{outline:none}
+
+.kiosk-account-card .kiosk-password-input{position:relative;display:flex;align-items:center}
+.kiosk-account-card .kiosk-password-input input{padding-right:80px;min-width:0}
+.kiosk-account-card .kiosk-password-input button{position:absolute;right:5px;top:4px;bottom:4px;min-width:62px;min-height:40px;padding:6px 10px;border:0;border-radius:7px;background:var(--activation-soft);color:var(--activation-text);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.kiosk-password-requirements{margin-top:16px;padding:16px;border:1px solid var(--activation-line);border-radius:10px;background:var(--activation-soft)}
+.kiosk-password-requirements>strong{font-size:14px}
+.kiosk-password-requirements ul{padding:0;margin:10px 0 0;list-style:none;display:grid;gap:8px}
+.kiosk-password-requirements li{display:flex;align-items:flex-start;gap:9px;color:var(--activation-muted);font-size:13px;line-height:1.5}
+.kiosk-password-requirements li[data-met=true]{color:#087242}
+.kiosk-visually-hidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.kiosk-account-card .kiosk-account-signin{border-top:1px solid var(--activation-line);padding-top:20px;margin-top:24px;text-align:center;font-size:14px}
+.kiosk-account-signin a{display:inline-flex;align-items:center;min-height:44px;color:#155dfb;font-weight:600;margin-left:4px}
+@media(prefers-color-scheme:dark){.kiosk-password-requirements li[data-met=true]{color:#a2edbe}.kiosk-account-signin a{color:#a9c7ff}}
+@media(max-width:380px){.kiosk-password-requirements{padding:12px}.kiosk-account-card .kiosk-password-input input{padding-right:74px}}

@@ -251,7 +251,7 @@ api.interceptors.request.use(
         // LOGIN REQUEST
         // =================================================
 
-        const isLoginRequest = /\/(?:admin-auth|staff-auth|eb-auth|auth)\/login(?:\/|$|\?)/.test(normalizedRequestUrl) || normalizedRequestUrl.startsWith("/auth/kiosk-online-access/");
+        const isLoginRequest = /\/(?:admin-auth|staff-auth|eb-auth|auth)\/login(?:\/|$|\?)/.test(normalizedRequestUrl) || normalizedRequestUrl.startsWith("/auth/kiosk-online-access/") || normalizedRequestUrl === "/auth/student-login";
         // =================================================
         // ADMIN REQUEST
         // =================================================
@@ -507,7 +507,7 @@ const studentContext = ["/student-dashboard", "/change-password", "/upload-profi
             const role = studentContext ? "student" : isEBContext ? "electoral_board" : adminContext ? "admin" : "";
             const authFailure = error.response.status === 401 ||
                 (error.response.status === 403 && /Student access is required|(?:Staff|Administrator|Electoral Board) account is inactive/i.test(error.response.data?.message || ""));
-            const authRequest = /\/(?:auth|eb-auth|admin-auth|staff-auth)\/(?:login|register|forgot-password|reset-password)/.test(normalizedRequestUrl);
+            const authRequest = /\/(?:auth|eb-auth|admin-auth|staff-auth)\/(?:login|register|forgot-password|reset-password)/.test(normalizedRequestUrl) || normalizedRequestUrl.startsWith("/auth/kiosk-online-access/") || normalizedRequestUrl === "/auth/student-login";
             // Ignore an old request that failed after this tab received a newer login/renewal.
             const sentHeader = error.config?.headers?.Authorization || error.config?.headers?.authorization || "";
             const sentToken = String(sentHeader).replace(/^Bearer\s+/i, "");

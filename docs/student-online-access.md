@@ -22,7 +22,7 @@ Student Login > **Already registered at the kiosk? Activate your account.**
 
 1. Paste the activation code and enter an email address.
 2. Receive the 6-digit email code, enter it, create and confirm a personal password, and optionally add a contact number.
-3. Finish activation and sign in normally with Student ID and the new password.
+3. Finish activation. The page signs in through the existing student-login endpoint and opens the current student dashboard. Existing mandatory password/photo setup steps are respected. If automatic sign-in fails after activation, use Student Login with the Student ID and new password; activation does not need to be repeated.
 
 Email supports password recovery. Email and phone are not new login identifiers. Phone is a contact detail and is not verified or used as an authentication factor. Email is shown in Settings > Profile; existing contact-number editing remains available. The linked email is read-only in the profile form, since this feature does not implement email replacement.
 
@@ -44,3 +44,8 @@ Use disposable records in a test database: approved verified/no-email student wh
 ## Disable if needed
 
 Revert the activation UI imports/links and new route mounts in source, then deploy. Keep the migration and any linked account emails/passwords; dropping new structures is not required to hide the feature. Never reset student records or voting tables to disable activation.
+## Activation connection errors and password controls
+
+The activation page has independent Show/Hide controls and a live checklist for the existing student password policy. This is a VOTARA password, not the password for the student's email provider. Password values are cleared after confirmed activation and are never stored in local storage. Existing EB/operator sessions are kept separate.
+
+A browser error ERR_NAME_NOT_RESOLVED means it could not resolve the API hostname. It is not an OTP or password validation response. Check the configured VITE_API_BASE_URL and network/DNS availability. The page preserves entered details when the activation request cannot reach the server. A completed activation followed by a failed sign-in is shown as account-ready, with a link to sign in normally.

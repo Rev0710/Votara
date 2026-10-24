@@ -824,3 +824,9 @@ to { opacity: 1; transform: translateY(0); }
     .student-login-page .student-login-right { background-image: none; }
     .student-login-page .student-login-form-card h1 { font-size: 32px; }
 }
+
+.student-login-page .student-kiosk-activation{margin-top:24px;padding-top:20px;border-top:1px solid #d7e1ef;text-align:center}
+.student-login-page .student-kiosk-activation p{margin:0 0 6px;color:#53657e;font-size:14px;line-height:1.6}
+.student-login-page .student-kiosk-activation button{display:inline-flex;justify-content:center;align-items:center;gap:10px;max-width:100%;min-height:44px;padding:8px 4px;border:0;background:transparent;color:#155dfb;font:inherit;font-size:15px;font-weight:600;line-height:1.5;cursor:pointer;white-space:normal}
+.student-login-page .student-kiosk-activation button:focus-visible{outline:3px solid #4b8aff;outline-offset:3px;border-radius:6px}
+.student-login-page .student-kiosk-activation button:disabled{opacity:.6;cursor:wait}
