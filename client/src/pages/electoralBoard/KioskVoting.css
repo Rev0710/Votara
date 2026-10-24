@@ -515,3 +515,19 @@
     .kiosk-review-student, .kiosk-review-document { padding: 16px; }
     .kiosk-assisted-registration .kiosk-form-grid :is(input, select) { font-size: 16px; }
 }
+
+/* Keep selected ballot rows readable in either workspace theme. */
+.eb-workspace .kiosk-voting-page .kiosk-position-card{min-width:0;margin:0;padding:20px;border:1px solid var(--kv-line);background:var(--kv-surface);color:var(--kv-text)}
+.eb-workspace .kiosk-voting-page .kiosk-position-card legend{padding:0 6px;font-size:20px;font-weight:700;color:var(--kv-text)!important}
+.eb-workspace .kiosk-voting-page .kiosk-position-card p{color:var(--kv-muted)!important;line-height:1.6}
+.eb-workspace .kiosk-voting-page .kiosk-position-help{font-size:13px;margin:8px 0 12px}
+.eb-workspace .kiosk-voting-page .kiosk-candidate{min-height:56px;background:var(--kv-surface)!important;color:var(--kv-text)!important;border-color:var(--kv-line)!important;align-items:flex-start}
+.eb-workspace .kiosk-voting-page .kiosk-candidate.selected{background:var(--kv-soft)!important;border-color:#377dff!important;box-shadow:inset 3px 0 #377dff}
+.eb-workspace .kiosk-voting-page .kiosk-candidate strong{color:var(--kv-text)!important;font-size:15px;line-height:1.5}
+.eb-workspace .kiosk-voting-page .kiosk-candidate small{color:var(--kv-muted)!important;font-size:14px;line-height:1.6}
+.eb-workspace .kiosk-voting-page .kiosk-candidate>span{min-width:0;overflow-wrap:anywhere}
+.eb-workspace .kiosk-voting-page .kiosk-candidate input[type=radio]{display:block!important;appearance:auto!important;position:static!important;opacity:1!important;flex:0 0 22px;width:22px!important;height:22px!important;min-height:22px!important;margin:2px 0 0;padding:0;accent-color:#377dff;cursor:pointer}
+.eb-workspace .kiosk-voting-page .kiosk-candidate:focus-within{outline:3px solid var(--kv-link);outline-offset:3px}
+.eb-workspace .kiosk-voting-page .kiosk-candidate:has(input:disabled){cursor:not-allowed;opacity:.7}
+.eb-workspace .kiosk-voting-page .kiosk-ballot-footer{color:var(--kv-muted);flex-wrap:wrap}
+@media(max-width:600px){.kiosk-voting-header{position:static}.eb-workspace .kiosk-voting-page .kiosk-position-card{padding:16px}.eb-workspace .kiosk-voting-page .kiosk-position-card legend{font-size:18px}}

@@ -17,9 +17,8 @@ const getStudentInPersonVerification = async (studentId) => {
         .eq("student_id", student.student_id)
         .order("created_at", { ascending: false });
     if (applicationError) throw applicationError;
-    const application = (applications || []).find(row =>
-        !["late", "late_enrollee"].includes(String(row.registration_type || "").toLowerCase())
-    ) || null;
+    // Verification applies to online, kiosk and Admin-approved late registrations.
+    const application = (applications || [])[0] || null;
 
     let identityVerification = null;
     if (application) {
@@ -87,7 +86,6 @@ const getInPersonVerificationStudents = async (req, res) => {
         const participationByStudent = new Map((participationResult.data || []).map(row => [String(row.student_id), row]));
         const applicationsByStudent = new Map();
         for (const row of applicationResult.data || []) {
-            if (["late", "late_enrollee"].includes(String(row.registration_type || "").toLowerCase())) continue;
             if (!applicationsByStudent.has(String(row.student_id))) applicationsByStudent.set(String(row.student_id), row);
         }
         const applicationIds = Array.from(applicationsByStudent.values()).map(row => row.id).filter(Boolean);
@@ -119,6 +117,7 @@ const getInPersonVerificationStudents = async (req, res) => {
                     verification_status: identity?.verification_status || "pending",
                     physical_id_verified: isVerified,
                     registration_confirmed: isVerified,
+                    enrollment_confirmed: isVerified && isEnrollmentActive(student.enrollment_status),
                     has_voted: election ? participation?.has_voted === true : null,
                     voted_at: election ? participation?.voted_at || null : null,
                     election_title: election?.title || null,
@@ -133,8 +132,8 @@ const getInPersonVerificationStudents = async (req, res) => {
 
 const verifyStudentInPerson = async (req, res) => {
     try {
-        if (req.body?.physical_id_verified !== true || req.body?.registration_confirmed !== true) {
-            return res.status(400).json({ success: false, message: "Complete both physical ID and registration checks before verifying." });
+        if (req.body?.physical_id_verified !== true || req.body?.registration_confirmed !== true || req.body?.enrollment_confirmed !== true) {
+            return res.status(400).json({ success: false, message: "Complete the physical ID, registration and enrollment checks before verifying." });
         }
         const { student, application, identityVerification: existingIdentityVerification } = await getStudentInPersonVerification(req.params.studentId);
         if (!student) return res.status(404).json({ success: false, message: "Student was not found." });

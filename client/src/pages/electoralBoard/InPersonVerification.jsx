@@ -37,6 +37,7 @@ const InPersonVerification = ({ onNavigate = () => {} }) => {
     const [success, setSuccess] = useState("");
 
     const [physicalIdVerified, setPhysicalIdVerified] = useState(false);
+    const [enrollmentConfirmed, setEnrollmentConfirmed] = useState(false);
     const [registrationConfirmed, setRegistrationConfirmed] =
         useState(false);
 
@@ -166,6 +167,7 @@ const InPersonVerification = ({ onNavigate = () => {} }) => {
 
     const selectStudent = (item) => {
         setStudent(item);
+        setEnrollmentConfirmed(Boolean(item?.enrollment_confirmed));
 
         setPhysicalIdVerified(
             Boolean(
@@ -194,6 +196,7 @@ const InPersonVerification = ({ onNavigate = () => {} }) => {
         setSearchTerm("");
         setPhysicalIdVerified(false);
         setRegistrationConfirmed(false);
+        setEnrollmentConfirmed(false);
         setError("");
         setSuccess("");
     };
@@ -239,6 +242,7 @@ const InPersonVerification = ({ onNavigate = () => {} }) => {
         if (isVerified) return "Verified";
         if (!physicalIdVerified) return "ID check needed";
         if (!registrationConfirmed) return "Registration check needed";
+        if (!enrollmentConfirmed) return "Enrollment check needed";
         return "Ready to verify";
     };
 
@@ -276,6 +280,7 @@ const InPersonVerification = ({ onNavigate = () => {} }) => {
         isEnrolled &&
         physicalIdVerified &&
         registrationConfirmed &&
+        enrollmentConfirmed &&
         !isVerified;
 
     const canActivate =
@@ -314,6 +319,7 @@ const InPersonVerification = ({ onNavigate = () => {} }) => {
                 `/electoral-board/in-person-verification/${studentId}/verify`,
                 {
                     physical_id_verified: physicalIdVerified,
+                    enrollment_confirmed: enrollmentConfirmed,
                     registration_confirmed:
                         registrationConfirmed,
                 }
@@ -329,6 +335,7 @@ const InPersonVerification = ({ onNavigate = () => {} }) => {
                 ...previous,
                 verification_status: "verified",
                 is_verified: true,
+                enrollment_confirmed: true,
             }));
         } catch (err) {
             console.error(
@@ -452,8 +459,7 @@ const InPersonVerification = ({ onNavigate = () => {} }) => {
                 <div>
                     <h1>In-Person Verification</h1>
                     <p>
-                        Verify the identity of students who
-                        completed the online registration process.
+                        Verify students with approved online, kiosk or late-enrollee registrations.
                     </p>
                 </div>
 
@@ -676,6 +682,15 @@ const InPersonVerification = ({ onNavigate = () => {} }) => {
                             {hasVotingStatus && !hasVoted && <button type="button" className="primary-button" onClick={() => onNavigate("kiosk")}><FiCreditCard />Vote through kiosk</button>}
                             <button type="button" className="secondary-button" onClick={() => onNavigate("dashboard")}>Return to dashboard</button>
                         </div>
+                    </div>
+                    <div className="verification-card online-access-record-card">
+                        <h2>Online account access</h2>
+                        <p>Set up email and a personal password on this student's existing account. Their previous vote remains recorded.</p>
+                        {!isRegistrationApproved && <p role="status">Registration approval is required first.</p>}
+                        {!isVerified && <p role="status">Complete the physical ID, registration and enrollment checklist below, then select Mark as Verified to save verification.</p>}
+                        {!isEnrolled && <p role="status">Active enrollment is required for online activation.</p>}
+                        <OnlineAccessIssuer key={student?.id} studentId={student?.id} studentName={getFullName()}
+                            disabled={!canActivate || !isRegistrationApproved || !isEnrolled || loading} />
                     </div>
                     <div className="verification-card student-details-card">
                         <div className="student-details-header">
@@ -903,36 +918,19 @@ const InPersonVerification = ({ onNavigate = () => {} }) => {
 
                             {/* Enrollment */}
 
-                            <div className="checklist-item readonly">
-                                <span className="custom-checkbox verified-static">
-                                    {isEnrolled ? (
-                                        <FiCheckCircle />
-                                    ) : (
-                                        <FiClock />
-                                    )}
-                                </span>
-
+                            <label className={`checklist-item enrollment-check ${enrollmentConfirmed ? "completed" : ""}`}>
+                                <input type="checkbox" checked={enrollmentConfirmed}
+                                    onChange={event=>setEnrollmentConfirmed(event.target.checked)}
+                                    disabled={isVerified || !isEnrolled}
+                                    aria-describedby="enrollment-confirmation-help" />
                                 <div className="checklist-content">
-                                    <strong>
-                                        Confirm Enrollment
-                                        Status
-                                    </strong>
-
-                                    <span>
-                                        Student must have an
-                                        enrolled status in the
-                                        VOTARA student records.
-                                    </span>
+                                    <strong>Confirm Enrollment Status</strong>
+                                    <span id="enrollment-confirmation-help">{isEnrolled
+                                        ? "I confirm the student's active enrollment matches the VOTARA record."
+                                        : "The student's official enrollment must be active before verification."}</span>
                                 </div>
-
-                                <StatusBadge
-                                    status={
-                                        isEnrolled
-                                            ? "Enrolled"
-                                            : getEnrollmentStatus()
-                                    }
-                                />
-                            </div>
+                                <StatusBadge status={isEnrolled ? "Enrolled" : getEnrollmentStatus()} />
+                            </label>
                         </div>
 
                         {/* =================================================
@@ -978,7 +976,7 @@ const InPersonVerification = ({ onNavigate = () => {} }) => {
                                             ? "The student's registration application must be approved first."
                                             : !isEnrolled
                                               ? "The student must have active enrollment before verification."
-                                              : "Complete the physical ID and registration confirmation checks before verifying the student."}
+                                              : "Complete the physical ID, registration and enrollment confirmation checks before verifying the student."}
                                     </span>
                                 </div>
                             )}
@@ -1031,7 +1029,6 @@ const InPersonVerification = ({ onNavigate = () => {} }) => {
                                     </div>
                                 ) : (
                                     <div className="activation-actions">
-                                        <OnlineAccessIssuer key={student?.id} studentId={student?.id} studentName={student?.full_name || student?.fullName} disabled={!canActivate || !isRegistrationApproved || !isEnrolled || loading} />
                                         <button
                                             className="primary-button activation-button"
                                             disabled={

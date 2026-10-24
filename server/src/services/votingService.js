@@ -43,11 +43,10 @@ const submitVote = async ({
     }
 
     if (
-        !Array.isArray(selections) ||
-        selections.length === 0
+        !Array.isArray(selections)
     ) {
         throw new Error(
-            "At least one vote selection is required."
+            "Vote selections must be a JSON array. An empty array represents full abstention."
         );
     }
 

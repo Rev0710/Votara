@@ -217,3 +217,13 @@
     .eb-workspace[data-eb-theme] .verification-modal .modal-actions { flex-direction:column-reverse; }
     .eb-workspace[data-eb-theme] .verification-modal .modal-actions button { width:100%; }
 }
+
+.eb-workspace .online-access-record-card{background:var(--eb-solid)!important;border:1px solid var(--eb-border);padding:24px;border-radius:20px;margin-bottom:24px}.online-access-record-card h2{margin:0 0 10px;font-size:20px}.online-access-record-card p{margin:10px 0;line-height:1.65}.online-access-record-card>button{min-height:44px;margin-top:8px}@media(max-width:600px){.eb-workspace .online-access-record-card{padding:18px}.online-access-record-card>button{width:100%}}
+
+/* All three verification confirmations are operable with touch and keyboard. */
+.eb-workspace .in-person-verification .checklist-item{cursor:pointer;min-height:60px}
+.eb-workspace .in-person-verification .checklist-item>input[type=checkbox]{position:static!important;opacity:1!important;pointer-events:auto!important;flex:0 0 22px;width:22px!important;height:22px!important;min-height:22px!important;margin:3px 0 0;accent-color:#167747}
+.eb-workspace .in-person-verification .checklist-item>input[type=checkbox]+.custom-checkbox{display:none}
+.eb-workspace .in-person-verification .checklist-item:focus-within{outline:3px solid var(--eb-link,#8cb5ff);outline-offset:3px}
+.eb-workspace .in-person-verification .enrollment-check>.status-badge{margin-left:auto;flex-shrink:0}
+@media(max-width:600px){.eb-workspace .in-person-verification .enrollment-check{flex-wrap:wrap}.eb-workspace .in-person-verification .enrollment-check .checklist-content{flex:1;min-width:160px}}

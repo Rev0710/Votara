@@ -36,6 +36,7 @@ import {
 } from "../../services/votingService";
 
 import "./KioskVoting.css";
+import KioskBallotPosition, {KIOSK_ABSTAIN} from "./KioskBallotPosition";
 
 
 // =====================================================
@@ -436,11 +437,7 @@ function KioskVoting() {
         ]);
 
 
-    const requiredPositions =
-        eligiblePositions.filter(
-            (position) =>
-                position.is_required !== false
-        );
+
 
 
     // =================================================
@@ -1855,7 +1852,7 @@ const approveRegistration =
             if(!votingGate.available){setError(votingGate.message);return;}
 
             const missing =
-                requiredPositions.filter(
+                eligiblePositions.filter(
                     (position) =>
                         !selections[
                             position.id
@@ -1866,7 +1863,7 @@ const approveRegistration =
             if (missing.length) {
 
                 setError(
-                    `Please select a candidate for: ${missing
+                    `Please choose a candidate or Abstain for: ${missing
                         .map(
                             (position) =>
                                 position.name
@@ -1896,7 +1893,7 @@ const approveRegistration =
                             (position) =>
                                 selections[
                                     position.id
-                                ]
+                                ] && selections[position.id] !== KIOSK_ABSTAIN
                         )
 
                         .map(
@@ -3294,147 +3291,10 @@ const approveRegistration =
 
                             <div className="kiosk-position-list">
 
-                                {eligiblePositions.map(
-                                    (position) => (
-
-                                        <div
-                                            className="kiosk-position-card"
-                                            key={
-                                                position.id
-                                            }
-                                        >
-
-                                            <div className="kiosk-position-heading">
-
-                                                <div>
-
-                                                    <h3>
-                                                        {
-                                                            position.name
-                                                        }
-                                                    </h3>
-
-                                                    {
-                                                        position.description &&
-                                                        (
-                                                            <p>
-                                                                {
-                                                                    position.description
-                                                                }
-                                                            </p>
-                                                        )
-                                                    }
-
-                                                </div>
-
-
-                                                {
-                                                    position.is_required !==
-                                                        false && (
-
-                                                        <span>
-                                                            Required
-                                                        </span>
-
-                                                    )
-                                                }
-
-                                            </div>
-
-
-                                            <div className="kiosk-candidate-grid">
-
-                                                {
-                                                    position
-                                                        .candidates
-                                                        .length
-                                                        ? position
-                                                            .candidates
-                                                            .map(
-                                                                (
-                                                                    candidate
-                                                                ) => (
-
-                                                                    <label
-                                                                        className={`kiosk-candidate ${
-                                                                            selections[
-                                                                                position
-                                                                                    .id
-                                                                            ] ===
-                                                                            candidate.id
-                                                                                ? "selected"
-                                                                                : ""
-                                                                        }`}
-                                                                        key={
-                                                                            candidate.id
-                                                                        }
-                                                                    >
-
-                                                                        <input
-                                                                            type="radio"
-                                                                            disabled={!votingGate.available}
-                                                                            name={`position-${position.id}`}
-                                                                            checked={
-                                                                                selections[
-                                                                                    position
-                                                                                        .id
-                                                                                ] ===
-                                                                                candidate.id
-                                                                            }
-                                                                            onChange={() =>
-                                                                                selectCandidate(
-                                                                                    position.id,
-                                                                                    candidate.id
-                                                                                )
-                                                                            }
-                                                                        />
-
-                                                                        <span className="kiosk-radio" />
-
-                                                                        <span>
-
-                                                                            <strong>
-                                                                                {
-                                                                                    candidate.full_name ||
-                                                                                    candidate.fullName ||
-                                                                                    candidate.name
-                                                                                }
-                                                                            </strong>
-
-                                                                            {
-                                                                                candidate.platform && (
-                                                                                    <small>
-                                                                                        {
-                                                                                            candidate.platform
-                                                                                        }
-                                                                                    </small>
-                                                                                )
-                                                                            }
-
-                                                                        </span>
-
-                                                                    </label>
-
-                                                                )
-                                                            )
-
-                                                        : (
-
-                                                            <div className="kiosk-empty-candidates">
-
-                                                                No active candidates are available for this position.
-
-                                                            </div>
-
-                                                        )
-                                                }
-
-                                            </div>
-
-                                        </div>
-
-                                    )
-                                )}
+                                {eligiblePositions.map(position => (
+                                    <KioskBallotPosition key={position.id} position={position} value={selections[position.id]}
+                                        onSelect={selectCandidate} disabled={!votingGate.available || actionLoading} />
+                                ))}
 
                             </div>
 
@@ -3449,14 +3309,14 @@ const approveRegistration =
                                         selections
                                     ).length
                                 }{" "}
-                                position(s) selected
+                                position(s) answered (including abstentions)
                             </span>
 
 
                             <button
                                 type="button"
                                 className="kiosk-main-button"
-                                onClick={submitKioskVote} disabled={actionLoading || !votingGate.available}
+                                onClick={submitKioskVote} disabled={actionLoading || !votingGate.available || eligiblePositions.length === 0}
                             >
 
                                 {

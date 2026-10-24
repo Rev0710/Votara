@@ -176,12 +176,7 @@ BEGIN
     END IF;
 
 
-    IF jsonb_array_length(p_selections) = 0 THEN
-
-        RAISE EXCEPTION
-            'At least one vote selection is required.';
-
-    END IF;
+    -- Empty selections are allowed for an intentional full-abstention ballot.
 
 
     -- ========================================================
@@ -304,6 +299,20 @@ BEGIN
 
 
     -- ========================================================
+
+    -- Full-abstention eligibility: empty ballots still require an eligible position.
+    IF jsonb_array_length(p_selections) = 0 THEN
+        IF LOWER(TRIM(v_student.year_level::text)) ~ '^(1|1st|first)([[:space:]]|$)'
+           OR NOT EXISTS (
+            SELECT 1 FROM public.positions p
+            WHERE p.election_id = p_election_id AND COALESCE(p.is_active, true)
+            AND (NOT EXISTS (SELECT 1 FROM public.position_year_levels pyl WHERE pyl.position_id = p.id)
+                 OR EXISTS (SELECT 1 FROM public.position_year_levels pyl WHERE pyl.position_id = p.id
+                    AND LOWER(TRIM(pyl.year_level::text)) = LOWER(TRIM(v_student.year_level::text))))
+        ) THEN RAISE EXCEPTION 'No voting positions are available for this student.';
+        END IF;
+    END IF;
+
     -- 7. CHECK EXISTING PARTICIPATION
     --
     -- If the row does not exist yet, create it as not voted.
