@@ -15,6 +15,7 @@ import {
 
 import api from "../../services/api";
 import "./InPersonVerification.css";
+import OnlineAccessIssuer from "./OnlineAccessIssuer";
 
 const isNumericStudentIdQuery = (value) => /^[\d\s-]+$/.test(value) && /\d/.test(value);
 const hasFiveDigitStudentId = (value) => value.replace(/\D/g, "").length === 5;
@@ -1030,6 +1031,7 @@ const InPersonVerification = ({ onNavigate = () => {} }) => {
                                     </div>
                                 ) : (
                                     <div className="activation-actions">
+                                        <OnlineAccessIssuer key={student?.id} studentId={student?.id} studentName={student?.full_name || student?.fullName} disabled={!canActivate || !isRegistrationApproved || !isEnrolled || loading} />
                                         <button
                                             className="primary-button activation-button"
                                             disabled={

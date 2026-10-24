@@ -251,7 +251,7 @@ api.interceptors.request.use(
         // LOGIN REQUEST
         // =================================================
 
-        const isLoginRequest = /\/(?:admin-auth|staff-auth|eb-auth|auth)\/login(?:\/|$|\?)/.test(normalizedRequestUrl);
+        const isLoginRequest = /\/(?:admin-auth|staff-auth|eb-auth|auth)\/login(?:\/|$|\?)/.test(normalizedRequestUrl) || normalizedRequestUrl.startsWith("/auth/kiosk-online-access/");
         // =================================================
         // ADMIN REQUEST
         // =================================================

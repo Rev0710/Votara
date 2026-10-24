@@ -16,6 +16,7 @@ const StudentRegistration = lazy(() => import("./src/pages/auth/StudentRegistrat
 const RegistrationConfirmation = lazy(() => import("./src/pages/auth/RegistrationConfirmation"));
 const RegistrationSubmitted = lazy(() => import("./src/pages/public/RegistrationSubmitted"));
 const StudentLogin = lazy(() => import("./src/pages/auth/StudentLogin"));
+const ActivateKioskAccount = lazy(() => import("./src/pages/auth/ActivateKioskAccount"));
 const ForgotPassword = lazy(() => import("./src/pages/auth/ForgotPassword"));
 const AccountSelection = lazy(() => import("./src/pages/auth/AccountSelection"));
 const ChangeTemporaryPassword = lazy(() => import("./src/pages/auth/ChangeTemporaryPassword"));
@@ -156,6 +157,7 @@ if (showInitialIntro) {
                     element={<LandingPage />}
                 />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/activate-kiosk-account" element={<ActivateKioskAccount />} />
 
 
                 <Route

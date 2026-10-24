@@ -785,7 +785,7 @@ const Profile = ({
                         {initialSection === "password"
                             ? "Update your student account password securely."
                             : initialSection === "edit"
-                            ? "Update your profile details and email address."
+                            ? "Update your profile details and contact number."
                             : "View your personal Votara account information."}
                     </p>
 
@@ -1042,9 +1042,9 @@ const Profile = ({
                                     type="email"
                                     name="email"
                                     value={form.email}
-                                    onChange={handleChange}
+                                    readOnly
                                     autoComplete="email"
-                                    required
+                                    aria-label="Linked email address"
                                 />
                             </label>
 

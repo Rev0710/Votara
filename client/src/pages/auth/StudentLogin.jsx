@@ -238,6 +238,9 @@ const StudentLogin = () => {
                             >
                                 Sign up
                             </button>
+                            <button type="button" className="student-signup-button" onClick={() => navigate("/activate-kiosk-account")} disabled={loading}>
+                                Already registered at the kiosk? Activate your account.
+                            </button>
                         </form>
                     </div>
                 </div>

@@ -98,4 +98,6 @@ router.get(
 );
 
 
+router.use("/kiosk-online-access", require("./studentOnlineAccessRoutes"));
+
 module.exports = router;

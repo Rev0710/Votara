@@ -1032,7 +1032,10 @@ const sendForgotPasswordOTPEmail = async (
 // =====================================================
 
 const sendAdminEmailChangeCode = (email, code) => sendEmail({to:email,fromName:'VOTARA Administration',subject:'Verify your VOTARA administrator email',html:'<p>Your administrator email verification code is <strong>'+code+'</strong>.</p><p>This code expires in 10 minutes. If you did not request this change, ignore this email.</p>'});
+const sendStudentOnlineAccessCode = (email,code) => sendEmail({to:email,fromName:"VOTARA",subject:"Verify your email for VOTARA online access",
+    html:'<h2>Activate your existing VOTARA account</h2><p>Your email verification code is <strong>'+code+'</strong>.</p><p>This code expires in 5 minutes. Do not share it. If you did not request online access, ignore this email.</p>'});
 module.exports = {
+    sendStudentOnlineAccessCode,
     sendAdminEmailChangeCode,
     sendOTPEmail,
     sendForgotPasswordOTPEmail,
